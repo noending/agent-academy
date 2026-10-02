@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="第 4 章：知识库与 RAG 全链路——知识在 Agent 链路中的位置、切块策略、嵌入检索、50 行完整管线、检索质量工程与失败诊断。">
+<title>第 4 章 · 知识库与 RAG 全链路 | Agent 学院</title>
+<link rel="stylesheet" href="assets/css/style.css?v=20">
+</head>
+<body data-chapter="ch4">
+
+<header class="topbar">
+ <button class="icon-btn hamburger" id="hamburger" title="打开导航">☰</button>
+ <a class="brand" href="index.html"><span class="logo">学</span> Agent 学院 <small>从零开发智能体 · Ontology · Harness</small></a>
+ <span class="spacer"></span>
+ <span class="progress-pill" id="progress-pill">进度 0/9 章</span>
+ <button class="icon-btn" id="theme-btn">🌙</button>
+</header>
+
+<div class="layout">
+ <aside class="sidebar" id="sidebar"></aside>
+
+ <main class="content">
+ <div class="content-inner">
+
+ <header class="chapter-head">
+ <div class="kicker">CHAPTER 04 · 预计 3 小时 · 全链路实战</div>
+ <h1>知识库与 <span class="grad">RAG 全链路</span></h1>
+ <p class="lead">
+ 从这一章起，Agent 开始接触「模型训练时没见过的知识」。<b>知识库是 Agent 链路中最容易做错、也最能拉开差距的一环</b>：
+ 本章把整条链路一次讲透——知识从哪来（文档）、怎么进库（切块与嵌入）、怎么取回（检索）、怎么用（生成）、怎么坏（失败模式），
+ 以及它如何与工具、记忆、本体衔接成一条完整的流水线。你将亲手搭出一条能跑的管线。
+ </p>
+ <div class="head-meta">
+ <span class="chip">目标：搭出并诊断自己的知识库</span>
+ <span class="chip">交互实验：检索质量对比器</span>
+ <span class="chip">6 段可运行代码</span>
+ <span class="chip">论文精读：RAG / GraphRAG</span>
+ <span class="chip">练习：3 题（带参考答案）</span>
+ </div>
+ </header>
+
+ <div class="callout info">
+ <div class="co-title">本章你将学会</div>
+ <p>① 知识库在 Agent 链路中的位置与四种知识来源的选型判据；② 切块策略及其对检索的决定性影响；③ 嵌入检索的原理与零依赖实现；④ 完整 RAG 管线代码；⑤ 检索质量评估与四大失败模式诊断。</p>
+ </div>
+
+ <h2>4.0 全景：知识在 Agent 链路中的位置</h2>
+ <p>先回答一个战略问题：用户问 Agent 一个问题时，答案可能来自四个完全不同的地方。把它们画在一张图上，整条链路的分工一目了然：</p>
+
+ <div class="flow">
+ <span class="flow-node accent">用户提问</span><span class="flow-arrow">→</span>
+ <span class="flow-node"> 模型内部<br><small>参数知识（训练时学到的）</small></span>
+ <span class="flow-node"> 知识库<br><small>检索私有文档</small></span>
+ <span class="flow-node"> 工具<br><small>实时数据（天气/库存/行情）</small></span>
+ <span class="flow-node"> 记忆<br><small>关于「这个用户」的事实</small></span>
+ <span class="flow-arrow">→</span>
+ <span class="flow-node accent">综合推理 → 行动 / 回答</span>
+ <div class="flow-note">四路知识在 Harness 的循环里汇合（第 7 章）；彼此的语义统一靠本体（第 6 章）</div>
+ </div>
+
+ <div class="tbl-wrap"><table class="tbl">
+ <tr><th>知识来源</th><th>存在哪</th><th>怎么更新</th><th>适合回答</th><th>失效模式</th></tr>
+ <tr><td><b>参数知识</b></td><td>模型权重里</td><td>重新训练（对应用开发者不可行）</td><td>「什么是递归」这类通用知识</td><td>过时、幻觉</td></tr>
+ <tr><td><b>知识库</b></td><td>外部文档 + 检索索引</td><td><b>增删文档即生效</b>（分钟级）</td><td>「我们公司的报销制度是什么」</td><td>检索不到、检索错</td></tr>
+ <tr><td><b>工具（实时）</b></td><td>外部系统 API</td><td>系统自带，永远最新</td><td>「现在北京几点、股价多少」</td><td>接口故障、超时</td></tr>
+ <tr><td><b>记忆</b></td><td>会话/用户数据</td><td>对话中主动写入</td><td>「我的课题叫什么」</td><td>写脏、冲突、过时</td></tr>
+ </table></div>
+
+ <div class="callout key">
+ <div class="co-title">选型判据（背下来）</div>
+ <p><b>通用且稳定</b> → 参数知识（不用做任何事）；<b>私有且相对静态</b> → 知识库；<b>实时变化</b> → 工具；<b>关于「这个用户本人」</b> → 记忆。<br>
+ 一个真实的 Agent 几乎总是四路并用：判断「这个问题该去哪找答案」本身就是模型在循环里的核心决策——而你在第 1 章已经见过它怎么决策了（读上下文 → 选工具）。<b>知识库和检索工具，就是这条链路上「私有知识」的供给站。</b></p>
+ </div>
+
+ <h2>4.1 链路第一站：切块（Chunking）</h2>
+ <p>知识库的原料是文档（PDF、Wiki、网页、工单……）。文档不能整篇塞给模型——一是 embedding 有输入上限，二是更根本的：<b>检索的粒度 = 命中的粒度</b>。把整篇手册做成一个向量，那么任何问题的「最相似结果」都是整篇手册——等于没有检索。所以第一步是把它切成小块（chunk）。</p>
+
+ <div class="tbl-wrap"><table class="tbl">
+ <tr><th>策略</th><th>做法</th><th>优点</th><th>致命伤</th></tr>
+ <tr><td><b>固定长度</b></td><td>每 N 个字符切一刀（常加 10~20% 重叠）</td><td>实现 5 行，块大小均匀</td><td><b>拦腰斩断语义</b>：一句话、一张表被切成两半</td></tr>
+ <tr><td><b>按句子/段落</b></td><td>以自然段落为单位</td><td>语义完整、命中干净</td><td>段落长短不均；超长段落仍需二次切</td></tr>
+ <tr><td><b>结构感知</b></td><td>按标题层级切（Markdown 标题、PDF 章节）</td><td>保结构、可带层级路径做元数据</td><td>整节可能过长——生产做法是「按标题切大块 + 块内句子级细分」</td></tr>
+ </table></div>
+
+ <p>经验参数：<b>块大小 200~500 token</b>，相邻块 10~20% 重叠；FAQ 类文档按「一问一答」切块效果最好，叙述类文档用结构感知。比切法更重要的另一件事：<b>每个块都要带元数据</b>（来源文件、章节标题、更新日期、类别）——它是后续「过滤检索」「答案溯源」的全部依据。</p>
+      <div class="callout warn">
+        <div class="co-title">PDF：入库管道的第一道现实关卡</div>
+        <p>知识库的原料大多是 PDF，而 PDF 分两种命运：<b>文本层 PDF</b>（Word 导出的那种）用 PyMuPDF / pdfplumber 可直接抽取，但要小心双栏排版打乱阅读顺序、跨页表格被拦腰截断；<b>扫描件 / 图片型 PDF</b> 没有文本层，必须 OCR（如 PaddleOCR），识别错误会一路污染检索——建议给页面级置信度，低分块标记「待人工复核」。<b>入库后人工抽查前 20 个块</b>：上游一次抽查，胜过下游十次调参。视觉路线（视觉 LLM 直接读页面）与多模态 Agent 的展开见 <a href="#zh-4-7">4.7 节</a>。</p>
+      </div>
+
+
+
+ <div class="codeblock"><div class="code-head"><span class="code-lang">python · chunker.py —— 结构感知切块器（约 25 行）</span></div><pre><code class="language-python">import re
+
+def chunk_markdown(text: str, max_chars: int = 800) -> list[dict]:
+    """按 Markdown 标题切块；超长小节在内部按段落二次切分。
+    每个块携带「标题路径」作为元数据——这是结构感知的核心收益。"""
+    chunks, cur, path = [], [], ["(卷首)"]
+    def flush():
+        if cur:
+            chunks.append({"path": " > ".join(path),
+                           "text": "\n".join(cur).strip()})
+            cur.clear()
+    for line in text.splitlines():
+        m = re.match(r"^(#{1,4})\s+(.*)", line)
+        if m:                                   # 遇到标题：结算上一块，更新标题路径
+            flush()
+            depth = len(m.group(1))
+            path = path[:depth - 1] + [m.group(2)]
+        cur.append(line)
+        if sum(len(x) for x in cur) > max_chars:  # 超长：按当前标题路径二次结算
+            flush()
+            path.append(path[-1] + "（续）")
+    flush()
+    return [c for c in chunks if c["text"]]
+
+# 每个块形如：
+# {"path": "员工手册 > 差旅政策 > 住宿标准", "text": "一线城市每晚上限 400 元…"}
+# path 会随文本一起进检索索引——「住宿标准」这个词直接提升了可检索性</code></pre></div>
+
+ <h2>4.2 链路第二站：嵌入与检索</h2>
+ <p><span class="term">嵌入</span>（embedding）把一段文本变成一个高维向量，其魔力在于：<b>语义相近的文本，向量也相近</b>（「电脑」和「计算机」的向量距离，远小于「电脑」和「所得税」）。于是「找相关内容」就变成了「找最近的向量」——这就是向量检索的全部原理。</p>
+
+ <div class="codeblock"><div class="code-head"><span class="code-lang">python · tiny_memory.py —— 零依赖检索器（完整可运行）</span></div><pre><code class="language-python">import math, re
+from collections import Counter
+
+class TinyVectorMemory:
+    """教学版：词频向量 + 余弦相似度。接口只有 add / search 两个词。
+    生产中把 _vec 换成 embedding API、存储换成向量库（Chroma/FAISS），
+    接口完全不变——上层代码一行不用改。"""
+
+    def __init__(self):
+        self.docs = []                       # [(元数据, 原文, 向量)]
+
+    def _vec(self, text):
+        return Counter(re.findall(r"[\w\u4e00-\u9fff]+", text.lower()))
+
+    def add(self, text: str, meta: dict | None = None):
+        self.docs.append((meta or {}, text, self._vec(text)))
+
+    def search(self, query: str, k: int = 3) -> list[dict]:
+        q = self._vec(query)
+        def cos(v):
+            dot = sum(q[w] * v.get(w, 0) for w in q)
+            nv = math.sqrt(sum(x * x for x in v.values())) or 1
+            nq = math.sqrt(sum(x * x for x in q.values())) or 1
+            return dot / (nv * nq)
+        ranked = sorted(self.docs,
+                        key=lambda d: cos(d[2]), reverse=True)[:k]
+        return [{"score": round(cos(v), 3), "text": t, "meta": m}
+                for m, t, v in ranked]</code></pre></div>
+
+ <div class="callout warn">
+ <div class="co-title">教学版的天花板：词面 ≠ 语义</div>
+ <p>词频向量只认<b>字面重合</b>：搜「电脑维修」命中不了「计算机故障处理」。生产实现把 <code>_vec</code> 换成 <b>embedding 模型</b>（各家都有 OpenAI 兼容的 embeddings 接口），语义检索才真正生效。但请注意——<b>接口没变</b>。这就是为什么本章敢用 30 行代码教完整条链路：链路的形状（切块 → 入库 → 检索 → 生成）与实现档次无关。</p>
+ </div>
+
+ <h2>4.3 完整管线：50 行跑通 RAG</h2>
+ <p>现在把两站接起来，加上生成端，就是完整的 RAG（Retrieval-Augmented Generation）：</p>
+
+ <div class="flow">
+ <span class="flow-node"> 文档</span><span class="flow-arrow">→</span>
+ <span class="flow-node"> 切块 + 元数据</span><span class="flow-arrow">→</span>
+ <span class="flow-node"> 向量入库</span><span class="flow-arrow">⤴</span>
+ <span class="flow-node accent">用户提问</span><span class="flow-arrow">→</span>
+ <span class="flow-node"> 检索 Top-K</span><span class="flow-arrow">→</span>
+ <span class="flow-node"> 片段 + 问题 → LLM</span><span class="flow-arrow">→</span>
+ <span class="flow-node accent">带引用的回答</span>
+ <div class="flow-note">上半是离线的「入库管道」，下半是在线的「查询管道」——两条管道独立演进</div>
+ </div>
+
+ <div class="codeblock"><div class="code-head"><span class="code-lang">python · rag.py —— 完整可运行</span></div><pre><code class="language-python">from openai import OpenAI
+
+client = OpenAI(api_key=os.environ["DEEPSEEK_API_KEY"],
+                base_url="https://api.deepseek.com")
+
+HANDBOOK = """
+# 员工手册
+## 报销制度
+员工报销请于每月 25 日前在 OA 系统提交，逾期顺延。需附发票原件，单笔超 5000 元需总监审批。
+## 差旅政策
+出差前需提交出差申请。交通：高铁二等座、经济舱。
+住宿标准：一线城市每晚上限 400 元，二线城市 300 元，超标需提前报备。
+## 考勤制度
+工作日 9:00-18:00，弹性半小时。出差期间按项目地考勤。
+"""
+
+# ── 离线：入库 ──
+kb = TinyVectorMemory()
+for chunk in chunk_markdown(HANDBOOK):
+    kb.add(chunk["text"], meta={"path": chunk["path"]})
+
+# ── 在线：检索 + 生成 ──
+SYSTEM = """你是员工手册问答助手。只依据【参考片段】回答，并标注来源路径。
+参考片段中没有的信息，明确回答「手册中未找到」，禁止编造。"""
+
+def ask(question: str) -> str:
+    hits = kb.search(question, k=2)
+    context = "\n\n".join(
+        f"[来源: {h['meta'].get('path', '?')}]\n{h['text']}" for h in hits)
+    resp = client.chat.completions.create(
+        model="deepseek-chat", temperature=0,
+        messages=[{"role": "system", "content": SYSTEM},
+                  {"role": "user",
+                   "content": f"【参考片段】\n{context}\n\n【问题】{question}"}])
+    return resp.choices[0].message.content
+
+print(ask("出差住宿报销的上限是多少？"))</code></pre></div>
+
+ <div class="codeblock"><div class="code-head"><span class="code-lang">text · 运行输出</span></div><pre><code>一线城市住宿每晚上限 400 元，二线城市 300 元，超标需提前报备。
+（来源：员工手册 > 差旅政策）</code></pre></div>
+
+ <div class="callout key">
+ <div class="co-title">三个容易忽略的设计决定</div>
+ <p>① <b>片段带来源进上下文</b>——模型的回答才能带引用，幻觉可追责（出错时能定位到具体文档块）；<br>
+ ② <b>系统提示里写明「未找到就说未找到」</b>——这是检索型系统的诚实条款（第 3 章边界区规则）；<br>
+ ③ <b>temperature=0</b>——问答要的是忠实转述，不是创作。</p>
+ </div>
+
+ <h2>4.4 链路的短板：检索质量决定 RAG 上限</h2>
+ <p>一句行话：<b>Garbage in, garbage out——检索不到正确片段，再强的模型也只能编。</b>所以 RAG 工程的大部分精力花在检索侧。先学会度量它：</p>
+
+ <div class="codeblock"><div class="code-head"><span class="code-lang">python · eval_retrieval.py —— 15 行检索评估</span></div><pre><code class="language-python">CASES = [   # (问题, 答案所在块的路径关键词)
+    ("出差住宿报销的上限是多少？", "住宿标准"),
+    ("发票丢失了还能报销吗？",     "报销制度"),
+    ("出差期间要打卡吗？",         "考勤制度"),
+]
+
+def hit_rate(kb, k=2) -> float:
+    ok = 0
+    for q, expect in CASES:
+        paths = [h["meta"].get("path", "") for h in kb.search(q, k=k)]
+        case_ok = any(expect in p for p in paths)   # 当前用例是否命中
+        ok += case_ok
+        print(f"{'' if case_ok else '❌'} {q} → {paths}")
+    return ok / len(CASES)
+
+print(f"hit@2 = {hit_rate(kb):.0%}")   # 改切块策略 / 换嵌入模型后重跑这一句</code></pre></div>
+
+ <p>提升检索质量的四件武器（按性价比排序）：</p>
+ <ol class="steps">
+ <li><b>换更好的切块</b><p>见下方实验——切块对命中质量的影响经常超过换嵌入模型。</p></li>
+ <li><b>混合检索（Hybrid Search）</b><p>向量检索（语义）+ 关键词检索 BM25（精确术语）各取 Top-K 合并。产品名、错误码、型号这类精确词，BM25 远比向量可靠。</p></li>
+ <li><b>重排序（Rerank）</b><p>先宽召回 Top-20，再用交叉编码器精排出 Top-3。多一次便宜的模型调用，换检索精度大幅提升——「粗召回 + 精排」是检索系统的通用架构。</p></li>
+ <li><b>查询改写</b><p>用户问「那个钱怎么报」——直接检索必挂。先用 LLM 把口语改写成检索友好查询（「报销流程和标准」）再检索，一行代码提升明显。</p></li>
+ </ol>
+
+       <h3>中文知识库的嵌入选型</h3>
+      <div class="tbl-wrap"><table class="tbl">
+        <tr><th>方案</th><th>代表</th><th>适合</th></tr>
+        <tr><td><b>本地开源中文模型</b></td><td>BAAI bge-large-zh-v1.5（配套 bge-reranker 重排序）</td><td>数据不出域、零调用成本；sentence-transformers 三行接入</td></tr>
+        <tr><td><b>国内 API</b></td><td>阿里 text-embedding-v3、智谱 embedding-3 等</td><td>免运维、按量付费、中文效果好</td></tr>
+        <tr><td><b>多语通用 API</b></td><td>OpenAI text-embedding-3-large 等</td><td>多语言混合语料</td></tr>
+      </table></div>
+      <p>选型纪律与第 8 章一致：<b>用 4.4 节的 hit@k 拿你自己的语料实测对比</b>——榜单分高不等于你的语料上分高。从教学版升级到中文语义检索只需三行：</p>
+      <div class="codeblock"><div class="code-head"><span class="code-lang">python · 升级 TinyVectorMemory 的 _vec</span></div><pre><code class="language-python">from sentence_transformers import SentenceTransformer
+model = SentenceTransformer("BAAI/bge-large-zh-v1.5")
+
+# _vec(text) 换成：
+#   model.encode(text, normalize_embeddings=True)
+# search 里的余弦相似度对归一化向量可直接用内积——
+# add / search 接口不变，「电脑」从此能检索到「计算机」</code></pre></div>
+
+<h2>交互实验：切块策略如何决定检索成败</h2>
+ <p>同一份员工手册、同一个问题、三种切块策略。先自己预测哪种会失败，再看检索结果与分数：</p>
+
+ <div class="lab" id="lab-rag-chunks">
+ <div class="lab-head"> 交互实验 <span class="lab-tag">检索质量对比器</span></div>
+ <div class="lab-body">
+ <div class="lab-toolbar">
+ <button class="btn primary" data-act="reveal"> 看结论要点</button>
+ </div>
+ <div class="rag-grid"></div>
+ <div class="viz-note" style="display:none">
+ 这个实验想让你带走的直觉：<b>切块策略决定了「答案是否完整地待在一个块里」。</b>
+ 固定长度切块在主题边界处拦腰斩断；按段落切命中最干净；按标题切保结构但精确提问时块内有噪声。
+ 生产系统的标准答案：<b>结构感知切大块 + 块内句子级细分 + 元数据过滤</b>。
+ </div>
+ </div>
+ </div>
+
+ <div class="callout tip">
+        <div class="co-title">推荐视频</div>
+        <p><b>3Blue1Brown《But what is a GPT?》</b>——嵌入向量的几何直觉。<br>
+        <a href="https://www.youtube.com/watch?v=wjZofJX0v4M" target="_blank" rel="noopener">YouTube</a> ·
+        <a href="https://search.bilibili.com/all?keyword=3Blue1Brown%20GPT" target="_blank" rel="noopener">B 站搜索</a></p>
+      </div>
+
+ <h2>4.5 RAG 的四大失败模式与诊断</h2>
+ <p>RAG 出问题时，别急着改提示词——先用第 8 章的五步定位法回到检索层。四大失败模式，每个都有明确的症状与修法：</p>
+
+ <div class="tbl-wrap"><table class="tbl">
+ <tr><th>失败模式</th><th>症状</th><th>根因</th><th>修法</th></tr>
+ <tr><td><b>① 检索不到</b></td><td>回答「未找到」，或模型开始编</td><td>切块毁掉了答案 / 词面不匹配 / 答案根本不在库里</td><td>先跑检索评估（hit@k）；换切块策略；查询改写；确认文档已入库</td></tr>
+ <tr><td><b>② 检索到了没读</b></td><td>片段在上下文里，回答却没用它</td><td>片段排在长上下文中部被忽略（context rot）；或无关片段太多稀释注意力</td><td>把最相关片段放在<b>最前或最后</b>；减少 K；rerank 精选</td></tr>
+ <tr><td><b>③ 来源冲突</b></td><td>回答自相矛盾或用了旧规定</td><td>库里同时有新旧两版文档</td><td>元数据带日期，检索后<b>按时间去重</b>；入库管道做版本管理</td></tr>
+ <tr><td><b>④ 拼接遗漏</b></td><td>答案只对一半</td><td>答案由两处内容拼成（制度 + 例外条款），只检索到其一</td><td>增大 K 或块 overlap；把「例外条款」类型文档单独建立索引并强制检索</td></tr>
+ </table></div>
+
+ <div class="callout tip">
+ <div class="co-title">诊断的元技巧</div>
+ <p>遇到「RAG 答错」，<b>永远先看检索层再看生成层</b>：把命中的片段打印出来，问自己「正确答案在不在里面？」——在，是生成问题（提示词/模型，第 3 章）；不在，是检索问题（本章）。这一句二分法，能省掉一半的盲目调参。</p>
+ </div>
+
+ <h2>4.6 链路合流：知识库 × 记忆 × 本体</h2>
+ <p>最后把三条知识线接成一张网——这正是本课程架构的核心：</p>
+ <ul>
+ <li><b>向量检索管「相似」</b>：文档语义搜索， strengths 在非结构化长文本（第 4 章 = 本章）；</li>
+ <li><b>知识图谱管「关系」</b>：多跳问题（「A 的导师的学生」）、一致性校验、幻觉检测（第 6 章 Ontology 的抽取管线把文档变成三元组）；</li>
+ <li><b>文件/记忆管「偏好与事实」</b>：用户本人的少量高价值事实（第 5 章）。</li>
+ </ul>
+ <p>三者不是三选一，而是<b>分流</b>：一条文档入库管道可以同时喂两路——切块进向量索引（语义检索），同时走 LLM 抽取管线生成三元组进图谱（关系查询）。这恰好是 GraphRAG 的核心思想：先抽取实体关系建图，再做社区摘要，专门回答「这批文档整体讲了什么」这类向量检索的天然盲区。</p>
+
+ <div class="flow">
+ <span class="flow-node"> 文档</span><span class="flow-arrow">→</span>
+ <span class="flow-node"> 切块</span><span class="flow-arrow">→</span>
+ <span class="flow-node"> 向量索引<br><small>管「相似」</small></span>
+ <span class="flow-arrow">⇄</span>
+ <span class="flow-node"> LLM 抽取<br><small>三元组进图谱，管「关系」</small></span>
+ <span class="flow-arrow">→</span>
+ <span class="flow-node accent">检索工具（暴露给 Agent）</span><span class="flow-arrow">→</span>
+ <span class="flow-node accent">Harness 循环调用</span>
+ <div class="flow-note">对 Agent 来说，知识库 / 图谱 / 记忆都只是「工具清单里的几个检索工具」——选择权在模型，供给站在你</div>
+ </div>
+
+ <div class="callout story">
+ <div class="co-title">论文精读入口</div>
+ <p>本章两条主线的源头论文：<b>RAG</b>（Lewis et al., 2020，参数记忆 + 非参数检索的开山之作）与 <b>GraphRAG</b>（Microsoft, 2024，知识库与图谱合流的代表作）。按模板逐段拆解见 <a href="papers.html#rag">论文精读页</a>，逐段中译见 <a href="translations.html#zh-rag">中文精读版</a>。</p>
+ </div>
+
+       <h2 id="zh-4-7">4.7 视觉解析与多模态：PDF 的第三条路</h2>
+      <p>4.1 节的 PDF 关卡提示了一个趋势：越来越多的高价值内容（扫描合同、财报图表、论文里的实验图）<b>根本不以文本形式存在</b>。把知识库的入口从「文本世界」扩展到「视觉世界」，有三条路线：</p>
+      <div class="tbl-wrap"><table class="tbl">
+        <tr><th>路线</th><th>怎么做</th><th>强项</th><th>短板</th></tr>
+        <tr><td><b>① 文本层抽取</b></td><td>PyMuPDF / pdfplumber 直接读文本层</td><td>最快、最便宜、信息无损</td><td>只适用于有文本层的 PDF；版面顺序易乱</td></tr>
+        <tr><td><b>② OCR</b></td><td>PaddleOCR / Tesseract 识别扫描图</td><td>能处理老扫描件；本地可跑</td><td>识别错误污染下游；表格与版面还原有限</td></tr>
+        <tr><td><b>③ 视觉 LLM</b></td><td>把页面渲染成图片，直接交给带视觉能力的模型</td><td><b>表格、公式、图文混排的最强解法</b>；可让模型「按版面理解」而非「按字符流理解」</td><td>调用成本高（每页一张图）；仍需人工抽查</td></tr>
+      </table></div>
+      <p>三条路线按成本递增排列，<b>正确的用法是级联</b>：文本层优先 → 失败或低置信的页转 OCR → 版面复杂（表格/公式/印章）的页转视觉 LLM。把「该走哪条路」的判定写进入库管道，而不是全量硬上视觉模型。</p>
+
+      <h3>视觉解析的最小代码（渲染页 → 视觉模型）</h3>
+      <div class="codeblock"><div class="code-head"><span class="code-lang">python · vision_pdf.py —— 扫描页 → 结构化 JSON</span></div><pre><code class="language-python">"""pip install pymupdf —— 把 PDF 页渲染成图，交给视觉模型"""
+import base64, fitz   # PyMuPDF
+
+def page_to_base64(pdf_path: str, page_no: int, dpi: int = 150) -> str:
+    doc = fitz.open(pdf_path)
+    pix = doc[page_no].get_pixmap(dpi=dpi)   # 扫描件建议 200~300 dpi
+    return base64.b64encode(pix.tobytes("png")).decode()
+
+def parse_page(pdf_path: str, page_no: int, vision_client) -> dict:
+    b64 = page_to_base64(pdf_path, page_no)
+    resp = vision_client.chat.completions.create(
+        model="<支持视觉的模型>", temperature=0,
+        messages=[{"role": "user", "content": [
+            {"type": "text", "text":
+                "解析这页文档，输出 JSON：{title, sections: [{heading, text}], "
+                "tables: [{caption, rows}]}。没有的字段写 null。"},
+            {"type": "image_url", "image_url": {
+                "url": f"data:image/png;base64,{b64}"}},
+        ]}],
+        response_format={"type": "json_object"})
+    import json
+    return json.loads(resp.choices[0].message.content)</code></pre></div>
+      <div class="callout warn">
+        <div class="co-title">引擎与成本的务实提醒</div>
+        <p>① DeepSeek 当前以文本模型见长，视觉调用请接支持视觉的引擎——<b>这正是第 7 章「引擎可插拔」设计的用武之地</b>：视觉解析步骤单独配引擎，其余循环照旧；② 视觉调用按页计费，先让文本层/OCR 路线拦下大部分页面，视觉模型只处理「难页」；③ 解析结果同样要过第 3 章的校验闭环——视觉模型也会幻觉，表格数字尤其要抽查。</p>
+      </div>
+
+      <h3>再往前一步：多模态 Agent</h3>
+      <p>视觉解析只是起点。当模型的输入从文本扩展到图像，Agent 的两个部件随之升级：<b>观察</b>——网页 Agent 的每步观察可以是截图而非 DOM 文本（视觉 Agent 路线），图表类知识终于能被「看懂」而不是被 OCR 碾平；<b>工具</b>——「拍一张照片」「读一张仪表盘」成为新的工具类型。本课程的方法论完全不变：四要素、Agent Loop、上下文工程照旧，只是 Observation 的载体从字符串变成了图文混合——<b>第 1 章的框架，装得下未来的每一种模态。</b></p>
+
+<h2>自测</h2>
+ <details class="quiz"><summary>「公司报销制度」「现在北京几点」「我的课题叫什么」「什么是递归」四个问题，各应由链路中的哪路知识回答？</summary>
+ <div class="quiz-body"><p><span class="ans-label">答案：</span>报销制度 → <b>知识库</b>（私有、相对静态、需要溯源）；现在几点 → <b>工具</b>（实时数据，任何索引都追不上时钟）；我的课题 → <b>记忆</b>（关于用户本人的写入数据）；什么是递归 → <b>参数知识</b>（通用稳定，别浪费检索）。选型错位的典型症状：用知识库回答实时问题（答案永远过期）——判据见 4.0 的表格。</p></div>
+ </details>
+ <details class="quiz"><summary>为什么「整篇文档做一个向量」等于没有检索？这说明了检索系统的什么一般规律？</summary>
+ <div class="quiz-body"><p><span class="ans-label">答案：</span>向量检索返回的是「与问题最相似的块」。若库里只有整篇文档一个块，无论问什么，它都是唯一且必然命中的结果——<b>检索失去了区分度</b>。一般规律：<b>检索的粒度 = 命中的粒度</b>，块的粒度必须与「答案的粒度」匹配（一段说清一件事），这就是切块环节决定 RAG 上限的原因。</p></div>
+ </details>
+ <details class="quiz"><summary>RAG 回答错误时，「先看检索层还是先看生成层」？二分判断的依据是什么？</summary>
+ <div class="quiz-body"><p><span class="ans-label">答案：</span><b>先看检索层</b>。把命中的 Top-K 片段打印出来：正确答案<b>在</b>片段里 → 生成层问题（提示词约束、片段排序、模型能力）；<b>不在</b> → 检索层问题（切块、词面匹配、查询改写、入库缺失）。依据是链路的依赖顺序：生成层只能在检索层给的材料上工作，材料错了改生成层是徒劳的。</p></div>
+ </details>
+
+ <h2>动手练习（带参考答案）</h2>
+
+ <details class="fold"><summary>练习 1 · 给 TinyVectorMemory 加元数据过滤</summary>
+ <div class="fold-body">
+ <p><b>任务：</b>为 <code>search</code> 增加 <code>where: dict | None</code> 参数——命中前先按元数据过滤（如 <code>where={"path": "差旅"}</code> 只在差旅相关块里检索）。这是向量库 metadata filter 的教学版。</p>
+ <div class="codeblock"><div class="code-head"><span class="code-lang">python · 参考答案</span></div><pre><code class="language-python">def search(self, query: str, k: int = 3, where: dict | None = None):
+    q = self._vec(query)
+    def cos(v):
+        dot = sum(q[w] * v.get(w, 0) for w in q)
+        nv = math.sqrt(sum(x * x for x in v.values())) or 1
+        nq = math.sqrt(sum(x * x for x in q.values())) or 1
+        return dot / (nv * nq)
+
+    pool = self.docs
+    if where:   # 先过滤，再排序——过滤是确定性的，必须发生在相似度之前
+        pool = [d for d in self.docs
+                if all(d[0].get(k2) == v2 or
+                       (isinstance(d[0].get(k2), str) and v2 in str(d[0].get(k2)))
+                       for k2, v2 in where.items())]
+    ranked = sorted(pool, key=lambda d: cos(d[2]), reverse=True)[:k]
+    return [{"score": round(cos(v), 3), "text": t, "meta": m}
+            for m, t, v in ranked]
+
+# 用法：kb.search("住宿上限", k=2, where={"path": "差旅"})</code></pre></div>
+ <p><b>要点：</b>元数据过滤是<b>确定性约束</b>（「只在制度类文档里找」），相似度是<b>概率性排序</b>——确定性约束必须先执行。这个优先级和第 5 章压缩器练习的「不可丢信息用确定性手段保住」是同一条工程原则。</p>
+ </div>
+ </details>
+
+ <details class="fold"><summary>练习 2 · 诊断一个真实形态的 RAG 失败</summary>
+ <div class="fold-body">
+ <p><b>任务：</b>知识库录入了《差旅制度 v1》和《差旅制度 v2（新）》。用户问「住宿报销上限」，Agent 回答「300 元」——但 v2 已把一线城市涨到 400。检索评估显示命中了 v2 的块。根因在哪一层？怎么修？</p>
+ <p><b>参考答案：</b>检索层没问题（命中正确），问题出在<b>来源冲突（失败模式 ③）</b>：Top-K 里 v1、v2 的块同时在场，模型选了旧版（或两版都引用了）。修法按彻底程度排序：<br>
+ ① <b>入库管道做版本管理</b>：新版本入库时归档旧版本（元数据标 <code>status: archived</code>），检索默认过滤——根治；<br>
+ ② 检索后<b>按文档日期去重</b>，同一主题只保留最新——快速止血；<br>
+ ③ 系统提示加规则「多版本冲突时采用最新日期版本并向用户说明」——兜底但不彻底（模型判断仍可能失误）。<br>
+ 元技能：这个案例再次验证「先看检索层」的二分法——检索评估通过后，问题自然浮现在「多个正确片段」这个生成层输入上。</p>
+ </div>
+ </details>
+
+ <details class="fold"><summary>练习 3 · 为你的知识库写一份「切块策略决策记录」</summary>
+ <div class="fold-body">
+ <p><b>任务：</b>假设你要为公司的三类文档建知识库：① FAQ（一问一答）、② 产品手册（Markdown 多级标题）、③ 会议记录（长段落口语化）。为每类选择切块策略并说明理由，写出元数据字段设计。</p>
+ <p><b>参考答案：</b></p>
+ <ul>
+ <li>① <b>FAQ：按问答对切块</b>——答案天然自包含，问题文本本身就是最好的检索锚点（可把问题重复拼进块首提升命中率）。元数据：category、更新日期。</li>
+ <li>② <b>产品手册：结构感知切块</b>——标题路径就是天然元数据；大节内句子级二次切分。元数据：title_path、version（产品手册有版本！见练习 2）。</li>
+ <li>③ <b>会议记录：按议题切块</b>——口语化长段落语义松散，按「议题转折点」（新议题/决议/行动项）切；行动项单独抽成小块。元数据：date、attendees、meeting_type。</li>
+ </ul>
+ <p><b>元技能：</b>切块策略没有全局最优，只有「匹配文档结构」的局部最优——<b>先看文档长什么样，再定切法</b>；上线前用 15 行的 hit@k 评估验证决策。这份「决策记录」的写法，就是第 8 章上线清单里「评估先行」的实操形态。</p>
+ </div>
+ </details>
+
+ <div class="callout story">
+ <div class="co-title">下一章预告</div>
+ <p>知识库解决了「世界知识」，但 Agent 还有另一条时间轴上的需求：跨会话记住关于「这个用户」的一切。第 5 章把文件记忆、向量记忆、知识图谱放进完整的记忆谱系，并给出规划、反思与多智能体的全部实现。</p>
+ </div>
+
+ </div>
+ </main>
+</div>
+
+<script src="assets/js/app.js?v=20"></script>
+<script src="assets/js/lab-rag.js?v=19"></script>
+</body>
+</html>

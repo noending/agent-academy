@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="第 1 章：Agent 基础认知——什么是智能体、四要素、Agent Loop、ReAct 与 Function Calling 直觉。">
+<title>第 1 章 · Agent 基础认知 | Agent 学院</title>
+<link rel="stylesheet" href="assets/css/style.css?v=20">
+</head>
+<body data-chapter="ch1">
+
+<header class="topbar">
+ <button class="icon-btn hamburger" id="hamburger" title="打开导航">☰</button>
+ <a class="brand" href="index.html"><span class="logo">学</span> Agent 学院 <small>从零开发智能体 · Ontology · Harness</small></a>
+ <span class="spacer"></span>
+ <span class="progress-pill" id="progress-pill">进度 0/9 章</span>
+ <button class="icon-btn" id="theme-btn">🌙</button>
+</header>
+
+<div class="layout">
+ <aside class="sidebar" id="sidebar"></aside>
+
+ <main class="content">
+ <div class="content-inner">
+
+ <header class="chapter-head">
+ <div class="kicker">CHAPTER 01 · 预计 1.5 小时 · 零代码</div>
+ <h1>Agent <span class="grad">基础认知</span></h1>
+ <p class="lead">
+ 在写第一行代码之前，先建立一个能受用终身的思维模型：<b>智能体到底是怎么「活」起来的？</b>
+ 学完本章，你将能一眼看穿任何一个 AI Agent 产品（包括 ChatGPT 的联网搜索、Claude Code、Devin）的内部结构。
+ </p>
+ <div class="head-meta">
+ <span class="chip">目标：建立 Agent 心智模型</span>
+ <span class="chip">交互实验：Agent Loop 模拟器</span>
+ <span class="chip">自测：5 题</span>
+ <span class="chip">练习：3 题（带参考答案）</span>
+ </div>
+ </header>
+
+ <div class="callout info">
+ <div class="co-title">本章你将学会</div>
+ <p>① Agent 的定义与四要素；② Chatbot / Workflow / Agent 的判断标准；③ Agent Loop 的运作机制；④ ReAct 范式；⑤ Function Calling 的工作直觉——以及一个大多数人都有过的误解。</p>
+ </div>
+
+ <h2>1.1 什么是智能体？</h2>
+ <p>
+ 先给一个<b>直觉定义</b>：智能体（Agent）是一个能<b>自主使用工具、多步推进任务</b>的 AI 系统。
+ 再给一个<b>严格一点</b>的定义（来自 Anthropic 的《Building Effective Agents》）：
+ </p>
+ <div class="callout key">
+ <div class="co-title">定义</div>
+ <p>Agent 是这样一类系统：LLM <b>动态地决定自己的处理过程与工具使用</b>，对完成任务的方式保有控制权，而不是按人写死的步骤执行。</p>
+ </div>
+ <p>拆开看，任何 Agent 都由四个要素组成——记住这个「四件套」，后面每一章都在给它们加深细节：</p>
+
+ <div class="grid2">
+ <div class="card"><span class="emoji"></span><h4>LLM · 大脑</h4><p>负责理解、推理、决策。它不执行任何操作，只负责「想」：下一步该做什么？调用哪个工具？任务完成了吗？</p></div>
+ <div class="card"><span class="emoji"></span><h4>Tools · 手脚</h4><p>搜索、读写文件、调 API、执行代码……工具让模型突破「只会说话」的边界，能对真实世界产生影响。</p></div>
+ <div class="card"><span class="emoji"></span><h4>Loop · 生命周期</h4><p>思考 → 行动 → 观察 → 再思考……循环往复，直到任务完成。这是 Agent 区别于「一问一答」的根本特征。</p></div>
+ <div class="card"><span class="emoji"></span><h4>Memory · 状态</h4><p>短期记忆是不断增长的对话历史；长期记忆可以是向量库、文件，甚至知识图谱（第 5、6 章展开）。</p></div>
+ </div>
+
+ <div class="callout story">
+ <div class="co-title">一个对比感受</div>
+ <p>问 Chatbot「帮我订明天去上海的机票」→ 它只能输出一段文字："好的，建议您打开航空公司官网……"<br>
+ 问 Agent 同样的问题 → 它调用航班查询工具 → 比价 → 调用订票工具 → 消息你"已订好 MU5101，靠窗座位"。<br>
+ <b>Chatbot 负责说，Agent 负责做成。</b></p>
+ </div>
+
+ <h2>1.2 Chatbot · Workflow · Agent：一张判定表</h2>
+ <p>不是所有系统都叫 Agent。业界（沿用 Anthropic 的区分）通常划成三类，判定标准只有一个——<mark>控制流由谁决定？</mark></p>
+
+ <div class="tbl-wrap"><table class="tbl">
+ <tr><th></th><th>Chatbot 对话</th><th>Workflow 工作流</th><th>Agent 智能体</th></tr>
+ <tr><td><b>控制流</b></td><td>用户每问一次，模型答一次</td><td><b>开发者写死的代码</b>决定步骤顺序</td><td><b>模型自己</b>决定下一步做什么</td></tr>
+ <tr><td><b>工具使用</b></td><td>无或固定</td><td>每个节点绑定固定工具</td><td>从工具清单里自主挑选</td></tr>
+ <tr><td><b>步骤数</b></td><td>1</td><td>预定（有限）</td><td>不预定（由任务难度决定）</td></tr>
+ <tr><td><b>典型例子</b></td><td>客服问答、翻译</td><td>「先分类 → 再检索 → 再生成」的固定管道</td><td>Claude Code、Devin、深度研究类产品</td></tr>
+ <tr><td><b>成本 / 可控性</b></td><td>最低 / 最高</td><td>可预测、易调试</td><td>最灵活，但最难预测</td></tr>
+ </table></div>
+
+ <div class="callout tip">
+ <div class="co-title">实用建议：能用 Workflow 就别上 Agent</div>
+ <p>Anthropic 在同一篇文章里反复强调：Agent 的自主性是一把双刃剑——更贵、更慢、更难调试。<b>当任务的步骤可以被预见时，写死的 Workflow 更便宜、更稳定</b>；只有开放性、步数不可预知的任务（"修复这个 bug 并通过测试"）才值得上 Agent。</p>
+ </div>
+
+ <h2>1.3 引擎的核心：Agent Loop</h2>
+ <p>剥掉所有包装，Agent 的「发动机」就是一个几十行代码的循环：</p>
+
+ <div class="flow">
+ <span class="flow-node accent">用户任务</span><span class="flow-arrow">→</span>
+ <span class="flow-node"> 思考</span><span class="flow-arrow">→</span>
+ <span class="flow-node"> 行动</span><span class="flow-arrow">→</span>
+ <span class="flow-node"> 观察</span><span class="flow-arrow">→</span>
+ <span class="flow-node loop">未完成？回到 思考</span><span class="flow-arrow">⤴</span>
+ <span class="flow-node accent">完成 → 输出</span>
+ <div class="flow-note">Loop：模型每次都能看到之前所有的思考、行动与观察，再决定下一步</div>
+ </div>
+
+ <p>用伪代码写出来只有 10 行——这<b>不是比喻，真实 Agent 框架的核心就这么简单</b>：</p>
+
+ <div class="codeblock"><div class="code-head"><span class="code-lang">pseudo · agent loop 伪代码</span></div><pre><code class="language-python">messages = [system_prompt, user_task]
+while True:
+    reply = llm(messages, tools=tool_schemas)   # ① 模型看着全部历史做决策
+    if reply.requires_tool:                     # ② 模型说：我要用某工具
+        result = execute_tool(reply.tool_name, reply.tool_args)  # ③ 你的代码去执行
+        messages.append(reply, tool_result)     # ④ 观察结果送回历史
+    else:                                       # ⑤ 不再需要工具 = 任务完成
+        return reply.final_answer</code></pre></div>
+
+ <div class="callout key">
+ <div class="co-title">本章最重要的一个观点</div>
+ <p>市面上的 LangChain、OpenAI Agents SDK、Claude Code……一切 Agent 框架，都是<b>这个循环 + 周边工程</b>的变体。把循环刻进脑子里，框架对你而言只是「不同牌子的发动机外壳」。</p>
+ </div>
+
+ <h2>1.4 ReAct：让模型边想边做</h2>
+ <p>
+ 2022 年论文《ReAct: Synergizing Reasoning and Acting in LLMs》（Yao et al.）确立了今天几乎所有 Agent 都在用的范式：
+ 让模型在<b>行动之前显式写出推理过程</b>，即 Thought（想）→ Action（做）→ Observation（看）的交替序列。
+ </p>
+
+ <div class="codeblock"><div class="code-head"><span class="code-lang">text · 一段典型的 ReAct 轨迹</span></div><pre><code>任务：帮我查 ArXiv 2201.11903 这篇论文的作者人数
+
+Thought 1: 我需要先检索这篇论文的信息 →
+Action 1:  search(query="arXiv 2201.11903")
+Observation 1: 《Chain-of-Thought Prompting…》, 8 位作者…
+
+Thought 2: 已找到论文条目，作者数可直接回答 →
+…（直接给出最终答案）</code></pre></div>
+
+ <p>为什么把推理「写出来」这么有效？两个原因：</p>
+ <ul>
+ <li><b>外化的思考可以纠错。</b>模型每一步都能重新审视自己的 Thought，用户和开发者也能定位是哪一步想错了（可解释性）。</li>
+ <li><b>行动有据可依。</b>没有 Thought 直接给 Action 的模型，工具选择更随机；先写理由再选工具，准确率显著更高——这是论文的核心实验结论。</li>
+ </ul>
+ <div class="callout info">
+ <div class="co-title">现代实现里 ReAct 去哪了？</div>
+ <p>今天的 Function Calling 接口里你看不到 "Thought:" 字样，但它换了个形态活着：模型在决定 <code>tool_calls</code> 前的内部推理（DeepSeek-Reasoner 会把这部分作为 <code>reasoning_content</code> 返回给你看）就是 Thought。范式没变，接口变优雅了。</p>
+ </div>
+ <div class="callout story">
+ <div class="co-title">论文精读入口</div>
+ <p>本章两大范式的原始论文：<b>ReAct</b>（1.3/1.4 节的出处，含「去掉 Thought 掉分」的关键消融实验）与 <b>Chain-of-Thought</b>（一切「先想再做」的起点）——按统一模板拆解见 <a href="papers.html#react">论文精读页</a>，逐段中译见 <a href="translations.html#zh-react">中文精读版</a>。</p>
+ </div>
+
+ <h2>1.5 Function Calling：模型只是「点名」，从不亲自动手</h2>
+ <p>工具调用的完整流程是三步，请特别注意第二步的执行者：</p>
+
+ <ol class="steps">
+ <li><b>声明</b><p>你的代码把每个工具的「说明书」（名字、功能描述、参数的 JSON Schema）随请求发给模型。</p></li>
+ <li><b>决策</b><p>模型<b>不执行任何东西</b>，只返回一个「调用意图」：<code>{"name": "get_weather", "arguments": '{"city":"北京"}'}</code>。这就是最常见的误解所在——模型没有上网，没有查天气，它只是「点名」要用这个工具。</p></li>
+ <li><b>执行与回填</b><p><b>你的代码</b>（也就是未来的 Harness，见第 7 章）真正执行该工具，把结果作为消息追加回对话，再请模型继续。</p></li>
+ </ol>
+
+ <div class="callout warn">
+ <div class="co-title">消灭一个流传最广的误解</div>
+ <p>「调用 get_weather 工具」≠「模型去查了天气」。模型自始至终只输出文字（结构化的文字）。<b>执行永远发生在你的运行时里。</b>理解这一点，你就理解了为什么「工具实现的质量」和「模型的质量」同样重要。</p>
+ </div>
+
+ <h2>交互实验：亲手运行一个 Agent Loop</h2>
+ <p>下面是一个真实 Agent Loop 的逐步模拟。建议这样玩：</p>
+ <ol>
+ <li><b>先关掉「启用工具」</b>，单步执行——观察模型面对实时问题时的表现（剧透：它会幻觉）。</li>
+ <li><b>再打开「启用工具」</b>，看同一个问题如何被「思考 → 行动 → 观察」的循环解决。</li>
+ <li>注意紫色思考气泡里的推理如何决定下一步行动——这就是 ReAct。</li>
+ </ol>
+
+ <div class="lab" id="lab-agent-loop">
+ <div class="lab-head"> 交互实验 <span class="lab-tag">AGENT LOOP 模拟器</span></div>
+ <div class="lab-body">
+ <div class="lab-toolbar">
+ <label class="switch-row">
+ <input type="checkbox" id="sim-use-tools" checked>
+ <span class="switch-track"></span>
+ <span class="sw-label"> 启用工具（get_weather / add_reminder）</span>
+ </label>
+ <span style="flex:1"></span>
+ <button class="btn primary" data-act="play">▶ 自动播放</button>
+ <button class="btn" data-act="step">⏭ 单步</button>
+ <button class="btn" data-act="reset">↺ 重置</button>
+ </div>
+ <div class="trace"></div>
+ <div class="status-line">
+ <span class="sim-status">状态：<b>待启动</b></span>
+ <span class="sim-step">步骤 0</span>
+ </div>
+ </div>
+ </div>
+
+ <div class="callout tip">
+ <div class="co-title">实验里该观察什么</div>
+ <p>① 无工具时，模型的「自信错误」——输出语气笃定但内容是编的，这叫<b>幻觉（hallucination）</b>，是工具存在的根本理由；② 两轮循环的分工：第一轮「获取信息」，第二轮「基于信息再行动」；③ 终止时机由<b>模型自己</b>判断，不是写死的。</p>
+ </div>
+
+ <h2>1.6 什么时候该用 / 不该用 Agent</h2>
+ <ul class="checklist">
+ <li>任务开放、步骤无法预先枚举（"调研并写一份报告"）→ <b>适合 Agent</b></li>
+ <li>需要组合多种工具、且组合方式依输入而变 → <b>适合 Agent</b></li>
+ <li>步骤固定可枚举（"分类 → 检索 → 生成"）→ <b>用 Workflow，更便宜稳定</b></li>
+ <li>一次回答即可解决（翻译、总结、改写）→ <b>普通 LLM 调用就够</b></li>
+ <li>任务会产生不可逆的高危操作 → <b>必须加权限控制（第 7 章）或人在环</b></li>
+ </ul>
+
+ <div class="callout tip">
+        <div class="co-title">推荐视频 · 配合本章食用</div>
+        <p>
+          <b>Karpathy《Deep Dive into LLMs like ChatGPT》</b>（3.5h，2025）——从预训练讲到 RLHF，覆盖本章全部概念的深读版。<br>
+          <a href="https://www.youtube.com/watch?v=7xTGNNLPyMI" target="_blank" rel="noopener">YouTube</a> ·
+          <a href="https://search.bilibili.com/all?keyword=Karpathy%20Deep%20Dive%20LLM" target="_blank" rel="noopener">B 站搜索</a><br>
+          <b>Anthropic 工程师访谈</b>——谈 Workflow vs Agent 判定原则。<br>
+          <a href="https://search.bilibili.com/all?keyword=Anthropic%20building%20effective%20agents" target="_blank" rel="noopener">B 站搜索</a>
+        </p>
+      </div>
+
+ <h2>1.7 Agent 生态全景：现在都有谁、在做什么</h2>
+ <p>带着四要素的透镜看市场，你会发现所有产品都是同一个模型的不同装配方式。认识它们，一是为了开阔思路，二是为了<b>在你自己动手时有「参考答案」可抄</b>：</p>
+
+ <div class="tbl-wrap"><table class="tbl">
+ <tr><th>类别</th><th>代表</th><th>解决什么</th><th>拆开看（四要素）</th></tr>
+ <tr><td><b>编码 Agent</b></td><td>Claude Code、Cursor Agent、Aider、Pi Agent</td><td>读懂代码库、改代码、跑测试直到通过</td><td>大脑：强推理模型；工具：读写文件 / 执行命令 / 搜索；循环：改→跑测试→再改；记忆：会话历史 + 项目文件</td></tr>
+ <tr><td><b>通用任务 Agent</b></td><td>ChatGPT Agent、Manus</td><td>跨应用的开放式任务（订票、比价、做报告）</td><td>工具：浏览器 / 虚拟机 / 代码执行；通常带「计划文件」外置记忆</td></tr>
+ <tr><td><b>深度研究</b></td><td>Deep Research 类产品</td><td>多轮检索并综合成长报告</td><td>常是 Workflow + Agent 混合：计划定死大框架，检索子步骤由模型自主展开</td></tr>
+ <tr><td><b>企业流程 Agent</b></td><td>各类客服 / 运营 / 数据 Agent</td><td>接单、查库、填表、升级人工</td><td>工具：内部 API；重权限与审计；大多严格限制步数</td></tr>
+ <tr><td><b>造 Agent 的框架</b></td><td>LangGraph、OpenAI Agents SDK、CrewAI</td><td>帮你搭「循环 + 工具 + 编排」</td><td>它们不是 Agent，是 Harness 的现成零件包（第 7 章详谈）</td></tr>
+ </table></div>
+
+ <div class="callout tip">
+ <div class="co-title">分析任意 Agent 产品的三连问</div>
+ <p>① 它的<b>大脑</b>是什么模型（决定推理上限）？② 它有<b>哪些工具</b>、工具描述写得如何（决定能力边界）？③ 它的<b>循环</b>怎么终止、有没有步数限制（决定成本与风险）？答完这三问，一个产品你就算「看懂」了——剩下的差异都在 Harness 工程细节里。</p>
+ </div>
+
+ <h2>自测</h2>
+ <p>先自己回答，再点开看解析。</p>
+
+ <details class="quiz"><summary>Agent 与 Workflow 最本质的区别是什么？</summary>
+ <div class="quiz-body"><p><span class="ans-label">答案：</span><b>控制流由谁决定</b>。Workflow 的步骤顺序由开发者写死在代码里；Agent 由模型在运行时自主决定下一步做什么、用哪个工具、何时结束。因此 Workflow 可预测、易调试，Agent 灵活但行为不可完全预知。</p></div>
+ </details>
+ <details class="quiz"><summary>模型输出 tool_calls 之后，是谁去真正执行工具？为什么这样设计？</summary>
+ <div class="quiz-body"><p><span class="ans-label">答案：</span>是<b>你的运行时代码</b>（Harness），模型从不执行工具。这样设计是因为：模型只能生成文本，没有任何对外通道；同时把「执行权」留在代码层，才能做权限校验、沙箱隔离、审计日志——这是安全性的根基（第 7 章详谈）。</p></div>
+ </details>
+ <details class="quiz"><summary>ReAct 中的 Observation 从哪里来？它对模型意味着什么？</summary>
+ <div class="quiz-body"><p><span class="ans-label">答案：</span>Observation 是工具执行后返回的真实世界反馈，由运行时回填进对话历史。它对模型意味着<b>「事实的锚点」</b>：模型的后续推理必须建立在自己真的看到过的数据上，而不是训练记忆或想象。Observation 的质量（是否信息密集、是否可读）直接决定下一轮决策质量。</p></div>
+ </details>
+
+ <details class="quiz"><summary>为什么「先写 Thought 再选工具」比直接让模型给 Action 更准确？</summary>
+ <div class="quiz-body"><p><span class="ans-label">答案：</span>外化的推理相当于强迫模型<b>先构建理由、再输出决策</b>，两者在同一个上下文里互相约束：写出的理由会暴露错误假设（可被下一步修正），也让工具选择有据可循而不是参数式地「猜」。ReAct 论文的核心实验就是这一点的对照验证。此外，显式 Thought 让开发者能定位错在哪一步，调试价值巨大。</p></div>
+ </details>
+ <details class="quiz"><summary>「每天早上 9 点拉取昨天的销售数据、生成周报、发邮件给固定列表」——该用 Agent 还是 Workflow？如果需求改成「分析这份销售数据，找出值得注意的变化并写一份给我老板看的报告」呢？</summary>
+ <div class="quiz-body"><p><span class="ans-label">答案：</span>第一问用 <b>Workflow</b>：步骤固定、顺序固定、输入输出格式固定——写死代码更便宜、稳定、可审计，用 Agent 反而引入不必要的不可预测性。第二问值得用 <b>Agent</b>：「值得注意的变化」无法枚举，分析路径取决于数据本身，模型需要自主决定查什么、对比什么、怎么组织——这是开放性任务的特征。</p></div>
+ </details>
+
+ <h2>动手练习（带参考答案）</h2>
+ <p>练习是检验「会不会」的唯一标准。先自己完成，再展开参考答案对照。</p>
+
+ <details class="fold"><summary>练习 1 · 用四要素拆解一个你天天在用的 AI 产品</summary>
+ <div class="fold-body">
+ <p><b>任务：</b>任选一个你用过的 AI 产品（比如某个 AI 客服、ChatGPT 的联网搜索、你手机里的 AI 助手），写出它的四要素清单。答不出工具和循环的，说明它可能根本不是 Agent。</p>
+ <p><b>参考答案（以「ChatGPT 联网搜索」为例）：</b></p>
+ <ul>
+ <li> 大脑：GPT 系列模型；</li>
+ <li> 工具：search（网页检索）+ browse（打开并阅读具体网页）——通常就这两个，少而正交；</li>
+ <li> 循环：问 → 决定搜什么 → 看结果 → 不够再搜 → 综合作答，一般 2~5 轮；</li>
+ <li> 记忆：仅本次会话历史，无跨会话长期记忆（所以它记不住你上周问过什么）。</li>
+ </ul>
+ <p>如果你拆的产品工具栏是空的、永远一步作答——那它是个 Chatbot，不是 Agent。<b>会判断「是不是 Agent」本身就是本章的核心技能。</b></p>
+ </div>
+ </details>
+
+ <details class="fold"><summary>练习 2 · 五个场景的选型判定</summary>
+ <div class="fold-body">
+ <p><b>任务：</b>对每个场景判断用「普通 LLM 调用 / Workflow / Agent」，一句话说理由。</p>
+ <ol>
+ <li>把用户输入的地址标准化成省 / 市 / 区三级字段。</li>
+ <li>客服系统：先识别意图，退换货走固定流程，咨询类回答知识库问题。</li>
+ <li>「帮我调研三款洗碗机的差异并给出购买建议」。</li>
+ <li>把上传的 PDF 摘要成 100 字。</li>
+ <li>「把这个仓库里所有用到旧版 API 的地方迁移到新版，并保证测试通过」。</li>
+ </ol>
+ <p><b>参考答案：</b></p>
+ <ol>
+ <li>普通 LLM 调用（或干脆正则 + 地址库）：一步、格式固定，模型只做一次格式转换。</li>
+ <li>Workflow：意图分类节点 + 两条固定管道；退换货流程绝不该让模型即兴发挥。</li>
+ <li>Agent（或 Workflow+Agent 混合）：调研路径取决于搜到什么，步数不可预知。</li>
+ <li>普通 LLM 调用：一步任务。</li>
+ <li>Agent：典型开放任务，Claude Code 类产品的核心场景。</li>
+ </ol>
+ <p>规律：五题里只有两题值得上 Agent——<b>现实业务里大部分需求都不需要 Agent，克制是美德。</b></p>
+ </div>
+ </details>
+
+ <details class="fold"><summary>练习 3 · 改造 Agent Loop：支持「用户中途补充输入」</summary>
+ <div class="fold-body">
+ <p><b>任务：</b>修改 1.3 的伪代码，使得循环进行中用户发来的新消息（比如「对了，改成经济舱」）能被模型看到。只用伪代码，5 行以内。</p>
+ <div class="codeblock"><div class="code-head"><span class="code-lang">pseudo · 参考答案</span></div><pre><code class="language-python">messages = [system_prompt, user_task]
+while True:
+    for new_msg in poll_user_inbox():        # 每轮循环开始前，检查用户是否插话
+        messages.append({"role": "user", "content": new_msg})
+    reply = llm(messages, tools=tool_schemas)
+    ...  # 其余不变：新消息自然进入模型视野，影响后续决策</code></pre></div>
+ <p><b>要点：</b>插话本质上就是往 messages 数组追加一条 user 消息。真正的产品（如 Claude Code 的 Esc 打断）做的都是这件事，外加「打断当前工具执行」的取消逻辑。你会发现所有改动都发生在 <b>harness 层</b>——模型一行不用改，这就是第 7 章的主题。</p>
+ </div>
+ </details>
+
+ <div class="callout story">
+ <div class="co-title">下一章预告</div>
+ <p>概念已经就位——下一章我们把它变成真的：用 DeepSeek API 亲手写出你的第一个能查天气、设提醒的智能体，并读懂 Function Calling 消息数组里的每一个字节。</p>
+ </div>
+
+ </div>
+ </main>
+</div>
+
+<script src="assets/js/app.js?v=20"></script>
+<script src="assets/js/lab-agent.js?v=19"></script>
+</body>
+</html>

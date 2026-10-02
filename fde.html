@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="FDE 能力地图：如何通过 Agent 学院成为优秀的前置部署工程师（Forward Deployed Engineer）——课程与能力的完整映射、企业级补齐清单与 90 天养成计划。">
+<title>FDE 能力地图 | Agent 学院</title>
+<link rel="stylesheet" href="assets/css/style.css?v=20">
+</head>
+<body data-chapter="fde">
+
+<header class="topbar">
+  <button class="icon-btn hamburger" id="hamburger" title="打开导航">☰</button>
+  <a class="brand" href="index.html"><span class="logo">学</span> Agent 学院 <small>从零开发智能体 · Ontology · Harness</small></a>
+  <span class="spacer"></span>
+  <span class="progress-pill" id="progress-pill">进度 0/9 章</span>
+  <button class="icon-btn" id="theme-btn">🌙</button>
+</header>
+
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <main class="content">
+    <div class="content-inner">
+
+      <header class="chapter-head">
+        <div class="kicker">CAREER · 从「学完」到「上岗」</div>
+        <h1>FDE <span class="grad">能力地图</span></h1>
+        <p class="lead">
+          FDE（Forward Deployed Engineer，前置部署工程师）是 OpenAI、Anthropic、Palantir 增长最快的岗位：
+          <b>驻在客户现场，把通用模型能力转化为可交付、可维护、可续约的智能体系统</b>——工程 50% + 方案设计 25% + 客户沟通 25%。
+          本页把课程的每一章映射到 FDE 的能力栈，标出课程之外的补齐清单，并给出一个 90 天养成计划。
+        </p>
+        <div class="head-meta">
+          <span class="chip">🎯 目标：课程 → 岗位能力的完整映射</span>
+          <span class="chip">📋 企业级交付清单</span>
+          <span class="chip">🗓 90 天计划</span>
+        </div>
+      </header>
+
+      <h2>① 什么是 FDE，为什么现在值得成为 FDE</h2>
+      <p>FDE 最早由 Palantir 大规模实践（其 AIP 部署团队就是这个模型），如今 OpenAI 与 Anthropic 的客户成功工程团队都在批量招聘。它与传统后端工程师的分野在于：</p>
+      <div class="tbl-wrap"><table class="tbl">
+        <tr><th></th><th>传统后端工程师</th><th>FDE</th></tr>
+        <tr><td><b>交付物</b></td><td>确定性系统：输入定了输出就定了</td><td><b>概率性系统</b>：要为「回答质量」这种模糊指标建立度量与回归</td></tr>
+        <tr><td><b>需求来源</b></td><td>产品经理转译的 PRD</td><td><b>直接面对客户</b>：从模糊的业务诉求中拆出可验收的技术方案</td></tr>
+        <tr><td><b>核心难点</b></td><td>正确性、性能、并发</td><td>可靠性、幻觉治理、<b>数据合规</b>、期望管理</td></tr>
+        <tr><td><b>护城河</b></td><td>架构与编码深度</td><td><b>「敢承诺指标」</b>：敢对客户说「准确率 ≥ 85%，达不到不收费」——背后是评估体系（第 8 章）</td></tr>
+      </table></div>
+
+      <h2>② 课程 ↔ FDE 能力栈：完整映射</h2>
+      <div class="tbl-wrap"><table class="tbl">
+        <tr><th>FDE 能力</th><th>课程覆盖</th><th>企业场景</th><th>你的作品集产出</th></tr>
+        <tr><td><b>① 场景拆解</b><br>把业务诉求变成可验收方案</td><td>第 1 章（Workflow vs Agent 判定）、第 6 章（七步法的 competency questions）</td><td>客户说「我们想上 AI 客服」→ 你产出 10 个验收问题 + 技术选型表</td><td>第 1 章练习 2 的五场景判定 + 毕业项目的需求文档</td></tr>
+        <tr><td><b>② 知识工程</b><br>企业数据 → 可检索资产</td><td>第 4 章全链路（切块/嵌入/检索/失败诊断）、第 6 章（本体与抽取管线）、4.7（PDF 视觉解析）</td><td>把客户 2 万份合同/手册/SOP 建成带权限的知识库</td><td>毕业项目 M1+M3 的入库管线 + 检索评估报告</td></tr>
+        <tr><td><b>③ Agent 构建</b></td><td>第 1–3 章（循环/工具/提示词）、第 5 章（记忆/规划/多智能体）</td><td>工单分派 Agent、研报生成 Agent、运维巡检 Agent</td><td>第 2 章 minimal agent + 第 5 章 orchestrator 改造版</td></tr>
+        <tr><td><b>④ 可靠性工程</b><br><b>（FDE 的护城河）</b></td><td>第 8 章全章（五步定位法、评估集三层、LLM-as-Judge）</td><td>向客户承诺「意图分类准确率 ≥ 90%」并用回归守住</td><td>毕业项目 M4 的 20 条评估集 + 通过率时间线</td></tr>
+        <tr><td><b>⑤ 安全与合规</b></td><td>第 5 章（权限/注入防线）、第 7 章（权限分级/沙箱/自托管）、第 6 章（Palantir 治理模型）</td><td>「数据不出域」的私有化部署；高危操作审批流</td><td>毕业项目的 confirm 审批流 + 沙箱改造</td></tr>
+        <tr><td><b>⑥ 成本与运维</b></td><td>第 6 章（CostMeter/路由）、第 8 章（上线清单/飞轮）</td><td>向 CFO 解释单据处理成本；设置日预算熔断</td><td>CostMeter 接入毕业项目 + 成本报告</td></tr>
+        <tr><td><b>⑦ 产品化交付</b><br>客户可用的界面</td><td>第 8 章（Gradio / FastAPI 骨架）——<b>课程覆盖到内部工具级</b>，客户级见 §④ 拼图一</td><td>从内部 demo 到客户员工天天用的系统</td><td>毕业项目 M4 的 Web 界面</td></tr>
+        <tr><td><b>⑧ 论文级判断力</b></td><td>论文四层阅读体系（8 篇全文翻译）</td><td>能在客户面前讲清「为什么这样设计、依据是什么」</td><td>你的精读笔记（本身就是面试材料）</td></tr>
+      </table></div>
+      <div class="callout key">
+        <div class="co-title">🔑 读表的方法</div>
+        <p>FDE 面试官最想看到的不是「学过什么」，而是<b>「做过什么、指标是多少」</b>。右边「作品集产出」一列就是你的作业：把毕业项目 + 各章练习整理成一个 GitHub 仓库 + 一页 README（含评估指标截图），这份材料比任何证书都有说服力。</p>
+      </div>
+
+      <h2>③ 课程设计的对标：借鉴与独有</h2>
+      <div class="seg seg-method">
+        <div class="seg-label">对标 · 我们站在谁的肩膀上</div>
+        <div class="seg-zh">课程设计明确借鉴了五条主流路线：<b>DeepLearning.AI</b> 的「每章必有可运行产物」、<b>HuggingFace Agents Course</b> 的「单元 + 自测 + 结业考核」结构、<b>Anthropic《Building Effective Agents》</b> 的 Workflow/Agent 判定与「简单优先」原则、<b>Chip Huyen《AI Engineering》</b> 的「评估先行」工程立场、<b>Karpathy Zero-to-Hero</b> 的从零手写哲学（应用到 Agent 层）。第 6 章的 Palantir 主线则对标其 AIP Bootcamp 的企业部署实践。</div>
+        <div class="seg-zh" style="margin-top:10px">本站的独有增补：<b>论文四层阅读体系</b>（主流课程不做系统论文伴读）、<b>中文原生工程语境</b>（中文 token 成本、BGE 嵌入选型、中文知识库案例）、<b>Ontology 以 Palantir 为主线</b>、以及<b>纯静态零依赖</b>——课程本身就是一个部署成品。</div>
+        <div class="seg-zh" style="margin-top:10px">诚实差距：无社区与证书、无视频、框架实操偏浅（LangGraph 只读不练）、CI 中跑评估的协作场景未覆盖、多模态/语音 Agent 无实操——这些正是下面拼图清单要补的。</div>
+      </div>
+
+      <h2>④ 课程之外的五块拼图</h2>
+      <ol class="steps">
+        <li><b>企业级前端：从 Gradio 到 React + SSE</b>
+          <p>课程交付到「内部工具级」。客户级系统还差三步：<b>① 服务端流式</b>——FastAPI 用 SSE 逐 token 推送（代码见下）；<b>② 前端消费流</b>——React 里用 fetch + ReadableStream 渲染打字机效果；<b>③ 会话与权限 UI</b>——登录态（SSO/OAuth）、会话列表、工具审批卡片。前端不必精通，但要能独立交付一个「能流式对话、能审批、能看历史」的界面。</p>
+          <div class="codeblock"><div class="code-head"><span class="code-lang">javascript · 前端消费 SSE 流（20 行核心）</span></div><pre><code class="language-javascript">async function chat(message, onDelta) {
+  const res = await fetch("/chat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ message, session_id }),
+  });
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buf = "";
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buf += decoder.decode(value, { stream: true });
+    const lines = buf.split("\n\n"); buf = lines.pop();
+    for (const line of lines) {
+      if (!line.startsWith("data: ")) continue;
+      const payload = line.slice(6);
+      if (payload === "[DONE]") return;
+      onDelta(JSON.parse(payload).delta);   // 逐 token 上屏
+    }
+  }
+}</code></pre></div>
+          <p class="small-note">服务端对应第 8 章的 StreamingResponse 骨架——前后端合起来就是一条完整的流式链路。</p></li>
+        <li><b>数据工程基础</b>
+          <p>企业知识不躺在 PDF 里，躺在<b>数据库和数仓</b>里。SQL 要能熟练读写（JOIN/窗口函数），了解 CDC 增量同步（Debezium 类工具）与 Airflow 级别的调度概念——FDE 的一半时间在与客户的数据库打交道。</p></li>
+        <li><b>云与交付基建</b>
+          <p>Docker 容器化（把毕业项目写进 Dockerfile）、云函数/容器服务部署、<b>SSO/OAuth 对接</b>（客户的登录体系你无法绕过）、密钥管理（Vault/云 KMS）、日志与告警。这门课刻意零依赖，企业里这些是标配。</p></li>
+        <li><b>行业纵深</b>
+          <p>FDE 的溢价来自「行业 × Agent」的组合。选一个行业深耕半年：金融（合规审查、研报）、医疗（病历结构化、随访）、制造（工单、质检）、法律（合同审查）。行业术语表本身就是一个值得建的小本体（第 6 章练习 1 的放大版）。</p></li>
+        <li><b>沟通与演示</b>
+          <p>FDE 的独特技能：<b>用 demo 卖方案</b>（一个 5 分钟可复现的演示胜过 30 页 PPT）、期望管理（把「准确率 85%」讲成客户能理解的业务语言）、以及把客户的模糊抱怨转写为评估用例的能力（第 8 章「用户反馈 → 回归层」的对外版本）。</p></li>
+      </ol>
+
+      <h2>⑤ 90 天 FDE 养成计划</h2>
+      <ol class="steps">
+        <li><b>第 1–30 天 · 完成课程主线</b>
+          <p>9 章全部学完，练习做一半，自测全过；毕业项目四个里程碑验收通过。产出：ScholarMate 仓库（含评估集与 Trace）。</p></li>
+        <li><b>第 31–60 天 · 把毕业项目「企业化」</b>
+          <p>① FastAPI 服务化 + SSE 流式 + React（或 Gradio 升级版）前端；② Docker 化 + 云上部署（哪怕一台最便宜的云主机）；③ 加 SSO 登录与操作审计日志；④ CI 里每天自动跑评估集并出报告；⑤ 写一页「部署架构图 + 成本模型」。<b>产出：一个公网可访问、带权限、有评估看板的系统。</b></p></li>
+        <li><b>第 61–90 天 · 做一个真实交付</b>
+          <p>找一个真实场景（你公司的内部流程、家人的小生意、社团的管理事务），完整走一遍 FDE 流程：客户访谈 → competency questions → 知识库 + Agent → 评估集 → 上线 → 收集反馈迭代两轮。<b>产出：一份 case study（问题 → 方案 → 指标 → 客户证言）</b>——这就是 FDE 岗位面试的核心材料。</p></li>
+      </ol>
+      <div class="callout tip">
+        <div class="co-title">✅ 面试准备清单</div>
+        <p>FDE 面试高频题与你的弹药：①「怎么处理幻觉」→ 第 4 章失败模式 + ReAct 论文的 0% vs 56% 数据；②「怎么保证质量不回退」→ 第 8 章评估集三层结构；③「怎么算成本」→ CostMeter + 前缀缓存；④「数据安全怎么办」→ 权限分级 + 沙箱 + 自托管；⑤「给我们设计一个 XX Agent」→ 现场走一遍 competency questions 方法论。<b>每一题都有本站的章节与论文背书。</b></p>
+      </div>
+
+      <h2>⑦ 能力成绩单：八维雷达（随实训点亮）</h2>
+      <p>进度不该是「读了几章」，而是「能干什么」。八项能力各对应一份<b>实训产出</b>，完成勾选后雷达点亮。数据存浏览器本地。</p>
+      <div class="score-wrap">
+        <div class="score-radar">
+          <svg id="radar" viewBox="0 0 320 280" style="width:100%;max-width:360px"></svg>
+        </div>
+        <div id="comp-list" class="comp-list"></div>
+      </div>
+      <script>
+      (function () {
+        const COMPS = [
+          { k: "scene",  n: "场景拆解",   items: ["完成第 1 章练习 2 五场景判定", "为真实场景写出 10 条验收问题"] },
+          { k: "know",   n: "知识工程",   items: ["完成第 4 章知识库管线", "检索评估 hit@k ≥ 0.8", "Brief 1 · M1 验收通过"] },
+          { k: "agent",  n: "Agent 构建", items: ["第 2 章 minimal agent 跑通", "第 5 章 orchestrator 跑通", "Brief 任一 · M2 验收通过"] },
+          { k: "rely",   n: "可靠性工程", items: ["评估集 ≥ 20 条", "通过率 ≥ 85% 有存档", "完成 Trace 侦探实验"] },
+          { k: "sec",    n: "安全与合规", items: ["权限分级实现", "沙箱或内网部署", "合规专项评估通过"] },
+          { k: "cost",   n: "成本与运维", items: ["CostMeter 接入", "成本模型表交付", "日预算熔断实现"] },
+          { k: "ship",   n: "产品化交付", items: ["公网可访问", "流式对话界面", "SSE 或 Gradio"] },
+          { k: "comm",   n: "沟通与演示", items: ["5 分钟 demo 完成", "case study 一份"] },
+        ];
+        const KEY = "fde-scorecard";
+        let state = {};
+        try { state = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch (e) { state = {}; }
+
+        const svg = document.getElementById("radar");
+        const list = document.getElementById("comp-list");
+        const CX = 160, CY = 140, R = 100, N = COMPS.length;
+
+        function pt(i, r) {
+          const a = -Math.PI / 2 + i * 2 * Math.PI / N;
+          return [CX + r * Math.cos(a), CY + r * Math.sin(a)];
+        }
+        function frac(comp) {
+          const done = (state[comp.k] || []).length;
+          return done / comp.items.length;
+        }
+        function render() {
+          // 网格环
+          let rings = "";
+          [0.33, 0.66, 1].forEach(f => {
+            const pts = COMPS.map((_, i) => pt(i, R * f).map(v => v.toFixed(1)).join(",")).join(" ");
+            rings += `<polygon points="${pts}" fill="none" stroke="var(--line)" stroke-width="1"/>`;
+          });
+          const axes = COMPS.map((c, i) => {
+            const [x, y] = pt(i, R);
+            return `<line x1="${CX}" y1="${CY}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="var(--line)" stroke-width="1"/>`;
+          }).join("");
+          // 数据多边形
+          const pts = COMPS.map((c, i) => pt(i, R * Math.max(0.08, frac(c))).map(v => v.toFixed(1)).join(",")).join(" ");
+          // 标签
+          const labels = COMPS.map((c, i) => {
+            const [x, y] = pt(i, R + 24);
+            const lit = frac(c) >= 1;
+            return `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" font-size="11" text-anchor="middle"
+              fill="${lit ? "var(--accent)" : "var(--text-3)"}" font-weight="${lit ? 700 : 400}">${c.n}</text>`;
+          }).join("");
+          svg.innerHTML = rings + axes +
+            `<polygon points="${pts}" fill="color-mix(in srgb, var(--accent) 28%, transparent)"
+              stroke="var(--accent)" stroke-width="2"/>` + labels;
+          // 清单
+          list.innerHTML = COMPS.map((c, ci) => {
+            const f = Math.round(frac(c) * 100);
+            const lit = f === 100;
+            return `<div class="comp-card ${lit ? "lit" : ""}">
+              <div class="comp-head"><b>${c.n}</b><span class="comp-pct">${f}%</span></div>
+              ${c.items.map(it => {
+                const done = (state[c.k] || []).includes(it);
+                return `<label class="comp-item"><input type="checkbox" data-k="${c.k}" data-it="${it}" ${done ? "checked" : ""}>
+                  <span>${it}</span></label>`;
+              }).join("")}
+            </div>`;
+          }).join("");
+          list.querySelectorAll("input[type=checkbox]").forEach(cb => {
+            cb.addEventListener("change", () => {
+              const k = cb.dataset.k, it = cb.dataset.it;
+              state[k] = state[k] || [];
+              if (cb.checked) { if (!state[k].includes(it)) state[k].push(it); }
+              else state[k] = state[k].filter(x => x !== it);
+              try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+              render();
+            });
+          });
+        }
+        render();
+      })();
+      </script>
+      <style>
+      .score-wrap { display: grid; grid-template-columns: 380px 1fr; gap: 24px; align-items: start; }
+      @media (max-width: 900px) { .score-wrap { grid-template-columns: 1fr; } }
+      .comp-list { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+      @media (max-width: 700px) { .comp-list { grid-template-columns: 1fr; } }
+      .comp-card { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; background: var(--surface); }
+      .comp-card.lit { border-color: var(--ok); background: color-mix(in srgb, var(--ok) 6%, var(--surface)); }
+      .comp-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+      .comp-head b { font-size: 14px; }
+      .comp-pct { font-family: var(--mono); font-size: 12px; color: var(--accent); font-weight: 700; }
+      .comp-item { display: flex; gap: 8px; align-items: flex-start; font-size: 12.8px; color: var(--text-2); line-height: 1.6; margin: 4px 0; cursor: pointer; }
+      .comp-item input { margin-top: 4px; accent-color: var(--accent); }
+      .comp-item input:checked + span { color: var(--text); }
+      </style>
+
+      <h2>⑥ 推荐的进阶资源</h2>
+      <ul class="res-list">
+        <li><b>Chip Huyen《AI Engineering》(2025)</b><span class="res-note">与本站范围最接近的书，评估与运维章节可直接当 FDE 手册读。</span></li>
+        <li><b>Anthropic / OpenAI 的官方部署指南与 Cookbook</b><span class="res-note">厂商视角的部署模式与反模式，持续更新。</span></li>
+        <li><b>Palantir AIP Bootcamp 公开视频</b><span class="res-note">企业本体部署的真实形态——第 6 章 Palantir 主线的视频版。</span></li>
+        <li><b>HuggingFace Agents Course + Berkeley LLM Agents MOOC</b><span class="res-note">框架实操与前沿讲座，补本站的框架浅尝与视频缺位。</span></li>
+      </ul>
+
+      <div class="callout story">
+        <div class="co-title">🎓 最后一句话</div>
+        <p>优秀的 FDE 不是「会调 API 的人」，而是<b>「能让客户放心把业务交给概率系统的人」</b>。本课程给你的是这条信任链的全部技术环节：评估让你敢承诺，Trace 让你能排查，权限让你可控，成本让你可持续——剩下的，去客户现场练。</p>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/app.js?v=20"></script>
+</body>
+</html>

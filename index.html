@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Agent 学院：一条从零开始的智能体开发学习路线——理解 Agent 原理、用 DeepSeek 亲手实战、掌握 Prompt 工程、搭通知识库与 RAG 全链路、深入 Ontology 与 Harness、学会调试评估与上线，完成毕业项目。">
+<title>Agent 学院 · 从零开发智能体 | Ontology 与 Harness 深入理解</title>
+<link rel="stylesheet" href="assets/css/style.css?v=20">
+</head>
+<body data-chapter="index">
+
+<header class="topbar">
+ <button class="icon-btn hamburger" id="hamburger" title="打开导航">☰</button>
+ <a class="brand" href="index.html">
+ <span class="logo">学</span> Agent 学院 <small>从零开发智能体 · Ontology · Harness</small>
+ </a>
+ <span class="spacer"></span>
+ <span class="progress-pill" id="progress-pill">进度 0/9 章</span>
+ <button class="icon-btn" id="theme-btn" title="切换亮 / 暗主题">🌙</button>
+</header>
+
+<div class="layout">
+ <aside class="sidebar" id="sidebar"></aside>
+
+ <main class="content">
+ <div class="content-inner">
+
+ <!-- ===== Hero ===== -->
+ <section class="hero">
+ <div class="eyebrow">Agent Academy</div>
+ <h1>学会开发你自己的<br><span class="grad">AI 智能体（Agent）</span></h1>
+ <p class="sub">
+ 一条以「<b>学完就能上手</b>」为标准设计的完整课程：亲手造出最小智能体 → 学会指挥它（Prompt 工程）→ 搭通<b>知识库与 RAG 全链路</b> →
+ 让它变可靠（记忆 / 规划 / 多智能体）→ 深入两大核心概念（<b>Ontology</b> 与 <b>Harness</b>）→
+ 学会调试、评估与上线 → 完成分里程碑的毕业项目。每章配可运行代码、交互实验、练习与参考答案，关键设计都有论文背书。
+ </p>
+ <div class="cta">
+ <a class="btn primary" href="01-agent-basics.html">开始学习 → 第 1 章</a>
+ <a class="btn" href="#map">先看全链路地图</a>
+ <a class="btn" href="papers.html"> 论文精读</a>
+ </div>
+ <div class="hero-stats">
+ <div class="stat"><b>9 章</b>系统化路线</div>
+ <div class="stat"><b>8 个</b>交互实验室</div>
+ <div class="stat"><b>~24.5 小时</b>预计总时长</div>
+ <div class="stat"><b>50+ 段</b>可运行代码</div>
+ <div class="stat"><b>8 篇</b>论文精读</div>
+ </div>
+ </section>
+
+ <!-- ===== 全链路地图 ===== -->
+ <h2 id="map"> 全链路地图：各章如何拼成一台完整的 Agent</h2>
+ <p>九个章节不是并列的知识点，而是<b>一条生产流水线的九个工位</b>。先看整机，再逐站学习——你随时知道自己在哪、为什么学它：</p>
+
+ <div class="flow">
+ <span class="flow-node accent">用户请求</span><span class="flow-arrow">→</span>
+ <span class="flow-node"> LLM 五种角色<br><small>第 3 章</small></span><span class="flow-arrow">→</span>
+ <span class="flow-node"> Harness 循环<br><small>第 1 / 7 章</small></span><span class="flow-arrow">→</span>
+ <span class="flow-node"> 工具调用<br><small>第 2 章</small></span><span class="flow-arrow">→</span>
+ <span class="flow-node"> 知识库 RAG<br><small>第 4 章</small></span><span class="flow-arrow">→</span>
+ <span class="flow-node"> 记忆<br><small>第 5 章</small></span><span class="flow-arrow">⤴</span>
+ <span class="flow-node loop">未完成？回到 </span>
+ <div class="flow-note"> Ontology（第 6 章）给以上所有环节统一语义 · 评估（第 8 章）给整条链路兜底 · 毕业项目（第 9 章）总装</div>
+ </div>
+
+ <div class="tbl-wrap"><table class="tbl">
+ <tr><th>链路环节</th><th>回答的问题</th><th>对应章节</th></tr>
+ <tr><td><b>引擎与循环</b></td><td>智能体靠什么「活」着？</td><td>第 1 章（原理）、第 2 章（DeepSeek 实装）</td></tr>
+ <tr><td><b>指挥与配置</b></td><td>怎么让模型稳定做对每一步？</td><td>第 3 章（LLM 五种角色、提示词五区、结构化输出闭环）</td></tr>
+ <tr><td><b>知识供给</b></td><td>私有知识从哪来、怎么检索、坏了怎么查？</td><td>第 4 章（知识库与 RAG 全链路）</td></tr>
+ <tr><td><b>状态与成长</b></td><td>怎么跨会话记住事、越用越好？</td><td>第 5 章（记忆谱系、规划反思、多智能体）</td></tr>
+ <tr><td><b>语义底座</b></td><td>工具/记忆/知识库用什么共同语言组织？</td><td>第 6 章（Ontology 与知识图谱）</td></tr>
+ <tr><td><b>运行时身体</b></td><td>模型之外，什么决定成败？</td><td>第 7 章（Harness 八大组件）</td></tr>
+ <tr><td><b>质量与交付</b></td><td>坏了怎么查、好不好怎么量、怎么上线？</td><td>第 8 章（调试、评估、上线）</td></tr>
+ <tr><td><b>总装</b></td><td>以上全部如何变成一个作品？</td><td>第 9 章（毕业项目·四里程碑）</td></tr>
+ </table></div>
+
+ <!-- ===== 学习路径 ===== -->
+ <h2 id="path"> 学习路径</h2>
+ <p>
+ 四个部分循序渐进，每个概念都遵循 <b>直觉 → 定义 → 代码 → 动手实验 → 自测 → 练习</b> 的节奏。
+ 第一部分结束你就会有一个真正能跑的智能体；之后的每一章都在给它加一层真实世界所需的能力。
+ </p>
+
+ <div class="timeline">
+ <div class="tl-item" data-no="01">
+ <h4><a href="01-agent-basics.html">Agent 基础认知</a></h4>
+ <p>什么是智能体？LLM 大脑 + 工具 + 循环 + 记忆四要素；Chatbot / Workflow / Agent 的判定标准；Agent Loop 与 ReAct 范式；Function Calling 的工作直觉；主流 Agent 产品生态全景。📜 论文：ReAct / CoT。</p>
+ <div class="tl-meta"><span>⏱ 1.5 小时</span><span>零代码</span><span>含实验：Agent Loop 模拟器</span></div>
+ </div>
+ <div class="tl-item" data-no="02">
+ <h4><a href="02-first-agent.html">动手写第一个 Agent（DeepSeek 实战）</a></h4>
+ <p>接入 DeepSeek API；裸 HTTP 请求拆解；Function Calling 完整消息流；90 行极简智能体；流式输出、超时重试、错误兜底——从「能跑」到「不脆」。</p>
+ <div class="tl-meta"><span>⏱ 3 小时</span><span>Python / Node.js</span><span>含实验：消息数组可视化</span></div>
+ </div>
+ <div class="tl-item" data-no="03">
+ <h4><a href="03-prompt-engineering.html">Prompt 工程与上下文设计</a></h4>
+ <p>系统提示的解剖学；少样本示例；结构化输出与「生成→校验→重试」闭环；参数的工程含义；<b>LLM 在链路中的五种角色</b>；提示词的迭代方法。提示词是你写下的第一段 harness 代码。📜 论文：CoT / ReAct / Toolformer。</p>
+ <div class="tl-meta"><span>⏱ 2 小时</span><span>含实验：提示词 A/B 对比器</span></div>
+ </div>
+ <div class="tl-item" data-no="04">
+ <h4><a href="04-knowledge-base.html">知识库与 RAG 全链路</a></h4>
+ <p>知识在链路中的位置与四种知识来源选型；切块策略（决定检索成败的第一因素）；嵌入检索原理；50 行完整 RAG 管线；检索评估与四大失败模式诊断；知识库 × 记忆 × 本体的合流。📜 论文：RAG / GraphRAG。</p>
+ <div class="tl-meta"><span>⏱ 3 小时</span><span>含实验：检索质量对比器</span></div>
+ </div>
+ <div class="tl-item" data-no="05">
+ <h4><a href="05-agent-patterns.html">Agent 工程进阶</a></h4>
+ <p>上下文压缩器；文件 / 向量 / 知识图谱三级记忆谱系；规划与反思（Reflexion）；多智能体编排完整代码；评估入门；安全防线。把「能跑的 demo」变成「可靠的系统」。</p>
+ <div class="tl-meta"><span>⏱ 3 小时</span><span>6 段核心实现代码</span></div>
+ </div>
+ <div class="tl-item" data-no="06">
+ <h4><a href="06-ontology.html">深入理解 Ontology（本体）</a></h4>
+ <p>从亚里士多德到知识图谱：类 / 实例 / 公理，RDF → RDFS → OWL → SPARQL 技术栈；rdflib 亲手建图与推理；LLM 抽取管线自动填充本体；本体在智能体中的三大用途；<b>以 Palantir Ontology（对象·链接·动作）框架为主线</b>并对比语义网路线。📜 经典：Gruber 1993 / Ontology 101。</p>
+ <div class="tl-meta"><span>⏱ 3 小时</span><span>含实验：Ontology 实验室</span><span>rdflib 实战</span></div>
+ </div>
+ <div class="tl-item" data-no="07">
+ <h4><a href="07-harness.html">深入理解 Harness（智能体框架）</a></h4>
+ <p>Harness 是模型之外的一切：八大组件解剖；mini-harness 升级实战；流式拼接、CostMeter、模型路由；「模型决定上限，Harness 决定下限」。📜 论文：SWE-agent（接口设计实证）。</p>
+ <div class="tl-meta"><span>⏱ 2.5 小时</span><span>含实验：Harness 实验室</span></div>
+ </div>
+ <div class="tl-item" data-no="08">
+ <h4><a href="08-ship-it.html">调试、评估与上线</a></h4>
+ <p>五步定位法找根因；评估集三层结构与 LLM-as-Judge 代码；成本与延迟工程；CLI → Gradio → 服务化的上线路径与部署清单；上线后的改进飞轮；<b>DeepSeek Harness 单文件参考实现</b>，并对比 Pi Agent 等框架。</p>
+ <div class="tl-meta"><span>⏱ 2.5 小时</span><span>含实验：Trace 侦探</span></div>
+ </div>
+ <div class="tl-item" data-no="09">
+ <h4><a href="09-capstone.html">综合实战：知识驱动的智能体（毕业项目）</a></h4>
+ <p>四个里程碑的完整项目：本体 + 三元组记忆 → 本体化工具与 Harness → LLM 抽取管线 → 评估与 Web 界面。每个里程碑都有任务、验收标准、提示与参考实现——做完它，你就完成了从「学过」到「会做」的跨越。</p>
+ <div class="tl-meta"><span>⏱ 4 小时</span><span>需要前 8 章</span></div>
+ </div>
+ <div class="tl-item" data-no="职">
+  <h4><a href="fde.html">FDE 能力地图</a></h4>
+  <p>课程与岗位的完整映射：FDE（前置部署工程师）八项能力栈、课程之外的五块拼图（企业级前端 / 数据工程 / 云基建 / 行业纵深 / 沟通演示）、90 天养成计划与面试清单。</p>
+  <div class="tl-meta"><span>🎯 面向求职与真实交付</span></div>
+ </div>
+ <div class="tl-item" data-no="实训">
+  <h4><a href="briefs.html">企业简报库（实训）</a></h4>
+  <p>三份故意不干净的企业简报：模糊邮件、脏数据、互相矛盾的限制、验收测试全红起步。像接真实项目一样走完全流程——交付五件套文档才算结业。</p>
+  <div class="tl-meta"><span>🏋 建议学完第 9 章后进入</span></div>
+ </div>
+ <div class="tl-item" data-no="附一">
+ <h4><a href="papers.html">论文精读</a></h4>
+ <p>8 篇塑造了智能体领域的关键论文：<b>原文 PDF 已下载至本站</b>；<a href='translations.html'>中文精读版</a> 对核心章节逐段中译、四色标注重要段落并配解读；另有模板拆解与原句点击解析；<b>8 篇全文翻译版已全部上线（对照式排版）</b>。附录新增 <a href="llm-basics.html">LLM 基础速成</a>。</p>
+ <div class="tl-meta"><span>每篇 10~15 分钟</span></div>
+ </div>
+ <div class="tl-item" data-no="附二">
+ <h4><a href="resources.html">资源与术语表</a></h4>
+ <p>35 个核心术语速查、必读论文清单、官方文档与开源项目索引。</p>
+ <div class="tl-meta"><span>随用随查</span></div>
+ </div>
+ </div>
+
+ <!-- ===== 前置知识 ===== -->
+ <h2>你需要哪些前置知识？</h2>
+ <div class="grid2">
+ <div class="card"><span class="emoji"></span><h4>必需：基础编程</h4><p>会 Python（或 JavaScript）的基本语法：函数、字典 / 对象、循环、异常、虚拟环境。不需要任何机器学习背景。</p></div>
+ <div class="card"><span class="emoji"></span><h4>必需：会用终端</h4><p>能打开终端、运行 <code>pip install</code>、设置环境变量。第 2 章开始会用到。</p></div>
+ <div class="card"><span class="emoji"></span><h4>第 2 章起：一个 DeepSeek API Key</h4><p>到 platform.deepseek.com 注册获取（几块钱能学完整门课）。没有 Key 也能学：所有交互实验都是纯前端模拟，代码照读不误。</p></div>
+ <div class="card"><span class="emoji"></span><h4>不需要：数学 / 训练模型</h4><p>本站教的是「应用层」智能体开发——调用大模型 API 而不是训练它。好奇心比数学更重要。</p></div>
+ </div>
+
+ <!-- ===== 学习建议 ===== -->
+ <h2>怎么用这个网站学？</h2>
+ <ul class="checklist">
+ <li><b>按流水线的顺序学，别跳。</b>第 4 章（知识库）依赖第 3 章的结构化输出闭环；第 9 章总装前 8 章。跳章的代价在毕业项目会连本带利还回来。</li>
+ <li><b>代码必须亲手跑。</b>每段代码都标了文件名，建议建一个 <code>agent-lab/</code> 目录跟着敲。跑不通的报错信息本身就是最好的教材。</li>
+ <li><b>每章末尾的练习至少做一半。</b>练习都配了参考答案（折叠在后面）——先自己写，写不出来再看，看懂后合上答案重写一遍。</li>
+ <li><b>对照论文读。</b>每章的「 论文精读入口」卡片指向对应的论文拆解——学完章节立刻读论文，是巩固最快的方式（三遍读法见论文页）。</li>
+ <li><b>交互实验是思维模型。</b>七个实验室都是「可操作的直觉」：先关掉开关看坏结果，再打开对比，比读十段文字更深刻。</li>
+ <li><b>进度自动保存在浏览器里。</b>每学完一章点「标记本章已学完」，下次接着来。</li>
+ </ul>
+
+ <div class="callout story">
+ <div class="co-title">一条贯穿全站的主线</div>
+ <p>本站的所有内容都围绕一个公式展开：<br>
+ <b>Agent = LLM（五种角色的引擎）× Tools（手脚）× Knowledge（知识库·记忆·图谱）× Prompt（指令）× Harness（身体）× Ontology（共同语言）</b><br>
+ 第 1–3 章把引擎、手脚和指令接起来，第 4–5 章接入知识与记忆，第 6–7 章深入共同语言与身体，第 8 章保证质量，第 9 章总装交付。</p>
+ </div>
+
+ <div class="callout tip">
+ <div class="co-title">学完你能做到什么</div>
+ <p>① 从零写出一个带工具调用、重试、流式输出的生产级 Agent 脚本；② 为你的业务设计并迭代系统提示词，用评估集验证效果；③ 搭建并诊断一套文档知识库，回答「检索不到」和「检索到了没读」两类问题；④ 用本体 / 知识图谱组织工具与记忆，实现多跳问答；⑤ 给 Agent 加上权限、成本核算与 Trace 调试；⑥ 把它变成可部署的 Web 应用，并用评估集做回归。每一条能力都对应具体章节与练习。</p>
+ </div>
+
+ </div>
+
+ <footer class="site-footer">
+ Agent 学院 · 一个纯静态的教学站点，无需安装任何依赖<br>
+ 学习进度保存在你的浏览器本地 · 内容采用 CC BY-NC 4.0 精神共享
+ </footer>
+ </main>
+</div>
+
+<script src="assets/js/app.js?v=20"></script>
+</body>
+</html>

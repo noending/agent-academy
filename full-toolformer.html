@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Toolformer 论文对照式全文翻译：Language Models Can Teach Themselves to Use Tools 原文逐段中英对照、三步管线完整解读。">
+<title>全文翻译 · Toolformer | Agent 学院</title>
+<link rel="stylesheet" href="assets/css/style.css?v=20">
+</head>
+<body data-chapter="full">
+
+<header class="topbar">
+  <button class="icon-btn hamburger" id="hamburger" title="打开导航">☰</button>
+  <a class="brand" href="index.html"><span class="logo">学</span> Agent 学院 <small>从零开发智能体 · Ontology · Harness</small></a>
+  <span class="spacer"></span>
+  <span class="progress-pill" id="progress-pill">进度 0/9 章</span>
+  <button class="icon-btn" id="theme-btn">🌙</button>
+</header>
+
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <main class="content">
+    <div class="content-inner">
+
+      <header class="chapter-head">
+        <div class="kicker">全文翻译 · 对照版 · 论文 5/8</div>
+        <h1>Toolformer：语言模型可以<span style="color:var(--accent)">自学使用工具</span></h1>
+        <p class="lead">
+          Toolformer: Language Models Can Teach Themselves to Use Tools · Schick et al., NeurIPS 2023 ·
+          <a href="papers/pdf/toolformer.pdf" target="_blank"> 原文 PDF</a> · <a href="https://arxiv.org/abs/2302.04761" target="_blank" rel="noopener">arXiv:2302.04761</a><br>
+          对照式排版：英文原文 → 中文翻译，重点段落黄色标注 + 解读。§2 的三步管线是全文心脏，§3 的五工具与 §4 的结果逐表译出。
+        </p>
+        <div class="paper-nav"><a href="translations.html" style="border-style:dashed">← 中文精读版</a> <a href="full-transformer.html">Transformer</a> · <a href="full-cot.html">CoT</a> · <a href="full-react.html">ReAct</a> · <b style="color:var(--accent)">Toolformer</b> · <a href="full-rag.html">RAG</a> · <a href="full-reflexion.html">Reflexion</a> · <a href="full-graphrag.html">GraphRAG</a> · <a href="full-sweagent.html">SWE-agent</a></div>
+      </header>
+
+      <h2>摘要</h2>
+      <div class="para key">
+        <div class="p-en">Language models (LMs) exhibit remarkable abilities to solve new tasks from just a few examples or textual instructions, especially at scale. They also, paradoxically, struggle with basic functionality, such as arithmetic or factual lookup, where much simpler and smaller models excel. In this paper, we show that LMs can teach themselves to use external tools via simple APIs and achieve the best of both worlds.</div>
+        <div class="p-zh">语言模型展现出仅凭少量示例或文字指令就能解决新任务的惊人能力（尤其在规模大时）。但矛盾的是，它们在一些<b>基础功能</b>上表现挣扎——比如算术或事实查询——而在这方面，简单得多、小得多的模型反而擅长。本文证明：语言模型可以通过简单的 API <b>自学使用外部工具</b>，兼得两个世界的优点。</div>
+        <div class="p-note"><b>解读：</b>"paradoxically（矛盾地）"是摘要的题眼：能写出优美散文的模型算不对 47×83——因为语言建模的目标函数从不奖励算术精确。工具补的正是这种结构性短板。</div>
+      </div>
+      <div class="para">
+        <div class="p-en">We introduce Toolformer, a model trained to decide which APIs to call, when to call them, what arguments to pass, and how to best incorporate the results into future token prediction. This is done in a self-supervised way, requiring nothing more than a handful of demonstrations for each API. We incorporate a range of tools, including a calculator, a Q&A system, a search engine, a translation system, and a calendar. Toolformer achieves substantially improved zero-shot performance across a variety of downstream tasks, often competitive with much larger models, without sacrificing its core language modeling abilities.</div>
+        <div class="p-zh">我们提出 Toolformer——一个被训练来<b>自主决定</b>调用哪些 API、何时调用、传什么参数、以及如何把结果最好地融入后续 token 预测的模型。整个过程<b>自监督</b>完成，每个 API 只需要少量示范。我们接入了计算器、问答系统、搜索引擎、翻译系统、日历五种工具。Toolformer 在多个下游任务上零样本表现大幅提升，常可与更大的模型竞争，且不牺牲其核心的语言建模能力。</div>
+        <div class="p-note"><b>解读：</b>四个"自主决定"（哪个 API/何时/什么参数/如何用结果）精确预告了现代 Function Calling 的四要素——工具选择、时机、参数、结果融入。第 2 章你手写的循环，处理的就是这四件事。</div>
+      </div>
+
+      <h2>§1 引言</h2>
+      <div class="para">
+        <div class="p-en">These limitations include an inability to access up-to-date information on recent events... difficulties in understanding low-resource languages, a lack of mathematical skills to perform precise calculations and an unawareness of the progression of time.</div>
+        <div class="p-zh">这些局限包括：无法访问近期事件的最新信息、易幻觉事实、低资源语言理解困难、缺少精确计算的数学技能、对时间流逝无感知。</div>
+      </div>
+      <div class="para key">
+        <div class="p-en">The use of tools should be learned in a self-supervised way without requiring large amounts of human annotations... because what humans find useful may be different from what a model finds useful. The LM should not lose any of its generality and should be able to decide for itself when and how to use which tool.</div>
+        <div class="p-zh">工具的使用应当<b>以自监督方式学习</b>，不需要大量人类标注——这不仅因为标注贵，更因为<b>人类觉得有用的，可能和模型觉得有用的不一样</b>。语言模型不应失去任何通用性，且应能<b>自主决定</b>何时、如何使用哪个工具。</div>
+        <div class="p-note"><b>解读：</b>"人类觉得有用 ≠ 模型觉得有用"是这篇论文最深刻的一句洞察。它否定了"人工标注工具调用"路线的合理性，也预告了第 6 章"让评估信号决定工具价值"的做法——判据交给模型的预测损失，而不是人的直觉。</div>
+      </div>
+
+      <h2>§2 方法：三步自监督管线</h2>
+      <div class="seg seg-method">
+        <div class="seg-label">方法机制 · API 调用的表示</div>
+        <div class="seg-zh">每个 API 调用表示为元组 c = (API 名, 输入)，线性化成文本序列嵌入原文，用特殊 token 标记起止（实践中直接用 "[", "]", "->"，<b>无需修改模型词表</b>）。示例：<code>The New England Journal of Medicine is a registered trademark of [QA("谁是其出版方？") → Massachusetts Medical Society]。</code></div>
+        <div class="seg-note"><b>解读：</b>注意设计取舍：调用就是"插在文本中间的一段文字"。这让工具使用与语言建模目标无缝兼容——今天 Function Calling 的 tool_calls 结构，本质上仍是这种"结构化地插话"。</div>
+      </div>
+      <div class="seg seg-method">
+        <div class="seg-label">方法机制 · 第 1 步：采样候选调用</div>
+        <div class="seg-zh">为每个 API 手写一个提示 P(x)（示例："你的任务是为文本插入问答 API 调用……输入：Joe Biden 出生在宾州斯克兰顿。输出：Joe Biden 出生于 [QA('Joe Biden 在哪里出生？')] 斯克兰顿……"）。对文本每个位置 i，计算模型分配给「在此开始 API 调用」的概率，超过阈值 τs 的位置保留（最多 k 个）；再从模型采样最多 m 个具体调用（问题内容）。</div>
+      </div>
+      <div class="seg seg-method">
+        <div class="seg-label">方法机制 · 第 2 步：执行调用</div>
+        <div class="seg-zh">执行所有生成的 API 调用获得结果——方式完全取决于 API 本身：调用另一个神经网络、执行 Python 脚本、或在大型语料上检索。每个调用返回一段文本。</div>
+      </div>
+      <div class="seg seg-result">
+        <div class="seg-label">方法机制 · 第 3 步：按「损失下降」筛选（全文灵魂）</div>
+        <div class="seg-zh">判据：比较两种前缀下的加权损失 L_i——(a) 给模型「调用 + 结果」；(b) 不给调用、或只给调用不给结果。<b>只有当「加上调用及其结果」比两种基线都更能降低后续 token 的预测损失时（L⁻ − L⁺ ≥ τf），这次调用才被保留</b>。筛完的调用与原文本交织成新数据集 C*，用它以标准语言建模目标微调模型。</div>
+        <div class="p-note"><b>解读：</b>展开讲这个判据为什么聪明：它同时排除了两种坏调用——①结果没信息（给了和不给损失一样）；②只有问题没有答案也有帮助（说明模型只是想"提问"这个动作本身）。剩下的调用才是"答案真的让模型猜中了后文"的。整条管线不需要一个人来标"这次调用好不好"。<b>把主观判断翻译成可计算的信号，是自监督系统设计的通用范式。</b></div>
+      </div>
+      <div class="seg seg-method">
+        <div class="seg-label">方法机制 · 推理时如何运行</div>
+        <div class="seg-zh">微调后的模型正常解码，直到它自己产出「→」token——表示"我现在需要这个 API 的结果"。此时<b>解码被中断，运行时调用相应 API，把结果与结束符插入后继续解码</b>。是否调用、何时调用、传什么参数，全部由模型基于上下文自主决定。</div>
+        <div class="p-note"><b>解读：</b>把这段和第 2 章你的 run_agent 循环并排看：模型产出调用意图 → 运行时打断 → 执行 → 结果回填 → 继续生成。<b>一模一样。</b>唯一的区别是 Toolformer 的模型"内化"了调用能力，而 Function Calling 靠提示与训练让它稳定。</div>
+      </div>
+
+      <h2>§3 工具：五种，各治一种短板</h2>
+      <div class="para">
+        <div class="p-en">We explore the following five tools: a question answering system, a Wikipedia search engine, a calculator, a calendar, and a machine translation system. The only constraints... (i) both their inputs and outputs can be represented as text sequences, and (ii) we can obtain a few demonstrations of their intended use.</div>
+        <div class="p-zh">五种工具：问答系统（缓解事实幻觉）、Wikipedia 搜索引擎（获取最新信息）、计算器（精确算术）、日历（时间感知）、机器翻译（低资源语言）。对工具只有两条约束：输入输出都能表示为文本序列；能拿到少量使用示范。</div>
+        <div class="p-note"><b>解读：</b>每个工具精准对应 §1 列举的一种模型固有缺陷——工具清单是从"缺陷清单"倒推出来的。第 6 章让你"从失败模式倒推工具清单"，方法论相同。</div>
+      </div>
+
+      <h2>§4–5 结果与消融（要点）</h2>
+      <div class="seg seg-result">
+        <div class="seg-label">实验结论</div>
+        <div class="seg-zh">基于 GPT-J 6.7B 的 Toolformer 在多个下游任务上零样本表现大幅提升，<b>明显超越体量大得多的 GPT-3</b>：算术任务（使用计算器后）大幅领先；LAMA 知识探针上借助问答系统补足事实；低资源语言借助翻译系统提升；时间相关问答借助日历。同时消融显示：<b>工具调用的机会在预训练语料中本就稀疏存在</b>——微调只是放大了模型"在正确位置发起正确调用"的能力；而「每个 API 的示范数从 1 到 1000 变化时，少量示范即可见效」，印证了方法的低成本。附加分析还显示 Toolformer 的核心语言建模能力（WikiText 困惑度）<b>不降</b>——学会用工具没有损害通用性。</div>
+        <div class="p-note"><b>解读：</b>三句话总结证据链：小模型+工具 &gt; 大模型裸考（有效性）；少量示范即可学会（低成本）；通用能力不降（无副作用）。评估一个"给模型加能力"的方案，就用这三条标尺。</div>
+      </div>
+
+      <h2>§6 局限与影响（速览）</h2>
+      <div class="seg seg-skip">
+        <div class="seg-label">可跳读 · 作者承认的局限</div>
+        <div class="seg-zh">① 串行的 API 调用无法表达更复杂的依赖；② 无法与真实世界动态交互（工具是一次性的，不能多轮）；③ 上下文窗口限制可插入的调用数；④ 采样调用候选的计算开销不小；⑤ 风险讨论：工具让模型更强大也放大了滥用面（作者建议部署时评估具体用例）。——每一条都对应了后来 Agent 工程的一个课题：多轮工具链（第 5 章）、运行时环境（第 7 章）、成本与安全。</div>
+      </div>
+      <div class="seg seg-link">
+        <div class="seg-label">课程连接</div>
+        <div class="seg-zh">两个可复制的动作：① 用「预测损失下降」判据审视你自己的工具集——把每个工具的真实调用日志拿出来，统计"结果真的被模型用上了吗"，没用上的工具就是该下架的；② 把"人类觉得有用 ≠ 模型觉得有用"贴在你的工位上——它适用于工具设计、提示词设计、评估集设计的一切场景。</div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/app.js?v=20"></script>
+</body>
+</html>

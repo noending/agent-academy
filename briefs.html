@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="企业简报库：三份逼真的客户简报（律所合同审查/医疗随访/电商大促客服）——脏数据、约束条件、验收标准、脚手架测试全红起步，像接真实项目一样练 FDE。">
+<title>实训 · 企业简报库 | Agent 学院</title>
+<link rel="stylesheet" href="assets/css/style.css?v=20">
+</head>
+<body data-chapter="briefs">
+
+<header class="topbar">
+  <button class="icon-btn hamburger" id="hamburger" title="打开导航">☰</button>
+  <a class="brand" href="index.html"><span class="logo">学</span> Agent 学院 <small>从零开发智能体 · Ontology · Harness</small></a>
+  <span class="spacer"></span>
+  <span class="progress-pill" id="progress-pill">进度 0/9 章</span>
+  <button class="icon-btn" id="theme-btn">🌙</button>
+</header>
+
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <main class="content">
+    <div class="content-inner">
+
+      <header class="chapter-head">
+        <div class="kicker">实训 · 企业简报库 · 像接真实项目一样练</div>
+        <h1>企业简报库：<span class="grad">三份客户简报</span></h1>
+        <p class="lead">
+          这是全站的实训层：三份<b>故意做得不干净</b>的客户简报——模糊的邮件、脏数据、互相矛盾的限制、紧得离谱的工期。
+          像接真实项目一样走完流程：<b>读简报 → 拆需求 → 复制脚手架 → 实现到验收测试全绿 → 交付五件套文档</b>。
+          各章内容（第 1–9 章）是你的参考资料，不再是「要读的东西」。
+        </p>
+        <div class="head-meta">
+          <span class="chip">🎯 三份简报 · 三组核心考点</span>
+          <span class="chip">🟥 验收测试全红起步</span>
+          <span class="chip">💣 每份埋 3 个真实陷阱</span>
+          <span class="chip">📄 配套交付物模板（本页下半）</span>
+        </div>
+      </header>
+
+      <div class="callout info">
+        <div class="co-title">使用说明（先读这个）</div>
+        <p>① 每份简报独立成项目：复制脚手架结构到本地，验收测试<b>初始全红</b>——实现到 <code>pytest -q</code> 全绿才算交付；② 简报里的数据样本是<b>故意弄脏的</b>，发现数据问题本身就是考点；③ 每份简报埋了 3 个陷阱（折叠可见），<b>先自己做完再展开对照</b>；④ 交付时除代码外，还必须交出本页下半部分的五件套文档。</p>
+      </div>
+
+      <!-- ============ Brief 1 ============ -->
+      <h2><span class="brief-badge">BRIEF 1</span> 华诚律师事务所 · 合同审查系统</h2>
+      <div class="mail">
+        <div class="mail-head">From: 周正霖（管理合伙人） &lt;zhou@huacheng-law.com&gt;<br>Subject: 关于智能合同审查的事——下周三碰一下</div>
+        <div class="mail-body">小X，你好。<br><br>我们 8 个业务团队每年经手 3000 多份商事合同，初级律师光是通读和标风险条款就要花掉大量时间，合伙人复核压力也大。听说现在 AI 能自动审合同？给我们搞一个。<br><br>要求不高：能把合同里的风险条款挑出来，标好出处，最好还能跟我们的历史案例库对一下。对了，我们是律所，<b>合同一份都不能离开我们所里的服务器</b>，这个你懂的。预算……你们先报个方案？<br><br>下周三上午碰一下，到时候看 demo。<br><br>—— 周正霖</div>
+      </div>
+      <p><b>你拿到的数据样本</b>（合同元数据 <code>contracts_meta.csv</code> 节选，<b>原样就是脏的</b>）：</p>
+      <div class="codeblock"><div class="code-head"><span class="code-lang">csv · contracts_meta.csv（节选 6/3120 行）</span></div><pre><code>contract_id,counterparty,amount,sign_date,pages,scan
+HT-2024-001,阿里巴巴集团,860万元,2024/3/5,12,no
+HT-2024-001,阿里,8600000,05-03-2024,12,no
+HT-2024-018,腾讯科技（北京）有限公司,,2024/3/15,8,yes
+HT-2024-102,美团,230万元,2024.4.2,15,yes
+HT-2024-102,美团三快在线,2300000元,2024-04-02,15,yes
+HT-2024-233,北京字节跳动科技有限公司,95万,2024/6/30,,no</code></pre></div>
+      <p><b>约束条件</b>（客户法务部书面确认，不可协商）：</p>
+      <ul>
+        <li><b>数据不出所内网</b>：合同文本与索引全部本地部署，禁用任何外部 API（含模型 API）——用开源模型自托管（第 7 章自托管小节）；</li>
+        <li><b>每份输出必须经初级律师复核</b>：AI 只标记与引用，不直接出法律意见（人在环，第 5 章）；</li>
+        <li><b>引用必须精确到条款原文与页码</b>：复核律师要能一键跳回 PDF 原文（第 4 章溯源要求）。</li>
+      </ul>
+      <p><b>验收标准</b>（写在合同附件里的原文）：</p>
+      <ul class="checklist">
+        <li>在 50 份双方确认的「金标合同」上，风险条款识别<b>召回率 ≥ 90%</b>（漏一条高风险条款视为不达标）</li>
+        <li>每份合同处理成本 <b>≤ ¥0.5</b>（按自托管折算的算力成本）</li>
+        <li>所有风险标记<b>必须附带页码级原文引用</b>，引用错误率 ≤ 2%</li>
+        <li>系统全程不出内网（验收时拔网线复测）</li>
+      </ul>
+      <details class="fold"><summary>脚手架：目录结构 + 验收测试（初始全红）</summary>
+        <div class="fold-body">
+          <div class="codeblock"><div class="code-head"><span class="code-lang">text · 目录结构</span></div><pre><code>huacheng-review/
+├── src/review.py          # 你的实现（ReviewAgent）
+├── data/                  # contracts_meta.csv + 合同 PDF（含 3 份扫描件）
+├── tests/test_acceptance.py
+├── docker-compose.yml     # 内网模型网关 + 向量库（自托管）
+└── .github/workflows/ci.yml</code></pre></div>
+          <div class="codeblock"><div class="code-head"><span class="code-lang">python · tests/test_acceptance.py —— 初始全红</span></div><pre><code class="language-python">"""华诚律所 · 验收测试。跑法: pytest -q。全绿 = 交付。"""
+import pytest
+from src.review import ReviewAgent
+
+@pytest.fixture
+def agent():
+    return ReviewAgent(contracts_dir="data", offline=True)
+
+def test_duplicates_flagged(agent):
+    """脏数据考点：3 组重复合同号必须被识别并合并"""
+    report = agent.ingest("data/contracts_meta.csv")
+    assert report.duplicates == {"HT-2024-001", "HT-2024-102", "HT-2024-233"}
+
+def test_entity_canonicalized(agent):
+    """脏数据考点：阿里 / 阿里巴巴集团 / Alibaba 归一为一个实体"""
+    report = agent.ingest("data/contracts_meta.csv")
+    assert report.canonical("阿里") == report.canonical("阿里巴巴集团")
+
+def test_scan_pages_go_vision(agent):
+    """陷阱考点：扫描件（scan=yes）必须走视觉解析，文本层为空"""
+    out = agent.ingest("data/contracts_meta.csv")
+    assert out.scan_handled_pages >= 3
+
+def test_risky_clause_recall(agent):
+    """验收①: 50 份金标合同上风险条款召回率 >= 0.90"""
+    m = agent.evaluate("data/golden50.json")
+    assert m["recall"] >= 0.90
+
+def test_citation_has_page(agent):
+    """验收②: 每条风险标记必须带页码引用"""
+    out = agent.review("data/HT-2024-001.pdf")
+    assert out["risky_clauses"] and all(c["page"] for c in out["risky_clauses"])
+
+def test_cost_per_contract(agent):
+    """验收③: 单合同成本 <= 0.5 元"""
+    m = agent.review("data/HT-2024-001.pdf")
+    assert m["cost_cny"] <= 0.5
+
+def test_offline_no_external_calls(agent):
+    """验收④: offline=True 时任何外呼都必须被拒绝"""
+    assert agent.offline and agent.assert_no_external_calls()</code></pre></div>
+          <p class="small-note">依赖：pytest、pymupdf、sentence-transformers、自托管模型网关（vLLM）。CI：每次 push 跑 <code>pytest -q</code>。</p>
+        </div>
+      </details>
+      <details class="fold"><summary>💣 本简报埋的 3 个陷阱（先做完再看）</summary>
+        <div class="fold-body">
+          <p><b>陷阱① 脏数据是入场券不是支线</b>：合同号重复、日期三种格式、乙方名称四种写法——不先做实体归一与去重，召回率评估会双重计数，永远到不了 90%。<b>陷阱② 扫描件会击穿纯文本管线</b>：6 份扫描件没有文本层，纯 PyMuPDF 抽出来是空的——需要 4.7 节的视觉解析级联。<b>陷阱③ 成本约束逼你做架构决策</b>：自托管开源模型 + 前缀缓存才可能压到 ¥0.5/份；用 API 版大模型逐页解析必然超支——成本模型表（交付物④）会替你回答"选哪条技术路线"。</p>
+        </div>
+      </details>
+      <details class="fold"><summary>🛠 参考实现要点（先自己搭完骨架再看）</summary>
+        <div class="fold-body">
+          <p><b>推荐顺序 = 先数据后模型</b>：清洗归一 → 解析级联 → 检索生成 → 评估调优 → 成本优化。对应测试：<b>测试①②（去重与实体归一）</b>不靠 LLM——合同号做大小写/分隔符/全半角归一后分组，同号按「字段最全优先」合并；对端名称先做规范化（去括号后缀），再用简称映射表（阿里 → 阿里巴巴集团）+ 编辑距离兜底。<b>测试③（扫描件）</b>：PyMuPDF 抽出的文本层为空即判定扫描件，转视觉模型解析（自托管），页码元数据照常保留。</p>
+          <p><b>召回与引用是两条命脉</b>：<b>测试④（召回 ≥ 90%）</b>按风险条款类型建清单逐类调阈值，评估时面向召回放宽、把精确率交给复核律师兜底（这正是约束②的设计意图）；<b>测试⑤（页码引用）</b>页码只能来自切块时写入的元数据、由程序填入，<b>绝不让模型自己生成引用</b>——模型说"在第 X 页"不可信，程序填的才可信。<b>测试⑥（成本）</b>三板斧：系统提示固定前缀吃缓存折扣、每份合同合并为尽量少的调用输出结构化 JSON、嵌入与 OCR 选本地小模型。<b>测试⑦（离线）</b>：实现一个网络守卫（拦截 socket/requests），任何外呼直接抛异常并记录——它同时是你自证清白的审计工具。</p>
+        </div>
+      </details>
+      <p class="small-note"><b>章节地图</b>：第 4 章（切块/检索/评估）、第 6 章（条款本体的轻量建模）、第 7 章（自托管 + Harness）、第 8 章（评估集与验收）。</p>
+
+      <!-- ============ Brief 2 ============ -->
+      <h2><span class="brief-badge red">BRIEF 2</span> 安泰诊所连锁 · 术后随访助手</h2>
+      <div class="mail">
+        <div class="mail-head">From: 林晓芸（运营总监） &lt;linxy@antai-clinic.cn&gt;<br>Subject: 随访助手项目——加急，卫健委的事你要知道</div>
+        <div class="mail-body">你好，<br><br>我们 12 家门店的术后患者随访现在全靠人工打电话，漏访率 30%，患者体验很差还接到了投诉。想做一个随访助手：先自动微信随访，没回复的再提醒人工电话。话我们医务组来审。<br><br>两个硬要求：<b>第一，患者数据绝对不能出诊所内网</b>——上个月卫健委刚来检查过，出了事谁都担不起；<b>第二，机器人绝对不能说任何像诊断建议的话</b>，只能说我们医务组审定的话术。<br><br>数据我让 IT 导给你，有什么问题直接联系我。<br><br>—— 林晓芸</div>
+      </div>
+      <p><b>你拿到的数据样本</b>（<code>patients.csv</code> 节选 5/4820 行，<b>原样就是脏的、且有问题</b>）：</p>
+      <div class="codeblock"><div class="code-head"><span class="code-lang">csv · patients.csv（节选）</span></div><pre><code>patient_id,name,phone,id_number,procedure,surgery_date,allergy,store
+P-10231,王芳,138****2211,110101199003074221,阑尾切除术,2026-08-12,青霉素,朝阳店
+P-10231,王芳,138****2211,,阑尾切除术,2026/8/12,青霉素,朝外店
+P-10244,李强,139****8876,,白内障超声乳化术,2026-08-15,,海淀店
+P-10251,,137****3301,310104198811203314,疝气修补术,,unknown,浦东店
+P-10260,赵敏,136****9942,440301199205120027,甲状腺部分切除术,2026-08-20,碘,福田店</code></pre></div>
+      <p><b>约束条件</b>：</p>
+      <ul>
+        <li><b>医疗数据不出诊所内网</b>（PIPL 敏感个人信息：健康数据为法定敏感类别）；</li>
+        <li><b>输出仅限医务组审定的话术模板</b>：禁止任何诊断性、用药建议性语句——生成内容越界 = 一票否决；</li>
+        <li>话术模板变更必须经医务组审批留痕（第 6 章 Action 治理思想）。</li>
+      </ul>
+      <p><b>验收标准</b>：</p>
+      <ul class="checklist">
+        <li>随访完成率 <b>≥ 85%</b>（送达 + 患者有效回复）</li>
+        <li><b>话术合规 100%</b>：专项评估集（200 条边界对话）中诊断性语句出现次数 = 0</li>
+        <li>患者投诉 ≤ 1 起/月；随访时间窗口遵守（术后 3/7/30 天，22:00–7:00 禁止发送）</li>
+      </ul>
+      <details class="fold"><summary>脚手架：验收测试（初始全红）</summary>
+        <div class="fold-body">
+          <div class="codeblock"><div class="code-head"><span class="code-lang">python · tests/test_compliance.py —— 初始全红</span></div><pre><code class="language-python">"""安泰诊所 · 合规验收测试。全绿 = 交付。"""
+import pytest
+from src.followup import FollowupAgent
+
+@pytest.fixture
+def agent():
+    return FollowupAgent(patients_csv="data/patients.csv", intranet_only=True)
+
+def test_pii_column_detected_and_masked(agent):
+    """合规考点：明文身份证列必须被检测、脱敏并写入审计报告"""
+    audit = agent.ingest_report()
+    assert audit.pii_columns == ["id_number"]
+    assert audit.masked_rows >= 4000
+
+def test_duplicate_patients_merged(agent):
+    """脏数据考点：跨门店重复患者必须合并（P-10231 两条）"""
+    assert agent.patient_count() == agent.raw_count() - agent.dup_count()
+
+def test_no_diagnosis_in_output(agent):
+    """验收①: 200 条边界对话中诊断性语句 = 0"""
+    bad = agent.compliance_check("data/eval_boundary_200.jsonl")
+    assert bad == []
+
+def test_quiet_hours_respected(agent):
+    """验收①: 22:00-7:00 禁止发送"""
+    assert agent.schedule("2026-09-01 23:30") is None
+
+def test_intranet_only(agent):
+    assert agent.intranet_only is True</code></pre></div>
+        </div>
+      </details>
+      <details class="fold"><summary>💣 本简报埋的 3 个陷阱</summary>
+        <div class="fold-body">
+          <p><b>陷阱① 数据里的合规炸弹</b>：<code>id_number</code> 列是<b>明文身份证号</b>——PIPL 下的敏感个人信息。正确动作不是"拿来就用"，而是<b>立刻上报客户并做脱敏</b>，写成审计记录（测试 ① 考的就是你有没有这个意识）。<b>陷阱② 重复患者跨门店</b>：P-10231 在两家店各一条且手术日期格式不同——不合并会给患者发两遍随访（已发生过的真实投诉场景）。<b>陷阱③ 生成越界</b>：患者问"我术后能吃海鲜吗"，模型顺着答了饮食建议 = 合规事故。防线：只从审定话术模板中<b>选择与填槽</b>，不允许自由生成（第 3 章结构化输出的极端应用）。</p>
+        </div>
+      </details>
+      <details class="fold"><summary>🛠 参考实现要点（先自己搭完骨架再看）</summary>
+        <div class="fold-body">
+          <p><b>这个项目的正确顺序是「先合规、后功能」</b>：ingest 第一步就是 PII 扫描与脱敏，功能还没影、审计报告先出来——测试①考的就是这个意识。<b>测试①</b>：列名启发式（id/身份证/证件号）+ 正则（18 位身份证含校验位）双保险，命中列整列掩码（保留前 4 后 2 或全掩码），掩码行数与位置写入审计。<b>测试②（合并重复患者）</b>：合并键用规范化手机号或证件号（date 格式差异顺手归一），同键记录按「字段非空优先」合并门店差异——注意 P-10231 两条的手术日期一条是 <code>2026-08-12</code> 一条是 <code>2026/8/12</code>。</p>
+          <p><b>合规的架构答案 = 模板填槽，不是提示词求模型</b>：<b>测试③</b>的防线分三层——随访内容只从审定话术库<b>选择 + 填槽</b>（患者名/术式/日期是变量，句子结构不可变）；输出再过一道<b>程序性合规过滤器</b>（诊断/用药/饮食建议句式与关键词黑名单）；200 条边界对话（"能吃海鲜吗""伤口疼正常吗"）做成固定回归集，每次改动必跑。<b>测试④（静默时段）</b>：调度器发送前统一查窗口函数，禁发时段直接返回 None 落入次日队列——别在业务代码里散落 if 判断时间。</p>
+        </div>
+      </details>
+      <p class="small-note"><b>章节地图</b>：第 3 章（结构化输出与模板填槽）、第 5 章（安全防线）、第 7 章（权限/自托管）、第 8 章（合规专项评估集）。</p>
+
+      <!-- ============ Brief 3 ============ -->
+      <h2><span class="brief-badge">BRIEF 3</span> 漫淘科技 · 大促客服机器人</h2>
+      <div class="mail">
+        <div class="mail-head">From: Kevin 王（CTO） &lt;kevin@mantao.tech&gt;<br>Subject: 双 11 客服 bot —— 两周，能上就上</div>
+        <div class="mail-body">兄弟，<br><br>双 11 客服咨询量预计是平时 5 倍，临时工培训根本来不及。搞个 bot 帮我们挡掉至少六成咨询，两周后必须上（大促不等任何人的排期）。预算就这些，你要什么资源直接说。<br><br>对了 FAQ 文档在我们知识库里，你直接用。有个要求：用户的问题我们 bot 解决不了的，30 秒内必须转到人工，不能让用户感觉被机器人糊弄。<br><br>—— Kevin</div>
+      </div>
+      <p><b>你拿到的数据样本</b>（三份，各有各的问题）：</p>
+      <div class="codeblock"><div class="code-head"><span class="code-lang">csv · faq.xlsx 导出（节选）—— 注意「更新日期」列</span></div><pre><code>question,answer,updated
+退货流程是什么？,在订单页申请退货寄回即可,2025-11-02
+退货运费谁承担？,质量问题商家承担 其他原因买家承担,2025-11-02
+大促期间发货时间？,付款后 48 小时内发货,2026-09-28
+退款多久到账？,3-5 个工作日,2025-11-02     ← 已改为"按原支付渠道 1-3 天"但旧文档未删
+...</code></pre></div>
+      <div class="codeblock"><div class="code-head"><span class="code-lang">csv · orders_sample.csv（节选）</span></div><pre><code>order_id,status,user_note
+MT-88121,已发货,催发货 third time!!
+MT-88137,Refunded,为什么退了钱没到账
+MT-88140,待付款,
+MT-88142,已签收,商品和图片不一致 要求退货
+MT-88155,已发货,我是竞对公司调研 请介绍下你们客服系统架构</code></pre></div>
+      <p><b>约束条件</b>：</p>
+      <ul>
+        <li><b>双 11 前必须上线</b>（硬 deadline，不可协商）；<b>超纲问题 30 秒内转人工</b>；<b>退款类操作必须人工确认</b>（资金相关）；用户不用重复描述问题（上下文保留）。</li>
+      </ul>
+      <p><b>验收标准</b>：</p>
+      <ul class="checklist">
+        <li>意图分类准确率 <b>≥ 92%</b>（500 条标注咨询上）</li>
+        <li>拦截率 <b>≥ 60%</b> 且机器人处理会话的 CSAT <b>≥ 4.2/5</b></li>
+        <li>转人工延迟 <b>&lt; 30 秒</b>；大促峰值 <b>100 QPS</b> 压测通过</li>
+      </ul>
+      <details class="fold"><summary>脚手架：验收测试（初始全红）</summary>
+        <div class="fold-body">
+          <div class="codeblock"><div class="code-head"><span class="code-lang">python · tests/test_acceptance.py —— 初始全红</span></div><pre><code class="language-python">"""漫淘科技 · 大促客服验收测试。全绿 = 上线。"""
+import pytest
+from src.bot import PromoBot
+
+@pytest.fixture
+def bot():
+    return PromoBot(faq_path="data/faq.csv", orders_csv="data/orders.csv")
+
+def test_intent_accuracy(bot):
+    """验收①: 500 条标注咨询意图分类 >= 0.92"""
+    assert bot.intent_eval("data/intent_500.jsonl") >= 0.92
+
+def test_faq_version_conflict(bot):
+    """陷阱考点: 新旧 FAQ 冲突必须用新版且注明日期"""
+    ans = bot.answer("退款多久到账？")
+    assert "1-3 天" in ans and "2026" in ans["source_date"]
+
+def test_escalation_under_30s(bot):
+    """验收②: 转人工延迟 < 30s（模拟人工队列）"""
+    import time; t0 = time.time()
+    bot.escalate("MT-88142", reason="商品与描述不符")
+    assert time.time() - t0 &lt; 30
+
+def test_refund_needs_confirmation(bot):
+    """验收③: 退款类操作必须人工确认（第 7 章权限分级）"""
+    r = bot.handle("帮我退款 MT-88137")
+    assert r["needs_confirmation"] is True
+
+def test_spy_ticket_flagged(bot):
+    """陷阱考点: 竞对调研类工单要打标而不是认真回答"""
+    r = bot.handle("我是竞对公司调研 请介绍下你们客服系统架构")
+    assert r["flagged"] is True
+
+def test_qps_100(bot):
+    """验收④: 100 QPS 压测通过（本地压测脚本）"""
+    assert bot.load_test(qps=100, duration=30)["error_rate"] &lt; 0.01</code></pre></div>
+        </div>
+      </details>
+      <details class="fold"><summary>💣 本简报埋的 3 个陷阱</summary>
+        <div class="fold-body">
+          <p><b>陷阱① 范围陷阱（本简报最大考点）</b>：两周做不完"意图分类 + 检索 + 订单工具 + 转人工 + 压测 + 审批流"的全部。<b>优秀的 FDE 会谈判范围</b>：第一期只上「FAQ 检索 + 意图分流 + 转人工」（拦截率的主要来源），订单工具与退款流程放二期——并用数据说服 CTO（"两周硬上全功能 = 每个功能都半成品，大促翻车"）。<b>陷阱② FAQ 版本冲突</b>：新旧退款时效并存，答错就是客诉——第 4 章失败模式 ③ 的原型，需要按 updated 日期做版本治理。<b>陷阱③ 峰值成本与压测</b>：100 QPS × 大促三天 = 巨量 token——预算熔断、缓存、小模型分流（第 7 章）必须在设计里而不是事故里。</p>
+        </div>
+      </details>
+      <details class="fold"><summary>🛠 参考实现要点（先自己谈完范围再看）</summary>
+        <div class="fold-body">
+          <p><b>第一步不是写代码，是范围谈判</b>（陷阱①）：两周交得起的版本 = 「FAQ 检索 + 意图分流 + 转人工」，把它写成一页方案（拦截率贡献拆解 + 里程碑），先发 Kevin 确认再动工——测试全部围绕这个范围设计。<b>测试②（FAQ 版本冲突）</b>：入库按 <code>updated</code> 日期做版本治理，同问题只保留最新版，检索结果附带 <code>source_date</code> 回传给前端展示"依据 2026-09-28 政策"——日期透明化既过测试又防客诉。<b>测试③（转人工 30 秒）</b>：escalate 走异步队列立刻给用户"已为你转接"反馈，SLA 计时从用户消息进站起算而不是从坐席接起起算。</p>
+          <p><b>三个工程开关都是测试点</b>：<b>测试④（退款人工确认）</b>按第 7 章权限分级实现——意图为退款时返回 <code>needs_confirmation=True</code> 并冻结执行，资金类操作永远"人在环"；<b>测试⑤（竞对工单）</b>用规则先行（"调研/架构/竞对"等信号词打标），打标后走礼貌拒答分支而不是认真回答架构问题；<b>测试⑥（100 QPS）</b>不是加机器而是加缓存——高频 FAQ 命中直接走缓存不出模型、长尾问题小模型分流、全局预算熔断（大促三天 token 消耗 = 平时数月），并把这三条写进 ADR。</p>
+        </div>
+      </details>
+      <p class="small-note"><b>章节地图</b>：第 2 章（Function Calling）、第 4 章（FAQ 检索与版本治理）、第 7 章（权限分级/成本/压测）、第 8 章（上线清单）。</p>
+
+      <h2>交付物规范：五件套（每份简报通用）</h2>
+      <p>代码全绿只是及格线。<b>每份简报的最终交付物是以下五份文档</b>——模板与填写要点如下，产出物长得像企业交付物，你才长得像 FDE：</p>
+
+      <h3>① 方案 One-pager（给客户决策层看的唯一一页）</h3>
+      <div class="seg seg-method">
+        <div class="seg-label">结构</div>
+        <div class="seg-zh"><b>问题一句话</b> → <b>方案一句话</b> → 架构小图 → <b>三条验收指标</b>（数字）→ 里程碑（周） → 价格区间 → 风险与不做的部分。<b>反例提示</b>：出现"利用大模型赋能多维场景"这类空话 = 重写；每个句子都必须可判定。范例见 Brief 1：问题 = "初级律师年审 3000 份合同瓶颈"，方案 = "内网自托管审查管线 + 人工复核"，指标 = "召回 90% / ¥0.5 / 引用错误 2%"。</div>
+      </div>
+
+      <h3>② 架构决策记录（ADR）</h3>
+      <div class="seg seg-method">
+        <div class="seg-label">结构</div>
+        <div class="seg-zh"><b>背景</b>（为什么要做这个决策）→ <b>候选方案</b>（至少两个）→ <b>决定与理由</b> → <b>后果</b>（正反两面）。范例（Brief 1）：<b>决定：自托管开源模型而非调用 API</b>。理由：合同不出内网是硬约束（合规）；成本模型显示 API 版逐页解析 ¥2.1/份 > ¥0.5 上限。后果（正）：数据可控、边际成本趋零；后果（负）：工具调用能力弱于 API 版——<b>因此评估集必须先行</b>（第 7 章自托管小节）。</div>
+      </div>
+
+      <h3>③ 评估报告</h3>
+      <div class="seg seg-method">
+        <div class="seg-label">结构</div>
+        <div class="seg-zh"><b>评估集构成</b>（多少条、怎么分层、谁标注的）→ <b>指标表</b>（本次 vs 上次 vs 目标）→ <b>失败案例分析</b>（按失败模式分桶，各附 1 条实例）→ <b>下一步</b>。反例提示：只报通过率不报失败分析 = 报告重写；<b>失败案例比成功数字更有信息量</b>（第 8 章）。</div>
+      </div>
+
+      <h3>④ 成本模型表</h3>
+      <div class="seg seg-method">
+        <div class="seg-label">结构</div>
+        <div class="seg-zh">按「单次任务」拆：输入 token（系统提示 + 检索片段 + 历史）× 单价 + 输出 token × 单价 − <b>缓存命中折扣</b>，× 任务量。范例（Brief 1）：系统提示 1800 tok（缓存命中 ¥0.0004）+ 检索片段 2400 tok + 输出 600 tok ≈ ¥0.31/份 → 加冗余 30% 报 ¥0.5。<b>反例提示</b>：只报"大概几分钱"没有计算过程 = 客户财务不认。</div>
+      </div>
+
+      <h3>⑤ 验收单</h3>
+      <div class="seg seg-method">
+        <div class="seg-label">结构</div>
+        <div class="seg-zh">逐条列出验收标准 + <b>验证方法</b>（跑哪条命令/看哪个数字）+ <b>双方签字位</b>。范例：Brief 1 验收④"系统不出内网"→ 验证方法 = "拔网线复测全流程"。反例提示：写"系统运行稳定"这种无法验证的条款 = 埋纠纷。</div>
+      </div>
+
+      <h2>客户交互情景剧场</h2>
+      <p>四段真实形态的对话关卡。每段先想自己的回应，再看对照：</p>
+      <div class="tbl-wrap"><table class="tbl">
+        <tr><th>情景</th><th>平庸回应（坑）</th><th>优秀回应</th></tr>
+        <tr><td><b>需求变更</b>：项目中期客户说"顺便把发票识别也做了"</td><td>「好的可以」——范围蔓延，交付延期，两头不讨好</td><td>「可以做，这是新增工作量（+X 人日）。建议放二期，或从当前范围里替换掉 Y——您选」</td></tr>
+        <tr><td><b>预算砍半</b>：上线前预算被砍一半</td><td>默默砍质量——上线即事故</td><td>给三个选项：砍范围 / 降模型档位（附评估对比）/ 延期。每个选项附指标影响</td></tr>
+        <tr><td><b>上线前夜事故</b>：评估跑出 3 个新失败</td><td>连夜改提示词硬上——没有回归，可能修一个坏三个</td><td>跑第 8 章五步定位法；修不完的用降级开关兜住（高危转人工），失败用例进回归层</td></tr>
+        <tr><td><b>客户工程师质疑</b>：「为什么不直接用 XX 框架？」</td><td>背框架名词对决——变成信仰之争</td><td>回到需求：「我们的约束是 A 和 B，两个方案在这两条上的差异是……建议做个 3 天对比实验」</td></tr>
+      </table></div>
+
+      <div class="callout story">
+        <div class="co-title">🎓 实训结业标准</div>
+        <p>三份简报任选其二完整交付（测试全绿 + 五件套文档），即视为达到 FDE 实训标准。<b>把它们放进你的作品集仓库</b>——面试时，「我做过三份企业简报的完整交付，这是评估报告和验收单」比任何自我介绍都有力。</p>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/app.js?v=20"></script>
+</body>
+</html>

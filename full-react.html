@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="ReAct 论文全文对照版：英文原文逐段对照中文翻译与解读，含 Table 1-4 完整数据，四色标注核心论点与课程连接。">
+<title>全文翻译 · ReAct | Agent 学院</title>
+<link rel="stylesheet" href="assets/css/style.css?v=20">
+</head>
+<body data-chapter="full">
+
+<header class="topbar">
+  <button class="icon-btn hamburger" id="hamburger" title="打开导航">☰</button>
+  <a class="brand" href="index.html"><span class="logo">学</span> Agent 学院 <small>从零开发智能体 · Ontology · Harness</small></a>
+  <span class="spacer"></span>
+  <span class="progress-pill" id="progress-pill">进度 0/9 章</span>
+  <button class="icon-btn" id="theme-btn">🌙</button>
+</header>
+
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <main class="content">
+    <div class="content-inner">
+
+      <header class="chapter-head">
+        <div class="kicker">全文翻译 · 对照版 · 论文 3/8</div>
+        <h1>ReAct：<span style="color:var(--accent)">推理与行动协同</span>的语言模型</h1>
+        <p class="lead">
+          ReAct: Synergizing Reasoning and Acting in Language Models · Yao et al., ICLR 2023 ·
+          <a href="papers/pdf/react.pdf" target="_blank"> 原文 PDF</a>（本站内置，可分屏阅读） · <a href="https://arxiv.org/abs/2210.03629" target="_blank" rel="noopener">arXiv:2210.03629</a><br>
+          对照式排版：每段先列<b>英文原文</b>（衬线引用体，超长处省略号衔接），紧随<b>中文翻译</b>；
+          Table 1–4 的数据完整译出； 核心论点 /  方法机制 /  实验结论 /  课程连接沿用手册标注体系。
+        </p>
+        <div class="paper-nav"><a href="translations.html" style="border-style:dashed">← 中文精读版</a> <a href="full-transformer.html">Transformer</a> · <a href="full-cot.html">CoT</a> · <b style="color:var(--accent)">ReAct</b> · <a href="full-toolformer.html">Toolformer</a> · <a href="full-rag.html">RAG</a> · <a href="full-reflexion.html">Reflexion</a> · <a href="full-graphrag.html">GraphRAG</a> · <a href="full-sweagent.html">SWE-agent</a></div>
+      </header>
+
+      <h2>摘要</h2>
+      <div class="seg seg-core">
+        <div class="seg-label">核心论点</div>
+        <div class="seg-en">"While large language models (LLMs) have demonstrated impressive performance across tasks in language understanding and interactive decision making, their abilities for reasoning (e.g. chain-of-thought prompting) and acting (e.g. action plan generation) have primarily been studied as separate topics. In this paper, we explore the use of LLMs to generate both reasoning traces and task-specific actions in an interleaved manner, allowing for greater synergy between the two: reasoning traces help the model induce, track, and update action plans as well as handle exceptions, while actions allow it to interface with and gather additional information from external sources such as knowledge bases or environments."</div>
+        <div class="seg-zh">尽管大语言模型（LLM）在语言理解与交互式决策任务上表现出色，但它们的<b>推理</b>能力（如思维链提示）与<b>行动</b>能力（如行动计划生成）此前一直被当作两个独立课题研究。本文探索让 LLM 以<b>交替方式</b>同时生成推理轨迹与任务相关动作，使二者产生更强协同：推理轨迹帮助模型归纳、跟踪、更新行动计划并处理例外；行动则让模型与知识库、环境等外部来源交互、收集额外信息。</div>
+      </div>
+      <div class="seg seg-result">
+        <div class="seg-label">实验结论 · 摘要部分</div>
+        <div class="seg-en">"We apply our approach, named ReAct, to a diverse set of language and decision making tasks and demonstrate its effectiveness over state-of-the-art baselines in addition to improved human interpretability and trustworthiness. Concretely, on question answering (HotpotQA) and fact verification (Fever), ReAct overcomes prevalent issues of hallucination and error propagation in chain-of-thought reasoning by interacting with a simple Wikipedia API, and generating human-like task-solving trajectories that are more interpretable than baselines without reasoning traces. Furthermore, on two interactive decision making benchmarks (ALFWorld and WebShop), ReAct outperforms imitation and reinforcement learning methods by an absolute success rate of 34% and 10% respectively, while being prompted with only one or two in-context examples."</div>
+        <div class="seg-zh">我们将该方法命名为 ReAct，应用于多种语言推理与决策任务，效果超越当时最强基线，且可解释性与可信度更高。具体而言：在问答（HotpotQA）与事实验证（FEVER）上，ReAct 通过与一个简单的 Wikipedia API 交互，克服了思维链推理中普遍存在的幻觉与错误传播问题，并生成比无推理轨迹的基线更可解释的、类人的任务求解轨迹。在两个交互式决策基准（ALFWorld 与 WebShop）上，ReAct 以<b>仅一两条上下文示例</b>的提示，绝对成功率分别超越模仿学习与强化学习方法 <b>34% 与 10%</b>。</div>
+        <div class="seg-note"><b>解读：</b>注意"仅一两条示例"——对比模仿学习动辄十万条训练轨迹，这是提示范式的降维优势。两个数字（34%、10%）就是后来所有"LLM Agent 能打"叙事的起点。</div>
+      </div>
+
+      <h2>§1 引言</h2>
+      <div class="seg seg-method">
+        <div class="seg-label">方法机制 · 动机</div>
+        <div class="seg-en">"A unique feature of human intelligence is the ability to seamlessly combine task-oriented actions with verbal reasoning (or inner speech), which has been theorized to play an important role in human cognition for enabling self-regulation or strategization and maintaining a working memory. Consider the example of cooking up a dish in the kitchen. Between any two specific actions, we may reason in language in order to track progress (“now that everything is cut, I should heat up the pot of water”), to handle exceptions or adjust the plan according to the situation (“I don’t have salt, so let me use soy sauce and pepper instead”), and to realize when external information is needed (“how do I prepare dough? Let me search on the Internet”). We may also act (open a cookbook to read the recipe, open the fridge, check ingredients) to support the reasoning and to answer questions (“What dish can I make right now?”). This tight synergy between “acting” and “reasoning” allows humans to learn new tasks quickly and perform robust decision making or reasoning, even under previously unseen circumstances or facing information uncertainties."</div>
+        <div class="seg-zh">人类智能的独特之处在于能把任务导向的行动与语言推理（或称"内心言语"）无缝结合——这一机制被认为在人类认知中承担自我调节、制定策略与维持工作记忆的功能。以在厨房做菜为例：在任意两个具体动作之间，我们都可以用语言推理来跟踪进度（"都切好了，该烧水了"）、处理例外或随机应变（"没盐了，用酱油和胡椒代替"）、意识到需要外部信息（"面团怎么弄？上网搜一下"）。我们也会用行动支持推理并回答问题（翻开菜谱、打开冰箱、查看食材——"现在能做什么菜？"）。正是这种"行动"与"推理"的紧密协同，让人类能快速学会新任务，在未见过的情境或信息不确定时依然做出稳健决策。</div>
+        <div class="seg-note"><b>解读：</b>厨房例子是全文最著名的类比——它把"什么是 Agent"讲成了生活常识：<b>想一步、做一步、看到反馈再想</b>。第 1 章模拟器的设计就脱胎于此。</div>
+      </div>
+      <div class="seg seg-core">
+        <div class="seg-label">核心论点 · 两条路线各自的困境</div>
+        <div class="seg-en">"However, this “chain-of-thought” reasoning is a static black box, in that the model uses its own internal representations to generate thoughts and is not grounded in the external world, which limits its ability to reason reactively or update its knowledge. This can lead to issues like fact hallucination and error propagation over the reasoning process. On the other hand, recent work has explored the use of pre-trained language models for planning and acting in interactive environments, with a focus on predicting actions via language priors. ... However, they do not employ language models to reason abstractly about high-level goals or maintain a working memory to support acting. Beyond such simple embodied tasks to interact with a few blocks, there have not been studies on how reasoning and acting can be combined in a synergistic manner for general task solving, and if such a combination can bring systematic benefits compared to reasoning or acting alone."</div>
+        <div class="seg-zh">一方面，"思维链"推理是一个<b>静态黑箱</b>：模型用内部表征生成想法，不与外部世界接地，这限制了它reactive地推理或更新知识的能力，会导致事实幻觉与错误沿推理过程传播。另一方面，用预训练语言模型在交互环境中规划与行动的工作（如 WebGPT、SayCan）只依赖语言先验预测动作，<b>并不让语言模型对高层目标做抽象推理、也不维护支持行动的工作记忆</b>。在通用任务求解中，推理与行动如何协同结合、这种结合是否比单独使用带来系统性收益——此前没有研究。</div>
+        <div class="seg-note"><b>解读：</b>这就是第 1 章"两条路线各有硬伤"的学术出处：CoT 不接地（幻觉），行动派不思考（乱试）。ReAct 的贡献声明是填补中间地带。</div>
+      </div>
+      <div class="seg seg-method">
+        <div class="seg-label">方法机制 · 贡献清单</div>
+        <div class="seg-en">"In this work, we present ReAct, a general paradigm to combine reasoning and acting with language models for solving diverse language reasoning and decision making tasks. ... To summarize, our key contributions are the following: (1) we introduce ReAct, a novel prompt-based paradigm to synergize reasoning and acting in language models for general task solving; (2) we perform extensive experiments across diverse benchmarks to showcase the advantage of ReAct in a few-shot learning setup over prior approaches that perform either reasoning or action generation in isolation; (3) we present systematic ablations and analysis to understand the importance of acting in reasoning tasks, and reasoning in interactive tasks; (4) we analyze the limitations of ReAct under the prompting setup, and perform initial finetuning experiments showing the potential of ReAct to improve with additional training data."</div>
+        <div class="seg-zh">本文贡献四点：① 提出 ReAct——一个让语言模型协同推理与行动的、基于提示的新范式；② 在多个基准上大量实验，证明少样本设定下 ReAct 优于单独推理或单独行动的方法；③ 系统性消融与分析，理解<b>行动在推理任务中、推理在交互任务中</b>各自的重要性；④ 分析提示设定下 ReAct 的局限，并做初步微调实验证明其在更多数据下的潜力。</div>
+      </div>
+
+      <h2>§2 方法：ReAct = 推理 + 行动</h2>
+      <div class="seg seg-method">
+        <div class="seg-label">方法机制 · 核心思想（把"想"变成一种动作）</div>
+        <div class="seg-en">"The idea of ReAct is simple: we augment the agent’s action space to Â = A ∪ L, where L is the space of language. An action â ∈ L in the language space, which we will refer to as a thought or a reasoning trace, does not affect the external environment, thus leading to no observation feedback. Instead, a thought aims to compose useful information by reasoning over the current context, and update the context to support future reasoning or acting. As shown in Figure 1, there could be various types of useful thoughts, e.g. decomposing task goals and create action plans, injecting commonsense knowledge relevant to task solving, extracting important parts from observations, track progress and transit action plans, handle exceptions and adjust action plans, and so on."</div>
+        <div class="seg-zh">考虑智能体与环境交互求解任务的通用设定。ReAct 的想法很简单：<b>把智能体的动作空间扩充为 Â = A ∪ L</b>，其中 L 是语言空间。语言空间中的动作（称为一个<b>想法</b>或<b>推理轨迹</b>）不影响外部环境，因此不产生观察反馈；它的作用是对当前上下文推理、组合出有用信息，并把结果写进上下文，支持未来的推理或行动。有用的想法多种多样：分解任务目标并制定行动计划、注入与任务相关的常识知识、从观察中抽取要点、跟踪进度并切换行动计划、处理例外并调整计划……</div>
+        <div class="seg-note"><b>解读：</b>这是全文最优雅的形式化："Thought 是一种不改变外部环境的动作"。一句话把推理纳入行动空间，于是整个 Agent Loop 统一成了"连续的动作流"——第 1 章伪代码的理论根基。</div>
+      </div>
+      <div class="seg seg-method">
+        <div class="seg-label">方法机制 · 实现设定</div>
+        <div class="seg-en">"However, as the language space L is unlimited, learning in this augmented action space is difficult and requires strong language priors. In this paper, we mainly focus on the setup where a frozen large language model, PaLM-540B, is prompted with few-shot in-context examples to generate both domain-specific actions and free-form language thoughts for task solving. Each in-context example is a human trajectory of actions, thoughts, and environment observations to solve a task instance. For the tasks where reasoning is of primary importance, we alternate the generation of thoughts and actions so that the task-solving trajectory consists of multiple thought-action-observation steps. In contrast, for decision making tasks that potentially involve a large number of actions, thoughts only need to appear sparsely in the most relevant positions of a trajectory, so we let the language model decide the asynchronous occurrence of thoughts and actions for itself."</div>
+        <div class="seg-zh">由于语言空间无限制，在扩充后的动作空间里学习很难，需要强语言先验。本文主要采用<b>冻结的 PaLM-540B + 少样本上下文示例</b>的设定：每条示例是人工书写的一条轨迹（动作 + 想法 + 环境观察）。对推理为主的任务，想法与动作<b>密集交替</b>；对动作繁多的决策任务，想法只需<b>稀疏地</b>出现在轨迹最关键的位置，出现时机由模型自行决定。</div>
+      </div>
+      <div class="seg seg-result">
+        <div class="seg-label">实验结论 · ReAct 的四个特性（作者自述）</div>
+        <div class="seg-en">"Since decision making and reasoning capabilities are integrated into a large language model, ReAct enjoys several unique features: A) Intuitive and easy to design: Designing ReAct prompts is straightforward as human annotators just type down their thoughts in language on top of their actions taken. ... B) General and flexible: Due to the flexible thought space and thought-action occurrence format, ReAct works for diverse tasks with distinct action spaces and reasoning needs, including but not limited to QA, fact verification, text game, and web navigation. C) Performant and robust: ReAct shows strong generalization to new task instances while learning solely from one to six in-context examples, consistently outperforming baselines with only reasoning or acting across different domains. ... D) Human aligned and controllable: ReAct promises an interpretable sequential decision making and reasoning process where humans can easily inspect reasoning and factual correctness. Moreover, humans can also control or correct the agent behavior on the go by thought editing."</div>
+        <div class="seg-zh">A) <b>直观易设计</b>：标注者只需在动作之上用语言写下想法，无需特殊格式设计；B) <b>通用灵活</b>：适用于问答、事实验证、文字游戏、网页导航等动作空间与推理需求迥异的任务；C) <b>高性能且稳健</b>：仅靠 1~6 条示例就能泛化到新任务实例；D) <b>人类对齐且可控</b>：决策与推理过程可解释、可审查，人类还能通过"编辑想法"实时纠正智能体行为。</div>
+      </div>
+
+      <h2>§3 知识密集型推理任务（HotpotQA 与 FEVER）</h2>
+      <div class="seg seg-method">
+        <div class="seg-label">方法机制 · 任务与动作空间</div>
+        <div class="seg-en">"We consider two datasets challenging knowledge retrieval and reasoning: (1) HotPotQA, a multi-hop question answering benchmark that requires reasoning over two or more Wikipedia passages, and (2) FEVER, a fact verification benchmark where each claim is annotated SUPPORTS, REFUTES, or NOT ENOUGH INFO, based on if there exists a Wikipedia passage to verify the claim. ... We design a simple Wikipedia web API with three types of actions to support interactive information retrieval: (1) search[entity], which returns the first 5 sentences from the corresponding entity wiki page if it exists, or else suggests top-5 similar entities from the Wikipedia search engine, (2) lookup[string], which would return the next sentence in the page containing string, simulating Ctrl+F functionality on the browser, (3) finish[answer], which would finish the current task with answer. We note that this action space mostly can only retrieve a small part of a passage based on exact passage name, which is significantly weaker than state-of-the-art lexical or neural retrievers. The purpose is to simulate how humans would interact with Wikipedia, and force models to retrieve via explicit reasoning in language."</div>
+        <div class="seg-zh">两个数据集：<b>HotpotQA</b>（多跳问答，需跨两篇以上维基百科段落推理）与 <b>FEVER</b>（事实验证，每条论断标注 SUPPORTS / REFUTES / NOT ENOUGH INFO）。设定为 question-only：模型只拿到问题本身，必须靠内部知识或与环境交互检索。动作空间是一个极简 Wikipedia API：<code>search[实体]</code>（返回对应页面头 5 句，或推荐 5 个相似实体）、<code>lookup[字符串]</code>（返回页面中下一处包含该字符串的句子，模拟 Ctrl+F）、<code>finish[答案]</code>。作者特意让这个动作空间<b>弱于</b>当时最强的检索器——目的是模拟人类查维基的方式，<b>逼模型用显式语言推理来检索</b>。</div>
+        <div class="seg-note"><b>解读：</b>"故意用弱检索器"是个漂亮的实验设计：把所有增益干净地归因于"推理 + 行动"的协同，而不是检索器本身。对 Builder 的暗示：哪怕工具很朴素，推理规划照样能把它们用出花来。</div>
+      </div>
+      <div class="seg seg-method">
+        <div class="seg-label">方法机制 · 基线构造</div>
+        <div class="seg-en">"We systematically ablate ReAct trajectories to build prompts for multiple baselines: (a) Standard prompting (Standard), which removes all thoughts, actions, observations in ReAct trajectories. (b) Chain-of-thought prompting (CoT), which removes actions and observations and serve as a reasoning-only baseline. We also build a self-consistency baseline (CoT-SC) by sampling 21 CoT trajectories with decoding temperature 0.7 during inference and adopting the majority answer. ... (c) Acting-only prompt (Act), which removes thoughts in ReAct trajectories, loosely resembling how WebGPT interacts with the Internet to answer questions. ... We therefore propose to incorporate ReAct and CoT-SC, and let the model decide when to switch to the other method based on the following heuristics: A) ReAct → CoT-SC: when ReAct fails to return an answer within given steps, back off to CoT-SC. ... B) CoT-SC → ReAct: when the majority answer among n CoT-SC samples occurs less than n/2 times (i.e. internal knowledge might not support the task confidently), back off to ReAct."</div>
+        <div class="seg-zh">基线由 ReAct 轨迹系统性消融而来：(a) <b>Standard</b>：去掉全部想法/动作/观察；(b) <b>CoT</b>：去掉动作与观察（纯推理基线）；<b>CoT-SC</b>：以温度 0.7 采样 21 条 CoT 轨迹取多数答案；(c) <b>Act</b>：去掉想法（纯行动基线，类似 WebGPT 的交互方式）。另有两种<b>组合策略</b>：ReAct→CoT-SC（ReAct 超步数上限则退回 CoT-SC）；CoT-SC→ReAct（21 条采样中多数答案出现不足一半——内部知识没把握——则转投 ReAct）。</div>
+        <div class="seg-note"><b>解读：</b>"内部知识没把握就出去查"——这个切换启发式就是今天"模型自主决定查不查"的雏形，也是第 4 章"四路知识来源"思想实验的源头。</div>
+      </div>
+
+      <h3>§3.3 结果与观察</h3>
+      <div class="seg seg-result">
+        <div class="seg-label">实验结论 · Table 1 完整数据（PaLM-540B）</div>
+        <div class="tbl-wrap"><table class="tbl">
+          <tr><th>提示方法</th><th>HotpotQA（EM）</th><th>FEVER（Acc）</th></tr>
+          <tr><td>Standard</td><td>28.7</td><td>57.1</td></tr>
+          <tr><td>CoT</td><td>29.4</td><td>56.3</td></tr>
+          <tr><td>CoT-SC（21 条自一致性）</td><td>33.4</td><td>60.4</td></tr>
+          <tr><td>Act（仅行动）</td><td>25.7</td><td>58.9</td></tr>
+          <tr><td><b>ReAct</b></td><td><b>27.4</b></td><td><b>60.9</b></td></tr>
+          <tr><td><b>CoT-SC→ReAct</b></td><td><b>34.2</b></td><td><b>64.6</b></td></tr>
+          <tr><td><b>ReAct→CoT-SC</b></td><td><b>35.1</b></td><td><b>62.0</b></td></tr>
+          <tr><td>监督 SOTA（SoTA 系统）</td><td>67.5</td><td>89.5</td></tr>
+        </table></div>
+        <div class="seg-en">"Table 1 shows HotpotQA and Fever results using PaLM-540B as the base model with different prompting methods. We note that ReAct is better than Act on both tasks, demonstrating the value of reasoning to guide acting. ... ReAct outperforms CoT on Fever (60.9 vs. 56.3) and slightly lags behind CoT on HotpotQA (27.4 vs. 29.4). ... the best prompting method on HotpotQA and Fever are ReAct → CoT-SC and CoT-SC → ReAct respectively. ... they both significantly and consistently outperform CoT-SC across different number of samples, reaching CoT-SC performance with 21 samples using merely 3-5 samples. These results indicate the value of properly combining model internal knowledge and external knowledge for reasoning tasks."</div>
+        <div class="seg-zh">关键读数：<b>ReAct 在两个任务上都稳定优于 Act</b>（推理指导行动的价值）；FEVER 上 ReAct 超过 CoT（60.9 vs 56.3），HotpotQA 上略低于 CoT（27.4 vs 29.4）；<b>最佳方案是两者的组合</b>（HotpotQA 最优 ReAct→CoT-SC 35.1，FEVER 最优 CoT-SC→ReAct 64.6），且组合法用 3~5 条 CoT-SC 采样就达到纯 CoT-SC 用 21 条的水平。</div>
+        <div class="seg-note"><b>解读：</b>诚实阅读这张表：单靠 ReAct 并没有全面碾压 CoT——它的价值在"接地与可信"，而"内部知识 + 外部检索"的组合才是上限。这直接支持第 4 章的立场：知识库与参数知识是互补而非互替。</div>
+      </div>
+      <div class="seg seg-result">
+        <div class="seg-label">实验结论 · Table 2 成功/失败模式（人工标注 200 条轨迹）</div>
+        <div class="tbl-wrap"><table class="tbl">
+          <tr><th>类型</th><th>定义</th><th>ReAct</th><th>CoT</th></tr>
+          <tr><td>成功 · 真阳性</td><td>推理轨迹与事实均正确</td><td>94%</td><td>86%</td></tr>
+          <tr><td>成功 · 假阳性</td><td>推理或事实有幻觉但答案碰对</td><td><b>6%</b></td><td><b>14%</b></td></tr>
+          <tr><td>失败 · 推理错误</td><td>推理轨迹错误（含无法跳出重复循环）</td><td>47%</td><td>16%</td></tr>
+          <tr><td>失败 · 检索结果差</td><td>搜索为空或无有用信息</td><td>23%</td><td>—</td></tr>
+          <tr><td>失败 · 幻觉</td><td>幻觉推理或事实</td><td><b>0%</b></td><td><b>56%</b></td></tr>
+          <tr><td>失败 · 标注歧义</td><td>预测合理但不精确匹配标签</td><td>29%</td><td>28%</td></tr>
+        </table></div>
+        <div class="seg-en">"A) Hallucination is a serious problem for CoT, resulting in much higher false positive rate than ReAct (14% vs. 6%) in success mode, and make up its major failure mode (56%). In contrast, the problem solving trajectory of ReAct is more grounded, fact-driven, and trustworthy, thanks to the access of an external knowledge base. B) While interleaving reasoning, action and observation steps improves ReAct’s groundedness and trustworthiness, such a structural constraint also reduces its flexibility in formulating reasoning steps, leading to more reasoning error rate than CoT. ... C) For ReAct, successfully retrieving informative knowledge via search is critical. Non-informative search, which counts for 23% of the error cases, derails the model reasoning and gives it a hard time to recover and reformulate thoughts. This is perhaps an expected trade-off between factuality and flexibility, which motivates our proposed strategies of combining two methods."</div>
+        <div class="seg-zh">三个关键观察：<b>A) 幻觉是 CoT 的重灾区</b>——假阳性率 14% vs 6%，且占其失败模式的 56%（ReAct 为 0%）：得益于外部知识库，ReAct 的轨迹更接地、更可信任。<b>B) 结构约束的代价</b>——交替格式降低了推理灵活性，ReAct 的推理错误率更高（47% vs 16%），一种特有错误是重复生成之前的想法与动作、跳不出循环。<b>C) 检索成败决定 ReAct 成败</b>——23% 的失败源于检索无收获，模型难以恢复并改写想法。</div>
+        <div class="seg-note"><b>解读：</b>这张表是全文对 Builder 最有价值的部分：它把"幻觉"从模糊抱怨变成了可度量的失败模式（CoT 56% → ReAct 0%），同时坦白新代价（推理错误 47%、检索依赖 23%）。第 8 章 Trace 侦探实验里"检索无收获"的失败模式、第 4 章"先查检索层"的诊断顺序，全部能在这张表里找到原型。<b>事实性与灵活性是一对真实权衡</b>——这句话值得写在你的项目文档里。</div>
+      </div>
+      <div class="seg seg-result">
+        <div class="seg-label">实验结论 · 微调实验（§3.3 末）</div>
+        <div class="seg-en">"With PaLM-8/62B, prompting ReAct performs worst among four methods due to the difficulty to learn both reasoning and acting from in-context examples. However, when finetuned with just 3,000 examples, ReAct becomes the best method among the four, with PaLM-8B finetuned ReAct outperforming all PaLM-62B prompting methods, and PaLM-62B finetuned ReAct outperforming all 540B prompting methods. In contrast, finetuning Standard or CoT is significantly worse than finetuning ReAct or Act for both PaLM-8/62B, as the former essentially teaches models to memorize (potentially hallucinated) knowledge facts, and the latter teaches models how to (reason and) act to access information from Wikipedia, a more generalizable skill for knowledge reasoning."</div>
+        <div class="seg-zh">用 ReAct 生成的 3000 条正确轨迹微调小模型（PaLM-8B/62B）后，<b>ReAct 成为四方法中最好的</b>：8B 微调版 ReAct 超过全部 62B 提示版，62B 微调版超过全部 540B 提示版。相反，微调 Standard 或 CoT 显著更差——因为后者教模型"背诵（可能幻觉的）知识"，前者教模型"如何推理并行动去获取信息"，是更可泛化的技能。</div>
+        <div class="seg-note"><b>解读：</b>"教方法比教知识更可泛化"——这是对"要不要微调"问题的论文级回答：要微调，就微调轨迹与方法，不要微调事实。</div>
+      </div>
+
+      <h2>§4 决策型任务（ALFWorld 与 WebShop）</h2>
+      <div class="seg seg-method">
+        <div class="seg-label">方法机制 · 两个环境</div>
+        <div class="seg-en">"ALFWorld is a synthetic text-based game designed to align with the embodied ALFRED benchmark. It includes 6 types of tasks in which an agent needs to achieve a high-level goal (e.g. examine paper under desklamp) by navigating and interacting with a simulated household via text actions. A task instance can have more than 50 locations and take an expert policy more than 50 steps to solve, thus challenging an agent to plan and track subgoals, as well as explore systematically. ... one challenge built into ALFWorld is the need to determine likely locations for common household items (e.g. desklamps will likely be on desks, shelfs, or dressers), making this environment a good fit for LLMs to exploit their pretrained commonsense knowledge. ... WebShop is a recently proposed online shopping website environment with 1.18M real-world products and 12k human instructions ... and requires an agent to purchase a product based on a user instruction (e.g. “I am looking for a nightstand with drawers. It should have a nickel finish, and priced lower than $140”) through web interactions."</div>
+        <div class="seg-zh"><b>ALFWorld</b>：文字版家居模拟游戏（6 类任务，如"在台灯下检查纸张"），50+ 个地点、专家要 50+ 步，考验子目标规划与系统性探索（例如逐个书桌找台灯），且内置"常识定位"挑战（台灯通常在桌上/架上）。<b>WebShop</b>：118 万真实商品、1.2 万条人类指令的网购环境，需按用户指令（"找带抽屉的床头柜，镍色，低于 140 美元"）通过网页交互买到匹配商品。</div>
+      </div>
+      <div class="seg seg-result">
+        <div class="seg-label">实验结论 · Table 3 / Table 4 完整数据</div>
+        <div class="tbl-wrap"><table class="tbl">
+          <tr><th>ALFWorld（成功率%）</th><th>Pick</th><th>Clean</th><th>Heat</th><th>Cool</th><th>Look</th><th>Pick2</th><th>总</th></tr>
+          <tr><td>Act（6 次最佳）</td><td>88</td><td>42</td><td>74</td><td>67</td><td>72</td><td>41</td><td>45</td></tr>
+          <tr><td>ReAct（平均）</td><td>65</td><td>39</td><td>83</td><td>76</td><td>55</td><td>24</td><td>57</td></tr>
+          <tr><td><b>ReAct（6 次最佳）</b></td><td><b>92</b></td><td><b>58</b></td><td><b>96</b></td><td><b>86</b></td><td><b>78</b></td><td><b>41</b></td><td><b>71</b></td></tr>
+          <tr><td>ReAct-IM（模仿内心独白，平均）</td><td>55</td><td>59</td><td>60</td><td>55</td><td>23</td><td>24</td><td>48</td></tr>
+          <tr><td>BUTLER（模仿学习基线，最佳）</td><td>46</td><td>39</td><td>74</td><td>100</td><td>22</td><td>24</td><td>37</td></tr>
+        </table></div>
+        <div class="tbl-wrap"><table class="tbl">
+          <tr><th>WebShop</th><th>得分</th><th>成功率%</th></tr>
+          <tr><td>Act</td><td>62.3</td><td>30.1</td></tr>
+          <tr><td><b>ReAct</b></td><td><b>66.6</b></td><td><b>40.0</b></td></tr>
+          <tr><td>模仿学习 IL</td><td>59.9</td><td>29.1</td></tr>
+          <tr><td>IL + RL</td><td>62.4</td><td>28.7</td></tr>
+          <tr><td>人类专家</td><td>82.1</td><td>59.6</td></tr>
+        </table></div>
+        <div class="seg-en">"ReAct outperforms Act on both ALFWorld (Table 3) and Webshop (Table 4). On ALFWorld, the best ReAct trial achieves an average success rate of 71%, significantly outperforming the best Act (45%) and BUTLER (37%) trials. In fact, even the worse ReAct trial (48%) beats the best trial of both methods. Moreover, the advantage of ReAct over Act is consistent across six controlled trials, with relative performance gain ranging from 33% to 90% and averaging 62%. ... On Webshop, one-shot Act prompting already performs on par with IL and IL+RL methods. With additional sparse reasoning, ReAct achieves significantly better performance, with an absolute 10% improvement over the previous best success rate. ... However, existing methods are still far from the performance of expert humans, who perform significantly more product explorations and query re-formulations. ... As can be seen in Table 3, ReAct substantially outperforms IM-style prompting (ReAct-IM) (71 vs. 53 overall success rate), with consistent advantages on five out of six tasks."</div>
+        <div class="seg-zh">ALFWorld：ReAct 最佳试验 71%，显著超过 Act 最佳（45%）与 BUTLER（37%）——<b>连 ReAct 最差的一次（48%）都高于两者最佳</b>；六次对照试验中 ReAct 相对增益 33%~90%，平均 62%。WebShop：单示例 Act 已与 IL/IL+RL 打平，加稀疏推理后 ReAct 成功率 40%，绝对提升 10%——但仍远低于人类专家的 59.6%（专家会做更多商品探索与查询改写）。</div>
+        <div class="seg-note"><b>解读：</b>"最差的一次都高于基线最佳"是全文最硬的一句对比——收益不是运气，是范式的。另一个亮点是 <b>ReAct-IM 消融</b>：把"内心独白"退化成"对外部反馈的复述"后成功率从 71 掉到 53——证明<b>真正有用的不是"复述环境"，而是"高层目标分解 + 常识推理"</b>。这正好是第 3 章"提示词要写出可判定的思考内容"的实验注脚。</div>
+      </div>
+
+      <h2>§5 相关工作（速览）</h2>
+      <div class="seg seg-skip">
+        <div class="seg-label">可跳读 · 两条研究线的定位</div>
+        <div class="seg-en">"Perhaps the most well-known work of using LLMs for reasoning is Chain-of-Thought (CoT), which reveals the ability of LLMs to formulate their own “thinking procedure” for problem solving. Several follow-up works have since been performed, including least-to-most prompting for solving complicated tasks, zero-shot-CoT, and reasoning with self-consistency. ... In contrast to these methods, ReAct performs more than just isolated, fixed reasoning, and integrates model actions and their corresponding observations into a coherent stream of inputs. ... WebGPT does not explicitly model the thinking and reasoning procedure, instead rely on expensive human feedback for reinforcement learning. ... Perhaps most relevant to ReAct in this respect are SayCan and Inner Monologue, which use LLMs for robotic action planning and decision making. ... However, we argue that Inner Monologue does not truly comprise of inner thoughts — this is elaborated in Section 4."</div>
+        <div class="seg-zh">§5 把 ReAct 放进两条线：LLM 推理（CoT 及其后续：least-to-most、zero-shot-CoT、自一致性、STaR 等——它们只做孤立固定的推理，ReAct 则把动作与观察织入推理流）与 LLM 决策（WebGPT、BlenderBot、SayCan、Inner Monologue 等——它们不做显式推理，且依赖昂贵的人类反馈；ReAct 只需语言化的推理描述，学习成本低得多）。作者特别强调：Inner Monologue 的"内心独白"只是环境反馈的注入，并非真正的内在想法——§4 的 ReAct-IM 消融即为此设计。</div>
+      </div>
+
+      <h2>§6 结论与局限</h2>
+      <div class="seg seg-core">
+        <div class="seg-label">核心论点 · §6</div>
+        <div class="seg-en">"We have proposed ReAct – a simple yet effective method for synergizing reasoning and acting in large language models. Through a diverse set of experiments on multi-hop question-answering, fact checking, and interactive decision-making tasks, we show that ReAct leads to superior performance with interpretable decision traces. Despite the simplicity of our method, complex tasks with large action spaces require more demonstrations to learn well, which unfortunately can easily go beyond the input length limit of in-context learning. We explore the fine-tuning approach on HotpotQA with initial promising results, but learning from more high-quality human annotations will be the desiderata to further improve the performance."</div>
+        <div class="seg-zh">我们提出了 ReAct——一个在大语言模型中协同推理与行动的简单而有效的方法。在多跳问答、事实核查与交互式决策上的多样实验表明：ReAct 带来更优的性能与可解释的决策轨迹。尽管方法简单，<b>动作空间大的复杂任务需要更多示范才能学好，而这很容易超出上下文学习的输入长度限制</b>。我们在 HotpotQA 上探索了微调方案，证明其有效性。</div>
+        <div class="seg-note"><b>解读：</b>"示范数量 vs 上下文长度"的矛盾在 2023 年是致命局限，今天已被长上下文模型大幅缓解——但"复杂任务需要更多示范"的规律依然成立，对应第 5 章"复杂任务上 reasoner 引擎 + 更多示例"的实践建议。</div>
+      </div>
+      <div class="seg seg-link">
+        <div class="seg-label">课程连接 · 全文读完后的三个动手动作</div>
+        <div class="seg-zh">① 把第 2 章的极简 Agent 改造成论文的 Wikipedia 三件套（search / lookup / finish），亲手复现一条 HotpotQA 轨迹；② 在你的 Harness 里实现 CoT-SC→ReAct 式的"内部知识没把握就查库"切换启发式；③ 用 Table 2 的成功/失败模式分类法给自己的 Agent 轨迹做一次人工标注——你会发现自己的失败分布和论文惊人地相似。</div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/app.js?v=20"></script>
+</body>
+</html>

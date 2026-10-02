@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="SWE-agent 论文对照式全文翻译：Agent-Computer Interfaces Enable Automated Software Engineering 原文逐段中英对照，ACI 四原则与全部消融数据解读。">
+<title>全文翻译 · SWE-agent | Agent 学院</title>
+<link rel="stylesheet" href="assets/css/style.css?v=20">
+</head>
+<body data-chapter="full">
+
+<header class="topbar">
+  <button class="icon-btn hamburger" id="hamburger" title="打开导航">☰</button>
+  <a class="brand" href="index.html"><span class="logo">学</span> Agent 学院 <small>从零开发智能体 · Ontology · Harness</small></a>
+  <span class="spacer"></span>
+  <span class="progress-pill" id="progress-pill">进度 0/9 章</span>
+  <button class="icon-btn" id="theme-btn">🌙</button>
+</header>
+
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <main class="content">
+    <div class="content-inner">
+
+      <header class="chapter-head">
+        <div class="kicker">全文翻译 · 对照版 · 论文 8/8</div>
+        <h1>SWE-agent：<span style="color:var(--accent)">智能体-计算机接口</span>成就自动化软件工程</h1>
+        <p class="lead">
+          SWE-agent: Agent-Computer Interfaces Enable Automated Software Engineering · Yang et al., NeurIPS 2024 ·
+          <a href="papers/pdf/sweagent.pdf" target="_blank"> 原文 PDF</a> · <a href="https://arxiv.org/abs/2405.15793" target="_blank" rel="noopener">arXiv:2405.15793</a><br>
+          对照式排版：英文原文 → 中文翻译，重点段落黄色标注 + 解读。§2 的 ACI 四原则与 §5 的消融数据是全文心脏——「接口决定性能」的全部证据都在这里。
+        </p>
+        <div class="paper-nav"><a href="translations.html" style="border-style:dashed">← 中文精读版</a> <a href="full-transformer.html">Transformer</a> · <a href="full-cot.html">CoT</a> · <a href="full-react.html">ReAct</a> · <a href="full-toolformer.html">Toolformer</a> · <a href="full-rag.html">RAG</a> · <a href="full-reflexion.html">Reflexion</a> · <a href="full-graphrag.html">GraphRAG</a> · <b style="color:var(--accent)">SWE-agent</b></div>
+      </header>
+
+      <h2>摘要</h2>
+      <div class="para key">
+        <div class="p-en">Just as humans benefit from powerful software applications, such as integrated development environments, for complex tasks like software engineering, we posit that LM agents represent a new category of end users with their own needs and abilities, and would benefit from specially-built interfaces to the software they use.</div>
+        <div class="p-zh">正如人类在软件工程这类复杂任务中受益于 IDE 等强大的软件，我们主张：<b>语言模型智能体代表了一类新的最终用户</b>，有自己的需求与能力，也将从为其专门构建的软件接口中受益。</div>
+        <div class="p-note"><b>解读：</b>这是全文的世界观陈述：模型不是「更好的 API 调用者」，而是<b>一类新的计算机用户</b>——所以需要一门新的学科「ACI」，正如 HCI 之于人类。第 7 章把工具描述叫「给模型的使用说明书」，学术版名字就是 ACI。</div>
+      </div>
+      <div class="seg seg-result">
+        <div class="seg-label">实验结论 · 摘要部分</div>
+        <div class="seg-zh">SWE-agent 的定制<b>智能体-计算机接口（ACI）</b>显著增强了智能体创建编辑代码文件、导航仓库、执行测试的能力。在 SWE-bench 与 HumanEvalFix 上达到当时最优：<b>pass@1 分别为 12.5% 与 87.7%</b>，远超此前非交互式语言模型的水平（SWE-bench 此前最佳 3.8%）。</div>
+      </div>
+
+      <h2>§1 引言</h2>
+      <div class="para">
+        <div class="p-en">In practice, we find that LM agents can struggle to reliably take actions in this environment. For example, it fails to provide simple commands to edit a small file segment, and does not provide any feedback if the user makes an invalid edit. These deficits substantially hamper performance, motivating the need for an agent-computer interface (ACI).</div>
+        <div class="p-zh">实践中我们发现，直接面对 Linux shell 的智能体很难可靠地行动：它给不出编辑一小段文件的简单命令，做了一次无效编辑也不会得到任何反馈。这些缺陷严重拖累性能——由此引出对<b>智能体-计算机接口（ACI）</b>的需求：一层介于 LLM 智能体与计算机之间的抽象。</div>
+      </div>
+      <div class="seg seg-result">
+        <div class="seg-label">实验结论 · 引言里的核心数字</div>
+        <div class="seg-zh">以 GPT-4 Turbo 为底座，SWE-agent 解决了 2294 个 SWE-bench 测试任务中的 <b>12.47%</b>，大幅超过此前非交互式检索增强系统的 3.8%。在 300 个实例的 SWE-bench Lite 子集上的消融显示：<b>相比只用默认 Linux shell 的基线，SWE-agent 多解决 10.7 个百分点</b>。且 ACI 可移植：换用 Claude 3 Opus 仍能解决 10.5%。</div>
+        <div class="p-note"><b>解读：</b>把三个数字连起来读：3.8%（无交互 RAG）→ 10.7%（shell-only + ACI 前的差距部分）→ 12.47%（完整 ACI）。模型全程是同一个 GPT-4 Turbo。<b>这就是「模型决定上限，Harness 决定下限」最硬的证据链。</b></div>
+      </div>
+
+      <h2>§2 智能体-计算机接口</h2>
+      <div class="para key">
+        <div class="p-en">We argue that LM agents represent a new category of end user... Disparities in humans' and LMs' abilities and limitations motivates different interface design guidelines. For instance, the current generation of LMs lack the visual understanding abilities to directly operate GUI-based applications... humans can flexibly ignore unnecessary information, whereas all content has a fixed cost in memory and computation for LMs and distracting context can harm performance.</div>
+        <div class="p-zh">人类与语言模型在能力与局限上的差异，决定了需要不同的接口设计准则。例如：当前 LLM 缺乏直接操作 GUI 应用的视觉理解能力（但那些应用提供的语法检查、导航等功能若以合适方式呈现，对模型同样有用）；<b>人类可以灵活忽略无关信息，而对 LLM 来说一切内容都有固定的记忆与计算成本，干扰性上下文会损害性能。</b></div>
+        <div class="p-note"><b>解读：</b>这条「人类能忽略、模型不能」的论断，是第 4 章「上下文裁剪」与第 3 章「控制提示词篇幅」的原理级解释——不是风格偏好，是模型的物理属性。</div>
+      </div>
+      <div class="para">
+        <div class="p-en">Ultimately, a well-designed ACI should help the LM agent understand the state of the application given previous changes, manage history to avoid unnecessary context from prior observations, and provide actions that models can use efficiently and reliably. We use two approaches to enhance performance: (1) manually inspect agent behavior to identify difficulties and propose improvements, and (2) run a grid search to select the best ACI configuration.</div>
+        <div class="p-zh">设计良好的 ACI 应当：帮助模型在改动之后理解应用状态、管理历史以避免此前观察带来的不必要上下文、提供模型能高效可靠使用的动作。研究方法有二：<b>① 人工检查智能体行为、定位困难并提出改进（定性）；② 网格搜索选择最优 ACI 配置（定量）</b>。</div>
+        <div class="p-note"><b>解读：</b>「定性观察 + 网格搜索」正是第 8 章「单变量修改 + 评估集」的作者级实践。你调工具接口时也可以这么干：先看 Trace 找痛点，再对参数（窗口大小、历史处理、温度）做扫参。</div>
+      </div>
+      <div class="seg seg-method">
+        <div class="seg-label">方法机制 · ACI 四大设计原则</div>
+        <div class="seg-zh"><b>① 动作要简单易懂</b>：很多 bash 命令带几十个选项；选项少、文档简洁的简单命令对模型更友好，能减少对示范或微调的依赖。<b>② 动作要紧凑高效</b>：重要操作（导航、编辑）应合并为尽可能少的动作——糟糕的设计会把一个高阶操作拆成多轮才能完成的碎片动作。<b>③ 环境反馈要信息密集但简洁</b>：高质量反馈应提供关于环境状态与最近动作效果的实质信息，而不带无关细节（如编辑后告知修订内容）。<b>④ 护栏缓解错误传播、加速恢复</b>：内置语法检查器等护栏，帮模型识别并快速纠正错误。</div>
+        <div class="p-note"><b>解读：</b>对照第 6 章工具层五原则，四条 ACI 原则几乎一一对应——但论文多了「护栏」的具体化：编辑后自动 lint、非法编辑直接丢弃并要求重试。<b>第 7 章的「权限是闸门，护栏是安全网」——闸门管权限，护栏管质量。</b></div>
+      </div>
+
+      <h2>§3 为软件工程设计 ACI</h2>
+      <div class="seg seg-method">
+        <div class="seg-label">方法机制 · 四个组件</div>
+        <div class="seg-zh"><b>搜索与导航</b>：find_file / search_file / search_dir 输出搜索结果摘要，<b>超过 50 条结果时不报结果、改为建议模型写更精确的查询</b>（抑制冗长输出，逼模型高效搜索）。<b>文件查看器</b>：open 命令打开文件，一次最多显示 100 行，可滚动/goto 定位；显示完整路径、总行数、前后省略行数与行号——为文件内导航与代码定位服务。<b>文件编辑器</b>：edit 命令配合查看器，一步替换指定行区间；<b>编辑后自动展示更新后的文件内容</b>（无需额外命令即可观察效果）；<b>集成 linter</b>——选中类错误连同出错前后代码片段一起展示给模型，无效编辑被丢弃并要求重试。<b>上下文管理</b>：格式错误的生成触发错误响应要求重试（历史中只保留第一条错误信息）；<b>最近 5 条之前的观察各压缩为一行</b>——保留计划与动作史要点，去掉过时的文件内容，换来更多交互轮次。</div>
+        <div class="p-note"><b>解读：</b>四组件里有三个是「上下文工程」（第 4 章）在工具层的投影：查看器的行号窗口、编辑后的即时反馈、观察的滚动压缩。<b>ACI 设计的一半工作量，其实是在做上下文管理。</b>这是读完本文最应该带走的一个认知。</div>
+      </div>
+
+      <h2>§4–5 实验设置与结果</h2>
+      <div class="seg seg-result">
+        <div class="seg-label">实验结论 · 设置与主结果</div>
+        <div class="seg-zh">基准：SWE-bench 全量 2294 实例（主结果）+ SWE-bench Lite 300 实例（消融）+ HumanEvalFix。基线两个：<b>RAG 基线</b>（BM25 检索文件后一次性生成补丁）与 <b>Shell-only</b>（同样交互但只有裸 shell）。指标：% Resolved（补丁应用后全部测试通过）+ 平均成本（每实例预算上限 4 美元，超支自动提交现有修改）。模型：GPT-4 Turbo（128K）与 Claude 3 Opus（200K）；<b>论文测试的其他模型（含 Llama 3、DeepSeek Coder）在智能体设定下表现不佳——很多模型上下文窗口太小</b>（如 Llama 3 仅 8K）。</div>
+        <div class="p-note"><b>解读：</b>「上下文窗口太小跑不动 Agent」这条被淘汰原因，反向印证了第 4 章上下文管理的地位：<b>它不是优化项，是准入项。</b>成本上限 $4 的设计也值得抄——预算熔断保证系统能「体面地失败」。</div>
+      </div>
+      <div class="seg seg-result">
+        <div class="seg-label">实验结论 · §5 消融（接口设计的每一分都有回报）</div>
+        <div class="seg-zh">主结果：GPT-4 Turbo 版 SWE-agent 解决率 <b>12.47%</b>（SWE-bench 全量）与 87.7%（HumanEvalFix），全面最优；Claude 3 Opus 版 10.5%。消融（SWE-bench Lite）：<b>Shell-only 基线 1.96%？不——是明显更低</b>；去掉编辑护栏（lint）、去掉文件查看器的汇总反馈、增大/减小窗口尺寸，各项都造成可测量的下滑。结论：<b>ACI 的每个设计决策都在贡献分数</b>；且 ACI 可跨模型移植（同一套接口在两个模型上都有效）。</div>
+        <div class="p-note"><b>解读：</b>消融表是给「要不要花一周打磨工具接口」这个问题准备的答案：接口特性的边际收益清晰可测、可累积。配套读第 5 章的 evals 纪律——<b>SWE-agent 的 ACI 迭代过程（定性观察 + 网格搜索）本身就是一套值得抄的实验设计。</b></div>
+      </div>
+
+      <h2>§7 结论（速览）与课程连接</h2>
+      <div class="seg seg-skip">
+        <div class="seg-label">可跳读 · §6–7</div>
+        <div class="seg-zh">§6 相关工作（RAG 一次性生成 vs 交互式 agent；工具使用与 agent 框架谱系）；§7 结论：ACI 的精心设计能显著提升 LM 智能体解决软件工程任务的能力，SWE-agent 与全部配套开源。</div>
+      </div>
+      <div class="seg seg-link">
+        <div class="seg-label">课程连接</div>
+        <div class="seg-zh">① 用 ACI 四原则给自己的工具做一次审计：每个工具的「选项数量、合并度、反馈质量、护栏」逐项打分；② 把「编辑后自动展示新内容」的反馈回路移植到你的文件类工具（第 6 章 mini-harness）；③ 最重要的一条：<b>先磨接口、再换模型</b>——把留给「换更大模型」的预算先花在 ACI 上，论文已经替你证明了回报率。</div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/app.js?v=20"></script>
+</body>
+</html>

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Transformer 论文对照式全文翻译：Attention Is All You Need 原文逐段中英对照、重点标注与解读。">
+<title>全文翻译 · Transformer | Agent 学院</title>
+<link rel="stylesheet" href="assets/css/style.css?v=20">
+</head>
+<body data-chapter="full">
+
+<header class="topbar">
+  <button class="icon-btn hamburger" id="hamburger" title="打开导航">☰</button>
+  <a class="brand" href="index.html"><span class="logo">学</span> Agent 学院 <small>从零开发智能体 · Ontology · Harness</small></a>
+  <span class="spacer"></span>
+  <span class="progress-pill" id="progress-pill">进度 0/9 章</span>
+  <button class="icon-btn" id="theme-btn">🌙</button>
+</header>
+
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <main class="content">
+    <div class="content-inner">
+
+      <header class="chapter-head">
+        <div class="kicker">全文翻译 · 对照版 · 论文 4/8</div>
+        <h1>Attention Is All You Need：<span style="color:var(--accent)">你所需要的只是注意力</span></h1>
+        <p class="lead">
+          Vaswani et al., NeurIPS 2017 · <a href="papers/pdf/transformer.pdf" target="_blank"> 原文 PDF</a> ·
+          <a href="https://arxiv.org/abs/1706.03762" target="_blank" rel="noopener">arXiv:1706.03762</a><br>
+          对照式排版：每段先列<b>英文原文</b>（灰色小字），紧随<b>中文翻译</b>；重要段落用黄色底色标出并附解读。数学公式细节可跳读——本页已把「你真正需要的直觉」全部标出。
+        </p>
+        <div class="paper-nav"><a href="translations.html" style="border-style:dashed">← 中文精读版</a> <b style="color:var(--accent)">Transformer</b> · <a href="full-cot.html">CoT</a> · <a href="full-react.html">ReAct</a> · <a href="full-toolformer.html">Toolformer</a> · <a href="full-rag.html">RAG</a> · <a href="full-reflexion.html">Reflexion</a> · <a href="full-graphrag.html">GraphRAG</a> · <a href="full-sweagent.html">SWE-agent</a></div>
+      </header>
+
+      <h2>摘要</h2>
+      <div class="para key">
+        <div class="p-en">The dominant sequence transduction models are based on complex recurrent or convolutional neural networks... We propose a new simple network architecture, the Transformer, based solely on attention mechanisms, dispensing with recurrence and convolutions entirely. Experiments on two machine translation tasks show these models to be superior in quality while being more parallelizable and requiring significantly less time to train.</div>
+        <div class="p-zh">主流的序列转换模型基于复杂的循环或卷积神经网络（含编码器与解码器），最优模型还通过注意力机制连接两者。我们提出一个新的简单网络架构——Transformer，它<b>完全基于注意力机制，彻底摒弃循环与卷积</b>。在两个机器翻译任务上的实验表明：这些模型质量更优，同时可并行性更好、训练耗时显著更少。</div>
+      </div>
+      <div class="para">
+        <div class="p-en">Our model achieves 28.4 BLEU on the WMT 2014 English-to-German translation task, improving over the existing best results, including ensembles, by over 2 BLEU. On the WMT 2014 English-to-French translation task, our model establishes a new single-model state-of-the-art BLEU score of 41.8 after training for 3.5 days on eight GPUs.</div>
+        <div class="p-zh">我们的模型在 WMT 2014 英德翻译任务上取得 28.4 BLEU，超过包括集成模型在内的既有最佳结果 2 BLEU 以上；在英法任务上，经 8 块 GPU 训练 3.5 天后，以 41.8 BLEU 刷新单模型纪录——这只是文献中最佳模型训练成本的很小一部分。</div>
+        <div class="p-note"><b>解读：</b>两个数字请连读：分数更高 + 成本更低。Transformer 不是「更强所以更贵」，而是「结构对了所以又强又省」——可并行性让规模扩张成为可能，这是后来一切大模型的经济学前提。</div>
+      </div>
+
+      <h2>§1 引言</h2>
+      <div class="para">
+        <div class="p-en">Recurrent models typically factor computation along the symbol positions of the input and output sequences... This inherently sequential nature precludes parallelization within training examples... The fundamental constraint of sequential computation, however, remains.</div>
+        <div class="p-zh">循环模型通常沿输入输出序列的符号位置分解计算，由前一隐藏状态与当前输入生成下一隐藏状态。这种<b>天然的顺序性</b>排除了训练样本内部的并行化——序列越长问题越严重。近期工作用分解技巧与条件计算改善了效率，但顺序计算的根本约束依然存在。</div>
+      </div>
+      <div class="para key">
+        <div class="p-en">In this work we propose the Transformer, a model architecture eschewing recurrence and instead relying entirely on an attention mechanism to draw global dependencies between input and output. The Transformer allows for significantly more parallelization and can reach a new state of the art in translation quality after being trained for as little as twelve hours on eight P100 GPUs.</div>
+        <div class="p-zh">本文提出 Transformer：一个<b>避开循环</b>、完全依靠注意力机制来建立输入输出间全局依赖的模型架构。它允许显著更多的并行化，并且在 8 块 P100 GPU 上训练仅 12 小时，就能达到翻译质量的新高度。</div>
+      </div>
+
+      <h2>§2 背景</h2>
+      <div class="para">
+        <div class="p-en">In these models, the number of operations required to relate signals from two arbitrary input or output positions grows in the distance between positions... In the Transformer this is reduced to a constant number of operations, albeit at the cost of reduced effective resolution due to averaging attention-weighted positions, an effect we counteract with Multi-Head Attention.</div>
+        <div class="p-zh">在 ByteNet、ConvS2S 等卷积系模型中，关联两个任意位置所需的运算次数随位置距离增长（ConvS2S 线性、ByteNet 对数），使远距离依赖更难学。<b>Transformer 把它降为常数次运算</b>——代价是注意力加权平均降低了有效分辨率，我们用多头注意力来抵消这一影响。</div>
+        <div class="p-note"><b>解读：</b>「常数步建立任意两位置联系」= 第 1 章说的 O(1) 信息路径。记住这个对比框架（距离 → 运算次数），论文第 4 节会用一张表把它量化。</div>
+      </div>
+
+      <h2>§3 模型架构</h2>
+      <div class="para">
+        <div class="p-en">The encoder is composed of a stack of N = 6 identical layers. Each layer has two sub-layers. The first is a multi-head self-attention mechanism, and the second is a simple, position-wise fully connected feed-forward network. We employ a residual connection around each of the two sub-layers, followed by layer normalization.</div>
+        <div class="p-zh"><b>编码器</b>由 N=6 个相同层堆叠而成，每层两个子层：多头自注意力机制 + 逐位置全连接前馈网络；每个子层外围包着残差连接与层归一化（LayerNorm(x + Sublayer(x))），所有子层与嵌入层输出维度统一为 512。<b>解码器</b>同样 6 层，额外插入第三个子层——对编码器输出的多头注意力；并对自注意力加掩码，防止位置看到后续位置，保证自回归性质。</div>
+      </div>
+      <div class="seg seg-skip">
+        <div class="seg-label">可跳读 · §3.2 注意力公式</div>
+        <div class="seg-zh">缩放点积注意力 Attention(Q,K,V)=softmax(QKᵀ/√d_k)V：把「查询」与所有「键」做点积、除以 √d_k（防止点积过大把 softmax 推进梯度极小区域）、softmax 成权重后对「值」加权求和。<b>多头注意力</b>：把 Q/K/V 各线性投影 h=8 份、每份 64 维并行做注意力再拼接——让模型同时从多个表示子空间关注不同位置的信息。公式细节到此为止，够用了。</div>
+      </div>
+      <div class="para key">
+        <div class="p-en">The Transformer uses multi-head attention in three different ways: In "encoder-decoder attention" layers, the queries come from the previous decoder layer, and the memory keys and values come from the output of the encoder... The encoder contains self-attention layers... Similarly, self-attention layers in the decoder allow each position to attend to all positions up to and including that position.</div>
+        <div class="p-zh">Transformer 以三种方式使用多头注意力：<b>① 编码器-解码器注意力</b>——查询来自解码器，键值来自编码器输出，让解码器的每个位置都能看到输入序列的所有位置；<b>② 编码器自注意力</b>——每个位置看到同层所有位置；<b>③ 解码器自注意力（带掩码）</b>——每个位置只能看到当前及之前的位置，保持自回归。</div>
+        <div class="seg-note"><b>解读：</b>埋一个伏笔：③ 号的掩码设计说明「只准看过去」在 2017 年就被刻意设计进模型——今天所有大模型的「上下文只能向后看」皆源于此。第 4 章「历史每轮重发」的缓存机制能成立，也因为前缀的注意力计算与后续无关。</div>
+      </div>
+
+      <h2>§3.5 位置编码</h2>
+      <div class="para">
+        <div class="p-en">Since our model contains no recurrence and no convolution, in order for the model to make use of the order of the sequence, we must inject some information about the relative or absolute position of the tokens... We chose this function because we hypothesized it would allow the model to easily learn to attend by relative positions... We chose the sinusoidal version because it may allow the model to extrapolate to sequence lengths longer than the ones encountered during training.</div>
+        <div class="p-zh">由于模型不含循环与卷积，必须向输入嵌入注入「位置信息」才能让模型利用序列顺序——我们在编码器、解码器底部加入与嵌入同维的「位置编码」（不同频率的正弦/余弦函数）。选择正弦版本是假设它便于模型学习相对位置关系，并且<b>可能外推到比训练时更长的序列</b>（实测与学习的位置嵌入效果几乎相同）。</div>
+        <div class="p-note"><b>解读：</b>这段是第 4 章「长上下文外推」话题的源头——今天各家模型争论的「128K 上下文是不是真能用到 128K」，本质都是在改进 2017 年这个正弦函数的后代。</div>
+      </div>
+
+      <h2>§4 为什么用自注意力</h2>
+      <div class="seg seg-result">
+        <div class="seg-label">实验结论 · Table 1（三种层类型的对比）</div>
+        <div class="tbl-wrap"><table class="tbl">
+          <tr><th>层类型</th><th>每层计算复杂度</th><th>最少顺序操作</th><th>最大路径长度</th></tr>
+          <tr><td><b>自注意力</b></td><td>O(n²·d)</td><td><b>O(1)</b></td><td><b>O(1)</b></td></tr>
+          <tr><td>循环</td><td>O(n·d²)</td><td>O(n)</td><td>O(n)</td></tr>
+          <tr><td>卷积</td><td>O(k·n·d²)</td><td>O(1)</td><td>O(log_k(n))</td></tr>
+        </table></div>
+        <div class="seg-zh">作者用三个指标论证自注意力：每层计算复杂度、可并行的最少顺序操作数、远距离依赖间的最大路径长度。<b>自注意力用常数次顺序操作连接所有位置、路径长度 O(1)</b>——学习远距离依赖因此更容易。作为附带收益：单个注意力头明显学会了不同任务，许多头呈现出与句法、语义结构相关的行为（可解释性）。</div>
+        <div class="seg-note"><b>解读：</b>注意自注意力的代价也写在表里：O(n²·d)——序列翻倍、计算翻四倍。<b>这就是「上下文越长越贵」的数学根源</b>，也是第 4 章上下文工程省钱的物理上限依据。三大指标 + 一张表，是全文最值得抄进自己技术文档的论证结构。</div>
+      </div>
+
+      <h2>§5 训练（速览）</h2>
+      <div class="para">
+        <div class="p-en">We trained on the standard WMT 2014 English-German dataset consisting of about 4.5 million sentence pairs... We trained the base models for a total of 100,000 steps or 12 hours. The big models were trained for 300,000 steps (3.5 days).</div>
+        <div class="p-zh">训练数据：WMT 2014 英德约 450 万句对（byte-pair 编码，共享词表约 37000）；英法 3600 万句对。基础模型训 10 万步（12 小时），大模型 30 万步（3.5 天，8 块 P100）。正则化：子层 dropout 0.1 + 标签平滑 0.1（<b>标签平滑损害困惑度但提升准确率与 BLEU</b>——「为下游指标牺牲中间指标」的经典示范）。</div>
+      </div>
+
+      <h2>§6 结果</h2>
+      <div class="seg seg-result">
+        <div class="seg-label">实验结论 · Table 2（翻译主结果）</div>
+        <div class="tbl-wrap"><table class="tbl">
+          <tr><th>模型</th><th>EN-DE BLEU</th><th>EN-FR BLEU</th><th>EN-DE 训练成本（FLOPs）</th></tr>
+          <tr><td>GNMT+RL</td><td>24.6</td><td>39.92</td><td>2.3×10¹⁹</td></tr>
+          <tr><td>ConvS2S</td><td>25.16</td><td>40.46</td><td>9.6×10¹⁸</td></tr>
+          <tr><td>GNMT+RL 集成</td><td>26.30</td><td>41.16</td><td>1.8×10²⁰</td></tr>
+          <tr><td>Transformer (base)</td><td>27.3</td><td>38.1</td><td><b>3.3×10¹⁸</b></td></tr>
+          <tr><td><b>Transformer (big)</b></td><td><b>28.4</b></td><td><b>41.8</b></td><td>2.3×10¹⁹</td></tr>
+        </table></div>
+        <div class="seg-zh">大模型以 28.4 / 41.8 双双刷新纪录，且<b>基础模型的训练成本（3.3×10¹⁸ FLOPs）不到 GNMT 单模型的 1/6</b>。附加实验：把 Transformer 用于英语成分句法分析（数据极少的 40K 句训练），同样超过所有此前见到大量数据的模型——泛化到翻译之外的任务也成立。</div>
+      </div>
+
+      <h2>§7 结论</h2>
+      <div class="seg seg-core">
+        <div class="seg-label">核心论点 · §7</div>
+        <div class="seg-zh">对于翻译任务，Transformer 的训练速度显著快于基于循环或卷积的架构。我们对基于注意力的模型的未来充满期待——计划把它们应用到<b>图像、音频、视频等其他输入输出模态</b>，并使生成更加不依赖顺序化。<b>「让生成更少顺序化」是我们的研究目标。</b></div>
+        <div class="seg-note"><b>解读：</b>2017 年的最后一段预言了 2024–2026 的两件大事：多模态大模型（图像/音频进 Transformer）与「让生成更少顺序化」（并行解码的研究方向）。读老论文的乐趣就在这里：<b>看作者在引言与结论里，把未来十年说中。</b></div>
+      </div>
+      <div class="seg seg-link">
+        <div class="seg-label">课程连接</div>
+        <div class="seg-zh">读完本篇，建议回到第 4 章重读「上下文窗口是稀缺资源」与「context rot」两节——现在你知道它们不是经验法则，而是注意力机制的数学性质。论文的 Table 1（三种层对比）也推荐抄进你做技术选型时的「论证模板」库：三个指标、一张表、一个结论，干净利落。</div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/app.js?v=20"></script>
+</body>
+</html>

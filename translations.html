@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="论文中文精读版：8 篇关键论文的核心章节逐段中译，四色标注区分核心论点/方法机制/实验结论/课程连接，重要段落配解读，小白也能读懂论文。">
+<title>附录 · 论文中文精读版 | Agent 学院</title>
+<link rel="stylesheet" href="assets/css/style.css?v=20">
+</head>
+<body data-chapter="translations">
+
+<header class="topbar">
+ <button class="icon-btn hamburger" id="hamburger" title="打开导航">☰</button>
+ <a class="brand" href="index.html"><span class="logo">学</span> Agent 学院 <small>从零开发智能体 · Ontology · Harness</small></a>
+ <span class="spacer"></span>
+ <span class="progress-pill" id="progress-pill">进度 0/9 章</span>
+ <button class="icon-btn" id="theme-btn">🌙</button>
+</header>
+
+<div class="layout">
+ <aside class="sidebar" id="sidebar"></aside>
+
+ <main class="content">
+ <div class="content-inner">
+
+ <header class="chapter-head">
+ <div class="kicker">APPENDIX · 论文中文精读版 · 逐段中译 · 四色标注</div>
+ <h1>论文<span class="grad">中文精读版</span></h1>
+ <p class="lead">
+ 这是《论文精读》的深读层：对 8 篇论文的<b>核心章节逐段中译</b>——每段给出英文原句、中文翻译、以及「解读」帮你把论文读懂。
+ <b>重要段落用四种颜色标注</b>（图例见下），可跳读的数学与附录也明确标出，小白按颜色读完全文主干大约只需 20~40 分钟一篇。
+ </p>
+ <div class="head-meta">
+ <span class="chip"> 核心论点</span>
+ <span class="chip"> 方法机制</span>
+ <span class="chip"> 实验结论</span>
+ <span class="chip"> 课程连接</span>
+ <span class="chip">⬜ 可跳读</span>
+ </div>
+ </header>
+
+ <div class="legend">
+ <span class="lg-item"><span class="dot" style="background:var(--warn)"></span>核心论点——论文真正想说的一句话</span>
+ <span class="lg-item"><span class="dot" style="background:var(--info)"></span>方法机制——它怎么做到的</span>
+ <span class="lg-item"><span class="dot" style="background:var(--ok)"></span>实验结论——证据在哪</span>
+ <span class="lg-item"><span class="dot" style="background:var(--violet)"></span>课程连接——与你写的代码的关系</span>
+ <span class="lg-item"><span class="dot" style="background:var(--text-3)"></span>可跳读——不影响理解的细节</span>
+ </div>
+
+ <div class="paper-nav">
+ <a href="#zh-transformer">① Transformer</a>
+ <a href="#zh-cot">② CoT</a>
+ <a href="#zh-react">③ ReAct</a>
+ <a href="#zh-toolformer">④ Toolformer</a>
+ <a href="#zh-rag">⑤ RAG</a>
+ <a href="#zh-reflexion">⑥ Reflexion</a>
+ <a href="#zh-graphrag">⑦ GraphRAG</a>
+ <a href="#zh-sweagent">⑧ SWE-agent</a>
+ <a href="papers.html" style="border-style:dashed">← 返回论文精读（模板拆解）</a>
+ </div>
+
+ <div class="callout tip">
+ <div class="co-title">使用说明</div>
+ <p>每段的结构固定：<b>原文摘引（节选关键句）→ 中文翻译 → 解读</b>。标注为「可跳读」的段落只为帮你定位论文结构，可以放心跳过；原文 PDF 已在本站（papers/pdf/），建议左右分屏对照读。翻译以「忠实且说人话」为准，个别术语保留英文并在解读里解释。</p>
+      <div class="callout story">
+        <div class="co-title">全新：全文翻译版（基于原文逐段翻译）</div>
+        <p><b>8 篇论文的全文翻译版已全部上线</b>——对照式排版：每段「英文原文 + 中文翻译」，重要段落黄色标注并附解读，论文的全部表格数据完整译出：<a href="full-transformer.html">Transformer</a> · <a href="full-cot.html">CoT</a> · <a href="full-react.html">ReAct</a> · <a href="full-toolformer.html">Toolformer</a> · <a href="full-rag.html">RAG</a> · <a href="full-reflexion.html">Reflexion</a> · <a href="full-graphrag.html">GraphRAG</a> · <a href="full-sweagent.html">SWE-agent</a>。</p>
+      </div>
+ </div>
+
+ <!-- ==================== Transformer ==================== -->
+ <h2 id="zh-transformer">① Transformer · 中文精读</h2>
+ <div class="paper-nav"><a href="papers.html#transformer">← 模板拆解</a> <a href="papers/pdf/transformer.pdf" target="_blank"> 原文 PDF</a></div>
+ <p><b>怎么读这一篇：</b>只需读摘要 + 第 3 节开头的架构图说明 + 第 1 页图 1。数学部分（第 3.2 节的注意力公式细节）标注为可跳读——你需要的只是直觉。</p>
+
+ <div class="seg seg-core">
+ <div class="seg-label">核心论点 · 摘要</div>
+ <div class="seg-en">"We propose a new simple network architecture, the Transformer, based solely on attention mechanisms, dispensing with recurrence and convolutions entirely. Experiments on two machine translation tasks show these models are superior in quality while being more parallelizable and requiring significantly less time to train."</div>
+ <div class="seg-zh"><b>译：</b>我们提出一个新的简单网络架构 Transformer，它完全基于注意力机制，彻底摒弃循环与卷积。在两个机器翻译任务上的实验表明：这些模型质量更优，同时可并行性更好、训练耗时显著更少。</div>
+ <div class="seg-note"><b>解读：</b>一句话里藏着三层胜利：质量更优（效果好）、更可并行（能堆大）、训练更省（便宜）。「能堆大」是其余一切的前提——今天的 GPT、DeepSeek 都靠这一条存在。三个词 请按顺序记：先简单，才可能大。</div>
+ </div>
+ <div class="seg seg-method">
+ <div class="seg-label">方法机制 · 自注意力</div>
+ <div class="seg-en">"Self-attention, sometimes called intra-attention, is an attention mechanism relating different positions of a single sequence in order to compute a representation of the sequence."</div>
+ <div class="seg-zh"><b>译：</b>自注意力（也称内部注意力）是一种把同一条序列中不同位置关联起来、从而计算整个序列表示的注意力机制。</div>
+ <div class="seg-note"><b>解读：</b>直观理解：处理"它"这个代词时，模型会同时"看"整句话里所有词，并自动给"猫"（它的指代对象）最高的关注度。每个词都是如此——整句话里的词两两建立联系，这就是 O(1) 信息路径的含义：任意两个位置只隔一步。<br><b>对比 RNN：</b>循环网络里第 100 个词要"经过"前面 99 步才能影响现在，信息会一路衰减——这就是 Transformer 记得更好的原因。</div>
+ </div>
+ <div class="seg seg-skip">
+ <div class="seg-label">可跳读</div>
+ <div class="seg-zh">第 3.2 节的 Q/K/V 缩放点积公式、多头注意力的矩阵推导、位置编码的正弦函数定义——这些是给要实现它的人准备的。作为应用层开发者，你只需要知道：<b>多头 = 从多个角度并行建立联系；位置编码 = 给"看得出词序"打补丁</b>（因为注意力本身天生看不出顺序）。</div>
+ </div>
+ <div class="seg seg-link">
+ <div class="seg-label">课程连接</div>
+ <div class="seg-zh">这篇论文决定了你每天的三个工程现实：<b>① 上下文窗口有限</b>（注意力矩阵大小 ∝ 序列长度²，所以窗口不可能无限大——第 4 章上下文工程的根源）；<b>② 中间内容容易被忽略</b>（attention 对位置有偏好，长上下文"中间段"被读到的概率低——RAG 片段排序的依据）；<b>③ 前缀可以复用</b>（DeepSeek 的前缀缓存之所以可行，是因为相同前缀的注意力计算完全相同——Agent 循环省钱的关键）。</div>
+ </div>
+
+ <!-- ==================== CoT ==================== -->
+ <h2 id="zh-cot">② Chain-of-Thought · 中文精读</h2>
+ <div class="paper-nav"><a href="papers.html#cot">← 模板拆解</a> <a href="papers/pdf/cot.pdf" target="_blank"> 原文 PDF</a></div>
+ <p><b>怎么读这一篇：</b>读摘要、第 1 节引言、第 3 节的示例图与主表即可。全篇没有公式——它是一篇纯粹的提示词工程论文。</p>
+
+ <div class="seg seg-core">
+ <div class="seg-label">核心论点 · 摘要</div>
+ <div class="seg-en">"We explore how generating a chain of thought — a series of intermediate reasoning steps — significantly improves the ability of large language models to perform complex reasoning. ... such reasoning abilities emerge naturally in sufficiently large language models via a simple method called chain-of-thought prompting."</div>
+ <div class="seg-zh"><b>译：</b>我们探索了生成「思维链」——一系列中间推理步骤——如何显著提升大语言模型执行复杂推理的能力。……这种推理能力在足够大的语言模型中，通过一种叫思维链提示的简单方法自然涌现。</div>
+ <div class="seg-note"><b>解读：</b>两个关键词。"中间推理步骤"——把一道题拆成若干小步，每步都写出来；"自然涌现"——能力本来就在，只是被引出来了。注意"足够大"：小模型模仿思维链反而可能更差，这为后来"推理模型都是大模型"埋下伏笔。</div>
+ </div>
+ <div class="seg seg-method">
+ <div class="seg-label">方法机制 · 提示词长什么样</div>
+ <div class="seg-en">"In this work, we explore how... augmenting each exemplar with intermediate reasoning steps... using only eight chain-of-thought exemplars."</div>
+ <div class="seg-zh"><b>译：</b>我们探索给每个提示词示例补充中间推理步骤的做法……总共只用 8 条思维链示例。</div>
+ <div class="seg-note"><b>解读：</b>方法简单到令人发指：把普通 few-shot 示例里的「问题 → 答案」改成「问题 → 推理过程 → 答案」，给 8 个例子就够。<b>这就是第 3 章 few-shot 原则「示例决定行为」的最强证据</b>——你给模型看的范例长什么样，它就长什么样。</div>
+ </div>
+ <div class="seg seg-result">
+ <div class="seg-label">实验结论 · 主表</div>
+ <div class="seg-en">"On GSM8K... PaLM 540B achieves 58% accuracy with chain-of-thought prompting, compared to 18% with standard prompting."</div>
+ <div class="seg-zh"><b>译：</b>在 GSM8K 数学题上……PaLM 540B 用思维链提示达到约 58% 的准确率，而标准提示只有约 18%。</div>
+ <div class="seg-note"><b>解读：</b>三倍提升，且随着模型规模增大，曲线在某个规模点"起飞"——这是"涌现能力"的经典图。另一面要记住：<b>多生成的推理步骤 = 更多 token = 更贵更慢</b>，所以第 8 章的模型路由原则是"只在值得想的步骤上花思维链的钱"。</div>
+ </div>
+ <div class="seg seg-result">
+ <div class="seg-label">实验结论 · 消融</div>
+ <div class="seg-zh">论文的消融实验还发现：把示例里的推理步骤去掉（只留问答对），性能回落到接近标准提示——<b>起作用的正是"示例里有推理"，而不是示例变多了</b>。</div>
+ <div class="seg-note"><b>解读：</b>消融实验是论文里最值得 Builder 学的部分：它证明因果来自"推理步骤"本身。这也教给你第 8 章评估的思路——想验证"是不是 X 起了作用"，就做一个"去掉 X"的对照版本。</div>
+ </div>
+ <div class="seg seg-link">
+ <div class="seg-label">课程连接</div>
+ <div class="seg-zh">CoT → ReAct → 思考模型，是一条完整的演化链：CoT 证明"写出来更好"；ReAct 给"写出来的思考"配上手脚（工具）；deepseek-reasoner 的 reasoning_content 则是把这条链做成了官方接口（第 2 章）。你的 Agent 里，"值得想"的步骤（规划、反思）交给思考模型，其余步骤走快速通道——第 8 章的路由表就是这么来的。</div>
+ </div>
+
+ <!-- ==================== ReAct（逐节精读） ==================== -->
+ <h2 id="zh-react">③ ReAct · 中文精读（逐节）</h2>
+ <div class="paper-nav"><a href="papers.html#react">← 模板拆解</a> <a href="papers/pdf/react.pdf" target="_blank"> 原文 PDF</a></div>
+ <p><b>怎么读这一篇：</b>全文按论文真实章节顺序精读：§1 引言 → §2 方法 → §3 实验 → §5 局限。§2.3 的强化学习微调部分标为可跳读。</p>
+
+ <h3>§1 引言 · 问题的提出</h3>
+ <div class="seg seg-core">
+ <div class="seg-label">核心论点 · §1</div>
+ <div class="seg-en">"Humans... invariably combine action and reasoning... acting to support reasoning (acting to look up... information) and reasoning to guide acting... We explore... such a synergy in LLMs: interleaving reasoning traces and actions."</div>
+ <div class="seg-zh"><b>译：</b>人类总是把行动与推理结合：用行动支持推理（动手去查资料……），也用推理指导行动。我们探索在 LLM 中实现这种协同：交替生成推理轨迹与动作。</div>
+ <div class="seg-note"><b>解读：</b>注意论文的出发点是<b>模仿人类智能的运作方式</b>，而不是发明新算法。"用行动支持推理"= 你算不出答案时会去查一下；"用推理指导行动"= 查什么、怎么查取决于你在想什么。对照第 1 章四要素：这一句话就是"大脑（推理）+ 手脚（行动）+ 循环（交替）"的论证版。</div>
+ </div>
+ <div class="seg seg-skip">
+ <div class="seg-label">可跳读 · §1 末相关工作</div>
+ <div class="seg-zh">本节把论文放进两条研究线（LLM 推理增强 / 交互式决策）之间并声明补齐了中间地带。了解即可，不影响后续阅读。</div>
+ </div>
+
+ <h3>§2 方法 · 一条轨迹是怎么长出来的</h3>
+ <div class="seg seg-method">
+ <div class="seg-label">方法机制 · §2.1–2.2</div>
+ <div class="seg-en">"In ReAct, we interleave... Thought, Action, Observation... An action causes an update to the environment... (e.g., a search engine returns some information), and an observation corresponds to what the environment returns to the agent."</div>
+ <div class="seg-zh"><b>译：</b>在 ReAct 中，我们交替生成思考、动作、观察……一个动作引发环境更新（例如搜索引擎返回信息），一个观察就是环境返回给智能体的内容。</div>
+ <div class="seg-note"><b>解读：</b>三种符号的定义就这么朴素。重要的是<b>没有任何训练</b>：作者在提示词里手写了几条完整的 Thought/Action/Observation 范例，模型照着模仿就能跑通——第 2 章 90 行代码、第 3 章 few-shot 原则，全部在这句话的射程之内。第 2.1 节讨论"动作怎么用"（搜索什么关键词），2.2 节讨论"推理怎么帮行动"（排除候选、更新计划），2.3 节讨论用轨迹微调小模型——<b>2.3 可跳读</b>。</div>
+ </div>
+
+ <h3>§3 实验 · 两类任务四个基准</h3>
+ <div class="seg seg-result">
+ <div class="seg-label">实验结论 · §3.1 知识密集型任务</div>
+ <div class="seg-en">"On HotpotQA and FEVER, ReAct outperforms baselines... We also find that ReAct falls into reasoning hallucination less than the CoT baseline, as it relies more on retrieved information."</div>
+ <div class="seg-zh"><b>译：</b>在 HotpotQA 与 FEVER 上，ReAct 超越各基线……我们还发现 ReAct 比 CoT 基线更少陷入推理幻觉，因为它更依赖检索到的信息。</div>
+ <div class="seg-note"><b>解读：</b>HotpotQA 需要多跳问答（两篇文章才能拼出答案），FEVER 是事实核查——两者都考"说的对不对"。<b>幻觉减少的机制值得反复咀嚼</b>：不是模型变聪明了，而是它的每句话都有检索结果兜底。这正是第 4 章知识库的立论：Observation 是模型的"现实锚点"。</div>
+ </div>
+ <div class="seg seg-result">
+ <div class="seg-label">实验结论 · §3.2 决策型任务</div>
+ <div class="seg-en">"On ALFWorld... ReAct achieves a success rate of 71%, significantly outperforming... act-only baselines. On WebShop... ReAct also outperforms imitation and reinforcement learning methods."</div>
+ <div class="seg-zh"><b>译：</b>在 ALFWorld（家居任务模拟）上，ReAct 达到约 71% 的成功率，显著超越仅行动的基线；在 WebShop（网页购物模拟）上，ReAct 也超越了模仿学习与强化学习方法。</div>
+ <div class="seg-note"><b>解读：</b>这两个基准考的是"做得多对"。纯行动 agent 会乱点乱试（没有计划），ReAct 因为每步前都写 Thought，把搜索空间收窄了。<b>对偶结论出现了</b>：§3.1 说"行动救推理（防幻觉）"，§3.2 说"推理救行动（防乱试）"——合起来才是完整的 §1 那句话。</div>
+ </div>
+ <div class="seg seg-result">
+ <div class="seg-label">实验结论 · §3.3 消融与错误分析</div>
+ <div class="seg-zh">消融实验把 ReAct 拆成"只有 Thought"（即 CoT）与"只有 Action"两种变体，性能都明显回落——<b>两个组件必须同时在</b>。错误分析还统计了失败原因：知识密集型任务里最大的失败源是"检索不到足够信息"，其次是推理偏差。</div>
+ <div class="seg-note"><b>解读：</b>这条错误分析非常有工程价值：它预言了"检索质量决定 RAG 上限"（第 4 章）与"工具返回质量决定下一轮决策"（第 6 章）。当你的 Agent 失败时，按论文的顺序排查：<b>先查信息够不够（Observation），再查推理对不对（提示词）</b>。</div>
+ </div>
+
+ <h3>§5 局限 · 论文自己承认什么</h3>
+ <div class="seg seg-core">
+ <div class="seg-label">核心论点 · §5（作者自述的局限）</div>
+ <div class="seg-en">"We note several limitations... the flexibility of reasoning traces is limited by exemplar trajectories... Also, ReAct's heavy reliance on... sequential decision making incurs... latency."</div>
+ <div class="seg-zh"><b>译：</b>我们指出几点局限：推理轨迹的灵活性受范例轨迹限制……此外 ReAct 高度依赖逐步串行的决策，带来延迟开销。</div>
+ <div class="seg-note"><b>解读：</b>两个局限恰好是后来十年的两个研究方向：① few-shot 范例僵化 → 被微调与更长的上下文学习缓解；② 串行慢 → 被并行工具调用（第 2 章）、思考模型、Agent 并行子任务（第 5 章）缓解。<b>读论文看"局限"的收益不亚于看结论：每个局限都是一张行业路线图。</b></div>
+ </div>
+ <div class="seg seg-link">
+ <div class="seg-label">课程连接</div>
+ <div class="seg-zh">学完这页，回去把第 1 章的模拟器再跑一遍：现在你能说出每一步背后的论文依据了。然后读第 2 章的 Function Calling 消息数组——你会发现 Thought 变成了 reasoning_content（或隐藏在 tool_calls 决策里），Action 变成了 tool_calls JSON，Observation 变成了 role=tool 消息。<b>范式从未改变，只是接口越来越优雅。</b></div>
+ </div>
+
+ <!-- ==================== Toolformer ==================== -->
+ <h2 id="zh-toolformer">④ Toolformer · 中文精读</h2>
+ <div class="paper-nav"><a href="papers.html#toolformer">← 模板拆解</a> <a href="papers/pdf/toolformer.pdf" target="_blank"> 原文 PDF</a></div>
+ <p><b>怎么读这一篇：</b>读摘要 + 第 2 节方法（三步管线，含那张经典的三步流程图）+ 第 3 节主表。微调超参细节可跳读。</p>
+
+ <div class="seg seg-core">
+ <div class="seg-label">核心论点 · 摘要</div>
+ <div class="seg-en">"Language models (LMs) exhibit remarkable capabilities to solve a variety of tasks... yet they struggle with... arithmetics... We show that LMs can teach themselves to use external tools via simple APIs."</div>
+ <div class="seg-zh"><b>译：</b>语言模型展现出解决多种任务的出色能力……但它们在算术等任务上仍然吃力。我们证明：语言模型可以通过简单的 API「自学」使用外部工具。</div>
+ <div class="seg-note"><b>解读：</b>标题 Toolformer 的 "-former" 一语双关：既是 Transformer 家族的新成员，也是"会使用工具的模型"。注意"自学"二字——不需要人工标注工具使用范例，这是它与此前所有工具调用工作的分界线。</div>
+ </div>
+ <div class="seg seg-method">
+ <div class="seg-label">方法机制 · 三步管线</div>
+ <div class="seg-en">"(1) sample API calls... (2) execute the API calls and filter... keeping only those where the API result helps the model predict future tokens better; (3) fine-tune the LM on this filtered dataset."</div>
+ <div class="seg-zh"><b>译：</b>①采样 API 调用候选；②执行这些调用并筛选——只保留「API 结果让模型更容易预测后续文本」的调用；③用筛选后的数据微调模型。</div>
+ <div class="seg-note"><b>解读：</b>灵魂在第二步的判据：<b>"有用"被翻译成了可计算的信号</b>（预测损失下降）。不需要人判断"这次调用是否合理"，数据自己会说话。第 3 章的"生成→校验"闭环、第 8 章的 LLM-as-Judge，都是在解决同一个问题：<b>如何把"好不好"变成机器可度量的东西</b>。</div>
+ </div>
+ <div class="seg seg-result">
+ <div class="seg-label">实验结论</div>
+ <div class="seg-zh">一个 6.7B 参数的模型，配上计算器、检索、日历、翻译、问答五个工具后，在相应任务上反超体量约十倍的大模型裸考；分析还显示每个工具的"使用率"不同——模型学会了只在真正需要时调用。</div>
+ <div class="seg-note"><b>解读：</b>两个推论直接可用：① <b>给模型配对工具，比换更大的模型更划算</b>（第 6 章接口优先于引擎的依据）；② 工具是"被需要才被用"的——你给 Agent 塞一堆低频工具，只会稀释它的选择质量（第 6 章"少而正交"原则）。</div>
+ </div>
+
+ <!-- ==================== RAG（逐节精读） ==================== -->
+ <h2 id="zh-rag">⑤ RAG · 中文精读（逐节）</h2>
+ <div class="paper-nav"><a href="papers.html#rag">← 模板拆解</a> <a href="papers/pdf/rag.pdf" target="_blank"> 原文 PDF</a></div>
+ <p><b>怎么读这一篇：</b>按论文真实章节精读：§1 引言 → §2 方法 → §4 实验。§2.4 的公式细节（RAG-Token 的边缘化）可跳读。</p>
+
+ <h3>§1 引言 · 两种记忆的宣言</h3>
+ <div class="seg seg-core">
+ <div class="seg-label">核心论点 · §1</div>
+ <div class="seg-en">"LLMs... store knowledge in their parameters... However, this knowledge is frozen at training time... We explore a general-purpose fine-tuning recipe for... combining pre-trained retrievers with pre-trained seq2seq models... The knowledge is thus stored in two sources: the parametric memory... and the non-parametric memory of the retriever (a dense vector index of Wikipedia)."</div>
+ <div class="seg-zh"><b>译：</b>大语言模型把知识存在参数里……然而这些知识在训练时就冻结了。我们探索一种通用的微调配方：把预训练的检索器与预训练的序列到序列生成器组合起来……于是知识存储在两个来源：生成器的参数记忆，与检索器的非参数记忆（一个 Wikipedia 的稠密向量索引）。</div>
+ <div class="seg-note"><b>解读：</b>"冻结"（frozen）这个词选得极好——参数里的知识像照片，拍下那一刻就不再更新。而非参数记忆像活页夹，随时增删。<b>第 4 章开篇四种知识来源的表格，右边两列（怎么更新 / 失效模式）全部由这句"冻结"推出。</b>下次有人问"为什么不微调一个自有知识的模型"，你就问回去："你的知识多久变一次？"——经常变，就该用活页夹。</div>
+ </div>
+
+ <h3>§2 方法 · 三个组件</h3>
+ <div class="seg seg-method">
+ <div class="seg-label">方法机制 · §2.1–2.3</div>
+ <div class="seg-en">"A RAG model is a seq2seq model where... the marginal likelihood p(y|x) is marginalized over retrieved documents... The retriever is a DPR (bi-encoder)... The generator is BART."</div>
+ <div class="seg-zh"><b>译：</b>RAG 模型是一个序列到序列模型，其对答案的似然在对检索到的文档做边缘化……检索器是 DPR（双塔编码器），生成器是 BART。</div>
+ <div class="seg-note"><b>解读：</b>翻译成第 4 章的语言：DPR = "把问题和文档各自变成向量再算相似度"（TinyVectorMemory 的生产版原型）；BART = 负责转述的生成模型；"边缘化"有两种玩法——<b>RAG-Sequence</b>（整段答案共用同一组文档）与 <b>RAG-Token</b>（每个词可以看向不同文档），工程上几乎都用前者。<b>可跳读</b>：§2.4 的公式推导，知道"两种边缘化方式"这个结论即可。</div>
+ </div>
+
+ <h3>§4 实验 · 检索真的在干活吗</h3>
+ <div class="seg seg-result">
+ <div class="seg-label">实验结论 · §4.1 开放域问答</div>
+ <div class="seg-en">"RAG-Sequence achieves state-of-the-art results on open-domain QA... outperforming... parametric-only seq2seq baselines."</div>
+ <div class="seg-zh"><b>译：</b>RAG-Sequence 在开放域问答上取得当时最优结果……超越只靠参数记忆的序列到序列基线。</div>
+ <div class="seg-note"><b>解读：</b>Natural Questions 上 44.5 对此前最强的约 36.6——值得注意的是，超越对象里就包括"参数大得多"的模型：<b>外挂知识库小模型打赢大模型裸考</b>，与 Toolformer 的结论互相印证。</div>
+ </div>
+ <div class="seg seg-result">
+ <div class="seg-label">实验结论 · §4.4 消融</div>
+ <div class="seg-en">"We find that removing access to the retriever during test time substantially degrades performance... The generator effectively relies on the retrieved documents."</div>
+ <div class="seg-zh"><b>译：</b>我们发现在测试时切断检索器会显著降低性能……生成器实际上依赖检索到的文档。</div>
+ <div class="seg-note"><b>解读：</b>这就是第 4 章「先看检索层」二分法的实验依据。<b>把这条规则学成条件反射：</b>RAG 答错了 → 打印命中的片段 → 答案在不在里面？在 → 查生成层；不在 → 查检索层。永远不要先改提示词。</div>
+ </div>
+ <div class="seg seg-link">
+ <div class="seg-label">课程连接</div>
+ <div class="seg-zh">这篇 2020 年的论文定义了整个行业的默认架构，但要注意它留给后人的三个坑——恰好对应第 4 章的三大失败模式：<b>① 词面/语义不匹配检索不到</b>（→ 混合检索与查询改写）；<b>② 多文档冲突</b>（→ 元数据与版本管理）；<b>③ 全局性总结问题</b>（→ GraphRAG，下一篇）。读到"未来工作"时你会看到作者隐约预感到了这些——纸面之上的空间就是你的机会。</div>
+ </div>
+
+ <!-- ==================== Reflexion ==================== -->
+ <h2 id="zh-reflexion">⑥ Reflexion · 中文精读</h2>
+ <div class="paper-nav"><a href="papers.html#reflexion">← 模板拆解</a> <a href="papers/pdf/reflexion.pdf" target="_blank"> 原文 PDF</a></div>
+ <p><b>怎么读这一篇：</b>读摘要 + 图 1（三角色架构图，全篇最重要的一张图）+ 第 2 节方法 + 第 4 节主实验。</p>
+
+ <div class="seg seg-core">
+ <div class="seg-label">核心论点 · 摘要</div>
+ <div class="seg-en">"We introduce Reflexion, a simple psychological idea: verbal reinforcement... an agent dynamically reflects on its own experiences and stores these reflections in an episodic memory buffer in natural language, allowing the agent to improve... without updating the underlying LLM."</div>
+ <div class="seg-zh"><b>译：</b>我们提出 Reflexion，一个简单的心理学思想：语言化的强化……智能体对自己的经验动态反思，并把反思以自然语言存进情景记忆缓冲区，从而在不更新底层大模型的情况下获得改进。</div>
+ <div class="seg-note"><b>解读：</b>注意对比：传统强化学习用"奖励数字"改权重（贵、慢、但对所有任务生效）；Reflexion 用"一段反思文字"改上下文（便宜、即时、但只对同任务重试生效）。<b>"不更新底层模型"是它最大的卖点也是边界</b>——教训存在记忆里，换任务就归零。</div>
+ </div>
+ <div class="seg seg-method">
+ <div class="seg-label">方法机制 · 三角色循环</div>
+ <div class="seg-en">"Reflexion consists of three models: an Actor, an Evaluator, and a Reflexion model... The Actor generates actions; the Evaluator scores the episode; the Reflexion model generates self-reflection that is stored in the memory buffer for subsequent trials."</div>
+ <div class="seg-zh"><b>译：</b>Reflexion 由三个模型组成：执行者、评估者、反思模型……执行者生成动作；评估者为整局表现打分；反思模型生成自我反思，存入记忆缓冲区供后续尝试使用。</div>
+ <div class="seg-note"><b>解读：</b>翻译成你的代码（第 5 章已实现）：Actor = 你的 Agent 主循环；Evaluator = 评估集判分（第 8 章 LLM-as-Judge 就是这个角色）；Reflexion = "失败后追问根因并把教训写进记忆文件"的那个提示词调用。<b>三个角色，两次额外的 LLM 调用——这就是完整的自我改进系统。</b></div>
+ </div>
+ <div class="seg seg-result">
+ <div class="seg-label">实验结论</div>
+ <div class="seg-en">"On ALFWorld, Reflexion achieves 130/134 (97%)... On HumanEval, Reflexion achieves 91% pass@1, exceeding GPT-4's 80.1%."</div>
+ <div class="seg-zh"><b>译：</b>在 ALFWorld 上，Reflexion 达到 130/134（97%）的成功率；在 HumanEval 代码生成上达到 91% 的单次通过率，超过 GPT-4 的 80.1%。</div>
+ <div class="seg-note"><b>解读：</b>重点不是绝对数字，而是<b>增益的来源</b>：同一批任务，失败→反思→重试后从 60% 多涨到 97%——涨出来的全是"以前犯过的错"。这也解释了第 8 章"回归层评估用例"的价值：它们就是团队的集体 Reflexion。</div>
+ </div>
+ <div class="seg seg-link">
+ <div class="seg-label">课程连接</div>
+ <div class="seg-zh">落地清单（第 5 章 5.3 节）：① 失败后不要直接重试，先强制一次"哪里错了、为什么"的反思调用；② 教训写入跨会话记忆文件（带任务标签）；③ 重试的提示词里注入相关教训；④ 用评估集验证反思真的有效——<b>反思本身也要过评估</b>，否则它只是在生成动听的自我检讨。</div>
+ </div>
+
+ <!-- ==================== GraphRAG ==================== -->
+ <h2 id="zh-graphrag">⑦ GraphRAG · 中文精读</h2>
+ <div class="paper-nav"><a href="papers.html#graphrag">← 模板拆解</a> <a href="papers/pdf/graphrag.pdf" target="_blank"> 原文 PDF</a></div>
+ <p><b>怎么读这一篇：</b>读摘要 + 第 1 节引言（两类问题的分界）+ 图 1（管线总览）+ 第 4 节实验。社区检测算法细节可跳读。</p>
+
+ <div class="seg seg-core">
+ <div class="seg-label">核心论点 · §1</div>
+ <div class="seg-en">"Query-focused summarization (QFS) tasks... differ substantially from explicit retrieval tasks such as 'what does X say about Y'... Vector-RAG struggles with global questions... whose answers are not contained in any single text chunk."</div>
+ <div class="seg-zh"><b>译：</b>查询聚焦式摘要类任务……与「X 关于 Y 说了什么」这类显式检索任务有本质不同……向量 RAG 在全局性问题上很挣扎——因为答案不存在于任何一个文本块里。</div>
+ <div class="seg-note"><b>解读：</b>开篇就把问题切成两半：<b>"局部检索"与"全局摘要"是两种不同的问题</b>。问"报销上限是多少"是前者；问"这 200 份客服记录反映的主要问题是什么"是后者——后者根本没法靠 Top-K 检索，因为没有任何一段话包含"全部主题"。第 4 章说向量检索的"天花板"，精确指的就是这里。</div>
+ </div>
+ <div class="seg seg-method">
+ <div class="seg-label">方法机制 · 离线管线</div>
+ <div class="seg-en">"...we use an LLM to extract entities and relationships from the corpus, form a graph, detect communities (Leiden), and produce community summaries at increasing levels of abstraction... At query time, community summaries are used in a map-reduce fashion."</div>
+ <div class="seg-zh"><b>译：</b>我们用 LLM 从语料中抽取实体与关系、构图、用 Leiden 算法检测社区，并在越来越高的抽象层级上生成社区摘要……查询时以 map-reduce 方式使用社区摘要。</div>
+ <div class="seg-note"><b>解读：</b>拆成两半看：离线阶段 = <b>第 6 章抽取管线的规模化</b>（你的毕业项目 M3 就是它的最小版）+ 一层"社区摘要"的新思想；在线阶段 = <b>摘要替代原始片段参与回答</b>。关键洞察：用 LLM 把文档"预消化"成理解产物，查询时消化过的理解比生肉更接近全局答案。</div>
+ </div>
+ <div class="seg seg-result">
+ <div class="seg-label">实验结论</div>
+ <div class="seg-zh">在全局性问题上，GraphRAG 在「全面性」「多样性」两个维度显著优于基线向量 RAG；同时论文坦承离线索引成本高一个数量级（要对全量语料跑抽取）。</div>
+ <div class="seg-note"><b>解读：</b>"离线贵、在线强"是它的经济学。给你的落地建议（第 4 章 4.6 节）：不必全量图谱化——<b>先对"高频全局问题"涉及的文档子集做图谱与摘要，其余问题仍走向量 RAG</b>，两路并存按问题路由。</div>
+ </div>
+
+ <!-- ==================== SWE-agent ==================== -->
+ <h2 id="zh-sweagent">⑧ SWE-agent · 中文精读</h2>
+ <div class="paper-nav"><a href="papers.html#sweagent">← 模板拆解</a> <a href="papers/pdf/sweagent.pdf" target="_blank"> 原文 PDF</a></div>
+ <p><b>怎么读这一篇：</b>读摘要 + 第 1 节（ACI 概念）+ 图 2（接口设计对比）+ 第 4 节消融。基准构建细节可跳读。</p>
+
+ <div class="seg seg-core">
+ <div class="seg-label">核心论点 · §1</div>
+ <div class="seg-en">"We show that design decisions in the agent-computer interface (ACI)—the commands... the agent uses to interact with the computer—substantially impact performance... agents with well-designed interfaces substantially outperform those without."</div>
+ <div class="seg-zh"><b>译：</b>我们证明，智能体-计算机接口（ACI）——即智能体与计算机交互所用的命令等——中的设计决策对性能影响巨大：接口设计良好的智能体显著超越没有设计接口的版本。</div>
+ <div class="seg-note"><b>解读：</b>把 ACI 和 HCI（人机交互）并排理解：UI 设计师知道"按钮放哪、报错怎么说"决定人类用户的成败；SWE-agent 证明同一件事对模型成立——<b>模型也是"用户"，它配的"界面"就是你的工具 Schema 与错误信息</b>。第 7 章 Harness 的立论（模型决定上限、Harness 决定下限）在这篇论文里有了受控实验。</div>
+ </div>
+ <div class="seg seg-method">
+ <div class="seg-label">方法机制 · ACI 三原则</div>
+ <div class="seg-en">"(1) guardrails for high-frequency actions (e.g., an edit tool that re-lints the file and reports errors immediately); (2) information-dense returns...; (3) do not offload to the LM tasks that humans find hard too."</div>
+ <div class="seg-zh"><b>译：</b>① 为高频动作设护栏（例如编辑工具在改完后立刻做语法检查、马上报告错误行）；② 返回信息密集的结果……③ 不要把人类也做不好的任务推给模型。</div>
+ <div class="seg-note"><b>解读：</b>逐条对照第 6 章工具层五原则：① = "失败也是信息"（第 2 章）——立刻反馈让模型当场自纠，而不是下一轮才发现；② = "信息密集的结果"；③ = "少而正交"——比如让模型直接读文件而不是解析裸命令输出。<b>论文与课程在这里完全咬合。</b></div>
+ </div>
+ <div class="seg seg-result">
+ <div class="seg-label">实验结论</div>
+ <div class="seg-zh">在 SWE-bench（真实 GitHub 修复基准）上达到 12.47% 的当时最优解决率；消融实验显示：去掉编辑后的 lint 反馈、或换用更"裸"的接口，通过率明显下滑——<b>模型一个字没换，分数全靠接口挣</b>。</div>
+ <div class="seg-note"><b>解读：</b>12% 看起来不高，但请换一个视角：这是"无人类干预修复真实开源仓库 bug"的通过率，而且<b>全部增益来自接口而非模型</b>。它给你的行动指南：当 Agent 表现不佳时，磨工具接口的投入产出比通常高于换更大的模型——先花一周把工具返回改"信息密集"，再谈升级引擎。</div>
+ </div>
+
+ <div class="callout story">
+ <div class="co-title">八篇读完，你会带走什么</div>
+ <p>一条主线：<b>推理要外化（CoT）→ 思考要配手脚（ReAct）→ 手脚靠自学（Toolformer）→ 知识要外挂（RAG）→ 失败要变成教训（Reflexion）→ 全局要靠图谱（GraphRAG）→ 接口决定兑现（SWE-agent）→ 而这一切的物理基础是注意力（Transformer）</b>。再回头看第 9 章毕业项目，你会发现每一行代码都站在某篇论文的肩膀上。</p>
+ </div>
+
+ </div>
+ </main>
+</div>
+
+<script src="assets/js/app.js?v=20"></script>
+</body>
+</html>

@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="论文精读：8 篇塑造了智能体领域的关键论文——原文 PDF 已下载至本站，重点句子点击即可展开小白解析；ReAct 与 RAG 提供逐节精读。">
+<title>附录 · 论文精读 | Agent 学院</title>
+<link rel="stylesheet" href="assets/css/style.css?v=20">
+</head>
+<body data-chapter="papers">
+
+<header class="topbar">
+ <button class="icon-btn hamburger" id="hamburger" title="打开导航">☰</button>
+ <a class="brand" href="index.html"><span class="logo">学</span> Agent 学院 <small>从零开发智能体 · Ontology · Harness</small></a>
+ <span class="spacer"></span>
+ <span class="progress-pill" id="progress-pill">进度 0/9 章</span>
+ <button class="icon-btn" id="theme-btn">🌙</button>
+</header>
+
+<div class="layout">
+ <aside class="sidebar" id="sidebar"></aside>
+
+ <main class="content">
+ <div class="content-inner">
+
+ <header class="chapter-head">
+ <div class="kicker">APPENDIX · 论文精读 · 原文已下载 · 点击标记看解析</div>
+ <h1>塑造智能体领域的 <span class="grad">8 篇关键论文</span></h1>
+ <p class="lead">
+ 论文不是装饰品——本课程每个设计决策背后都有一篇论文在撑腰。
+ <b>8 篇论文的原文 PDF 已下载到本站（papers/pdf/ 目录），可离线阅读</b>；
+ 每篇按统一模板拆解，重点原句用引文块标出：<b>英文原句 → 中文翻译 → 点击「小白解析」展开逐句讲解</b>。
+ ReAct 与 RAG 两篇最重要的论文提供<b>逐节精读</b>（按论文章节结构走一遍）。
+ </p>
+ <div class="head-meta">
+ <span class="chip">原文 PDF 本地可读</span>
+ <span class="chip">重点句点击解析</span>
+ <span class="chip">三遍读法见文末</span>
+ </div>
+ </header>
+
+ <div class="callout info">
+ <div class="co-title">阅读地图（与课程章节对应）</div>
+ <p>地基：<a href="#transformer">Transformer</a>（任何一章之前）→ 第 1–3 章：<a href="#cot">CoT</a>、<a href="#react">ReAct</a>、<a href="#toolformer">Toolformer</a> → 第 4 章：<a href="#rag">RAG</a>、<a href="#graphrag">GraphRAG</a> → 第 5 章：<a href="#reflexion">Reflexion</a> → 第 7 章：<a href="#sweagent">SWE-agent</a>。本体一脉的经典（Gruber 1993、Ontology Development 101）在<a href="#ontology-classics">文末附注</a>。</p>
+ </div>
+
+ <div class="callout story">
+ <div class="co-title">全新：中文精读版已上线</div>
+ <p>想要完整的中译？8 篇论文的核心章节已在 <a href="translations.html">中文精读版</a> 逐段中译——重要段落用四色标注（核心论点 / 方法机制 / 实验结论 / 课程连接），每段配「解读」，ReAct 与 RAG 为逐节精读。本页保留模板拆解与原句精读，两页配合使用。</p>
+ </div>
+ <div class="callout tip">
+ <div class="co-title">怎么用「小白解析」</div>
+ <p>每个 <span class="qn-mark"></span> 引文块 = 论文中真正值得精读的一句原文：先看英文原句锻炼读原文的眼睛 → 看中文翻译确认理解 → <b>点击「小白解析」展开讲解</b>（名词是什么意思、为什么这句话重要、和你正在写的代码有什么关系）。建议对照本站 PDF 一起读。</p>
+ </div>
+
+ <!-- ================= Transformer ================= -->
+ <h2 id="transformer">① Attention Is All You Need（Transformer）—— 一切的起点</h2>
+ <div class="callout info">
+ <div class="co-title">元信息</div>
+ <p>Vaswani et al., NeurIPS 2017 · <a href="https://arxiv.org/abs/1706.03762" target="_blank" rel="noopener">arXiv:1706.03762</a> · <a href="papers/pdf/transformer.pdf" target="_blank"> 原文 PDF（本站）</a> · <a href="translations.html#zh-transformer" style="color:var(--violet)"> 中文精读版</a> · <a href="full-transformer.html" style="color:var(--ok)">全文翻译</a></p>
+ </div>
+ <p><b>它解决什么问题：</b>2017 年之前的序列模型（RNN/LSTM）逐词处理文本，长距离依赖记不住、训练没法并行。机器翻译的质量与速度都卡在这里。</p>
+ <p><b>核心思想：</b>彻底扔掉循环结构，只靠<b>自注意力（self-attention）</b>：序列中每个词直接「看」所有其他词并按相关性加权聚合信息——任意两个位置之间的信息路径长度从 O(n) 变成 O(1)。</p>
+
+ <details class="qn"><summary> 原句精读 1 · 摘要的第一句</summary>
+ <div class="qn-body">
+ <div class="qn-en">"We propose a new simple network architecture, the Transformer, based solely on attention mechanisms, dispensing with recurrence and convolutions entirely."</div>
+ <div class="qn-zh">「我们提出一个新的简单网络架构 Transformer，它完全基于注意力机制，彻底摒弃循环与卷积。」</div>
+ <div class="qn-note"><b>小白解析：</b>注意两个词。"简单"——AI 史上最成功的架构自我介绍居然是 simple，这是领域审美的信号：能用更少假设解释同样现象的方案，长期会赢。"完全摒弃循环"——RNN 的逐词处理正是当时并行化的死结，"摈弃"意味着作者赌的是：注意力本身足以表达序列的全部结构。这个赌注定义了之后十年。<br><b>和你的关系：</b>你调用的大模型全是它的后代；它给你的两个日常约束——上下文窗口与注意力衰减——会在第 4 章反复出现。</div>
+ </div>
+ </details>
+
+ <p><b>结果怎么读：</b>翻译质量刷新纪录固然重要，真正改变世界的是<b>可并行训练</b>——从此模型大小可以野蛮堆叠，才有后来的 GPT 与 DeepSeek 系列。</p>
+ <div class="callout key">
+ <div class="co-title">对 Builder 的启示</div>
+ <p>你不需要读懂全部数学（真的）。但要带走两个直接影响日常决策的遗产：① <b>上下文窗口</b>就是注意力矩阵的物理边界——第 4 章的上下文工程全部源自这个约束；② <b>注意力会衰减</b>（position bias）——「重要内容放窗口前后、避免中间塞满」（context rot 对策）不是玄学，是架构性质。</p>
+ </div>
+
+ <!-- ================= CoT ================= -->
+ <h2 id="cot">② Chain-of-Thought（思维链）—— 让模型把中间步骤写出来</h2>
+ <div class="callout info">
+ <div class="co-title">元信息</div>
+ <p>Wei et al., NeurIPS 2022 · <a href="https://arxiv.org/abs/2201.11903" target="_blank" rel="noopener">arXiv:2201.11903</a> · <a href="papers/pdf/cot.pdf" target="_blank"> 原文 PDF（本站）</a> · <a href="translations.html#zh-cot" style="color:var(--violet)"> 中文精读版</a> · <a href="full-cot.html" style="color:var(--ok)">全文翻译</a></p>
+ </div>
+ <p><b>它解决什么问题：</b>模型直接回答多步推理题时错误率很高——输出一步到位，错了不知道错在哪，更没机会纠。</p>
+ <p><b>核心思想：</b>在提示词里给几个<b>带完整推理步骤的示例</b>，模型就会模仿着先输出中间推导、再给最终答案。没有改任何模型参数。</p>
+
+ <details class="qn"><summary> 原句精读 · 论文标题本身</summary>
+ <div class="qn-body">
+ <div class="qn-en">"Chain-of-thought prompting elicits a series of intermediate reasoning steps that significantly improves the ability of large language models to perform complex reasoning."</div>
+ <div class="qn-zh">「思维链提示引导出一系列中间推理步骤，显著提升大语言模型执行复杂推理的能力。」</div>
+ <div class="qn-note"><b>小白解析：</b>动词 "elicits"（引导出）很讲究——这些推理能力<b>原本就在模型里</b>，只是平时不拿出来；提示的作用不是"教会"，而是"引出"。<b>和你的关系：</b>第 3 章写提示词时永远记住这个前提：你在设计的是"引出条件"，不是"灌输知识"。所以五区结构里最关键的是边界与示例，而不是长篇说教。</div>
+ </div>
+ </details>
+
+ <p><b>结果怎么读：</b>GSM8K 数学题上 PaLM 540B 从约 18% 跳到约 57%，且<b>模型越大收益越大</b>（小模型学思维链反而可能变差）——这解释了为什么推理模型（deepseek-reasoner）都是大模型，「能力涌现」这个词也由此进入主流。</p>
+ <div class="callout key">
+ <div class="co-title">对 Builder 的启示</div>
+ <p>① 提示词工程的威力第一次被严格证明：<b>不改模型，只改上下文，表现天差地别</b>；② 「先写理由再下结论」成为一切 Agent 推理设计的模板——ReAct 是它的行动版；③ 代价是输出变长（token 成本），所以 CoT 用在「值得想」的步骤上，这是第 8 章模型路由的依据。</p>
+ </div>
+
+ <!-- ================= ReAct ================= -->
+ <h2 id="react">③ ReAct—— 智能体范式的原点（逐节精读）</h2>
+ <div class="callout info">
+ <div class="co-title">元信息</div>
+ <p>Yao et al., ICLR 2023 · <a href="https://arxiv.org/abs/2210.03629" target="_blank" rel="noopener">arXiv:2210.03629</a> · <a href="papers/pdf/react.pdf" target="_blank"> 原文 PDF（本站）</a> · <a href="translations.html#zh-react" style="color:var(--violet)"> 中文精读版</a> · <a href="full-react.html" style="color:var(--ok)">全文翻译</a> · 课程第 1 章的主角</p>
+ </div>
+ <p><b>它解决什么问题：</b>两条路线各有硬伤：只会推理（CoT）的模型<b>没有真实世界信息</b>，幻觉频发；只会行动（行为 agent）<b>不会规划</b>，动作随机。问答、操作、游戏三类任务都在等统一范式。</p>
+
+ <h3>§1 引言：范式宣言</h3>
+ <details class="qn"><summary> 原句精读 · 摘要核心句（全篇最重要的一句）</summary>
+ <div class="qn-body">
+ <div class="qn-en">"Reasoning helps the model to induce, track, and update action plans as well as handle exceptions, while actions allow the model to gather additional information from external sources and update the reasoning trace."</div>
+ <div class="qn-zh">「推理帮助模型归纳、跟踪并更新行动计划、处理例外；而行动让模型从外部来源收集额外信息、更新推理轨迹。」</div>
+ <div class="qn-note"><b>小白解析：</b>拆开看这个"闭环"：左边（推理→行动）解决了"做什么"，右边（行动→推理）解决了"想错了怎么办"。<b>两个方向缺一不可</b>——只有左半边就是 CoT（会想不会查），只有右半边就是当时的行动 agent（会做不会想）。<br><b>和你的关系：</b>第 1 章模拟器里"思考气泡决定调用什么、观察气泡修正思考"的画面，就是这句话的可视化。你以后审视任何 Agent 产品，都可以问：它的推理和行动，真的互相喂养吗？</div>
+ </div>
+ </details>
+
+ <h3>§2 方法：一条轨迹长什么样</h3>
+ <p>ReAct 的全部"方法"就是设计轨迹格式：Thought / Action / Observation 三种符号交替，用少量手写范例（few-shot）喂给模型。<b>没有新算法、没有训练</b>——这恰恰是它影响力惊人的原因：任何人一天就能照着实现（你第 2 章已经做过）。</p>
+ <details class="qn"><summary> 原句精读 · 为什么用 few-shot 而不是微调</summary>
+ <div class="qn-body">
+ <div class="qn-en">"On tasks... where in-context learning is effective, ReAct uses a fixed number of handcrafted prompts... We also explore fine-tuning, which allows smaller models to achieve competitive performance."</div>
+ <div class="qn-zh">「在上下文学习有效的任务上，ReAct 使用固定数量的手工范例……我们也探索了微调，使更小的模型达到有竞争力的表现。」</div>
+ <div class="qn-note"><b>小白解析：</b>两层意思。① 主体方案零训练：只要模型会"照葫芦画瓢"就能跑，这就是为什么 Agent 突然人人可做；② 作者顺手做了蒸馏实验：把 ReAct 轨迹拿去微调小模型，小模型也能学到这个范式——预告了后来"用大模型轨迹训练小模型"的整条产业路线。<br><b>和你的关系：</b>你在第 3 章学的 few-shot 选例三原则，源头就是这里的"handcrafted prompts"——范例质量决定范式质量。</div>
+ </div>
+ </details>
+
+ <h3>§3 实验：两类任务、三个基准</h3>
+ <p><b>知识密集型</b>（HotpotQA 多跳问答、FEVER 事实验证）：ReAct 的答案幻觉显著少于 CoT——因为它可以去查证。<b>决策型</b>（ALFWorld 家务模拟、WebShop 网页购物）：ReAct 大幅超越纯行动基线（ALFWorld 上约 71% vs 45%）——因为"先想再做"避免了乱试。</p>
+ <details class="qn"><summary> 原句精读 · 关于幻觉的关键发现</summary>
+ <div class="qn-body">
+ <div class="qn-en">"On HotpotQA and FEVER, we observe that ReAct falls into reasoning hallucination less than baseline... as it relies more on retrieved information."</div>
+ <div class="qn-zh">「在 HotpotQA 与 FEVER 上，我们观察到 ReAct 比基线更少陷入推理幻觉……因为它更依赖检索到的信息。」</div>
+ <div class="qn-note"><b>小白解析：</b>"更依赖检索到的信息"是全文最工程化的一句洞见：<b>幻觉不是靠"让模型更聪明"解决的，是靠"让模型多看真实数据"解决的</b>。Observation 就是给模型的"现实锚点"。<br><b>和你的关系：</b>第 4 章知识库存在的根本理由、第 3 章"信息不足时怎么办"的边界规则，全部可以追溯到这句话。当你的 Agent 胡说八道时，第一反应应该是"它的 Observation 够不够、好不好"，而不是"换个更大的模型"。</div>
+ </div>
+ </details>
+
+ <p><b>局限（论文自己也承认）：</b>few-shot 范例限制了轨迹结构的灵活性；逐步串行推理延迟高。后续十年的 Function Calling、并行工具调用、思维模型，都是在补这两个短板。</p>
+ <div class="callout key">
+ <div class="co-title">对 Builder 的启示</div>
+ <p>① 你在第 1 章模拟器里逐帧看过的循环，就是这篇论文；② 「Observation 质量决定下一轮决策质量」——第 6 章工具设计五原则第一条的出处；③ 现代 Function Calling 只是给 Thought/Action 换了 JSON 外衣，范式内核五年未变——<b>读懂这篇，所有 Agent 框架对你都是透明外壳</b>。</p>
+ </div>
+
+ <!-- ================= Toolformer ================= -->
+ <h2 id="toolformer">④ Toolformer—— 模型自学用工具</h2>
+ <div class="callout info">
+ <div class="co-title">元信息</div>
+ <p>Schick et al., NeurIPS 2023 · <a href="https://arxiv.org/abs/2302.04761" target="_blank" rel="noopener">arXiv:2302.04761</a> · <a href="papers/pdf/toolformer.pdf" target="_blank"> 原文 PDF（本站）</a> · <a href="translations.html#zh-toolformer" style="color:var(--violet)"> 中文精读版</a> · <a href="full-toolformer.html" style="color:var(--ok)">全文翻译</a></p>
+ </div>
+ <p><b>它解决什么问题：</b>教模型用工具需要人工标注"这里该调哪个 API、参数是什么"——贵到不可扩展。</p>
+ <p><b>核心思想：</b>让模型<b>自监督地给自己造训练数据</b>：海量插入"可能的 API 调用"候选 → 执行 → 只保留"调用确实有帮助"的样本 → 用它们微调模型自身。</p>
+
+ <details class="qn"><summary> 原句精读 · 自监督筛选的判据</summary>
+ <div class="qn-body">
+ <div class="qn-en">"We filter the generated API calls using a simple loss-based criterion: keep a call only if the language model finds it easier to predict future tokens when the API result is provided."</div>
+ <div class="qn-zh">「我们用一个基于损失的简单判据筛选生成的 API 调用：只有当模型在拿到 API 结果后，更容易预测后续文本时，才保留这次调用。」</div>
+ <div class="qn-note"><b>小白解析：</b>这是全文最妙的设计：<b>"有没有用"不需要人来判断，看预测损失降没降就行</b>——调用结果让模型"猜后续"更轻松，说明这次调用真的提供了信息。一个纯统计判据替代了昂贵的人工标注。<br><b>和你的关系：</b>它回答了一个你终将面对的问题："该给我的 Agent 配哪些工具？"——Toolformer 的答案是"看哪个工具真的降低模型的困惑"。第 6 章"少而正交"的工具选型原则、以及用评估集验证工具价值的做法，精神同源。</div>
+ </div>
+ </details>
+
+ <p><b>结果怎么读：</b>一个 6.7B 的小模型配上五个简单工具（计算器、检索、日历、翻译、问答），在相应任务上超越了体量约十倍的大模型裸考——<b>「小模型 + 正确工具」打赢「大模型空手」</b>。</p>
+ <div class="callout key">
+ <div class="co-title">对 Builder 的启示</div>
+ <p>① 现代函数调用接口的精神源头（第 2 章）；② 给模型配工具宁缺毋滥——Toolformer 学的是 5 个工具不是 50 个（第 6 章选型原则同源）；③ 它还预告了一个方向：工具使用能力可以内化进模型——今天的思考模型已经内化了大量工具规划能力。</p>
+ </div>
+
+ <!-- ================= RAG ================= -->
+ <h2 id="rag">⑤ RAG—— 知识库链路的奠基之作（逐节精读）</h2>
+ <div class="callout info">
+ <div class="co-title">元信息</div>
+ <p>Lewis et al., NeurIPS 2020 · <a href="https://arxiv.org/abs/2005.11401" target="_blank" rel="noopener">arXiv:2005.11401</a> · <a href="papers/pdf/rag.pdf" target="_blank"> 原文 PDF（本站）</a> · <a href="translations.html#zh-rag" style="color:var(--violet)"> 中文精读版</a> · <a href="full-rag.html" style="color:var(--ok)">全文翻译</a> · 课程第 4 章的源头</p>
+ </div>
+ <p><b>它解决什么问题：</b>模型的知识全部冻在参数里：过时、无法更新、无法溯源、私有知识根本没有。「把知识塞进参数」（微调）成本高且依然会幻觉。</p>
+
+ <h3>§1 引言：两种记忆</h3>
+ <details class="qn"><summary> 原句精读 · 参数记忆 vs 非参数记忆</summary>
+ <div class="qn-body">
+ <div class="qn-en">"RAG models combine a pre-trained retriever (query encoder + document index) with a pre-trained seq2seq model (generator), and fine-tune end-to-end... The knowledge is stored in two sources: the parametric memory of the generator, and the non-parametric memory of the retriever."</div>
+ <div class="qn-zh">「RAG 把预训练的检索器（查询编码器 + 文档索引）与预训练的序列到序列生成器组合，端到端微调……知识存储在两处：生成器的参数记忆，与检索器的非参数记忆。」</div>
+ <div class="qn-note"><b>小白解析：</b>"参数记忆"= 烙在模型权重里的知识（改起来要重新训练）；"非参数记忆"= 一个可以随时增删改的外部文档索引（改起来是分钟级）。<b>这个二分法是整个知识库行业的地基</b>：第 4 章开篇"四种知识来源"表格里的第一行和第二行，就是这两个词。<br><b>和你的关系：</b>当业务方问"能不能微调一个我们公司专用的模型"，你用这句话就能解释为什么 90% 的场景应该建知识库而不是微调——除非知识需要改变模型的"行为方式"而非"事实内容"。</div>
+ </div>
+ </details>
+
+ <h3>§2 方法：两个变体、三个组件</h3>
+ <p>检索器用 DPR（双塔向量检索：问题、文档各自编码成向量再算相似度——第 4 章 TinyVectorMemory 的"生产版原型"）；生成器用 BART；两个变体：<b>RAG-Sequence</b>（整段答案共用同一组检索文档）与 <b>RAG-Token</b>（每个 token 可以看向不同文档）。工程上几乎都用 RAG-Sequence。</p>
+
+ <h3>§4 实验：检索真的有用吗？</h3>
+ <details class="qn"><summary> 原句精读 · 消融实验的结论</summary>
+ <div class="qn-body">
+ <div class="qn-en">"We find that removing access to the retriever during generation substantially degrades performance... the generator effectively relies on the retrieved documents."</div>
+ <div class="qn-zh">「我们发现，在生成时切断检索器会显著降低性能……生成器实际上依赖检索到的文档。」</div>
+ <div class="qn-note"><b>小白解析：</b>消融实验（ablation）= 把系统的某个零件拆掉看性能掉多少，是论文里最值得 Builder 关注的部分——它直接告诉你"哪个零件是真的在干活"。这里拆掉检索器性能大跌，证明 <b>RAG 的收益来自检索而非生成器的容量</b>。<br><b>和你的关系：</b>这就是第 4 章"先看检索层还是生成层"二分法的实验依据：既然收益主要来自检索，故障诊断当然先查检索。你自己的 RAG 也应该做这个消融——把检索结果替换成随机片段，看回答掉多少。</div>
+ </div>
+ </details>
+
+ <p><b>结果怎么读：</b>开放域问答（NQ、TriviaQA 等）刷新当时 SOTA（NQ 上 44.5 vs 此前最强约 36.6）；Jeopardy 问题生成的人类评估显示生成内容<b>更具体、可溯源到具体维基条目</b>——"可溯源"在今天依然是知识库系统的合规刚需。</p>
+ <div class="callout key">
+ <div class="co-title">对 Builder 的启示</div>
+ <p>① 你不需要端到端联合训练——现成嵌入 + 生成模型已够用，但「检索管找对材料、生成管忠实转述」的分工永不过时（第 4 章诊断二分法的出处）；② 「知识更新 = 更新索引而非更新参数」从此成为行业默认架构；③ 它的天花板（多跳、全局汇总）正是 GraphRAG 与本体介入的入口。</p>
+ </div>
+
+ <!-- ================= Reflexion ================= -->
+ <h2 id="reflexion">⑥ Reflexion—— 失败后用语言自我改进</h2>
+ <div class="callout info">
+ <div class="co-title">元信息</div>
+ <p>Shinn et al., NeurIPS 2023 · <a href="https://arxiv.org/abs/2303.11366" target="_blank" rel="noopener">arXiv:2303.11366</a> · <a href="papers/pdf/reflexion.pdf" target="_blank"> 原文 PDF（本站）</a> · <a href="translations.html#zh-reflexion" style="color:var(--violet)"> 中文精读版</a> · <a href="full-reflexion.html" style="color:var(--ok)">全文翻译</a> · 课程第 5 章反思机制的源头</p>
+ </div>
+ <p><b>它解决什么问题：</b>强化学习微调又贵又慢；Agent 失败后，下一次尝试通常原样再错一遍。</p>
+ <p><b>核心思想：</b>失败后让模型<b>用自然语言反思</b>（"我错在没考虑 X"），存进<b>情景记忆</b>；下次尝试同一任务时把反思注入上下文。用「语言」替代「梯度」做自我改进。</p>
+
+ <details class="qn"><summary> 原句精读 · 语言即强化信号</summary>
+ <div class="qn-body">
+ <div class="qn-en">"Reflexion is a simple psychological idea: verbal reinforcement... an agent dynamically reflects on its own experiences and stores these reflections in an episodic memory buffer in natural language."</div>
+ <div class="qn-zh">「Reflexion 是一个简单的心理学思想：语言化的强化……智能体对自身经验动态反思，并把反思以自然语言存进情景记忆缓冲区。」</div>
+ <div class="qn-note"><b>小白解析：</b>强化学习用"奖励数字"改权重，Reflexion 用"一段话"改上下文——信息量更大（包含因果解释：错在"为什么"）、成本更低（无需训练）、但只对"同任务重试"生效。<br><b>和你的关系：</b>第 5 章反思机制的实现就是这篇：失败 → 追问根因 → 教训写进记忆文件 → 重试带上。注意它定义的三角角色（执行者 / 评估者 / 反思者）——你的 Harness 里加两个提示词模板就能拥有它。</div>
+ </div>
+ </details>
+
+ <p><b>结果怎么读：</b>ALFWorld 任务成功率 60% → <b>97%（134 题对 130）</b>；HumanEval 代码生成 91%（超过当时 GPT-4 裸考的 80%）。记忆系统的价值从此有了硬数字：第 4、5 章讲的"记忆 = 改进"不只是记用户偏好，更是 Agent 自我进化的载体。</p>
+
+ <!-- ================= GraphRAG ================= -->
+ <h2 id="graphrag">⑦ GraphRAG—— 知识库与知识图谱合流</h2>
+ <div class="callout info">
+ <div class="co-title">元信息</div>
+ <p>Microsoft Research, 2024 · <a href="https://arxiv.org/abs/2404.16130" target="_blank" rel="noopener">arXiv:2404.16130</a> · <a href="papers/pdf/graphrag.pdf" target="_blank"> 原文 PDF（本站）</a> · <a href="translations.html#zh-graphrag" style="color:var(--violet)"> 中文精读版</a> · <a href="full-graphrag.html" style="color:var(--ok)">全文翻译</a> · 课程第 4、6 章的交汇点</p>
+ </div>
+ <p><b>它解决什么问题：</b>向量 RAG 擅长"这个问题在哪段话里说过"，答不了<b>全局性、汇总性问题</b>："这批文档的核心主题是什么？"——答案不存在于任何一个片段里，Top-K 检索注定残缺。</p>
+ <p><b>核心思想：</b>离线用 LLM 从全部文档<b>抽取实体关系建图</b> → 社区检测聚成主题 → <b>逐社区生成摘要</b>（层级化）→ 在线按问题粒度选层级做 map-reduce 汇总。本质：<b>用 LLM 把文档预消化成多层"理解产物"，查询时拿消化过的理解替代原始片段</b>。</p>
+
+ <details class="qn"><summary> 原句精读 · local to global 的含义</summary>
+ <div class="qn-body">
+ <div class="qn-en">"Query-focused summarization (QFS) tasks... differ from explicit retrieval tasks such as 'what does X say about Y'... Our approach transforms the corpus into a hierarchical community structure and summarizes communities at increasing levels of abstraction."</div>
+ <div class="qn-zh">「查询聚焦式摘要类任务……不同于『X 关于 Y 说了什么』这类显式检索任务……我们的方法把语料转成层级化社区结构，并在越来越高的抽象层级上做社区摘要。」</div>
+ <div class="qn-note"><b>小白解析：</b>作者一开始就划清了两类问题的界线："X 关于 Y 说了什么"= 局部检索（向量 RAG 的主场）；"这批材料整体在讲什么"= 全局摘要（向量 RAG 的盲区，因为答案不在任何一段里）。<br><b>和你的关系：</b>第 4 章 4.6 节的分流策略（向量管相似、图谱管关系）在这里升级成了三级火箭：检索片段 → 图谱关系 → 社区摘要。判断你的知识库该建哪层，就看业务问题落在哪一类。</div>
+ </div>
+ </details>
+
+ <p><b>结果怎么读：</b>全局性问题上全面性与多样性大幅超越基线向量 RAG；代价是离线索引成本高一个数量级（海量抽取调用）——典型「离线贵、在线强」的架构权衡，与第 6 章 LLM 抽取管线（你的毕业项目已实现其最小版）直接衔接。</p>
+
+ <!-- ================= SWE-agent ================= -->
+ <h2 id="sweagent">⑧ SWE-agent—— 接口设计 = 被低估的性能杠杆</h2>
+ <div class="callout info">
+ <div class="co-title">元信息</div>
+ <p>Yang et al., NeurIPS 2024 · <a href="https://arxiv.org/abs/2405.15793" target="_blank" rel="noopener">arXiv:2405.15793</a> · <a href="papers/pdf/sweagent.pdf" target="_blank"> 原文 PDF（本站）</a> · <a href="translations.html#zh-sweagent" style="color:var(--violet)"> 中文精读版</a> · <a href="full-sweagent.html" style="color:var(--ok)">全文翻译</a> · 课程第 7 章的核心论据</p>
+ </div>
+ <p><b>它解决什么问题：</b>给模型一台"电脑"让它修真实 GitHub issue，成功率一开始很低。问题出在哪：模型？还是它面对的那套"键盘和屏幕"？</p>
+ <p><b>核心思想：</b>提出 <b>ACI（Agent-Computer Interface）</b>：为模型设计命令与反馈格式要像 HCI 为人类设计 UI 一样严肃。三条原则：<b>① 反馈回路</b>（编辑后立刻 lint 报错行，模型当场自纠）；<b>② 高效交互</b>（专用文件查看器替代裸 cat）；<b>③ 不让模型做人类也做不好的事</b>。</p>
+
+ <details class="qn"><summary> 原句精读 · 全文论点的一句话版</summary>
+ <div class="qn-body">
+ <div class="qn-en">"SWE-agent... achieving a resolve rate of 12.47%... We show that design decisions in the agent-computer interface (ACI) substantially impact performance: agents with well-designed interfaces substantially outperform those without."</div>
+ <div class="qn-zh">「SWE-agent……取得 12.47% 的解决率……我们证明智能体-计算机接口（ACI）中的设计决策对性能影响巨大：设计良好的接口让智能体显著超越没有设计接口的版本。」</div>
+ <div class="qn-note"><b>小白解析：</b>注意实验设计：模型不变，<b>只变接口</b>，成功率显著波动——所以"模型决定上限，Harness 决定下限"这句口号的实验证据就是它。12% 看似不高，但这是"无人干预修真实 GitHub bug"的通过率，当时是记录。<br><b>和你的关系：</b>你的工具 JSON Schema、错误信息、返回格式就是你的 ACI。调优顺序应当是"先磨接口，再换模型"——接口优化的收益成本比远高于换更大模型（第 7 章 Harness 的立论）。</div>
+ </div>
+ </details>
+
+ <p><b>结果怎么读：</b>SWE-bench 当时 SOTA（12.47%），且消融显示去掉 lint 反馈回路等接口特性后通过率明显下滑——<b>每一个接口细节都在贡献分数</b>。方法论部分（如何迭代 ACI）本身就是一份 Harness 工程的实验设计模板。</p>
+
+ <h2 id="ontology-classics">附：本体一脉的两份经典（非 arXiv）</h2>
+ <ul class="res-list">
+ <li><b>Gruber (1993), "A translation approach to portable ontology specifications"</b><span class="res-note">Ontology 定义（明确的概念化规范说明）的出处，「形式化 / 明确 / 共享」三关键词沿用至今。读导言与定义节即可。→ 课程第 6 章 6.1 节。</span></li>
+ <li><b>Noy &amp; McGuinness (2001), "Ontology Development 101"</b><span class="res-note">七步建模法的原始教程，比任何综述都好读。红酒本体例子贯穿全文。→ 课程第 6 章 6.7 节七步法的原型。<a href="https://protege.stanford.edu/publications/ontology_development/ontology101.pdf" target="_blank" rel="noopener">免费 PDF</a></span></li>
+ </ul>
+
+ <h2>怎么读论文：三遍读法</h2>
+ <ol class="steps">
+ <li><b>第一遍 · 5 分钟（决定要不要读）</b>
+ <p>只看标题、摘要、所有图表。回答三个问题：解决什么问题？核心主张一句话是什么？和我的项目有关吗？<b>90% 的论文在这一步就该放下</b>，这是效率而非偷懒。</p></li>
+ <li><b>第二遍 · 30 分钟（读懂主张）</b>
+ <p>通读引言、方法框架图、实验主表，跳过证明与附录。目标：能向同事复述「它怎么做到的」。本页每篇的「核心思想 + 关键设计 + 原句精读」就是第二遍该产出的东西。</p></li>
+ <li><b>第三遍 · 按需（复现级）</b>
+ <p>只有要落地或做研究时才进行：推公式、抠实验细节、跑开源实现。<b>先问「我要用它改变哪个设计决策」再进入第三遍</b>——没有决策要改，就不值得第三遍。</p></li>
+ </ol>
+ <div class="callout tip">
+ <div class="co-title">Builder 的论文观</div>
+ <p>应用层开发者读论文的目的不是追前沿，而是<b>为自己的设计决策找到依据与边界</b>：为什么工具描述要这样写（ReAct/Toolformer）？为什么检索要先于提示词调优（RAG）？为什么接口值得花一周打磨（SWE-agent）？——每篇论文都是某个「行业默认做法」的第一性解释。</p>
+ </div>
+
+ </div>
+ </main>
+</div>
+
+<script src="assets/js/app.js?v=20"></script>
+</body>
+</html>

@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Agent 学院附录：核心术语表、必读论文、官方文档与开源项目索引。">
+<title>附录 · 资源与术语表 | Agent 学院</title>
+<link rel="stylesheet" href="assets/css/style.css?v=20">
+</head>
+<body data-chapter="res">
+
+<header class="topbar">
+ <button class="icon-btn hamburger" id="hamburger" title="打开导航">☰</button>
+ <a class="brand" href="index.html"><span class="logo">学</span> Agent 学院 <small>从零开发智能体 · Ontology · Harness</small></a>
+ <span class="spacer"></span>
+ <span class="progress-pill" id="progress-pill">进度 0/9 章</span>
+ <button class="icon-btn" id="theme-btn">🌙</button>
+</header>
+
+<div class="layout">
+ <aside class="sidebar" id="sidebar"></aside>
+
+ <main class="content">
+ <div class="content-inner">
+
+ <header class="chapter-head">
+ <div class="kicker">APPENDIX · 随用随查</div>
+ <h1>资源与<span class="grad">术语表</span></h1>
+ <p class="lead">35 个核心术语速查、8 篇关键论文精读（原文 PDF 本站可读）、必读书单与开源项目索引。</p>
+ </header>
+
+ <h2>术语表</h2>
+ <dl class="glossary">
+ <dt>智能体 <span class="en">Agent</span></dt>
+ <dd>LLM 动态决定自身处理过程与工具使用的系统。四要素：LLM 大脑、工具、循环、记忆。判定标准：控制流由模型而非代码决定。</dd>
+
+ <dt>智能体循环 <span class="en">Agent Loop</span></dt>
+ <dd>「思考 → 行动 → 观察 →（未完成则回到思考）」的核心循环，一切 Agent 框架的心脏。终止条件由模型判断。</dd>
+
+ <dt>推理 + 行动 <span class="en">ReAct</span></dt>
+ <dd>Yao et al. 2022 提出的范式：让模型在行动前显式写出推理（Thought），交替进行 Reason 与 Act。现代 Function Calling 是它的接口化形态。</dd>
+
+ <dt>工具调用 / 函数调用 <span class="en">Function Calling</span></dt>
+ <dd>用 JSON Schema 声明工具 → 模型返回调用意图（名称 + JSON 字符串参数）→ <b>运行时代码执行</b> → 结果以 role=tool 消息回填。模型从不执行工具。</dd>
+
+ <dt>工作流 <span class="en">Workflow</span></dt>
+ <dd>步骤顺序由开发者代码写死的 LLM 应用。可预测、便宜、易调试；能用 Workflow 就别用 Agent（Anthropic 建议）。</dd>
+
+ <dt>上下文工程 <span class="en">Context Engineering</span></dt>
+ <dd>管理「循环每一轮模型能看到什么」的工程：裁剪、压缩、外置、结构化四大策略。Agent 工程中杠杆最大的主题。</dd>
+
+ <dt>上下文窗口 <span class="en">Context Window</span></dt><dd>模型一次能处理的 token 上限。稀缺资源：历史与工具结果都会消耗它。</dt>
+        <dt>上下文腐烂 <span class="en">Context Rot</span></dt>
+        <dd>长上下文中模型对内容的注意力随位置与密度衰减的现象：塞得越满、越靠中间，越容易被忽略。对策见第 5 章上下文工程（裁剪 / 压缩 / 外置 / 结构化）与第 4 章片段排序。</dd>
+
+ <dt>幻觉 <span class="en">Hallucination</span></dt>
+ <dd>模型以笃定语气输出编造内容。对实时/私有信息尤为严重——工具（给出真实 Observation）是对抗它的根本手段。</dd>
+
+ <dt>提示注入 <span class="en">Prompt Injection</span></dt>
+ <dd>在输入中夹带恶意指令劫持模型。间接注入（藏在工具返回的网页/邮件/文件里）对 Agent 危害最大，因为会触发执行。</dd>
+
+ <dt>检索增强生成 <span class="en">RAG</span></dt>
+ <dd>先从知识库检索相关片段、再据此生成回答。在 Agent 中通常包装为检索工具。多跳推理是它的天然盲区。</dd>
+
+ <dt>思维链 <span class="en">CoT / Chain-of-Thought</span></dt>
+ <dd>让模型逐步写出中间推理再给答案。思考模型（如 deepseek-reasoner）在接口层直接返回思维链（reasoning_content）。</dd>
+
+ <dt>思考模型 <span class="en">Reasoning Model</span></dt>
+ <dd>先进行长内部推理再输出的模型。适合规划、反思等重决策，延迟与成本更高；与执行型模型（deepseek-chat）混用是典型架构。</dd>
+
+ <dt>人类在环 <span class="en">Human-in-the-loop</span></dt>
+ <dd>高危操作（删除、转账、发送）执行前必须由人确认。Harness 权限分级的 confirm 级。</dd>
+
+ <dt>智能体框架 <span class="en">Harness / Scaffold</span></dt>
+ <dd>围绕 LLM 的全部运行时脚手架：系统提示、工具层、主循环、上下文管理、权限沙箱、子 Agent 调度、Trace、持久化。模型是引擎，Harness 是整车；模型决定上限，Harness 决定下限。</dd>
+
+ <dt>前缀缓存 <span class="en">Context Caching</span></dt>
+ <dd>对请求中重复的相同前缀（系统提示、历史）按大幅折扣计费。Agent 循环的消息数组只增不改，是前缀缓存的理想客户。</dd>
+
+ <dt>编排者–工人 <span class="en">Orchestrator–Workers</span></dt>
+ <dd>最实用的多智能体拓扑：主 Agent 拆解并派发任务给独立上下文的子 Agent，汇总结论。核心收益是上下文隔离与并行。</dd>
+
+ <dt>本体 <span class="en">Ontology</span></dt>
+ <dd>共享概念化的形式化、明确的规范说明（Gruber 1993 / Studer 1998）。构成：类、实例、属性、关系、公理。源自哲学的「存在研究」（亚里士多德范畴论）。</dd>
+
+ <dt>类 / 实例 <span class="en">Class / Instance</span></dt>
+ <dd>类是事物的抽象（Tool），实例是具体个体（WebSearch）。类层级由 is-a 连接，具有传递性。</dd>
+
+ <dt>三元组 <span class="en">Triple</span></dt>
+ <dd>RDF 的最小知识单元：主语–谓语–宾语。类属、关系、属性统一成同一形态，整个知识库因此是一张图。</dd>
+
+ <dt>术语层 / 断言层 <span class="en">TBox / ABox</span></dt>
+ <dd>TBox 是类与关系的定义（schema），ABox 是实例断言（数据）。知识图谱 = TBox + ABox。</dd>
+
+ <dt>网络本体语言 <span class="en">OWL</span></dt>
+ <dd>W3C 的强表达力本体语言：等价、互斥、基数、传递/对称属性等。基于开放世界假设（未写 ≠ 假）。配套：RDF（存）、RDFS（继承与定义域值域）、SPARQL（查）、SHACL（校验）。</dd>
+
+ <dt>开放世界假设 <span class="en">OWA / Open World Assumption</span></dt>
+ <dd>OWL 的语义立场：图中没有的事实是「未知」而非「不存在」，因为知识可被分布式补充。与数据库的封闭世界假设（没查到 = 假）相对。</dd>
+
+ <dt>知识图谱 <span class="en">Knowledge Graph</span></dt>
+ <dd>本体作骨架 + 海量实例作血肉的可查询语义网络。作为 Agent 长期记忆时支持多跳查询、一致性校验与幻觉检测。</dd>
+
+ <dt>模型上下文协议 <span class="en">MCP</span></dt>
+ <dd>开放标准，标准化 Harness 连接工具与数据源的接口（JSON-RPC）。MCP 管「怎么连」，本体管「连来的东西是什么意思」——互补而非竞争。</dd>
+
+ <dt>少样本示例 <span class="en">Few-shot</span></dt>
+ <dd>在提示词中放 2~5 个「输入→理想输出」示例，让模型模仿格式、风格与边界判断。选例原则：覆盖典型 + 边界、彼此多样、数量克制。</dd>
+
+ <dt>结构化输出 <span class="en">Structured Output</span></dt>
+ <dd>让模型输出机器可读的 JSON。三层防线：JSON 模式（语法合法）→ Schema 校验（字段类型合法）→ 带错误重试（校验失败把错误喂回模型）。闭环由 Harness 负责。</dd>
+
+ <dt>评估集 <span class="en">Evals</span></dt>
+ <dd>一组带判定标准的测试用例（能力层 / 边界层 / 回归层），任何改动前后各跑一遍。Agent 工程中复利最高的资产。</dd>
+
+ <dt>LLM-as-Judge</dt>
+ <dd>开放性任务无法用关键词断言时，请另一个模型按评分标准（rubric）打分。防三坑：偏爱长回答、自我偏好、rubric 含糊——并定期人工抽样复核。</dd>
+
+ <dt>调用轨迹 <span class="en">Trace</span></dt>
+ <dd>Agent 运行的全量记录：每次 LLM 调用的消息数组、工具调用、token 用量。调试的第一现场；没有 Trace 的 Agent 无法调试。</dd>
+
+ <dt>指数退避 <span class="en">Exponential Backoff</span></dt>
+ <dd>失败重试时按 2^n 秒等待（加随机抖动），避免在限流时雪上加霜。只适用于无副作用的调用；有副作用的工具执行不可盲目重试。</dd>
+
+ <dt>嵌入 <span class="en">Embedding</span></dt>
+ <dd>把文本映射为高维向量，语义相近则向量相近——向量检索（RAG）的基础。教学上接口只有 add / search 两个词，实现可从词频一路升级到嵌入模型 + 向量库。</dd>
+
+ <dt>切块 <span class="en">Chunking</span></dt>
+ <dd>把文档切成适合检索的小块。检索的粒度 = 命中的粒度：固定长度会拦腰斩断语义，结构感知切块（按标题）+ 块内细分是生产标准做法；每块必带元数据（来源、日期、类别）。</dd>
+
+ <dt>重排序 <span class="en">Rerank</span></dt>
+ <dd>检索的「粗召回 + 精排」架构：先宽召回 Top-20，再用交叉编码器按相关性精排出 Top-3。多一次廉价调用换检索精度大幅提升。</dd>
+
+ <dt>对象·链接·动作 <span class="en">Palantir Ontology</span></dt>
+ <dd>Palantir Foundry 的工业级本体三件套：对象类型（业务实体）、链接类型（关系本体）、动作类型（唯一合法写入口：校验+权限+副作用）。与语义网本体对比：前者运营业务、支持安全写回，后者描述世界、支持推理——Agent 时代 Action 类型就是模型的高危工具闸门。</dd>
+ </dl>
+
+ <h2>必读论文（按建议阅读顺序）</h2>
+ <div class="callout tip">
+ <div class="co-title">先看这里</div>
+ <p>下列论文中最重要的 8 篇已在 <a href="papers.html">论文精读页</a> 按统一模板逐篇拆解（解决什么问题 → 核心思想 → 结果怎么读 → 对 Builder 的启示），建议先读精读版再决定是否深入原文。</p>
+ </div>
+ <ul class="res-list">
+ <li><a href="https://arxiv.org/abs/2210.03629" target="_blank" rel="noopener">ReAct: Synergizing Reasoning and Acting in Language Models</a>（Yao et al., 2022）<span class="res-note">第 1 章主角。Agent 范式的原点。</span></li>
+ <li><a href="https://arxiv.org/abs/2201.11903" target="_blank" rel="noopener">Chain-of-Thought Prompting Elicits Reasoning in LLMs</a>（Wei et al., 2022）<span class="res-note">思维链的源头，理解思考模型的前置知识。</span></li>
+ <li><a href="https://arxiv.org/abs/2303.11366" target="_blank" rel="noopener">Reflexion: Language Agents with Verbal Reinforcement Learning</a>（Shinn et al., 2023）<span class="res-note">反思机制的代表作，第 5 章的进阶读物。</span></li>
+ <li><a href="https://arxiv.org/abs/2302.04761" target="_blank" rel="noopener">Toolformer: Language Models Can Teach Themselves to Use Tools</a>（Schick et al., 2023）<span class="res-note">工具使用从"教"到"自教"的里程碑。</span></li>
+ <li><a href="https://arxiv.org/abs/2405.15793" target="_blank" rel="noopener">SWE-agent: Agent-Computer Interfaces Enable Automated Software Engineering</a>（Yang et al., 2024）<span class="res-note">实证「接口设计 = 被低估的性能杠杆」，第 7 章的论据。</span></li>
+ <li>Gruber, T. (1993). <a href="https://doi.org/10.1016/S1042-819X(05)80008-2" target="_blank" rel="noopener">A translation approach to portable ontology specifications</a><span class="res-note">Ontology 经典定义的出处。</span></li>
+ <li>Noy, N. &amp; McGuinness, D. (2001). <a href="https://protege.stanford.edu/publications/ontology_development/ontology101.pdf" target="_blank" rel="noopener">Ontology Development 101: A Guide to Creating Your First Ontology</a><span class="res-note">第 6 章七步法的原教程，免费 PDF。</span></li>
+ <li>Lewis et al. (2020). <a href="https://arxiv.org/abs/2005.11401" target="_blank" rel="noopener">Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks</a><span class="res-note">RAG 开山之作，第 4 章知识库链路的源头。精读版见论文页。</span></li>
+ <li>Microsoft Research (2024). <a href="https://arxiv.org/abs/2404.16130" target="_blank" rel="noopener">From Local to Global: A Graph RAG Approach to Query-Focused Summarization</a><span class="res-note">知识库与知识图谱合流的代表作，第 4 / 6 章交汇点。</span></li>
+ </ul>
+
+  <h2>视频伴随学习</h2>
+ <p>每章末尾有「推荐视频」提示框（YouTube + B 站搜索双链接），以下是全部视频汇总：</p>
+ <div class="tbl-wrap"><table class="tbl">
+   <tr><th>视频</th><th>时长</th><th>覆盖章节</th><th>链接</th></tr>
+   <tr><td>Karpathy《Deep Dive into LLMs like ChatGPT》</td><td>3.5h</td><td>第 1/3 章 · 模型三阶段 / 采样 / 微调</td><td><a href="https://www.youtube.com/watch?v=7xTGNNLPyMI" target="_blank" rel="noopener">YT</a> · <a href="https://search.bilibili.com/all?keyword=Karpathy%20Deep%20Dive%20LLM" target="_blank" rel="noopener">B 站</a></td></tr>
+   <tr><td>Karpathy《Let's build GPT from scratch》</td><td>2h</td><td>第 2 章 · 从零写 GPT</td><td><a href="https://www.youtube.com/watch?v=kCc8FmEb1nY" target="_blank" rel="noopener">YT</a> · <a href="https://search.bilibili.com/all?keyword=Karpathy%20build%20GPT" target="_blank" rel="noopener">B 站</a></td></tr>
+   <tr><td>Karpathy《Intro to Large Language Models》</td><td>1h</td><td>第 8 章 · 部署运维</td><td><a href="https://www.youtube.com/watch?v=zjkBMFhNj_g" target="_blank" rel="noopener">YT</a> · <a href="https://search.bilibili.com/all?keyword=Karpathy%20intro%20LLM" target="_blank" rel="noopener">B 站</a></td></tr>
+   <tr><td>3B1B《But what is a neural network》</td><td>19m</td><td>第 6 章 · 神经网络直觉</td><td><a href="https://www.youtube.com/watch?v=aircAruvnKk" target="_blank" rel="noopener">YT</a> · <a href="https://search.bilibili.com/all?keyword=3Blue1Brown%20neural%20network" target="_blank" rel="noopener">B 站</a></td></tr>
+   <tr><td>3B1B《But what is a GPT?》</td><td>27m</td><td>第 4 章 · 嵌入向量几何</td><td><a href="https://www.youtube.com/watch?v=wjZofJX0v4M" target="_blank" rel="noopener">YT</a> · <a href="https://search.bilibili.com/all?keyword=3Blue1Brown%20GPT" target="_blank" rel="noopener">B 站</a></td></tr>
+   <tr><td>3B1B《Attention in transformers》</td><td>26m</td><td>第 3 章 · 注意力可视化</td><td><a href="https://www.youtube.com/watch?v=eMlx5fFNoYc" target="_blank" rel="noopener">YT</a> · <a href="https://search.bilibili.com/all?keyword=3Blue1Brown%20attention" target="_blank" rel="noopener">B 站</a></td></tr>
+   <tr><td>3B1B《How might LLMs store facts》</td><td>20m</td><td>第 3 章 · 幻觉机理</td><td><a href="https://www.youtube.com/watch?v=9-Jl0dxWQs8" target="_blank" rel="noopener">YT</a> · <a href="https://search.bilibili.com/all?keyword=3Blue1Brown%20LLM%20store%20facts" target="_blank" rel="noopener">B 站</a></td></tr>
+ </table></div>
+
+<h2>🏛️ 官方文档</h2>
+ <ul class="res-list">
+ <li><a href="https://api-docs.deepseek.com" target="_blank" rel="noopener">DeepSeek API 文档</a><span class="res-note">模型列表、Function Calling、JSON 输出、前缀缓存说明——以这里的最新版本为准。</span></li>
+ <li><a href="https://platform.openai.com/docs/guides/function-calling" target="_blank" rel="noopener">OpenAI Function Calling Guide</a><span class="res-note">DeepSeek 兼容此规范；这份指南写得最细。</span></li>
+ <li><a href="https://www.w3.org/TR/owl2-overview/" target="_blank" rel="noopener">OWL 2 Web Ontology Language Overview</a><span class="res-note">OWL 的官方总览，比规范本身好读得多。</span></li>
+ <li><a href="https://www.w3.org/TR/sparql11-query/" target="_blank" rel="noopener">SPARQL 1.1 Query Language</a><span class="res-note">语义图查询的标准语言。</span></li>
+ <li><a href="https://modelcontextprotocol.io" target="_blank" rel="noopener">Model Context Protocol (MCP)</a><span class="res-note">工具连接的开放标准。</span></li>
+ <li><a href="https://www.anthropic.com/research/building-effective-agents" target="_blank" rel="noopener">Building Effective Agents</a>（Anthropic）<span class="res-note">Workflow vs Agent 的经典论述，第 1 章定义的出处。</span></li>
+ </ul>
+
+ <h2>开源项目</h2>
+ <ul class="res-list">
+ <li><a href="https://github.com/rdflib/rdflib" target="_blank" rel="noopener">rdflib</a>（Python）<span class="res-note">RDF / SPARQL 标准库——把第 9 章的 TripleStore 升级为真知识图谱的第一步。</span></li>
+ <li><a href="https://github.com/langchain-ai/langgraph" target="_blank" rel="noopener">LangGraph</a><span class="res-note">图状 Agent 编排框架。手写过第 2、7 章后再来读，会非常顺。</span></li>
+ <li><a href="https://github.com/EleutherAI/lm-evaluation-harness" target="_blank" rel="noopener">lm-evaluation-harness</a><span class="res-note">"harness" 一词在 LLM 时代的传播者，评测脚手架的参考实现。</span></li>
+ <li><a href="https://github.com/SWE-agent/SWE-agent" target="_blank" rel="noopener">SWE-agent</a><span class="res-note">ACI（智能体-计算机接口）研究的教学级开源实现。</span></li>
+ <li><a href="https://github.com/getzep/graphiti" target="_blank" rel="noopener">Graphiti</a><span class="res-note">时序知识图谱记忆框架——第 6 章「记忆长出骨骼」的工程化形态。</span></li>
+ <li><a href="https://github.com/microsoft/GraphRAG" target="_blank" rel="noopener">GraphRAG</a>（Microsoft）<span class="res-note">图谱增强检索，RAG 跨越相似度盲区的代表方案。</span></li>
+ <li><a href="https://palantir.com/docs/foundry/ontology/overview/" target="_blank" rel="noopener">Palantir Foundry · Ontology 官方文档</a><span class="res-note">对象/链接/动作三件套的权威定义；AIP 与 Ontology 的接入方式见其 AI 板块——第 6 章 6.2 节的官方源头。</span></li>
+ <li><a href="https://github.com/search?q=pi+agent" target="_blank" rel="noopener">Pi Agent（GitHub 搜索定位官方仓库）</a><span class="res-note">极简主义开源终端编程智能体框架（Star 数万，模型无关）。读完第 7 章自建 Harness 后精读其源码——每个组件都能对上号。以仓库当前版本为准。</span></li>
+ <li><a href="https://www.gradio.app/docs" target="_blank" rel="noopener">Gradio Docs</a><span class="res-note">20 行给 Agent 一个 Web 界面——毕业项目 M4 用它。</span></li>
+ <li><a href="https://github.com/chroma-core/chroma" target="_blank" rel="noopener">Chroma</a><span class="res-note">轻量向量数据库，TinyVectorMemory 的生产替代。</span></li>
+ </ul>
+
+ <h2>⚡ 在线 Python 环境（JupyterLite）</h2>
+ <p>不想配环境？点下面的按钮，在浏览器里获得一个完整的 Python（Pyodide 内核）环境——<b>零安装、零注册、纯 CDN 加载</b>，关掉页面即消失。全站各章 Python 代码块右上角也有 <b>⚡ 运行</b> 按钮（标准库示例可用），点击即可把代码预填进这个环境。
+ <div class="lab" id="lab-lite">
+   <div class="lab-head"> 交互实验 <span class="lab-tag">JupyterLite 在线运行</span></div>
+   <div class="lab-body" style="padding:14px">
+     <button class="btn primary" id="lite-launch">▶ 启动 JupyterLite（首次加载需数十秒）</button>
+     <div id="lite-host" style="display:none">
+       <iframe id="lite-full" style="width:100%;height:560px;border:0;border-radius:8px;background:#fff;display:block" allow="clipboard-read; clipboard-write"></iframe>
+       <p class="small-note">启动后试一试：<code>import sys; print(sys.version)</code>。第三方纯 Python 包可先执行 <code>import micropip; await micropip.install("rdflib")</code> 再导入；numpy、pandas 等已内置。需要联网 API（如 DeepSeek）或本地文件的示例请在本地运行。</p>
+     </div>
+   </div>
+ </div>
+ <script>
+ document.getElementById("lite-launch").addEventListener("click", function() {
+   const host = document.getElementById("lite-host");
+   if (host.style.display !== "none") return;
+   const dark = document.documentElement.getAttribute("data-theme") === "dark";
+   document.getElementById("lite-full").src =
+     "https://jupyterlite.github.io/demo/repl/index.html?kernel=python&toolbar=1&execute=0&showBanner=0"
+     + "&theme=" + (dark ? "JupyterLab%20Dark" : "JupyterLab%20Light");
+   host.style.display = "block";
+   this.textContent = "环境已启动 ✓";
+ });
+ </script>
+
+ <div class="callout tip">
+ <div class="co-title">毕业寄语</div>
+ <p>Agent 领域的「框架」每月都在翻新，但第一性原理五年内不会变：<b>循环、工具、上下文、共同语言、运行时</b>。本站教你的就是这五样。剩下的，去读源码、跑 Evals、造你自己的 Harness 吧。</p>
+ </div>
+
+ </div>
+ </main>
+</div>
+
+<script src="assets/js/app.js?v=20"></script>
+</body>
+</html>

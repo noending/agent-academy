@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="第 6 章：深入理解 Ontology——从哲学起源到知识图谱技术栈，再到本体在智能体中的三大用途。">
+<title>第 6 章 · 深入理解 Ontology | Agent 学院</title>
+<link rel="stylesheet" href="assets/css/style.css?v=20">
+</head>
+<body data-chapter="ch6">
+
+<header class="topbar">
+ <button class="icon-btn hamburger" id="hamburger" title="打开导航">☰</button>
+ <a class="brand" href="index.html"><span class="logo">学</span> Agent 学院 <small>从零开发智能体 · Ontology · Harness</small></a>
+ <span class="spacer"></span>
+ <span class="progress-pill" id="progress-pill">进度 0/9 章</span>
+ <button class="icon-btn" id="theme-btn">🌙</button>
+</header>
+
+<div class="layout">
+ <aside class="sidebar" id="sidebar"></aside>
+
+ <main class="content">
+ <div class="content-inner">
+
+ <header class="chapter-head">
+ <div class="kicker">CHAPTER 06 · 预计 3 小时 · 核心概念之一</div>
+ <h1>深入理解 <span class="grad">Ontology（本体）</span></h1>
+ <p class="lead">
+ Ontology 是一个有两千多年历史、被两次「发明」的概念：一次在古希腊的哲学课堂，一次在 1990 年代的知识工程实验室。
+ 本章带你看清它的全貌——<b>它是什么、怎么建模、怎么查询，以及它为什么恰好是 Agent 时代最被低估的基础设施</b>。
+ </p>
+ <div class="head-meta">
+ <span class="chip">目标：真正理解而非背名词</span>
+ <span class="chip">交互实验：Ontology 实验室</span>
+ <span class="chip">与第 4、7、9 章强关联</span>
+ <span class="chip">rdflib 实战 + LLM 抽取管线</span>
+ <span class="chip">练习：3 题（带参考答案）</span>
+ </div>
+ </header>
+
+ <h2>6.1 两次发明：从哲学到计算机</h2>
+ <p>
+ <b>哲学中的 ontology</b>（本体论）是形而上学的核心分支，研究「<b>存在本身</b>」：世界上有哪些东西？它们分属哪些基本范畴？如何组织？
+ 亚里士多德在《范畴篇》里给出了最早的「顶层分类」——十范畴：实体、数量、性质、关系、地点、时间、姿态、状况、主动、被动。
+ 这其实就是一次「顶层本体建模」的尝试。
+ </p>
+ <p>
+ 1990 年代，知识工程界把这个词借了过去，含义从「研究存在」变成「<b>把某个领域的存在方式明确地写下来</b>」。
+ 最重要的定义来自 Thomas Gruber（1993）：
+ </p>
+ <div class="callout key">
+ <div class="co-title">经典定义（Gruber 1993）</div>
+ <p>"An ontology is an <b>explicit specification of a conceptualization</b>."<br>
+ （本体是对概念化的明确说明。）<br>
+ Studer 等人后来补全为："<b>formal</b>, <b>explicit</b> specification of a <b>shared</b> conceptualization"——<b>共享概念化的形式化、明确的规范说明</b>。四个词各有分量：</p>
+ <p>• <b>概念化（conceptualization）</b>：我们对领域「有哪些概念、它们如何关联」的抽象认识<br>
+ • <b>明确（explicit）</b>：概念的类型与使用约束被显式写出，不靠心照不宣<br>
+ • <b>形式化（formal）</b>：机器可读、可推理（而不是一篇散文）<br>
+ • <b>共享（shared）</b>：被一个群体共同认可——这是它与个人笔记的本质区别</p>
+ </div>
+ <div class="callout story">
+ <div class="co-title">经典文献入口</div>
+ <p>本节定义的两份原始文献：<b>Gruber (1993)</b>（Ontology 定义的出处）与 <b>Ontology Development 101</b>（6.6 节七步法的原型教程）——导读见 <a href="papers.html#ontology-classics">论文精读页</a>。</p>
+ </div>
+
+ <h2>6.2 Palantir Ontology：本体如何变成企业操作系统</h2>
+ <p>
+ 如果说语义网本体回答的是「世界有哪些概念」，那么 <b>Palantir Foundry 的 Ontology</b> 回答的是另一个更锋利的问题：
+ <b>一家企业的业务如何运转，以及如何被安全地操作</b>。它是 Agent 时代最成功的工业级本体实现——理解它，你就理解了「本体」这个词为什么突然变得如此值钱，
+ 也理解了「知识库 / 记忆 / 工具」这三样东西在企业里最终要汇合成什么。
+ </p>
+
+ <h3>核心三件套：对象 · 链接 · 动作</h3>
+ <p>Palantir 的本体由三种一等公民构成（官方术语 Object Types / Link Types / Action Types）。注意它们与第 6.3 节纯描述性要素的微妙差异——<b>多了一种「动作」</b>：</p>
+
+ <div class="tbl-wrap"><table class="tbl">
+ <tr><th>组件</th><th>是什么</th><th>工单域的例子</th><th>关键性质</th></tr>
+ <tr><td><b>Object Type 对象类型</b></td><td>业务实体的数字化身：类型化属性 + 主键，底层由数据集 / 流数据实时同步</td><td><code>Customer</code>、<code>Ticket</code>、<code>SupportAgent</code></td><td>对象是「活的」：带着权限、血缘、版本——不是一张死表</td></tr>
+ <tr><td><b>Link Type 链接类型</b></td><td>对象之间的关系本体（可多对多、可携带属性）</td><td><code>Ticket —submitted_by→ Customer</code>；<code>Ticket —assigned_to→ SupportAgent</code></td><td>关系不再藏在某张表的字段里，而是一等公民，可被检索、可被治理</td></tr>
+ <tr><td><b>Action Type 动作类型</b></td><td>对对象状态的<b>唯一合法写入口</b>：声明式校验 + 权限检查 + 副作用编排</td><td><code>escalateTicket(升级工单)</code>、<code>issueRefund(退款)</code></td><td>业务流程本体化：谁、在什么条件下、能把世界改成什么样</td></tr>
+ </table></div>
+
+ <p>第四个角色是 <b>Function</b>：挂在对象上的纯计算逻辑（如 <code>calcSLA(ticket) → 剩余响应时长</code>）——可测试、可复用，并且和 Action 一样能被 AI 直接调用。</p>
+
+ <h3>AIP：当 Agent 走进本体</h3>
+ <p>Palantir 的 AI 层（AIP）让大模型直接「活」在本体上，接线方式出奇地眼熟——<b>正是你在第 1–7 章亲手搭过的那套结构</b>：</p>
+ <ul>
+ <li><b>工具 = Action Types + Functions</b>：模型不再面对一堆裸 API，而是面对一排经过校验与授权的本体动作——每次调用天然带校验、权限与审计；</li>
+ <li><b>上下文 = 对象与链接</b>：模型的"知识"不是文档碎片，而是当前业务对象及其关系图（通过 MCP 工具集 / OSDK 把本体暴露给模型）；</li>
+ <li><b>权限继承</b>：Agent 以用户的身份行动——用户在本体里看不见的工单，Agent 也碰不到。</li>
+ </ul>
+
+ <div class="callout key">
+ <div class="co-title">Action Type = Agent 的高危工具闸门</div>
+ <p>第 7 章的权限分级（auto / confirm / deny）在 Palantir 体系里是<b>原生能力</b>：Action 的校验与审批规则定义在本体上，任何调用者（人类或 Agent）都走同一道闸门。这就是「本体 + Agent」组合真正的卖点：<b>LLM 提供灵活性，本体提供确定性，二者各自负责自己擅长的部分</b>——与第 3 章结构化输出闭环、第 6 章抽取校验管线是同一条工程哲学。</p>
+ </div>
+
+ <h3>建模实例：客服工单域（可直接映射到你的项目）</h3>
+ <div class="codeblock"><div class="code-head"><span class="code-lang">yaml · 客服工单域的 Ontology 定义（示意）</span></div><pre><code>objectTypes:
+  - Customer: { primaryKey: id, properties: [name, tier, since] }
+  - Ticket:   { primaryKey: id, properties: [title, status, priority, createdAt] }
+linkTypes:
+  - submitted_by: Customer 1..n Ticket
+  - assigned_to:  SupportAgent 1..n Ticket
+functions:
+  - calcSLA(ticket) → 剩余响应时长（纯计算）
+actionTypes:
+  - escalateTicket(ticketId, reason):
+      校验: ticket.status in [open, pending]；reason 非空
+      副作用: status → escalated；通知值班经理；写审计日志
+      权限: 仅当班组长及以上
+  - issueRefund(ticketId, amount):
+      校验: amount &lt;= 500（超过需人工审批——即 confirm 级）
+      权限: 客服主管</code></pre></div>
+
+ <p>映射到 Agent 的工具清单时，每一行都是你在第 2 章已经写过的 JSON Schema——<b>区别只在于：这里的工具背后站着校验、权限与审计</b>：</p>
+
+ <div class="tbl-wrap"><table class="tbl">
+ <tr><th>模型可能要做的事</th><th>对应本体组件</th><th>对应你的 Harness</th></tr>
+ <tr><td>「查一下这个客户的历史工单」</td><td>Object 检索 + Link 遍历</td><td>只读工具（auto）</td></tr>
+ <tr><td>「这单还剩多久超时」</td><td>Function: calcSLA</td><td>只读工具（auto）</td></tr>
+ <tr><td>「把这单升级给经理」</td><td>Action: escalateTicket</td><td>写入工具（校验 + 审计）</td></tr>
+ <tr><td>「给客户退 300 块」</td><td>Action: issueRefund</td><td>写入工具（confirm 级，人工审批）</td></tr>
+ </table></div>
+
+ <h3>两条路线的对比：语义网本体 vs Palantir 本体</h3>
+ <p>现在回答一个必然的困惑：第 6.5 节的 RDF/OWL 和 Palantir 的对象-链接-动作，到底是不是一回事？——<b>同一门学科的两条路线，服务两种目标</b>：</p>
+
+ <div class="tbl-wrap"><table class="tbl">
+ <tr><th></th><th>语义网路线（RDF / OWL）</th><th>Palantir 路线（对象 · 链接 · 动作）</th></tr>
+ <tr><td><b>建模单位</b></td><td>类 / 实例 / 三元组 / 公理</td><td>对象 / 链接 / 动作 / 函数</td></tr>
+ <tr><td><b>主要目的</b></td><td><b>描述</b>世界、支持自动推理</td><td><b>运营</b>业务、支持安全写回</td></tr>
+ <tr><td><b>语义表达</b></td><td>强逻辑（等价、传递、基数……）</td><td>业务规则（校验、审批流、SLA）</td></tr>
+ <tr><td><b>「推理」</b></td><td>OWL 推理机算出隐含事实</td><td>计算引擎跑 Function 与规则</td></tr>
+ <tr><td><b>写操作</b></td><td>无——RDF 是纯描述性的</td><td><b>Action 类型是一等公民</b></td></tr>
+ <tr><td><b>治理</b></td><td>无原生概念</td><td>权限 / 血缘 / 审计原生内置</td></tr>
+ <tr><td><b>给 Agent 的接口</b></td><td>自己包一层工具 Schema</td><td>OSDK / MCP 原生把本体暴露为工具</td></tr>
+ <tr><td><b>典型问题</b></td><td>「X 和 Y 在逻辑上是什么关系？」</td><td>「这单还能不能升级？升级了会发生什么？」</td></tr>
+ </table></div>
+
+ <div class="callout story">
+ <div class="co-title">两条路线的共同底座</div>
+ <p>别被表格吓到——你在毕业项目里写的"轻量本体"（类目 + 关系 + 定义域值域校验）正是两条路线的<b>公分母</b>：它同时满足语义网的"形式化明确"与 Palantir 的"受治理写入"。Palantir 给本课程最大的启示是：<b>本体要想对 Agent 有用，必须带上「动作」与「治理」——纯描述性的本体只是地图，带 Action 的本体才是控制台。</b></p>
+ </div>
+ <h2>交互实验：Palantir 三件套速览</h2>
+ <p>三个标签页分别拆开 Object / Link / Action，左边是本体定义（示意），右边是同一个东西在 Agent 工具清单里的样子——<b>看它们如何一一对应</b>：</p>
+
+ <div class="lab" id="lab-palantir">
+ <div class="lab-head"> 交互实验 <span class="lab-tag">PALANTIR 三件套速览</span></div>
+ <div class="lab-body">
+ <div class="pal-tabs"></div>
+ <div class="pal-body"></div>
+ </div>
+ </div>
+
+
+ <h2>6.3 本体的构成要素</h2>
+ <p>一个本体由五类「零件」组成。用一个「智能体领域」的例子贯穿：</p>
+
+ <div class="tbl-wrap"><table class="tbl">
+ <tr><th>要素</th><th>含义</th><th>本站例子</th></tr>
+ <tr><td><b>类（Class / Concept）</b></td><td>一类事物的抽象</td><td><code>Agent</code>、<code>Tool</code>、<code>Task</code>、<code>Human</code></td></tr>
+ <tr><td><b>实例（Instance / Individual）</b></td><td>具体的个体</td><td>ClaudeCode 是 <code>Agent</code> 的实例；WebSearch 是 <code>Tool</code> 的实例</td></tr>
+ <tr><td><b>属性（Property / Attribute）</b></td><td>个体自身的特征</td><td>工具的 <code>version</code>、任务的 <code>deadline</code></td></tr>
+ <tr><td><b>关系（Relation）</b></td><td>个体之间的连接</td><td><code>uses(Agent → Tool)</code>、<code>executes(Agent → Task)</code></td></tr>
+ <tr><td><b>公理（Axiom / Constraint）</b></td><td>必须成立的逻辑陈述</td><td>「uses 的主语必须是 Agent，宾语必须是 Tool」；「CodingAgent 是 Agent 的子类」</td></tr>
+ </table></div>
+
+ <p>
+ 描述逻辑传统里还有一对重要术语：<span class="term">TBox</span>（Terminological Box，术语层——类与关系的定义，即 schema）
+ 和 <span class="term">ABox</span>（Assertional Box，断言层——具体实例的陈述）。
+ <b>「知识图谱 = 本体（TBox）+ 实例数据（ABox）」</b>，这句话能帮你定位市面上 90% 的相关讨论。
+ </p>
+
+ <h2>6.4 概念辨析：四个长得很像的东西</h2>
+ <div class="tbl-wrap"><table class="tbl">
+ <tr><th></th><th>表达力</th><th>一句话区分</th><th>例子</th></tr>
+ <tr><td><b>Taxonomy 分类法</b></td><td>★</td><td>只有「is-a」的树形分类</td><td>生物分类学：界门纲目科属种</td></tr>
+ <tr><td><b>Schema 模式</b></td><td>★★</td><td>数据的结构约束（字段、类型），不含语义推理</td><td>数据库表结构、JSON Schema</td></tr>
+ <tr><td><b>Ontology 本体</b></td><td>★★★</td><td>丰富的关系 + 语义约束，<b>可自动推理出隐含事实</b></td><td>schema.org、Gene Ontology、医疗本体 SNOMED</td></tr>
+ <tr><td><b>Knowledge Graph 知识图谱</b></td><td>本体 + 数据</td><td>本体作为骨架 + 海量实例填充 = 可查询的语义网络</td><td>Google Knowledge Graph、企业知识库</td></tr>
+ </table></div>
+ <div class="callout info">
+ <div class="co-title">记忆锚点</div>
+ <p>分类法是「目录树」，模式是「表格模板」，本体是「带语法规则的地图语言」，知识图谱是「用这门语言标注完成的真实地图」。</p>
+ </div>
+
+ <div class="callout tip">
+        <div class="co-title">推荐视频</div>
+        <p><b>3Blue1Brown《But what is a neural network?》</b>——理解模型怎么学知识的地基。<br>
+        <a href="https://www.youtube.com/watch?v=aircAruvnKk" target="_blank" rel="noopener">YouTube</a> ·
+        <a href="https://search.bilibili.com/all?keyword=3Blue1Brown%20neural%20network" target="_blank" rel="noopener">B 站搜索</a></p>
+      </div>
+
+ <h2>6.5 语义网技术栈：RDF → RDFS → OWL → SPARQL</h2>
+ <p>「形式化」意味着要有机器能懂的表示语言。W3C 语义网栈从下到上一层层加表达力：</p>
+
+ <h3>① RDF：万物皆三元组</h3>
+ <p><span class="term">RDF</span>（Resource Description Framework）把一切知识拆成 <b>主语–谓语–宾语</b> 三元组：</p>
+ <div class="codeblock"><div class="code-head"><span class="code-lang">turtle · RDF 三元组示例</span></div><pre><code>@prefix : &lt;http://example.org/agent#&gt; .
+
+:ClaudeCode  :is-a  :CodingAgent .        # 类属关系
+:ClaudeCode  :uses   :WebSearch .         # 关系断言
+:WebSearch   :version "2.1" .             # 属性值
+# 这三行读作：ClaudeCode 是一个编码智能体，
+# 它使用 WebSearch 工具；WebSearch 的版本是 2.1。</code></pre></div>
+ <p>三元组的天才之处在于<b>同构</b>：类属、关系、属性全部统一成「主谓宾」，于是整个知识库就是一张巨大的图，查询与合并都变成图操作。</p>
+
+ <h3>② RDFS：给 RDF 加上类与继承</h3>
+ <p><span class="term">RDFS</span> 引入 <code>rdfs:subClassOf</code>（子类）、<code>rdfs:domain</code>（定义域）、<code>rdfs:range</code>（值域）——本体开始能「推理」：知道 CodingAgent 是 Agent 的子类，就能自动推出「ClaudeCode 是 Agent」。</p>
+
+ <h3>③ OWL：真正的本体语言</h3>
+ <p><span class="term">OWL</span>（Web Ontology Language）把表达力拉满：</p>
+ <ul>
+ <li><b>属性特征</b>：可声明属性是传递的（在……之上）、对称的（是……的配偶）、函数型的（每人只有一个生日）</li>
+ <li><b>等价与互斥</b>：<code>Agent ≡ IntelligentSystem</code>；「工具」与「人类」互斥</li>
+ <li><b>基数约束</b>：每个任务恰好有一个负责人</li>
+ <li><b>开放世界假设</b>（见下方要点）</li>
+ </ul>
+ <div class="callout key">
+ <div class="co-title">关键认知：开放世界假设（OWA）</div>
+ <p>数据库世界是「封闭世界」：没查到的就是不存在。OWL 是<b>开放世界</b>：没写的事实只是「未知」，不能断定「假」——因为本体可能被分布式的各方不断补充。
+ 这让 OWL 适合开放共享的场景，但也意味着推理结果与直觉时常不同（「没报错」可能只是「缺少信息」）。做企业内封闭系统时，常常要主动选择封闭世界语义（如 SHACL 校验）。</p>
+ </div>
+
+ <h3>④ SPARQL：查询语义图</h3>
+ <div class="codeblock"><div class="code-head"><span class="code-lang">sparql · 查出所有 Agent 使用的工具</span></div><pre><code>PREFIX : &lt;http://example.org/agent#&gt;
+SELECT ?agent ?tool WHERE {
+  ?agent a :Agent .          # ？agent 是一个 Agent（含子类，靠推理）
+  ?agent :uses ?tool .       # ？agent 使用 ？tool
+}
+# 想象一下：这相当于「关系数据库的 JOIN + 面向对象的多态」，但全部自动完成</code></pre></div>
+
+ <p>栈顶还有 <b>SHACL</b>（用 Shape 约束校验数据质量）与规则语言（SWRL 等），至此：RDF 存事实、RDFS/OWL 定语义、SPARQL 查、SHACL 验。</p>
+
+ <h2>代码实战：用 rdflib 建图与查询（可运行）</h2>
+ <p>概念讲完，亲手跑一次完整的语义栈。安装：</p>
+ <div class="codeblock"><div class="code-head"><span class="code-lang">bash</span></div><pre><code class="language-bash">pip install rdflib owlrl   # rdflib：RDF 库与 SPARQL；owlrl：RDFS/OWL 推理机</code></pre></div>
+
+ <p>第一步，用 Turtle 格式写下本体与数据（这就是「形式化」——一个文本文件就是一份机器可读的本体）：</p>
+ <div class="codeblock"><div class="code-head"><span class="code-lang">turtle · kg.ttl</span></div><pre><code>@prefix : &lt;http://example.org/agent#&gt; .
+@prefix rdfs: &lt;http://www.w3.org/2000/01/rdf-schema#&gt; .
+
+### TBox：类层级
+:CodingAgent  rdfs:subClassOf :Agent .
+:SearchTool   rdfs:subClassOf :Tool .
+:Agent        rdfs:subClassOf :Thing .
+:Tool         rdfs:subClassOf :Thing .
+
+### ABox：实例与断言
+:ClaudeCode a :CodingAgent ;
+    :uses :WebSearch, :CodeRunner ;
+    :executes :Task101 .
+:R1 a :CodingAgent ;
+    :uses :WebSearch .
+:Task101 a :Task ; :assignedTo :Alice .</code></pre></div>
+
+ <p>第二步，加载并查询——注意 <code>:R1 a :Agent</code> 这条断言我们<b>从没写过</b>，看推理机能不能把它「算」出来：</p>
+ <div class="codeblock"><div class="code-head"><span class="code-lang">python · query_kg.py</span></div><pre><code class="language-python">from rdflib import Graph
+from owlrl import DeductiveClosure, RDFS_Semantics
+
+g = Graph()
+g.parse("kg.ttl", format="turtle")
+print(f"加载后：{len(g)} 条三元组")
+
+# ── 运行 RDFS 推理：把 subClassOf / domain / range 的全部推论补进图里 ──
+DeductiveClosure(RDFS_Semantics).expand(g)
+print(f"推理后：{len(g)} 条三元组")   # 变多了！隐含事实被显式化了
+
+# 查询 1：谁使用了工具？（继承推理后，CodingAgent 的实例也算 Agent）
+q1 = """
+PREFIX : &lt;http://example.org/agent#&gt;
+SELECT ?agent ?tool WHERE {
+  ?agent a :Agent ;
+         :uses ?tool .
+} ORDER BY ?agent"""
+for row in g.query(q1):
+    print(f"  {row.agent.split(&apos;#&apos;)[-1]} → {row.tool.split(&apos;#&apos;)[-1]}")
+# 输出包含 ClaudeCode 和 R1 —— 它们只是 CodingAgent，:Agent 是推出来的
+
+# 查询 2：每个智能体用几个工具？（SPARQL 聚合）
+q2 = """
+PREFIX : &lt;http://example.org/agent#&gt;
+SELECT ?agent (COUNT(?tool) AS ?n) WHERE { ?agent :uses ?tool }
+GROUP BY ?agent"""
+for row in g.query(q2):
+    print(f"  {row.agent.split(&apos;#&apos;)[-1]}: {row.n} 个工具")</code></pre></div>
+
+ <div class="callout key">
+ <div class="co-title">你刚刚见证了什么</div>
+ <p>推理前 11 条三元组，推理后多了几十条——<b>全是「买数据送知识」送出来的隐含事实</b>（is-a 传递、domain/range 反推类型等）。查询 1 不需要任何人改写数据，就自动把 CodingAgent 的实例纳入 Agent。<b>这就是本体相对「普通数据库表」的本质优势：把推理从应用代码下沉到数据层。</b></p>
+ </div>
+
+ <h2>6.6 著名本体一览</h2>
+ <div class="tbl-wrap"><table class="tbl">
+ <tr><th>本体</th><th>领域</th><th>一句话</th></tr>
+ <tr><td><b><a href="https://schema.org" target="_blank" rel="noopener">schema.org</a></b></td><td>通用实体</td><td>搜索引擎时代的最大公约数：Person / Event / Product……你的网页里可能就嵌着它</td></tr>
+ <tr><td><b>FOAF</b></td><td>人际网络</td><td>Friend of a Friend：描述「人与其关系」的最早流行本体</td></tr>
+ <tr><td><b>Dublin Core</b></td><td>文献元数据</td><td>图书馆界的 15 个核心字段（标题、作者、日期……）</td></tr>
+ <tr><td><b><a href="https://geneontology.org" target="_blank" rel="noopener">Gene Ontology</a></b></td><td>生物医学</td><td>数十万个基因功能术语，本体价值的教科书案例</td></tr>
+ <tr><td><b>BFO / SUMO / Cyc</b></td><td>顶层本体</td><td>试图回答亚里士多德之问：万物的最基本范畴是什么</td></tr>
+ </table></div>
+
+ <h2>6.7 怎么建一个本体：七步法</h2>
+ <p>斯坦福经典教程《Ontology Development 101》（Noy &amp; McGuinness）给出七步流程。我们直接用它来建一个「智能体领域本体」：</p>
+ <ol class="steps">
+ <li><b>确定领域与范围</b><p>领域：智能体系统。<b>范围问题</b>（用一组问题定义边界）：「这个本体要回答什么？」——例如：某个工具属于哪个类目？某条记忆涉及哪些实体？某个任务由谁执行？</p></li>
+ <li><b>考虑复用现有本体</b><p>通用实体可复用 schema.org 的 Person / Organization；能复用就复用，互联的价值大于自建的快感。</p></li>
+ <li><b>枚举重要术语</b><p>Agent、Tool、Task、Human、Memory、uses、executes、delegates_to……先不管层级，全部列出来。</p></li>
+ <li><b>定义类层级</b><p>自顶向下（从大类细分）或自底向上（从实例归纳）都行。得到：Thing ▸ Agent ▸ CodingAgent；Thing ▸ Tool ▸ SearchTool ……</p></li>
+ <li><b>定义属性与关系</b><p>为每个类挂属性；定义关系并<b>标注定义域 / 值域</b>：uses(Agent, Tool)、executes(Agent, Task)。</p></li>
+ <li><b>定义分面</b><p>约束细节：version 只能是字符串；status 只能取 {pending, running, done, failed}。</p></li>
+ <li><b>创建实例</b><p>ClaudeCode ∈ CodingAgent、WebSearch ∈ SearchTool……实例随应用增长。</p></li>
+ </ol>
+
+ <h2>交互实验：Ontology 实验室</h2>
+ <p>下面是用上面的方法建出的极简本体。请依次：</p>
+ <ol>
+ <li><b>点击节点</b>查看类与实例的详情（注意 is-a 链）；</li>
+ <li><b>添加一个实例</b>（比如给 CodingAgent 加一个 "R1"）；</li>
+ <li><b>点击「运行推理」</b>——观察系统如何自动推出你从没写过的结论。</li>
+ </ol>
+
+ <div class="lab" id="lab-ontology">
+ <div class="lab-head"> 交互实验 <span class="lab-tag">ONTOLOGY 实验室</span></div>
+ <div class="lab-body">
+ <div class="ont-layout">
+ <div class="ont-canvas-wrap">
+ <svg viewBox="0 0 780 470" role="img" aria-label="本体可视化图"></svg>
+ </div>
+ <div class="ont-panel">
+ <div class="ont-info"><h5> 点击图中任意节点</h5>这里会显示它的定义、父类与关系断言。</div>
+ <div class="ont-form">
+ <h5 style="margin:0 0 8px;font-size:13.5px"> 添加实例</h5>
+ <div class="row"><input id="ont-inst-name" placeholder="实例名，如 R1"></div>
+ <div class="row">
+ <select id="ont-inst-class">
+ <option value="Human">Human</option>
+ <option value="Agent">Agent</option>
+ <option value="CodingAgent" selected>CodingAgent</option>
+ <option value="Tool">Tool</option>
+ <option value="SearchTool">SearchTool</option>
+ <option value="Task">Task</option>
+ </select>
+ </div>
+ <button class="btn primary small" data-act="add-inst">添加到图中</button>
+ </div>
+ <div class="ont-infer">
+ <h5> 推理演示 <button class="btn small" data-act="infer" style="float:right;margin-top:-4px">运行推理 →</button></h5>
+ <ul><li style="color:var(--text-3)">先添加实例或直接点击运行，观察 is-a 传递性与定义域 / 值域推理。</li></ul>
+ </div>
+ </div>
+ </div>
+ </div>
+ </div>
+
+ <div class="callout tip">
+ <div class="co-title">你刚刚见证的正是本体的价值</div>
+ <p>「R1 is-a Agent」这条结论<b>没有任何人写过</b>，它是从两条已知断言（R1 ∈ CodingAgent、CodingAgent is-a Agent）+ 一条公理（is-a 有传递性）自动推出的。
+ 数据规模越大、关系越复杂，这种「买了数据送知识」的效应越惊人——而 LLM 恰好是知识工程的超级加速器（见下一节）。</p>
+ </div>
+
+ <h2>6.8 本体 × Agent：两个主题的交汇点</h2>
+ <p>现在回答本站的核心问题之一：<b>为什么 Agent 开发者要懂本体？</b>三大用途，价值递增：</p>
+
+ <h3>用途一：给工具目录建立「分类学骨架」</h3>
+ <p>
+ Agent 的工具超过一二十个后，全部塞进上下文既贵又乱（模型选错工具的概率上升）。
+ 用本体把工具组织成类目树（搜索类 / 文件类 / 计算类 / 通信类……），运行时先按任务语义检索「相关类目」，再把该类目下的少数工具注入上下文——
+ <b>工具从平铺清单变成可索引的语义空间</b>。第 9 章的综合项目会实现这一招。
+ </p>
+
+ <h3>用途二：让长期记忆长出「骨骼」</h3>
+ <p>
+ 第 4 章说过向量记忆的盲区：相似 ≠ 相关。给记忆装上本体后，记忆变成<b>实体–关系网络</b>：
+ 「用户 Alice — 负责 → 项目 X — 依赖 → Redis」「项目 X — 使用 → deepseek-chat」。
+ 好处立竿见影：
+ </p>
+ <ul>
+ <li><b>多跳查询</b>：「A 的导师合作过的公司」这类问题，图上两跳就到，向量检索无能为力；</li>
+ <li><b>一致性校验</b>：写入前校验定义域 / 值域，脏数据进不来；</li>
+ <li><b>幻觉检测</b>：模型说出的实体在图里查无此人 → 触发怀疑与复核。业界的 GraphRAG、时序知识图谱记忆（如 Graphiti / Zep 一类方案）都在这个方向上。</li>
+ </ul>
+
+ <h3>用途三：LLM 与本体互相成就</h3>
+ <div class="grid2">
+ <div class="card"><span class="emoji"></span><h4>LLM 帮本体</h4><p>本体最贵的是人工建模。LLM 能从自然语言文本中<b>抽取实体与关系、自动填充实例</b>（ontology population），甚至起草类层级——建模成本骤降一个数量级。</p></div>
+ <div class="card"><span class="emoji"></span><h4>本体帮 LLM</h4><p>本体是 LLM 输出的<b>校验器与接地桩</b>：枚举约束让分类输出永远合法；关系校验抓出张冠李戴；生成 SPARQL 查图，让回答有据可查。幻觉从「治理问题」变成「工程问题」。</p></div>
+ </div>
+
+ <div class="callout info">
+ <div class="co-title">一个历史注脚 + 一个当代注脚</div>
+ <p><b>历史</b>：早在 2000 年代的多智能体标准 FIPA ACL 中，智能体间通信消息就要求引用一个共享本体来解释消息内容——「没有共同语言就无法协作」是老问题。<br>
+ <b>当代</b>：MCP（Model Context Protocol）把<b>工具接口</b>标准化了（JSON Schema 描述的工具 / 资源 / 提示），而本体解决的是<b>工具语义</b>的标准化——两者互补：MCP 管「怎么连」，本体管「连来的东西是什么意思」。</p>
+ </div>
+
+ <h3>代码落地：LLM 抽取管线（本体 × LLM 的组合拳）</h3>
+ <p>本体最贵的是人工建模，LLM 恰好是最便宜的建模工人。把第 3 章的「生成→校验」闭环用在这里：</p>
+ <div class="codeblock"><div class="code-head"><span class="code-lang">python · extract.py</span></div><pre><code class="language-python">import json
+
+EXTRACT_PROMPT = """从下面的文本中抽取 (主体, 关系, 客体) 三元组。
+关系只能取：leads / belongs_to / uses / cites / supports / implemented_by
+主体、客体用简短名词（≤10字）。输出 JSON：{"triples": [{"s":..., "r":..., "o":...}]}
+文本中没有把握的不要输出。
+
+文本：{text}"""
+
+def extract_triples(text: str, onto) -> list:
+    resp = client.chat.completions.create(
+        model="deepseek-chat", temperature=0,
+        response_format={"type": "json_object"},
+        messages=[{"role": "user",
+                   "content": EXTRACT_PROMPT.format(text=text)}])
+    items = json.loads(resp.choices[0].message.content).get("triples", [])
+
+    valid = []
+    for it in items:
+        err = onto.check(it.get("r"), it.get("s"), it.get("o"))
+        if err is True:
+            valid.append((it["s"], it["r"], it["o"]))
+        else:
+            print(f"✂️ 丢弃非法三元组 {it} → {err}")   # 模型的越界输出在这里被拦下
+    return valid
+
+store = TripleStore()
+for t in extract_triples(
+        "Alice 负责的 GraphRAG 对比实验用到了重排序技术，"
+        "arXiv 2404.02765 这篇论文支持该方法。", onto):
+    store.add(*t)
+# ✂️ 若模型输出 {"s":"Alice","r":"uses","o":"重排序技术"}，
+# 会被校验拦下：uses 的宾语必须是 Tool，"重排序技术" 是 Technique —— 换 uses 才对？不，
+# 正确关系是 Project uses Technique，模型必须自己选对关系；选错了就丢弃</code></pre></div>
+
+ <div class="callout tip">
+ <div class="co-title">分工的艺术</div>
+ <p><b>模型负责它擅长的</b>：从口语化文本里理解语义、识别实体与关系；<b>本体负责它擅长的</b>：用枚举和定义域值域把模型的输出硬约束在合法空间里。这个组合让「自动填充知识图谱」从研究课题变成了一个下午能写完的管线。两个已知的坑：① 同一实体的不同写法（DeepSeek / 深度求索）需要<b>实体对齐</b>，简单做法是让模型在抽取时输出规范名，进阶做法是嵌入聚类；② 抽取置信度低的条目可以标记 <code>pending_review</code> 留给人工，而不是硬丢弃。</p>
+ </div>
+
+ <h2>6.9 实用主义建议与反模式</h2>
+ <ul class="checklist">
+ <li><b>从任务出发倒推建模</b>：先写下本体要回答的 10 个问题（competency questions），建模只为它们服务。</li>
+ <li><b>轻量优先</b>：90% 的 Agent 场景，「类目 + 关系 + 定义域值域」这一层（RDFS 级）就够，不必上 OWL 全家桶与专业推理机。</li>
+ <li><b>反模式：大而全</b>：试图一次建成「企业万物本体」的项目几乎必死。本体是长出来的，不是一次规划出来的。</li>
+ <li><b>反模式：为了本体而本体</b>：如果三个字典对象就能解决当前问题，先解决，再谈语义。</li>
+ <li><b>让 LLM 参与建模与填充</b>：你负责审校公理与核心层级，批量实例交给抽取管线。</li>
+ </ul>
+
+ <h2>自测</h2>
+ <details class="quiz"><summary>用 TBox / ABox 的语言说清「本体」和「知识图谱」的关系。</summary>
+ <div class="quiz-body"><p><span class="ans-label">答案：</span>本体 ≈ TBox（术语层：类、关系、公理的定义），知识图谱 = TBox + ABox（术语层之上填充了大量实例断言）。所以「知识图谱里包含一个本体作为它的 schema 骨架」是准确的说法，而「本体就是知识图谱」丢掉了实例层。</p></div>
+ </details>
+ <details class="quiz"><summary>OWL 的开放世界假设与数据库的封闭世界假设，各适合什么场景？</summary>
+ <div class="quiz-body"><p><span class="ans-label">答案：</span>开放世界适合<b>开放、分布式、持续补充</b>的知识（语义网、跨机构共享）——没写不代表假。封闭世界适合<b>封闭、自治、要求校验严格</b>的系统（企业数据库、表单校验）——没写就是假，可以做完整性检查。工程上常用 SHACL 在开放世界模型上叠加封闭式校验，兼得两者。</p></div>
+ </details>
+ <details class="quiz"><summary>说出本体在 Agent 中的至少三个用途，并指出哪一个对你当前的项目最有价值。</summary>
+ <div class="quiz-body"><p><span class="ans-label">答案：</span>① 工具目录的语义组织与按需注入；② 结构化长期记忆（实体–关系图），支持多跳查询、一致性校验与幻觉检测；③ 作为 LLM 输出的校验器 / 接地桩，以及用 LLM 反向抽取填充本体。第三问没有标准答案——但如果你认真想了，说明这章学进去了。</p></div>
+ </details>
+
+ <h2>动手练习（带参考答案）</h2>
+
+ <details class="fold"><summary>练习 1 · 用七步法为「个人阅读清单」建迷你本体</summary>
+ <div class="fold-body">
+ <p><b>任务：</b>你想做一个管理自己读书生活的小 Agent。用七步法的前五步（确定范围、复用、列术语、类层级、属性与关系）建一个迷你本体，写出 3 个「本体能回答的问题」。</p>
+ <p><b>参考答案：</b></p>
+ <p><b>① 范围问题（competency questions）</b>：「我读过哪些讲 X 主题的书？」「《A》的作者还写过什么？」「哪本书引用/推荐了《B》？」「我标记为「想读」但拖了半年的有哪些？」</p>
+ <p><b>② 复用</b>：书籍条目复用 schema.org 的 <code>Book</code>（isbn、author 字段现成），人物复用 <code>Person</code>——不重复造轮子。</p>
+ <p><b>③ 类层级</b>：Thing ▸ Work（著作）▸ Book / Paper；Thing ▸ Agent ▸ Person（作者）| Me；Thing ▸ Topic（主题）；Thing ▸ Note（批注）。</p>
+ <p><b>④ 关系与定义域值域</b>：<code>written_by(Work, Person)</code>、<code>about(Work, Topic)</code>、<code>cites(Work, Work)</code>、<code>my_status(Work, 状态枚举)</code>（枚举：want / reading / done / abandoned）、<code>recommended(Work, Work)</code>。</p>
+ <p><b>⑤ 自查</b>：每一个 competency question 都能被 1~2 跳查询回答吗？「拖了半年的想读」需要 status + 时间戳属性（<code>status_since</code>）——发现缺口就回炉补属性，这正是七步法的迭代本质。</p>
+ </div>
+ </details>
+
+ <details class="fold"><summary>练习 2 · 写一条 SPARQL：找出被两个以上智能体使用的工具</summary>
+ <div class="fold-body">
+ <div class="codeblock"><div class="code-head"><span class="code-lang">sparql · 参考答案</span></div><pre><code>PREFIX : &lt;http://example.org/agent#&gt;
+SELECT ?tool (COUNT(DISTINCT ?agent) AS ?users) WHERE {
+  ?agent :uses ?tool .
+}
+GROUP BY ?tool
+HAVING (COUNT(DISTINCT ?agent) &gt; 1)
+ORDER BY DESC(?users)</code></pre></div>
+ <p><b>要点：</b><code>DISTINCT</code> 防止同一 agent 的多条 uses 边重复计数；<code>HAVING</code> 过滤聚合结果。这条查询在关系数据库里要写 JOIN + GROUP BY，在图上只是一次「按邻居数排序」——数据越关联，图查询的优势越明显。</p>
+ </div>
+ </details>
+
+ <details class="fold"><summary>练习 3 · 本体校验判定题：哪条三元组能入库？</summary>
+ <div class="fold-body">
+ <p><b>任务：</b>沿用第 9 章要用的本体（leads: Human→Project；belongs_to: Project→Project；uses: Project→Technique；implemented_by: Technique→Tool）。判断下列模型抽出的三元组哪些合法、哪些被拦、为什么：<br>
+ ① (Alice, leads, GraphRAG对比实验)　② (GraphRAG对比实验, uses, 重排序技术)　③ (重排序技术, uses, BM25工具)　④ (重排序技术, implemented_by, BM25工具)　⑤ (Alice, uses, 重排序技术)</p>
+ <p><b>参考答案：</b></p>
+ <ul>
+ <li>① <b>合法</b>：Human leads Project ✓</li>
+ <li>② <b>合法</b>：Project uses Technique ✓</li>
+ <li>③ <b>拦截</b>：uses 的定义域是 Project，「重排序技术」是 Technique —— 定义域不符。模型大概率把关系选错了。</li>
+ <li>④ <b>合法</b>：Technique implemented_by Tool ✓（BM25 是检索工具）</li>
+ <li>⑤ <b>拦截</b>：uses 的定义域是 Project，Alice 是 Human —— 但注意！这条错误<b>很有价值</b>：它暴露了本体缺一条关系（人也可以采用某技术）。被拦下的三元组里有需求信号——<b>校验失败日志就是本体迭代的路线图</b>。</li>
+ </ul>
+ </div>
+ </details>
+
+ <details class="fold"><summary>练习 4 · 为你的业务设计 Palantir 三件套</summary>
+ <div class="fold-body">
+ <p><b>任务：</b>选一个你熟悉的业务域（外卖配送 / 图书馆 / 健身房预约均可），写出 3 个 Object Type、2 个 Link Type、2 个 Action Type（每个 Action 给出校验规则与权限），并标注每个组件会映射成 Agent 工具清单里的什么。</p>
+ <p><b>参考答案（健身房预约域）：</b></p>
+ <ul>
+ <li><b>Objects</b>：<code>Member</code>（会员：等级、剩余课时）、<code>Trainer</code>（教练：专长、档期）、<code>Session</code>（课程：时间、容量、状态）</li>
+ <li><b>Links</b>：<code>books(Member → Session)</code>、<code>teaches(Trainer → Session)</code></li>
+ <li><b>Actions</b>：<code>bookSession(memberId, sessionId)</code>——校验：容量未满、会员剩余课时 &gt; 0、无时间冲突；权限：本人或前台。<code>cancelSession(sessionId, reason)</code>——校验：开课前 2 小时；副作用：退还课时、通知候补队列。</li>
+ <li><b>Agent 映射</b>：查询档期 → Object+Link（auto）；<code>bookSession</code> → 写入 Action（校验兜底，auto）；<code>cancelSession</code> → confirm 级（不可逆）。</li>
+ </ul>
+ <p><b>自查要点：</b>每个 Action 是否都有「校验 + 权限 + 副作用」三要素？高危写操作是否进了 confirm 级？——这三问就是 Palantir 方法论对你 Harness 的直接迁移。</p>
+ </div>
+ </details>
+
+ <div class="callout story">
+ <div class="co-title">下一章预告</div>
+ <p>有了「共同语言」，还差「身体」：同样是 deepseek-chat，为什么在不同框架里表现天差地别？第 7 章解剖 Harness——模型之外决定成败的一切。</p>
+ </div>
+
+ </div>
+ </main>
+</div>
+
+<script src="assets/js/app.js?v=20"></script>
+<script src="assets/js/lab-palantir.js?v=19"></script>
+<script src="assets/js/lab-ontology.js?v=19"></script>
+</body>
+</html>

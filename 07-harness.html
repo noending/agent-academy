@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="第 7 章：深入理解 Harness——智能体运行时框架的解剖学，以及 DeepSeek 作为引擎的角色。">
+<title>第 7 章 · 深入理解 Harness | Agent 学院</title>
+<link rel="stylesheet" href="assets/css/style.css?v=20">
+</head>
+<body data-chapter="ch7">
+
+<header class="topbar">
+ <button class="icon-btn hamburger" id="hamburger" title="打开导航">☰</button>
+ <a class="brand" href="index.html"><span class="logo">学</span> Agent 学院 <small>从零开发智能体 · Ontology · Harness</small></a>
+ <span class="spacer"></span>
+ <span class="progress-pill" id="progress-pill">进度 0/9 章</span>
+ <button class="icon-btn" id="theme-btn">🌙</button>
+</header>
+
+<div class="layout">
+ <aside class="sidebar" id="sidebar"></aside>
+
+ <main class="content">
+ <div class="content-inner">
+
+ <header class="chapter-head">
+ <div class="kicker">CHAPTER 07 · 预计 2.5 小时 · 核心概念之二</div>
+ <h1>深入理解 <span class="grad">Harness（智能体框架）</span></h1>
+ <p class="lead">
+ 「Harness」是 Agent 圈近年来最重要的词之一，却几乎没有中文社区把它讲透。
+ 本章把它彻底讲透：<b>它是什么、为什么它决定 Agent 的下限、由哪些部件组成、DeepSeek 在其中扮演什么角色</b>。
+ </p>
+ <div class="head-meta">
+ <span class="chip">目标：能设计自己的 Harness</span>
+ <span class="chip">交互实验：Harness 实验室</span>
+ <span class="chip">含 mini-harness 代码</span>
+ <span class="chip">流式拼接 · 成本核算 · 模型路由</span>
+ <span class="chip">练习：4 题（带参考答案）</span>
+ </div>
+ </header>
+
+ <h2>7.1 什么是 Harness？</h2>
+ <p>
+ <b>Harness</b> 的本义是「马具」——套在马身上的那套皮革与缰绳，把马的蛮力转化为可驾驭的前进动力。
+ 软件工程里早有先例：测试领域的 <b>test harness</b>，指驱动被测代码运行的一整套脚手架。
+ 在 LLM 时代，这个词经由评测项目（如 EleutherAI 的 <i>lm-evaluation-harness</i>）进入大众视野，随后被 Agent 社区接管：
+ </p>
+
+ <div class="callout key">
+ <div class="co-title">定义</div>
+ <p><b>Agent Harness（智能体框架 / 运行时）= 围绕 LLM 构建的全部运行时脚手架</b>：系统提示、工具实现、Agent 主循环、上下文管理、权限与安全、子 Agent 调度、日志追踪、持久化恢复……<br>
+ 一句话：<b>模型是引擎，Harness 是整辆车</b>。你也可能见到同义的说法 <i>scaffold</i>（脚手架）或 <i>agent runtime</i>。</p>
+ </div>
+
+ <p>由这个定义直接推出 Agent 工程中最重要的经验公式：</p>
+ <div class="callout story">
+ <div class="co-title">模型决定上限，Harness 决定下限</div>
+ <p>同一个 deepseek-chat，放在裸循环里（第 2 章的最小版）和放在精心设计的 Harness 里，完成真实任务的成功率可以是天壤之别——<b>模型没变，变的是它每一步能看到什么、能做什么、犯错后会被如何兜住</b>。Harness 不是模型的附属品，而是把模型能力「兑现」出来的兑现器。</p>
+ </div>
+
+ <h3>这不是空话：有论文实证</h3>
+ <p>
+ 2024 年的 SWE-agent 论文（Yang et al., NeurIPS）专门研究了「智能体–计算机接口」（ACI，本质上就是 Harness 的工具层）对性能的影响：
+ 同一个模型，<b>仅改变工具接口的设计</b>（比如给编辑工具加上「改完必须重新读文件」的反馈回路），在真实 GitHub issue 修复基准上的成功率就有显著差异。
+ 结论与第 2 章的「工具描述五原则」互相印证：<b>接口设计是被低估的性能杠杆</b>。
+ </p>
+ <div class="callout story">
+ <div class="co-title">论文精读入口</div>
+ <p>本节论据的完整拆解：<b>SWE-agent</b>（ACI 三条设计原则 + 「全部增益来自接口而非模型」的实验设计）——见 <a href="papers.html#sweagent">论文精读页</a>，逐段中译见 <a href="translations.html#zh-sweagent">中文精读版</a>。</p>
+ </div>
+
+ <h2>交互实验：Harness 实验室</h2>
+ <p>亲身体验「模型相同、Harness 不同、结局不同」。同一个任务——<b>「把 utils.py 的同步 IO 改成异步并通过全部测试」</b>——逐个打开下面的组件开关，观察模拟的任务结局如何变化：</p>
+
+ <div class="lab" id="lab-harness">
+ <div class="lab-head"> 交互实验 <span class="lab-tag">HARNESS 实验室</span></div>
+ <div class="lab-body">
+ <div class="harness-grid">
+ <div class="harness-toggles">
+ <div class="ht-item"><label class="switch-row"><input type="checkbox" data-key="prompt"><span class="switch-track"></span><span><span class="sw-title"> 良好的系统提示</span><span class="sw-desc">写明完成标准、禁止臆测、每步跑测试</span></span></label></div>
+ <div class="ht-item"><label class="switch-row"><input type="checkbox" data-key="tools"><span class="switch-track"></span><span><span class="sw-title"> 精心设计的工具</span><span class="sw-desc">read_file / edit_file / run_tests，信息密集、报错可读</span></span></label></div>
+ <div class="ht-item"><label class="switch-row"><input type="checkbox" data-key="ctx"><span class="switch-track"></span><span><span class="sw-title"> 上下文管理</span><span class="sw-desc">自动压缩历史，关键约束写入 todo 文件</span></span></label></div>
+ <div class="ht-item"><label class="switch-row"><input type="checkbox" data-key="perm"><span class="switch-track"></span><span><span class="sw-title"> 权限与沙箱</span><span class="sw-desc">危险命令拦截，写操作白名单</span></span></label></div>
+ <div class="ht-item"><label class="switch-row"><input type="checkbox" data-key="sub"><span class="switch-track"></span><span><span class="sw-title"> 子 Agent 分工</span><span class="sw-desc">并行改造多个文件，上下文互相隔离</span></span></label></div>
+ <button class="btn primary" data-act="run" style="margin-top:6px">▶ 用当前配置运行任务</button>
+ </div>
+ <div>
+ <div class="metrics metrics-result"></div>
+ <div class="hlog">点击左侧「运行任务」，这里会显示该配置下的执行轨迹……</div>
+ </div>
+ </div>
+ </div>
+ </div>
+
+ <h2>7.2 解剖：Harness 的八大组件</h2>
+ <p>任何生产级 Harness（包括 Claude Code、Devin、 Manus 这类产品）都能拆成下面八个部件。每个部件都给你「是什么 + 设计要点」：</p>
+
+ <ol class="steps">
+ <li><b>系统提示层</b>
+ <p>模型的人格、规则与输出契约。要点：分区排版；规则用祈使句与正例；把「完成标准」显式写出；控制篇幅——系统提示本身也是上下文，塞满例外条款会让模型顾此失彼。</p></li>
+ <li><b>工具层</b>
+ <p>工具实现 + JSON Schema 声明 + 注册表。要点（SWE-agent 论文背书）：少而正交（能组合出复杂操作）；幂等；<b>返回信息密集的结果</b>（模型最需要的不是 "success"，而是它能据此决策的内容）；错误信息写给「模型」看，不是写给人看。</p></li>
+ <li><b>主循环</b>
+ <p>第 2 章那个 while 循环。要点：最大步数保险丝；并行工具调用支持；每轮决定「继续 / 求助 / 终止」的策略；重试与指数退避。</p></li>
+ <li><b>上下文管理器</b>
+ <p>第 5 章四大策略（裁剪 / 压缩 / 外置 / 结构化）的落地组件。要点：给「不可丢」的信息（验收标准、用户偏好）设计独立的存活通道。</p></li>
+ <li><b>权限与安全层</b>
+ <p>工具按风险分级：auto（自动执行）/ confirm（要用户点头）/ deny（禁止）。外加路径白名单、网络隔离、注入内容隔离。要点：<b>执行权永远在 Harness 手里</b>——这是整个 Agent 安全模型的基石。</p></li>
+ <li><b>子 Agent 调度器</b>
+ <p>按需生成携带独立上下文的子 Agent（fan-out），回收时只取结论。要点：子 Agent 的提示里要给足背景，因为它看不到主对话。</p></li>
+ <li><b>可观测性</b>
+ <p>全量 Trace + 成本计量 + Evals。要点：没有 Trace 的 Harness 无法调试，没有 Evals 的 Harness 无法进化。</p></li>
+ <li><b>持久化与恢复</b>
+ <p>会话状态落盘，崩溃后能从断点续跑。长任务（数小时的自主运行）没有这一条等于裸奔。</p></li>
+ </ol>
+
+ <div class="callout info">
+ <div class="co-title">第 1 章四要素 → 八大组件</div>
+ <p>还记得四要素吗？LLM 是引擎（不在 Harness 内）；工具、循环、记忆分别对应组件 2/3/4+6；而系统提示、权限、可观测、持久化，是「让要素能安全高效协作」的骨架。两张清单合起来 = 完整的 Agent。</p>
+ </div>
+
+ <h2>7.3 DeepSeek 作为 Harness 的引擎</h2>
+ <p>Harness 决定下限，但引擎依然决定上限的一部分。DeepSeek 作为引擎有几个鲜明的工程特征：</p>
+
+ <div class="grid2">
+ <div class="card"><span class="emoji">🔌</span><h4>OpenAI 兼容 = 可插拔</h4><p>改一个 base_url 就接入（第 2 章已做）。Harness 与引擎解耦，你可以随时给同一套 Harness 换引擎做 A/B 对比。</p></div>
+ <div class="card"><span class="emoji"></span><h4>上下文缓存</h4><p>DeepSeek 自动做<b>前缀缓存</b>：Agent 循环每轮都重复发送的大段相同前缀（系统提示、历史消息）命中缓存后按大幅折扣计费。Agent 越是「连续作业」，省得越多——这是它对 Agent 经济学的直接贡献。</p></div>
+ <div class="card"><span class="emoji"></span><h4>双档引擎</h4><p>deepseek-chat 干高频执行，deepseek-reasoner 干重规划与反思（思维链经 <code>reasoning_content</code> 可观测）。「便宜引擎跑循环 + 强引擎做关键决策」是性价比最高的 Harness 架构之一。</p></div>
+ <div class="card"><span class="emoji"></span><h4>开源权重</h4><p>V3 / R1 系列开放权重，允许自托管：数据不出域、延迟可控、可微调。对合规敏感场景，这让 DeepSeek 成为少数能把整个 Harness 连同引擎都锁在自己机房里的选择。</p></div>
+ </div>
+
+       <h3>自托管：把引擎搬回自己机房</h3>
+      <p>开源权重（本节开头那张卡片）不是一句口号，落地路径已经非常成熟——<b>你的 Harness 一行不用改，只换 base_url</b>：</p>
+      <div class="codeblock"><div class="code-head"><span class="code-lang">bash · 两条自托管路径</span></div><pre><code class="language-bash"># 方式一：Ollama（一台好一点的笔记本即可起步，适合个人与原型）
+ollama pull deepseek-r1:8b          # 开源蒸馏版
+# 服务默认跑在 http://localhost:11434/v1
+
+# 方式二：vLLM（服务器级吞吐，适合团队）
+pip install vllm
+vllm serve deepseek-ai/DeepSeek-R1 --port 8000</code></pre></div>
+      <div class="codeblock"><div class="code-head"><span class="code-lang">python · Harness 侧只改两行</span></div><pre><code class="language-python">client = OpenAI(base_url="http://localhost:11434/v1",
+                api_key="ollama")     # 引擎即插即换的终极形态</code></pre></div>
+      <p>三点务实提醒：① <b>小尺寸蒸馏版的工具调用与长上下文能力弱于 API 版</b>——上线前先跑你的评估集；② Function Calling 的支持程度随推理引擎版本而异（vLLM 较全），以模型卡为准；③ 收益是数据不出域、零边际调用成本、延迟可控，代价是硬件与运维——按数据敏感度做取舍。</p>
+<div class="callout warn">
+ <div class="co-title">版本注意</div>
+ <p>DeepSeek 模型迭代很快（模型名背后指向的引擎版本会更新，思考模型对 Function Calling 的支持也在演进）。写 Harness 时把「模型名、能力开关」做成配置项而不是硬编码，并以 <a href="https://api-docs.deepseek.com" target="_blank" rel="noopener">官方文档</a> 为准。这本身就是 Harness 思维：引擎会换，骨架长存。</p>
+ </div>
+
+ <h2>7.4 Harness 生态地图</h2>
+ <div class="tbl-wrap"><table class="tbl">
+ <tr><th>路线</th><th>代表</th><th>适合</th><th>代价</th></tr>
+ <tr><td><b>手写循环</b>（本站路线）</td><td>第 2 章 90 行</td><td>理解原理；简单场景</td><td>周边工程自己补</td></tr>
+ <tr><td><b>通用框架</b></td><td>LangChain / LangGraph</td><td>快速拼装、复杂图状流程编排</td><td>抽象层厚，调试要下探</td></tr>
+ <tr><td><b>厂商官方 SDK</b></td><td>OpenAI Agents SDK 等</td><td>与该厂商引擎深度配合</td><td>与厂商绑定</td></tr>
+ <tr><td><b>成品编码 Harness</b></td><td>Claude Code、Aider、SWE-agent</td><td>直接拿来做软件工程任务，或当参考实现精读</td><td>定制空间受限</td></tr>
+ <tr><td><b>工具连接标准</b></td><td>MCP</td><td>让任何 Harness 接入标准化的工具 / 数据源</td><td>不解决语义组织（→ 第 6 章本体）</td></tr>
+ <tr><td><b>极简开源 Agent</b></td><td>Pi Agent</td><td>把「4 个基础工具 + 透明循环」做到极致的终端编码智能体，模型无关</td><td>重编排需自行扩展</td></tr>
+ </table></div>
+ <div class="callout tip">
+ <div class="co-title">选型建议</div>
+ <p><b>先手写，再框架</b>。把第 2 章的 90 行吃透之后，你看 LangGraph 的节点与边、看 Claude Code 的工具设计，看到的是熟悉的零件而不是黑魔法。反过来（先框架后原理），你大概率会永远停在「会调包但不理解」的层面。</p>
+ </div>
+
+ <h2>7.5 实战：把第 2 章的 Agent 升级成 mini-harness</h2>
+ <p>纸上谈完，动手兑现。下面把第 2 章的最小版升级：加入<b>工具注册表、权限分级、Trace 日志</b>——八大组件里的 2、5、7 号就位：</p>
+
+ <div class="codeblock"><div class="code-head"><span class="code-lang">python · mini_harness.py（核心部分）</span></div><pre><code class="language-python">"""mini_harness.py —— 从 Agent 到 Harness 的第一次进化"""
+import json, os, time
+from openai import OpenAI
+
+client = OpenAI(api_key=os.environ["DEEPSEEK_API_KEY"],
+                base_url="https://api.deepseek.com")
+MODEL = "deepseek-chat"
+
+# ── 组件 2：工具注册表（含声明 / 实现 / 权限级）──────────────
+class ToolRegistry:
+    def __init__(self):
+        self._tools = {}
+
+    def register(self, spec, impl, permission="auto"):
+        """permission: auto=直接执行 | confirm=需人工确认"""
+        self._tools[spec["function"]["name"]] = (spec, impl, permission)
+
+    def specs(self):
+        return [t[0] for t in self._tools.values()]
+
+    def call(self, name, args, confirm_fn):
+        if name not in self._tools:
+            return {"error": f"未知工具 {name}，可用: {list(self._tools)}"}
+        _, impl, perm = self._tools[name]
+        if perm == "confirm" and not confirm_fn(f"执行 {name}({args})?"):
+            return {"error": "用户拒绝执行该操作，请换一种方案。"}
+        try:
+            return impl(**args)
+        except Exception as e:
+            return {"error": f"{type(e).__name__}: {e}"}
+
+# ── 组件 7：可观测性（Trace 日志）────────────────────────
+class Trace:
+    def __init__(self, path="trace.jsonl"):
+        self.path = path; self.t0 = time.time()
+    def log(self, kind, **kw):
+        rec = {"t": round(time.time() - self.t0, 2), "kind": kind, **kw}
+        print("·", kind, {k: v for k, v in kw.items() if k != "messages"})
+        with open(self.path, "a", encoding="utf-8") as f:
+            f.write(json.dumps(rec, ensure_ascii=False) + "\n")
+
+# ── Harness 主体：循环不变，周边增厚 ─────────────────────
+class Harness:
+    def __init__(self, registry, system_prompt, max_steps=10):
+        self.registry = registry
+        self.system_prompt = system_prompt
+        self.max_steps = max_steps
+
+    def confirm(self, question):           # 生产中接到 UI；教学里用命令行
+        return input(f"  {question} [y/N] ").strip().lower() == "y"
+
+    def run(self, user_input):
+        trace = Trace()
+        messages = [{"role": "system", "content": self.system_prompt},
+                    {"role": "user", "content": user_input}]
+        for step in range(self.max_steps):
+            resp = client.chat.completions.create(
+                model=MODEL, messages=messages,
+                tools=self.registry.specs())
+            msg = resp.choices[0].message
+            usage = resp.usage
+            trace.log("llm_call", step=step,
+                      tokens=usage.total_tokens)
+            if not msg.tool_calls:
+                trace.log("final")
+                return msg.content
+            messages.append(msg)
+            for tc in msg.tool_calls:
+                args = json.loads(tc.function.arguments or "{}")
+                trace.log("tool_call", step=step, name=tc.function.name, args=args)
+                result = self.registry.call(
+                    tc.function.name, args, confirm_fn=self.confirm)
+                messages.append({"role": "tool", "tool_call_id": tc.id,
+                                 "content": json.dumps(result, ensure_ascii=False)})
+        return "已达最大步数。"
+
+# ── 组装与运行 ─────────────────────────────────────────
+if __name__ == "__main__":
+    reg = ToolRegistry()
+    reg.register(SPEC_GET_WEATHER, impl_get_weather, permission="auto")
+    reg.register(SPEC_DELETE_FILE, impl_delete_file, permission="confirm")  # 高危！
+    h = Harness(reg, "你是一个严谨的生活助理，实时信息必须调用工具。")
+    print(h.run("明天北京天气如何？我怕淋雨。"))</code></pre></div>
+
+ <p>对比第 2 章，你已经获得了：加工具不用改主循环（注册表）、高危操作有人把关（权限）、出了问题有据可查（Trace）。<b>剩下六大组件，就是综合项目里继续加厚的方向。</b></p>
+
+ <h2>7.6 继续加厚：流式拼接、成本核算、模型路由</h2>
+ <p>mini-harness 已经有骨架了。生产环境还差三件高频小事，每件都给出最小实现：</p>
+
+ <h3>① 流式模式下把「分片」拼回完整工具调用</h3>
+ <p>第 2 章提过：流式时 tool_calls 是碎着来的。拼接是所有流式 Agent UI 的必经之路：</p>
+ <div class="codeblock"><div class="code-head"><span class="code-lang">python · stream_tools.py</span></div><pre><code class="language-python">def stream_with_tools(client, messages, tools_spec):
+    """流式输出正文 + 实时拼装工具调用。返回 (全文, 完整的 tool_calls)"""
+    content, calls = "", {}          # calls: index -> {id, name, args}
+
+    stream = client.chat.completions.create(
+        model="deepseek-chat", messages=messages,
+        tools=tools_spec, stream=True,
+    )
+    for chunk in stream:
+        delta = chunk.choices[0].delta
+        if delta.content:                          # 正文增量：立即上屏
+            print(delta.content, end="", flush=True)
+            content += delta.content
+        for tc in (delta.tool_calls or []):        # 工具调用增量：按 index 拼接
+            slot = calls.setdefault(tc.index, {"id": "", "name": "", "args": ""})
+            if tc.id:    slot["id"] += tc.id
+            if tc.function and tc.function.name:
+                slot["name"] += tc.function.name
+            if tc.function and tc.function.arguments:
+                slot["args"] += tc.function.arguments
+
+    print()
+    return content, list(calls.values())</code></pre></div>
+
+ <h3>② 成本核算：每个 Agent 都该有一个 CostMeter</h3>
+ <div class="codeblock"><div class="code-head"><span class="code-lang">python · cost_meter.py</span></div><pre><code class="language-python">class CostMeter:
+    """单价表按官方文档维护（元/百万token）；缓存命中价更低，可分档登记"""
+    PRICES = {                       # (输入价, 输出价) 元/百万 token —— 示意值
+        "deepseek-chat":     (2.0, 8.0),
+        "deepseek-reasoner": (4.0, 16.0),
+    }
+
+    def __init__(self, model="deepseek-chat"):
+        self.model = model
+        self.in_toks = self.out_toks = 0
+        self.in_cached = 0           # 命中前缀缓存的部分，单价更低
+
+    def add(self, usage):
+        self.in_toks += usage.prompt_tokens
+        self.out_toks += usage.completion_tokens
+        if getattr(usage, "prompt_cache_hit_tokens", 0):
+            self.in_cached += usage.prompt_cache_hit_tokens
+
+    @property
+    def cost(self) -> float:
+        pin, pout = self.PRICES[self.model]
+        return (self.in_toks * pin + self.out_toks * pout) / 1_000_000
+
+    def report(self) -> str:
+        hit = f"（缓存命中 {self.in_cached}）" if self.in_cached else ""
+        return f"{self.model}：{self.in_toks} in{hit} / {self.out_toks} out ≈ ¥{self.cost:.4f}"
+
+# 用法：Harness 每轮循环里 meter.add(resp.usage)，结束时 print(meter.report())</code></pre></div>
+ <div class="callout tip">
+ <div class="co-title">为什么非要一块钱一块钱地记</div>
+ <p>Agent 的成本是<b>按步数复利</b>的：历史每轮重发，第 20 步的输入 token 远大于第 1 步。有了 CostMeter，你才能回答「这个任务平均花多少钱」「哪个工具最烧钱」「换 reasoner 值不值」——这些都是第 8 章上线前的必答题。而 DeepSeek 的<b>前缀缓存</b>（自动命中、按大幅折扣计费）会让 <code>in_cached</code> 随循环轮数快速增长——同一套 Harness 越连续作业越便宜。</p>
+ </div>
+
+ <h3>③ 模型路由：让每一步都用在刀刃上</h3>
+ <div class="codeblock"><div class="code-head"><span class="code-lang">python · router.py</span></div><pre><code class="language-python">PLANNER_TASKS = {"plan", "reflect", "review"}
+
+def route(step_kind: str) -> str:
+    """按「这一步在干什么」选引擎——两档引擎混用的最小实现"""
+    if step_kind in PLANNER_TASKS:
+        return "deepseek-reasoner"   # 重决策：慢而深
+    return "deepseek-chat"           # 高频执行：快而省
+
+# 循环里：plan/反思/评审类步骤走 reasoner，其余全部走 chat。
+# 配合 CostMeter 分开记账，路由是否划算一目了然。</code></pre></div>
+
+ <h2>7.7 DeepSeek Harness 参考实现（单文件完整版）</h2>
+ <p>前面各节是零件特写。现在把它们拧成<b>一个可直接运行的单文件</b>——这就是你自己的第一个可复用 Harness 库。每个组件都标注了出处章节，建议逐行敲一遍：</p>
+
+ <div class="codeblock"><div class="code-head"><span class="code-lang">python · deepseek_harness.py —— 全书零件合体（约 120 行）</span></div><pre><code class="language-python">"""deepseek_harness.py —— DeepSeek 驱动的最小可复用 Harness
+组件清单：重试(2.7) + 工具注册表与权限(7.2) + 上下文压缩(5.1)
+        + 成本核算(7.6) + 模型路由(7.6) + Trace(7.2)
+运行：export DEEPSEEK_API_KEY=sk-xxx && python deepseek_harness.py"""
+import json, os, time, random
+from openai import OpenAI, RateLimitError, APITimeoutError, APIConnectionError
+
+client = OpenAI(api_key=os.environ["DEEPSEEK_API_KEY"],
+                base_url="https://api.deepseek.com")
+
+# ── 传输层韧性：重试 + 退避（第 2 章 2.7）────────────────
+def call_llm(max_retries=3, **kw):
+    for attempt in range(max_retries):
+        try:
+            return client.chat.completions.create(**kw)
+        except RateLimitError:
+            time.sleep(min(2 ** attempt + random.random(), 30))
+        except (APITimeoutError, APIConnectionError):
+            if attempt == max_retries - 1: raise
+            time.sleep(2 ** attempt)
+    raise RuntimeError("重试耗尽")
+
+# ── 成本核算（7.6）──────────────────────────────────
+class CostMeter:
+    PRICES = {"deepseek-chat": (2.0, 8.0), "deepseek-reasoner": (4.0, 16.0)}
+    def __init__(self, model):
+        self.model, self.in_toks, self.out_toks = model, 0, 0
+    def add(self, u):
+        self.in_toks += u.prompt_tokens
+        self.out_toks += u.completion_tokens
+    @property
+    def cost(self):
+        pin, pout = self.PRICES[self.model]
+        return (self.in_toks * pin + self.out_toks * pout) / 1e6
+    def report(self):
+        return f"{self.model}: {self.in_toks}in/{self.out_toks}out ≈ ¥{self.cost:.4f}"
+
+# ── 工具注册表 + 权限分级（7.2 / 第 6 章 Action 思想）────
+class ToolRegistry:
+    def __init__(self):
+        self._tools = {}
+    def register(self, spec, impl, permission="auto"):
+        self._tools[spec["function"]["name"]] = (spec, impl, permission)
+    def specs(self):
+        return [t[0] for t in self._tools.values()]
+    def call(self, name, args, confirm_fn):
+        if name not in self._tools:
+            return {"error": f"未知工具 {name}，可用: {sorted(self._tools)}"}
+        _, impl, perm = self._tools[name]
+        if perm == "confirm" and not confirm_fn(f"执行 {name}({args})?"):
+            return {"error": "用户拒绝执行该操作。"}
+        try:
+            return impl(**args)
+        except Exception as e:
+            return {"error": f"{type(e).__name__}: {e}"}
+
+# ── 上下文管理：历史压缩（第 5 章）────────────────────
+def maybe_compact(messages, threshold=8000, keep_recent=4):
+    est = sum(len(str(m.get("content") or "")) for m in messages)
+    if est &lt; threshold:
+        return messages
+    head, tail = messages[1:-keep_recent], messages[-keep_recent:]
+    summary = call_llm(model="deepseek-chat", temperature=0, messages=[
+        {"role": "user", "content":
+            "把对话压缩成摘要，保留任务目标、已完成步骤、未完成部分与全部约束。\n\n"
+            + "\n".join(f"[{m[&apos;role&apos;]}] {str(m.get(&apos;content&apos;) or &apos;&apos;)[:400]}"
+                        for m in head if m.get("content"))}])
+    return [messages[0],
+            {"role": "user",
+             "content": f"[此前对话摘要]{summary.choices[0].message.content}"},
+            *tail]
+
+# ── 模型路由（7.6）──────────────────────────────────
+def route(mode):
+    return "deepseek-reasoner" if mode in ("plan", "reflect") else "deepseek-chat"
+
+# ── 主循环：全部组件在这里汇合 ───────────────────────
+class Harness:
+    def __init__(self, registry, system_prompt, max_steps=12):
+        self.reg, self.sys, self.max_steps = registry, system_prompt, max_steps
+        self.trace = open("trace.jsonl", "a", encoding="utf-8")
+
+    def confirm(self, q):                       # CLI 确认；Web 版换审批队列
+        return input(f"  {q} [y/N] ").strip().lower() == "y"
+
+    def run(self, task, mode="execute"):
+        model, meter = route(mode), None
+        messages = [{"role": "system", "content": self.sys},
+                    {"role": "user", "content": task}]
+        for step in range(self.max_steps):
+            resp = call_llm(model=model, temperature=0,
+                            messages=maybe_compact(messages),
+                            tools=self.reg.specs())
+            if meter is None:
+                meter = CostMeter(model)
+            meter.add(resp.usage)
+            msg = resp.choices[0].message
+            self.trace.write(json.dumps(
+                {"step": step, "model": model,
+                 "tools": [tc.function.name for tc in (msg.tool_calls or [])]},
+                ensure_ascii=False) + "\n")
+            if not msg.tool_calls:                          # 终止信号
+                return msg.content, meter.report()
+            messages.append(msg)
+            for tc in msg.tool_calls:
+                args = json.loads(tc.function.arguments or "{}")
+                result = self.reg.call(tc.function.name, args, self.confirm)
+                messages.append({"role": "tool", "tool_call_id": tc.id,
+                                 "content": json.dumps(result, ensure_ascii=False)})
+        return "已达最大步数。", meter.report()
+
+# ── 装一个演示工具并运行 ─────────────────────────────
+if __name__ == "__main__":
+    reg = ToolRegistry()
+    reg.register({"type": "function", "function": {
+        "name": "get_time", "description": "返回当前时间",
+        "parameters": {"type": "object", "properties": {}}}},
+        impl=lambda: {"now": time.strftime("%H:%M")})
+    h = Harness(reg, "你是一个严谨的助理，时间问题必须查工具。")
+    answer, cost = h.run("现在几点了？再提醒我 25 分钟后喝水。", mode="plan")
+    print(answer); print("[成本]", cost)</code></pre></div>
+
+ <div class="callout tip">
+ <div class="co-title">这个文件怎么用</div>
+ <p>① 作为<b>模板</b>：新项目复制它，只改工具注册段；② 作为<b>测试台</b>：每学一个新组件（子 Agent、MCP 接入、审批队列）就往里加一个类，观察循环不变——这正是 Harness 思维的日常形态；③ 作为<b>面试底稿</b>：能向别人逐行解释这个文件，你就超过绝大多数「只会调框架」的候选人。</p>
+ </div>
+
+ <h2>7.8 框架对比：自建 Harness vs Pi Agent vs 重型框架</h2>
+ <p>学完自建，看别人怎么建就有了坐标系。重点介绍一个与本站哲学最接近的项目——<b>Pi Agent</b>：</p>
+
+ <h3>Pi Agent：极简主义的标杆</h3>
+ <p>
+ Pi Agent 是 GitHub 上 Star 数以万计的开源<b>终端编程智能体</b>框架，近年被多家公司（如 MiniMax Code）用作产品底座。
+ 它的走红恰恰因为<b>克制</b>：作者把框架比作「一张透明的纸」——默认只提供
+ <b>读文件、写文件、改文件、执行命令</b>四个基础工具，循环逻辑一眼可读，模型完全无关（可接 DeepSeek、Claude 等 30+ 引擎），
+ 扩展全靠你自己往上加，而不是被框架的黑盒接管。
+ </p>
+ <details class="qn"><summary> 为什么 Pi Agent 值得你读源码</summary>
+ <div class="qn-body">
+ <b>小白解析：</b>它本质上就是<b>你第 2 章 90 行循环的生产化</b>——读完本站手写 Harness，再去读 Pi 的源码，你会发现自己能逐目录对上号：agent loop 在哪、工具注册在哪、上下文压缩在哪、流式拼接在哪。
+ <b>「先手写理解原理 → 再读极简框架源码 → 需要复杂编排才上重型框架」</b>——这条路径省下的是你未来数年的"框架搬家"成本：极简框架哲学不变、可插引擎，你的知识随引擎贬值最慢。
+ （具体 Star 数、工具清单以官方仓库当前版本为准。）
+ </div>
+ </details>
+
+ <div class="tbl-wrap"><table class="tbl">
+ <tr><th></th><th>自建 Harness（本站）</th><th>Pi Agent（极简派）</th><th>LangGraph（编排派）</th><th>OpenAI Agents SDK（厂商派）</th></tr>
+ <tr><td><b>本质</b></td><td>你自己写的运行时</td><td>极简终端编码 Agent</td><td>图状流程编排框架</td><td>官方 Agent 框架</td></tr>
+ <tr><td><b>抽象层级</b></td><td>全透明（你就是作者）</td><td>薄，接近手写</td><td>厚：节点/边/状态机</td><td>中：Agent/Handoff/Guardrail</td></tr>
+ <tr><td><b>工具机制</b></td><td>随你设计</td><td>4 个基础工具 + 自行扩展</td><td>工具节点 + 状态通道</td><td>tools + handoffs</td></tr>
+ <tr><td><b>模型绑定</b></td><td>无（DeepSeek 即插）</td><td>无，30+ 引擎可插</td><td>多引擎</td><td>OpenAI 系为主</td></tr>
+ <tr><td><b>上下文管理</b></td><td>自己写（第 5 章）</td><td>内置压缩</td><td>内置 checkpointer</td><td>内置 sessions</td></tr>
+ <tr><td><b>权限</b></td><td>自己写（第 7 章）</td><td>简单确认</td><td>需自接</td><td>内置 guardrails</td></tr>
+ <tr><td><b>适合</b></td><td>学习原理；中小系统；完全掌控</td><td>想要透明可改的编码 Agent；读源码学工程</td><td>复杂多角色流程编排</td><td>OpenAI 生态快速起步</td></tr>
+ </table></div>
+
+ <div class="callout tip">
+ <div class="co-title">选型路径建议</div>
+ <p><b>先手写</b>（第 2、7 章——理解原理）→ <b>读 Pi 源码</b>（看极简哲学如何生产化，吸收它的工具克制与上下文压缩实现）→ <b>任务真的复杂了再上重型框架</b>（LangGraph 的状态机编排）。反过来走（从最重的框架入门）的人，通常最后还是要回来补手写这一课。</p>
+ </div>
+
+       <h2>7.9 沙箱：把执行关进笼子（20 行最小实现）</h2>
+      <p>第 5 章安全防线里「沙箱」讲了概念，这里给出进程级的最小实现——<b>目录白名单 + 超时熔断 + 输出截断</b>：</p>
+      <div class="codeblock"><div class="code-head"><span class="code-lang">python · sandbox.py —— 可直接运行</span></div><pre><code class="language-python">"""sandbox.py —— 最小命令沙箱：教学版，生产请上容器"""
+import shlex, subprocess
+from pathlib import Path
+
+class Sandbox:
+    def __init__(self, root="./workspace", timeout=30, max_output=4000):
+        self.root = Path(root).resolve()
+        self.root.mkdir(exist_ok=True)
+        self.timeout, self.max_output = timeout, max_output
+
+    def run(self, cmd: str) -> dict:
+        parts = shlex.split(cmd)
+        if not parts:
+            return {"error": "空命令"}
+        # ① 路径白名单：命令参数必须落在 workspace/ 内
+        for a in parts[1:]:
+            try:
+                (self.root / a.lstrip("./")).resolve().relative_to(self.root)
+            except ValueError:
+                return {"error": f"路径越界，只允许访问 {self.root.name}/ 内的文件"}
+        # ② 受控执行：限时 + 工作目录锁定 + 输出截断
+        try:
+            p = subprocess.run(parts, cwd=self.root, shell=False,
+                               timeout=self.timeout, capture_output=True,
+                               text=True)
+        except subprocess.TimeoutExpired:
+            return {"error": f"执行超过 {self.timeout}s，已终止"}
+        except FileNotFoundError:
+            return {"error": f"命令不存在: {parts[0]}"}
+        return {"exit_code": p.returncode,
+                "output": (p.stdout + p.stderr)[:self.max_output] or "(无输出)"}
+
+# sb = Sandbox()
+# sb.run("ls .")            → 正常返回
+# sb.run("cat /etc/passwd") → {"error": "路径越界..."}
+# sb.run("sleep 999")       → {"error": "执行超过 30s，已终止"}</code></pre></div>
+      <div class="callout warn">
+        <div class="co-title">沙箱的三层强度</div>
+        <p>① <b>进程级</b>（本例）：白名单 + 超时 + 输出上限——挡住绝大多数事故，实现成本最低；② <b>容器级</b>：docker run --network none + 只读根文件系统 + 资源配额——生产默认档；③ <b>系统级</b>：gVisor / Firecracker 微虚拟机——运行不可信生成代码时的选择。原则与第 5 章一致：<b>权限决定「能不能」，沙箱决定「出事了损失多大」。</b></p>
+      </div>
+
+      <h2>7.10 MCP 实操：把你的工具变成标准件（30 行）</h2>
+      <p>全课程多次提到 MCP，现在动手。先理清它在链路里的位置——<b>MCP 和 Function Calling 不是竞争关系，而是两段接口</b>：模型 ↔ Harness 之间只有 Function Calling（模型只会输出 tool_calls JSON）；<b>Harness ↔ 工具/数据源</b> 之间才是 MCP——它解决工具的发现、接入与跨产品复用（写一次工具，Claude Code、你的 Harness、Palantir 都能接）。</p>
+
+      <div class="codeblock"><div class="code-head"><span class="code-lang">python · mcp_server.py —— pip install "mcp[cli]"</span></div><pre><code class="language-python">"""把第 2 章的两个工具发布为标准 MCP server"""
+from mcp.server.fastmcp import FastMCP
+
+mcp = FastMCP("scholar-tools")
+
+@mcp.tool()
+def get_weather(city: str, date: str) -> dict:
+    """查询指定城市某天的天气"""
+    return {"city": city, "date": date, "weather": "小雨", "temp": "12~20°C"}
+
+@mcp.tool()
+def add_reminder(time: str, content: str) -> dict:
+    """创建一条提醒"""
+    return {"ok": True, "msg": f"已在 {time} 创建提醒：{content}"}
+
+if __name__ == "__main__":
+    mcp.run()      # stdio 传输：被 Harness 以子进程方式拉起</code></pre></div>
+
+      <p>函数签名 + docstring 自动成为工具的 JSON Schema——<b>你在第 2 章手写的 TOOLS_SPEC，从这里开始可以由框架自动生成</b>。支持 MCP 的 Harness（如 Claude Code）一行配置即可接入：</p>
+      <div class="codeblock"><div class="code-head"><span class="code-lang">bash · 接入现成 Harness</span></div><pre><code class="language-bash">claude mcp add scholar-tools -- python mcp_server.py</code></pre></div>
+
+      <p>要让<b>你自己的</b> deepseek_harness.py 也吃到 MCP 工具，需要一个桥接层——这正是 MCP 与 Function Calling 的接缝：</p>
+      <div class="codeblock"><div class="code-head"><span class="code-lang">python · mcp_bridge.py —— 桥接示意</span></div><pre><code class="language-python">from mcp import ClientSession, StdioServerParameters
+from mcp.client.stdio import stdio_client
+
+def to_openai_spec(t) -> dict:
+    """MCP 工具描述 → 第 2 章的 tools_spec 格式"""
+    return {"type": "function", "function": {
+        "name": t.name, "description": t.description or "",
+        "parameters": t.inputSchema}}
+
+async def attach_mcp(server_cmd: list, registry) -> None:
+    """拉起 MCP server（子进程），把它的工具并入注册表"""
+    params = StdioServerParameters(command=server_cmd[0], args=server_cmd[1:])
+    async with stdio_client(params) as (read, write):
+        async with ClientSession(read, write) as session:
+            await session.initialize()
+            for t in await session.list_tools():
+                registry.register(to_openai_spec(t),
+                                  impl=None, permission="auto")
+            # 分发差异：mcp 工具的执行不走本地函数，而是
+            # result = await session.call_tool(name, args)
+            # 返回内容照旧以 role=tool 消息回填——循环完全不变</code></pre></div>
+
+      <div class="callout key">
+        <div class="co-title">一张图记住 MCP 的位置</div>
+        <p><b>模型 ↔（Function Calling）↔ 你的 Harness ↔（MCP）↔ 工具与数据源</b>。所以「接了 MCP 仍离不开 Function Calling」：模型侧的对话协议不会变。MCP 的价值在 Harness 右侧——工具的标准化发现与复用；第 6 章 Palantir 的 MCP toolkit 与本节的 FastMCP，是同一思想的两端。</p>
+      </div>
+
+<h2>自测</h2>
+ <details class="quiz"><summary>「模型决定上限，Harness 决定下限」——用八大组件中的三个，各举一个「拉低下限」的具体方式。</summary>
+ <div class="quiz-body"><p><span class="ans-label">示例答案：</span>工具层：报错只返回 exit code 1，模型无法据此修正，反复盲试烧 token；上下文管理：历史不压缩，关键验收标准被挤出窗口，模型「忘了目标」；权限层：无确认机制，一条 rm -rf 毁掉全部进度。三条对应实验室里的三个开关——现象一致。</p></div>
+ </details>
+ <details class="quiz"><summary>为什么 OpenAI 兼容接口对 Harness 设计是重大利好？</summary>
+ <div class="quiz-body"><p><span class="ans-label">答案：</span>它把<b>引擎从 Harness 中解耦</b>：同一套工具、循环、权限、Trace 可以在 deepseek-chat / deepseek-reasoner / 其他兼容引擎之间即插即换，用配置而非代码切换。于是你可以：按任务混用引擎档位、做引擎 A/B 评测、在厂商涨价或故障时快速迁移——骨架不随引擎生死。</p></div>
+ </details>
+ <details class="quiz"><summary>前缀缓存为什么恰好对 Agent 场景特别有效？</summary>
+ <div class="quiz-body"><p><span class="ans-label">答案：</span>Agent 循环的消息数组是<b>只增不改</b>的：每轮 = 上一轮 + 新消息，前缀完全相同。前缀缓存命中后，重复部分按大幅折扣计费。循环步数越多、系统提示与历史越长，折扣红利越大——Agent 是前缀缓存的最理想客户。</p></div>
+ </details>
+
+       <details class="quiz"><summary>MCP 和 Function Calling 是什么关系？为什么接了 MCP 仍然离不开 Function Calling？</summary>
+        <div class="quiz-body"><p><span class="ans-label">答案：</span>两者处在链路的不同段：<b>Function Calling 是「模型 ↔ Harness」的接口</b>——模型只会输出 tool_calls JSON，这由模型能力决定；<b>MCP 是「Harness ↔ 工具/数据源」的协议</b>——解决工具的发现、接入与跨产品复用。因此接入 MCP 后，Harness 仍要把 MCP 工具转成 tools_spec 发给模型、把模型的调用意图经桥接层转发给 MCP server（7.10 节）。一句话：<b>MCP 管连接，Function Calling 管对话，缺一不可</b>。</p></div>
+      </details>
+
+<h2>动手练习（带参考答案）</h2>
+
+ <details class="fold"><summary>练习 1 · 给 mini_harness 挂上 CostMeter</summary>
+ <div class="fold-body">
+ <div class="codeblock"><div class="code-head"><span class="code-lang">python · 参考答案（只列改动）</span></div><pre><code class="language-python">class Harness:
+    def __init__(self, registry, system_prompt, max_steps=10):
+        self.reg = registry
+        self.sys = system_prompt
+        self.max_steps = max_steps
+        self.trace = []
+        self.meter = CostMeter()          # 新增
+
+    def run(self, user_input):
+        ...
+        for step in range(self.max_steps):
+            resp = client.chat.completions.create(
+                model=MODEL, messages=messages,
+                tools=self.reg.specs_for())
+            self.meter.add(resp.usage)    # 新增：每轮记账
+            ...
+        # 循环结束（无论成功/超步数）：
+        print(self.meter.report())</code></pre></div>
+ <p><b>验收：</b>跑 10 个任务后，你能报出「平均每个任务 ¥0.0X」——从这一刻起，你的优化都有了货币单位。</p>
+ </div>
+ </details>
+
+ <details class="fold"><summary>练习 2 · 症状诊断：哪个组件缺失？</summary>
+ <div class="fold-body">
+ <p><b>任务：</b>三位开发者的 Agent 出了以下症状，各指出最可能是八大组件中的哪一个缺失：</p>
+ <ol>
+ <li>A 的 Agent 第 30 步时开始重复做已完成的事，且忘了最初的验收要求。</li>
+ <li>B 的 Agent 在一次搜索后突然开始执行提示里从未出现过的操作。</li>
+ <li>C 的 Agent 在网络抖动后直接崩溃退出，没有降级输出。</li>
+ </ol>
+ <p><b>参考答案：</b></p>
+ <ol>
+ <li><b>上下文管理器</b>缺失：历史滚到窗口边缘，早期约束被挤出（context rot + 无压缩/外置）。</li>
+ <li><b>安全层 / 内容隔离</b>缺失：搜索结果里几乎必然带着外部文本，提示注入最可能的入口；也可能是权限分级缺失让危险动作直接执行——两层都要查。</li>
+ <li><b>主循环的韧性</b>缺失：没有重试/降级（第 2 章 2.7 节的十行防御）；顺带检查持久化——崩溃后能不能从断点恢复？</li>
+ </ol>
+ <p><b>这个练习的元技能：</b>把「Agent 表现诡异」翻译成「哪个组件的哪个职责没兑现」——这就是 Harness 思维的日常用法。</p>
+ </div>
+ </details>
+
+ <details class="fold"><summary>练习 3 · 设计「发送邮件」工具的权限方案</summary>
+ <div class="fold-body">
+ <p><b>任务：</b>你的客服 Agent 需要一个 send_email(to, subject, body) 工具。设计它的权限分级、确认流与防滥用约束。</p>
+ <p><b>参考答案（要点全即得分）：</b></p>
+ <ul>
+ <li><b>权限级：confirm</b>——发邮件不可逆且对外，必须人在环；收件人在白名单（如客服工单组）内的高频模板类邮件可降为 auto。</li>
+ <li><b>确认 UI 显示三要素</b>：收件人、主题、正文全文——不能只显示「发送一封邮件吗」，人必须能审内容（防注入的正文夹带）。</li>
+ <li><b>速率限制</b>：每会话上限（如 5 封）；同一收件人去重，防止模型循环重发。</li>
+ <li><b>内容隔离</b>：body 里若包含「忽略之前的指令」等模式，标记出来给确认人看。</li>
+ <li><b>审计</b>：每封邮件记入 Trace（谁批准的、何时、原文）——出事能回放。</li>
+ </ul>
+ </div>
+ </details>
+
+ <details class="fold"><summary>练习 4 · 把模型路由接进 Harness 循环</summary>
+ <div class="fold-body">
+ <div class="codeblock"><div class="code-head"><span class="code-lang">python · 参考答案</span></div><pre><code class="language-python">def run(self, user_input, mode="execute"):
+    model = route(mode)            # mode 由调用方给定：plan/reflect → reasoner
+    messages = [{"role": "system", "content": self.sys},
+                {"role": "user", "content": user_input}]
+    meter = CostMeter(model)       # 每次路由单独记账，才能对比两档引擎的性价比
+    ...
+    # 更进一步——循环中途降级：
+    # 若 reasoner 连续 2 步没有任何工具调用且只是复述，切换回 chat 继续</code></pre></div>
+ <p><b>要点：</b>路由的粒度是「步骤类型」而不是「整个会话」——同一个会话完全可以规划用 reasoner、执行用 chat。记账分开，是验证「路由有没有省钱」的唯一方式。</p>
+ </div>
+ </details>
+
+ <div class="callout story">
+ <div class="co-title">下一章预告</div>
+ <p>所有零件已备齐：循环（第 1–2 章）、工程方法（第 5 章）、共同语言（第 6 章）、运行时骨架（本章）。第 9 章把它们组装成一个完整的作品：<b>知识驱动的科研小助手</b>。</p>
+ </div>
+
+ </div>
+ </main>
+</div>
+
+<script src="assets/js/app.js?v=20"></script>
+<script src="assets/js/lab-harness.js?v=19"></script>
+</body>
+</html>

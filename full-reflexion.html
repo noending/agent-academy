@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Reflexion 论文对照式全文翻译：Language Agents with Verbal Reinforcement Learning 原文逐段中英对照，三角色架构与全部实验数据解读。">
+<title>全文翻译 · Reflexion | Agent 学院</title>
+<link rel="stylesheet" href="assets/css/style.css?v=20">
+</head>
+<body data-chapter="full">
+
+<header class="topbar">
+  <button class="icon-btn hamburger" id="hamburger" title="打开导航">☰</button>
+  <a class="brand" href="index.html"><span class="logo">学</span> Agent 学院 <small>从零开发智能体 · Ontology · Harness</small></a>
+  <span class="spacer"></span>
+  <span class="progress-pill" id="progress-pill">进度 0/9 章</span>
+  <button class="icon-btn" id="theme-btn">🌙</button>
+</header>
+
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <main class="content">
+    <div class="content-inner">
+
+      <header class="chapter-head">
+        <div class="kicker">全文翻译 · 对照版 · 论文 6/8</div>
+        <h1>Reflexion：<span style="color:var(--accent)">语言强化学习</span>智能体</h1>
+        <p class="lead">
+          Reflexion: Language Agents with Verbal Reinforcement Learning · Shinn et al., NeurIPS 2023 ·
+          <a href="papers/pdf/reflexion.pdf" target="_blank"> 原文 PDF</a> · <a href="https://arxiv.org/abs/2303.11366" target="_blank" rel="noopener">arXiv:2303.11366</a><br>
+          对照式排版：英文原文 → 中文翻译，重点段落黄色标注 + 解读。§3 的三角色架构（Actor / Evaluator / Self-Reflection）与记忆机制是全文心脏。
+        </p>
+        <div class="paper-nav"><a href="translations.html" style="border-style:dashed">← 中文精读版</a> <a href="full-transformer.html">Transformer</a> · <a href="full-cot.html">CoT</a> · <a href="full-react.html">ReAct</a> · <a href="full-toolformer.html">Toolformer</a> · <a href="full-rag.html">RAG</a> · <b style="color:var(--accent)">Reflexion</b> · <a href="full-graphrag.html">GraphRAG</a> · <a href="full-sweagent.html">SWE-agent</a></div>
+      </header>
+
+      <h2>摘要</h2>
+      <div class="para key">
+        <div class="p-en">We propose Reflexion, a novel framework to reinforce language agents not by updating weights, but instead through linguistic feedback. Concretely, Reflexion agents verbally reflect on task feedback signals, then maintain their own reflective text in an episodic memory buffer to induce better decision-making in subsequent trials.</div>
+        <div class="p-zh">我们提出 Reflexion——一个强化语言智能体的新框架：<b>不更新权重，而是通过语言反馈</b>。具体而言，Reflexion 智能体对任务反馈信号进行口头反思，把反思文本保存在情景记忆缓冲区中，以改善后续尝试的决策。</div>
+        <div class="p-note"><b>解读：</b>"not by updating weights, but instead through linguistic feedback"——不更新权重、只更新上下文。这半句定义了一个与强化学习并列的全新方向：训练改反思，梯度改语言。</div>
+      </div>
+      <div class="seg seg-result">
+        <div class="seg-label">实验结论 · 摘要部分</div>
+        <div class="seg-zh">Reflexion 足够灵活，可以吸纳多种类型（标量值或自由文本）与来源（外部或内部模拟）的反馈信号。在多样化任务上显著超越基线智能体：<b>HumanEval 编码基准 91% pass@1，超过此前最优的 GPT-4（80%）</b>。决策、编码、语言推理三类任务全面改善。</div>
+      </div>
+
+      <h2>§1 引言</h2>
+      <div class="para">
+        <div class="p-en">Reflexion converts binary or scalar feedback from the environment into verbal feedback in the form of a textual summary, which is then added as additional context for the LLM agent in the next episode. This self-reflective feedback acts as a 'semantic' gradient signal by providing the agent with a concrete direction to improve upon.</div>
+        <div class="p-zh">Reflexion 把环境给出的二值或标量反馈转换成「文字总结」形式的语言反馈，作为下一轮尝试的额外上下文加入。这种自我反思反馈相当于一个<b>「语义」梯度信号</b>——为智能体指出具体的改进方向，帮助它从错误中学习。</div>
+        <div class="p-note"><b>解读：</b>"语义梯度"是全文最天才的类比：普通 RL 的梯度是一个数字向量（指出"往哪边调参数"），语言反思是一段话（指出"第 3 步不该假设测试库在线"）。信息量完全不是一个量级——代价是它只能改上下文、不能改模型本身。</div>
+      </div>
+      <div class="seg seg-method">
+        <div class="seg-label">方法机制 · 反馈信号的三个来源</div>
+        <div class="seg-zh">生成有用的反思很难——它要求定位错误（credit assignment 问题）并总结出可执行的改进洞见。论文探索三种方式：<b>① 简单的二值环境反馈；② 针对常见失败情形的预定义启发式；③ 自我评估</b>——如用 LLM 做二分类判断（决策任务）或模型自写单元测试（编程任务）。所有实现中，评估信号都被放大成可存入长期记忆的自然语言经验总结。</div>
+      </div>
+      <div class="para">
+        <div class="p-en">Reflexion has several advantages compared to more traditional RL approaches: 1) it is lightweight and doesn't require finetuning the LLM, 2) it allows for more nuanced forms of feedback..., 3) it allows for a more explicit and interpretable form of episodic memory..., 4) it provides more explicit hints for actions in future episodes. At the same time, it does have the disadvantages of relying on the power of the LLM's self-evaluation capabilities and not having a formal guarantee for success.</div>
+        <div class="p-zh">与传统 RL 相比，Reflexion 的优势：① 轻量、无需微调 LLM；② 反馈形式更细腻（可以指出"具体哪个动作该改"），而非难以做信用分配的标量奖励；③ 情景记忆更显式、可解释；④ 给未来尝试的动作提供更明确的提示。劣势：依赖 LLM 自我评估能力（或启发式），且没有成功的正式保证。</div>
+        <div class="p-note"><b>解读：</b>利弊清单值得抄进你的架构评审文档：每当有人提议"给 Agent 上 RL"，先回答"为什么语言反思不够"。</div>
+      </div>
+      <div class="seg seg-result">
+        <div class="seg-label">实验结论 · 摘要级战报</div>
+        <div class="seg-zh">三类任务全面改善：决策任务 AlfWorld 在 12 步迭代学习内超过强基线<b>绝对 22%</b>；推理任务 HotPotQA 提升 <b>20%</b>；Python 编程 HumanEval 提升最高 <b>11%</b>。此外本文还发布了 LeetcodeHardGym（40 道 LeetCode 困难题、19 种语言的代码生成 RL 环境）。</div>
+      </div>
+
+      <h2>§3 方法：强化 = 自我口头反思</h2>
+      <div class="seg seg-method">
+        <div class="seg-label">方法机制 · 三角色定义</div>
+        <div class="seg-zh"><b>Actor（执行者）M_a</b>：基于 LLM，根据状态观察生成文本与动作——可选用 CoT、ReAct 等不同生成模型，并配备一个提供额外上下文的记忆组件 mem。<b>Evaluator（评估者）M_e</b>：为 Actor 的输出打分——推理任务用精确匹配（EM）打分，决策任务用预定义启发式，编程与决策任务也可以用另一个 LLM 实例充当评估者生成奖励。<b>Self-Reflection（自我反思）M_sr</b>：给定稀疏奖励信号（如成败）、当前轨迹与持久记忆 mem，生成细腻、具体的语言反馈存入记忆。</div>
+        <div class="p-note"><b>解读：</b>对照第 8 章：Evaluator 就是 LLM-as-Judge 的角色，Self-Reflection 就是失败后的根因追问。<b>论文把这两件事形式化成了 RL 的 actor-critic 结构</b>——你的 Harness 里其实一直住着一个轻量版 actor-critic。</div>
+      </div>
+      <div class="seg seg-method">
+        <div class="seg-label">方法机制 · 反思的具体样子</div>
+        <div class="seg-zh">在多步决策任务中，当智能体收到失败信号，它可以推断出：动作 a_i 导致了后续错误的 a_{i+1}、a_{i+2}，于是用语言写出「我当时应该采取 a'_i，那样就会得到 a'_{i+1}、a'_{i+2}」，并把这条经验存入记忆。后续尝试中，智能体在时刻 t 就能选择 a'_i 而不是重蹈覆辙。</div>
+        <div class="p-note"><b>解读：</b>注意反思的粒度：<b>具体到"哪个动作、应换成什么、会带来什么"。</b>泛泛地说"下次小心"是无效反思。第 8 章 Trace 侦探训练的定位能力，就是为了让你的反思生成器能写到这个粒度。</div>
+      </div>
+      <div class="seg seg-method">
+        <div class="seg-label">方法机制 · 短期记忆与长期记忆</div>
+        <div class="seg-zh">推理时，Actor 的决策同时依赖<b>短期记忆</b>（轨迹历史，精细但易失）与<b>长期记忆</b>（反思输出的沉淀，浓缩且跨尝试）。两者协同提供"既具体、又带着几轮教训"的上下文——这是 Reflexion 智能体相对其他 LLM 行动器的关键优势。</div>
+        <div class="p-note"><b>解读：</b>直接对应第 5 章的两层记忆：短期 = messages 数组，长期 = memory 文件/记忆库。<b>"人类既记得刚发生的小细节、也回忆长期沉淀的重要经验"——你的 Agent 也应该如此。</b></div>
+      </div>
+
+      <h2>§5 结果（要点）</h2>
+      <div class="seg seg-result">
+        <div class="seg-label">实验结论</div>
+        <div class="seg-zh"><b>决策（ALFWorld）</b>：ReAct 基线 60% 左右起步，Reflexion 在 12 次迭代内升至 <b>97%（130/134）</b>；消融显示去掉记忆或反思组件都会显著回落。<b>推理（HotPotQA）</b>：ReAct+CoT-SC 基线上再提 20%。<b>编程（HumanEval）</b>：Reflexion + 自生成单元测试达 <b>91% pass@1</b>，超过 GPT-4 的 80.1%；在 LeetcodeHardGym 上亦大幅领先。消融还比较了不同反思形式：具体、含行动建议的反思优于笼统总结。</div>
+        <div class="p-note"><b>解读：</b>三条证据链各自对应一类任务，但机制相同：<b>把"失败"这个标量，翻译成"下一步具体怎么改"的语言</b>。另外注意"自生成单元测试"这个细节——让模型自己造评估器，正是第 8 章 LLM-as-Judge 在编程场景的形态。</div>
+      </div>
+
+      <h2>§7 讨论与局限（速览）</h2>
+      <div class="seg seg-skip">
+        <div class="seg-label">可跳读 · 定位与局限</div>
+        <div class="seg-zh">§7 讨论了记忆类型选择、模型选择（反思模型不必是最强模型）与情境记忆对超参数的敏感性。局限：依赖 LLM 自我评估的可靠性、无成功保证、记忆缓冲区长度受上下文限制（作者建议用检索而非全量注入）。——每一条在今天的工程里都有对应的解法（评估校准、记忆检索）。</div>
+      </div>
+      <div class="seg seg-link">
+        <div class="seg-label">课程连接</div>
+        <div class="seg-zh">三个动手动作：① 给第 9 章毕业项目的 Agent 加上"失败后自动反思"——把 Trace 里的失败轨迹喂给反思模型，教训写入记忆文件，重试一次，用评估集量化提升；② 反思提示词务必要求"具体到动作级"（照论文的 a_i → a'_i 粒度）；③ 给反思产出本身设一条评估用例——防止反思退化为文采练习。</div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/app.js?v=20"></script>
+</body>
+</html>

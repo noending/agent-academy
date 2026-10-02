@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="GraphRAG 论文对照式全文翻译：From Local to Global 原文逐段中英对照，完整管线（实体抽取→社区检测→摘要→map-reduce）解读。">
+<title>全文翻译 · GraphRAG | Agent 学院</title>
+<link rel="stylesheet" href="assets/css/style.css?v=20">
+</head>
+<body data-chapter="full">
+
+<header class="topbar">
+  <button class="icon-btn hamburger" id="hamburger" title="打开导航">☰</button>
+  <a class="brand" href="index.html"><span class="logo">学</span> Agent 学院 <small>从零开发智能体 · Ontology · Harness</small></a>
+  <span class="spacer"></span>
+  <span class="progress-pill" id="progress-pill">进度 0/9 章</span>
+  <button class="icon-btn" id="theme-btn">🌙</button>
+</header>
+
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <main class="content">
+    <div class="content-inner">
+
+      <header class="chapter-head">
+        <div class="kicker">全文翻译 · 对照版 · 论文 7/8</div>
+        <h1>GraphRAG：从局部到全局的<span style="color:var(--accent)">图增强检索</span></h1>
+        <p class="lead">
+          From Local to Global: A GraphRAG Approach to Query-Focused Summarization · Microsoft Research, 2024 ·
+          <a href="papers/pdf/graphrag.pdf" target="_blank"> 原文 PDF</a> · <a href="https://arxiv.org/abs/2404.16130" target="_blank" rel="noopener">arXiv:2404.16130</a><br>
+          对照式排版：英文原文 → 中文翻译，重点段落黄色标注 + 解读。§3.1 的六阶段管线（含 NeoChip 抽取实例）是全文心脏。
+        </p>
+        <div class="paper-nav"><a href="translations.html" style="border-style:dashed">← 中文精读版</a> <a href="full-transformer.html">Transformer</a> · <a href="full-cot.html">CoT</a> · <a href="full-react.html">ReAct</a> · <a href="full-toolformer.html">Toolformer</a> · <a href="full-rag.html">RAG</a> · <a href="full-reflexion.html">Reflexion</a> · <b style="color:var(--accent)">GraphRAG</b> · <a href="full-sweagent.html">SWE-agent</a></div>
+      </header>
+
+      <h2>摘要</h2>
+      <div class="para key">
+        <div class="p-en">The use of retrieval-augmented generation (RAG)... enables LLMs to answer questions over private and/or previously unseen document collections. However, RAG fails on global questions directed at an entire text corpus, such as "What are the main themes in the dataset?", since this is inherently a query-focused summarization (QFS) task, rather than an explicit retrieval task.</div>
+        <div class="p-zh">检索增强生成让大模型能就私有或未见过的文档集合回答问题。然而，<b>面向整个语料库的全局问题</b>——比如「这个数据集的主要主题是什么？」——RAG 是失败的：因为这本质上是一个<b>查询聚焦式摘要（QFS）任务</b>，而不是显式检索任务。</div>
+        <div class="p-note"><b>解读：</b>摘要第一段就把「检索任务」与「摘要任务」划成两类——这是第 4 章「向量管相似、图谱管关系」分流论述的学术源头。判断你的用户问的是哪一类，是知识库设计的第一决策。</div>
+      </div>
+      <div class="para">
+        <div class="p-en">Our approach uses an LLM to build a graph index in two stages: first, to derive an entity knowledge graph from the source documents, then to pre-generate community summaries for all groups of closely related entities. Given a question, each community summary is used to generate a partial response, before all partial responses are again summarized in a final response... For a class of global sensemaking questions over datasets in the 1 million token range, we show that GraphRAG leads to substantial improvements over a conventional RAG baseline for both the comprehensiveness and diversity of generated answers.</div>
+        <div class="p-zh">我们的方法用 LLM 分两阶段构建图索引：先从源文档<b>导出实体知识图谱</b>，再为所有紧密相关的实体群组<b>预生成社区摘要</b>。给定问题时，每份社区摘要独立生成部分回答，最后把所有部分回答汇总成最终回答。在约 100 万 token 规模的语料上，针对一类全局性「意义建构」（sensemaking）问题，GraphRAG 在回答的<b>全面性与多样性</b>上大幅超越常规 RAG 基线。</div>
+      </div>
+
+      <h2>§1 引言</h2>
+      <div class="para">
+        <div class="p-en">However, vector RAG approaches do not support sensemaking queries, meaning queries that require global understanding of the entire dataset, such as "What are the key trends in how scientific discoveries are influenced by interdisciplinary research over the past decade?"</div>
+        <div class="p-zh">然而，向量 RAG 不支持「意义建构型查询」——即需要对整个数据集做全局理解的查询，例如：「过去十年，跨学科研究如何影响科学发现的关键趋势是什么？」</div>
+        <div class="p-note"><b>解读：</b>sensemaking（意义建构）源自情报分析领域：通过梳理「人与事之间的连接」来预判走向。这个词精确描述了一类此前 RAG 根本没覆盖的问题——你的知识库有没有这类用户？有的话，本文就是解法。</div>
+      </div>
+      <div class="seg seg-method">
+        <div class="seg-label">方法机制 · 管线总览（Figure 1）</div>
+        <div class="seg-zh">GraphRAG 先用 LLM 构建知识图谱（节点=关键实体，边=实体间关系），再把图<b>划分为紧密关联实体的层级社区</b>，用 LLM 生成<b>社区摘要</b>——自底向上递归生成，高层摘要整合低层摘要。查询时对各社区摘要做 map-reduce：map 步骤并行生成部分回答，reduce 步骤合并出全局回答。开源实现：<a href="https://github.com/microsoft/graphrag" target="_blank" rel="noopener">github.com/microsoft/graphrag</a>。</div>
+      </div>
+
+      <h2>§3.1 六阶段管线（全文核心）</h2>
+      <div class="seg seg-method">
+        <div class="seg-label">方法机制 · 阶段 ①②：切块 → 实体与关系抽取</div>
+        <div class="seg-zh">文档先切块（<b>块大小是关键设计决策：块更长则 LLM 抽取调用更少、更省钱，但块内前部信息的召回会衰减</b>——长上下文注意力衰减在管线设计里的直接体现）。LLM 从每块抽取实体、关系及简短描述，且可按领域定制 few-shot 示例。论文示例：一段 NeoChip 的文本 → 抽出实体 NeoChip（「专注可穿戴与 IoT 低功耗处理器的上市公司」）、实体 Quantum Systems（「NeoChip 此前的持有方」）、关系「Quantum Systems 自 2016 年持有 NeoChip 直至其上市」。还可抽取关于实体的<b>声明（claims）</b>——如「NeoChip 首周股价大涨」。</div>
+      </div>
+      <div class="seg seg-method">
+        <div class="seg-label">方法机制 · 阶段 ③④：建图 → 社区检测</div>
+        <div class="seg-zh">同一实体通常会被多次抽取——实体/关系/声明的多个实例最终<b>聚合为图上的节点与边</b>（节点与边做描述汇总，关系重复次数成为边权重）。实体对齐本文用精确字符串匹配，但作者指出 GraphRAG 对重复实体有韧性（重复者常在后续步骤被聚在一起汇总）。然后用 <b>Leiden 社区检测算法层级式</b>划分图：递归检测子社区直到不可再分，<b>每一层都互斥且完备地覆盖全图节点</b>——这使得「分治式全局摘要」成为可能。</div>
+        <div class="p-note"><b>解读：</b>实体对齐只用精确匹配、靠社区聚合兜底——这是一个「用管线后段的鲁棒性换取前段简单性」的工程决策。对照第 6 章：你的抽取管线同样不必在实体对齐上一步到位。</div>
+      </div>
+      <div class="seg seg-method">
+        <div class="seg-label">方法机制 · 阶段 ⑤⑥：社区摘要 → map-reduce 回答</div>
+        <div class="seg-zh"><b>社区摘要</b>把节点/边/声明的元素摘要填入模板生成，叶子社区按「边的重要性（源节点与目标节点度数之和）降序」填满上下文窗口；高层社区装不下时，用子社区摘要（更短）替换元素摘要（更长）。<b>查询时</b>：社区摘要随机打散分块（确保相关信息分布在多个窗口而不集中在一处）、map 步骤并行生成部分回答并打 0–100 的「有用性分」（0 分过滤）、reduce 步骤按分数降序装满上下文生成全局回答。</div>
+        <div class="p-note"><b>解读：</b>「随机打散」是个反直觉的细节：不按相关性排序，是为了让相关信息均匀分布到每个 map 块——否则某个块可能错过全部要点。对照第 4 章「重要片段放最前或最后」：两种策略解决同一个注意力衰减问题，场景不同、方案相反，值得一起记。</div>
+      </div>
+
+      <h2>§3.2 评估问题的生成：persona 方法</h2>
+      <div class="seg seg-method">
+        <div class="seg-label">方法机制 · 自适应基准</div>
+        <div class="seg-zh">如何给「全局摘要类任务」出考题？答案精妙：让 LLM 先根据语料描述<b>推断潜在用户画像（personas）与其用例</b>，再为每个「用户 × 任务」组合生成需要理解全语料的问题。<b>避免直接从语料本身生成问题</b>（否则评估会被语料泄漏污染；替代方案是留出一部分语料不参与建图）。</div>
+        <div class="p-note"><b>解读：</b>这套「用户画像 → 任务 → 问题」的评估题生成法，可以直接搬进第 8 章你的评估集流水线——它解决的是「全局类任务没有标准答案怎么考」的问题：没有金标答案，就用「两个系统、同一评分标准、LLM 相对比较」。</div>
+      </div>
+
+      <h2>§4 结果（要点）</h2>
+      <div class="seg seg-result">
+        <div class="seg-label">实验结论</div>
+        <div class="seg-zh">在两个真实语料（播客转写、新闻报道，各约 100 万 token）上，用 GPT-4 以四维标准做 LLM 相对评判——<b>全面性（comprehensiveness）、多样性（diversity）、赋能性（empowerment）、直接性（directness）</b>。结果：<b>全局问题上，GraphRAG 的全面性与多样性以显著优势胜过向量 RAG</b>（各层社区摘要均优于基线，高层 C3 在全面性上领先最多）；直接性（答案直击要点）上互有胜负。同时论文坦承索引成本：图构建的 token 消耗约为向量 RAG 的一个数量级以上。</div>
+        <div class="p-note"><b>解读：</b>注意「直接性」维度上 GraphRAG 并不占优——它是为「全面、多样」而生的，不是为「快而准的一个事实」。这与第 4 章 4.6 节的分流策略完全一致：<b>局部问题走向量，全局问题走图谱摘要，按问题类型路由</b>。成本方面，第 6 章的「只对高频全局问题的子集做图谱化」就是从这里的成本数据推出的务实策略。</div>
+      </div>
+
+      <h2>§6 结论（速览）与课程连接</h2>
+      <div class="seg seg-skip">
+        <div class="seg-label">可跳读 · §5–6</div>
+        <div class="seg-zh">§5 相关工作（分层索引/RAG 变体谱系）；§6 结论重申：GraphRAG 用 LLM 派生的图索引支持了对整个语料的全局意义建构，在全面性与多样性上超越向量 RAG，且已在开源与多家框架落地。</div>
+      </div>
+      <div class="seg seg-link">
+        <div class="seg-label">课程连接</div>
+        <div class="seg-zh">① 你的毕业项目（第 9 章）M3 的抽取管线就是 GraphRAG 离线阶段的最小版——给它加上「社区检测 + 摘要」两级，就得到了对语料的全局问答能力；② 把「persona 生成考题」的方法抄进第 8 章评估集流水线，专门覆盖全局类问题；③ 记住本文的成本结构：<b>离线贵、在线强</b>——用它说服团队只在真正需要全局摘要的语料子集上图化。</div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/app.js?v=20"></script>
+</body>
+</html>

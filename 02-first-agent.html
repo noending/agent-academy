@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="第 2 章：动手写第一个 Agent——接入 DeepSeek API，读懂 Function Calling 每条消息，写出 90 行以内的极简智能体。">
+<title>第 2 章 · 动手写第一个 Agent（DeepSeek 实战） | Agent 学院</title>
+<link rel="stylesheet" href="assets/css/style.css?v=20">
+</head>
+<body data-chapter="ch2">
+
+<header class="topbar">
+ <button class="icon-btn hamburger" id="hamburger" title="打开导航">☰</button>
+ <a class="brand" href="index.html"><span class="logo">学</span> Agent 学院 <small>从零开发智能体 · Ontology · Harness</small></a>
+ <span class="spacer"></span>
+ <span class="progress-pill" id="progress-pill">进度 0/9 章</span>
+ <button class="icon-btn" id="theme-btn">🌙</button>
+</header>
+
+<div class="layout">
+ <aside class="sidebar" id="sidebar"></aside>
+
+ <main class="content">
+ <div class="content-inner">
+
+ <header class="chapter-head">
+ <div class="kicker">CHAPTER 02 · 预计 3 小时 · 动手实战</div>
+ <h1>动手写<span class="grad">第一个 Agent</span></h1>
+ <p class="lead">
+ 这一章没有新概念，只有一件事：<b>把第 1 章的循环变成能运行的代码</b>。
+ 我们用 DeepSeek 作为引擎（它是 OpenAI 兼容接口，学一遍到处能用），从一条最简单的请求开始，逐步组装出 90 行以内的极简智能体。
+ </p>
+ <div class="head-meta">
+ <span class="chip">目标：写出可运行的 Agent</span>
+ <span class="chip">交互实验：消息数组可视化</span>
+ <span class="chip">Python 为主 · 附 Node.js</span><span class="chip">练习：5 题（带参考答案）</span>
+ </div>
+ </header>
+
+ <div class="callout info">
+ <div class="co-title">本章你将学会</div>
+ <p>① 接入 DeepSeek API（SDK 与裸 HTTP 两种方式）；② Function Calling 的完整消息流；③ 90 行极简 Agent 的实现与每个易错点；④ 流式输出、超时重试、错误兜底——从「能跑」到「不脆」。</p>
+ </div>
+
+ <h2>2.1 认识 DeepSeek API</h2>
+ <p>
+ DeepSeek 提供 <b>OpenAI 兼容</b>的 HTTP 接口：你用官方 <code>openai</code> SDK，只需把 <code>base_url</code> 指向 DeepSeek。
+ 这件小事的意义深远——<b>引擎可以即插即换</b>，这正是第 7 章 Harness 思维的伏笔。
+ </p>
+
+ <div class="tbl-wrap"><table class="tbl">
+ <tr><th></th><th>deepseek-chat</th><th>deepseek-reasoner</th></tr>
+ <tr><td><b>定位</b></td><td>通用对话 + 工具调用（V3 系列引擎，非思考模式）</td><td>深度思考模式：先输出长思维链再作答</td></tr>
+ <tr><td><b>思维链</b></td><td>无</td><td>有，通过 <code>reasoning_content</code> 字段返回</td></tr>
+ <tr><td><b>适合</b></td><td>Agent 主循环的绝大多数步骤：快、便宜、可并行</td><td>复杂的任务规划、疑难推理、反思总结</td></tr>
+ <tr><td><b>延迟</b></td><td>低</td><td>较高（要"想"很久）</td></tr>
+ </table></div>
+ <p class="small-note"> 模型名与能力更新很快（例如思考模型对 Function Calling 的支持在不同版本间有变化），以 <a href="https://api-docs.deepseek.com" target="_blank" rel="noopener">官方 API 文档</a> 为准。本站的方法论不随版本失效。</p>
+
+ <h3>环境准备（2 分钟）</h3>
+ <div class="codeblock"><div class="code-head"><span class="code-lang">bash</span></div><pre><code class="language-bash"># 1. 安装官方 OpenAI SDK（DeepSeek 推荐的接入方式）
+pip install openai
+
+# 2. 到 platform.deepseek.com 创建 API Key，设置到环境变量
+export DEEPSEEK_API_KEY="sk-你的密钥"</code></pre></div>
+
+ <h3>第一个请求</h3>
+ <div class="codeblock"><div class="code-head"><span class="code-lang">python · hello_deepseek.py</span></div><pre><code class="language-python">import os
+from openai import OpenAI
+
+client = OpenAI(
+    api_key=os.environ["DEEPSEEK_API_KEY"],   # 从环境变量读，不要写死在代码里
+    base_url="https://api.deepseek.com",      # 关键：把引擎从 OpenAI 换成 DeepSeek
+)
+
+resp = client.chat.completions.create(
+    model="deepseek-chat",
+    messages=[
+        {"role": "system", "content": "你是一名简洁的编程导师。"},
+        {"role": "user", "content": "用一句话解释什么是 agent loop。"},
+    ],
+)
+print(resp.choices[0].message.content)</code></pre></div>
+
+ <div class="callout tip">
+ <div class="co-title">✨ 思考模型怎么用</div>
+ <p>把 <code>model</code> 换成 <code>"deepseek-reasoner"</code>，返回消息里会多一个 <code>reasoning_content</code> 字段——那就是模型的完整思维链。注意官方建议：<b>思维链仅供阅读与调试，不要把它塞回下一轮请求</b>。</p>
+ </div>
+
+ <h2>2.2 不用 SDK：裸 HTTP 请求拆解</h2>
+ <p>SDK 很方便，但值得花 10 分钟<b>掀开引擎盖</b>看一次原始请求——所谓「OpenAI 兼容」，就是「接受同样结构的 JSON」。看懂这一节，以后任何新语言、新厂商的接口你都能十分钟接上。</p>
+
+ <div class="codeblock"><div class="code-head"><span class="code-lang">bash · curl 直接调用</span></div><pre><code class="language-bash">curl https://api.deepseek.com/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $DEEPSEEK_API_KEY" \
+  -d &apos;{
+    "model": "deepseek-chat",
+    "messages": [{"role": "user", "content": "用一句话解释 agent loop"}]
+  }&apos;</code></pre></div>
+
+ <div class="codeblock"><div class="code-head"><span class="code-lang">python · requests 版本 + 响应解剖</span></div><pre><code class="language-python">import os, requests
+
+resp = requests.post(
+    "https://api.deepseek.com/chat/completions",
+    headers={"Authorization": f"Bearer {os.environ[&apos;DEEPSEEK_API_KEY&apos;]}"},
+    json={
+        "model": "deepseek-chat",
+        "messages": [{"role": "user", "content": "你好"}],
+    },
+    timeout=60,
+)
+data = resp.json()
+
+print(data["choices"][0]["message"]["content"])   # 模型回复的正文
+print(data["usage"])       # prompt_tokens / completion_tokens —— 成本核算的数据源
+print(data["choices"][0]["finish_reason"])        # 本轮结束的原因，见下表</code></pre></div>
+
+ <div class="tbl-wrap"><table class="tbl">
+ <tr><th>finish_reason</th><th>含义</th><th>Agent 里怎么处理</th></tr>
+ <tr><td><b>stop</b></td><td>模型自然说完了</td><td>正常处理</td></tr>
+ <tr><td><b>tool_calls</b></td><td>模型要求调用工具</td><td>进入工具执行分支（2.4 节的循环）</td></tr>
+ <tr><td><b>length</b></td><td>撞到 max_tokens 被截断</td><td>输出不完整！要加大配额或做续写，<b>不能当正常结果用</b></td></tr>
+ </table></div>
+
+ <div class="callout key">
+ <div class="co-title">SDK 到底帮你做了什么</div>
+ <p>拼 JSON 请求体、解析响应、把异常分类（超时 / 限流 / 连接失败）、自动重试一部分网络错误。就这些。所以「换引擎」的本质只是换一个 URL 和模型名——第 7 章 Harness 的「引擎可插拔」就是这么来的。</p>
+ </div>
+
+ <h2>2.3 Function Calling 完整拆解</h2>
+ <p>工具要分两处出现：<b>实现</b>（你的 Python 函数）和<b>声明</b>（给模型看的 JSON Schema 说明书）。</p>
+
+ <div class="codeblock"><div class="code-head"><span class="code-lang">python · 工具声明（JSON Schema）</span></div><pre><code class="language-python">TOOLS_SPEC = [
+    {
+        "type": "function",
+        "function": {
+            "name": "get_weather",
+            # description 是模型的"选型依据"，要写清楚：做什么 + 什么时候该用
+            "description": "查询指定城市某天的天气。用户问到天气、穿衣、出行安排时调用。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "city": {"type": "string", "description": "城市名，如：北京"},
+                    "date": {"type": "string", "description": "日期，如：今天 / 明天 / 2026-10-01"},
+                },
+                "required": ["city", "date"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "add_reminder",
+            "description": "为用户创建一条提醒。当用户表达了带某物、做某事的意愿时主动调用。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "time":  {"type": "string", "description": "提醒时间"},
+                    "content": {"type": "string", "description": "提醒内容"},
+                },
+                "required": ["time", "content"],
+            },
+        },
+    },
+]</code></pre></div>
+
+ <p>模型决定调用工具时，返回消息长这样（<b>注意 arguments 是 JSON 字符串，不是对象</b>——新手第一大坑）：</p>
+
+ <div class="codeblock"><div class="code-head"><span class="code-lang">python · 响应中的 tool_calls 结构</span></div><pre><code class="language-python">msg = resp.choices[0].message
+
+if msg.tool_calls:
+    tc = msg.tool_calls[0]
+    print(tc.function.name)        # "get_weather"
+    print(tc.function.arguments)   # '{"city": "北京", "date": "明天"}'  ← 字符串！
+    print(tc.id)                   # "call_0_..."，回填结果时要用</code></pre></div>
+
+ <h2>交互实验：看着消息数组一步步长大</h2>
+ <p>Function Calling 的全部秘密都在<b>消息数组</b>里。用下面的可视化逐步推进，重点观察：数组如何累积、两次 API 请求发生在哪、<code>tool_call_id</code> 如何对账。</p>
+
+ <div class="lab" id="lab-func-call">
+ <div class="lab-head"> 交互实验 <span class="lab-tag">消息数组可视化</span></div>
+ <div class="lab-body">
+ <div class="lab-toolbar">
+ <button class="btn" data-act="reset">↺ 重置</button>
+ <button class="btn" data-act="prev">← 上一步</button>
+ <button class="btn primary" data-act="next">下一步 →</button>
+ </div>
+ <div class="msg-stack"></div>
+ <div class="dots"></div>
+ <div class="viz-note"></div>
+ </div>
+ </div>
+
+ <h2>2.4 组装：90 行以内的极简 Agent</h2>
+ <p>下面是完整、可直接运行的代码。逐行读懂它，你就读懂了所有 Agent 框架的心脏：</p>
+
+ <div class="codeblock"><div class="code-head"><span class="code-lang">python · minimal_agent.py 完整代码</span></div><pre><code class="language-python">"""minimal_agent.py —— 90 行以内的 DeepSeek 工具调用智能体"""
+import json, os
+from openai import OpenAI
+
+client = OpenAI(api_key=os.environ["DEEPSEEK_API_KEY"],
+                base_url="https://api.deepseek.com")
+MODEL = "deepseek-chat"
+
+# ── 1. 工具的真实实现（第 1 章说过：执行权永远在你手里）──────
+def get_weather(city: str, date: str) -> dict:
+    # 真实项目里这里调用天气 API；教学里返回固定值
+    return {"city": city, "date": date, "weather": "小雨",
+            "temp": "12~20°C", "advice": "建议带伞"}
+
+def add_reminder(time: str, content: str) -> dict:
+    return {"ok": True, "msg": f"已在 {time} 创建提醒：{content}"}
+
+TOOL_IMPL = {"get_weather": get_weather, "add_reminder": add_reminder}
+
+# ── 2. 工具声明（上一节写好的 TOOLS_SPEC，原样粘进来）────────
+TOOLS_SPEC = [ ... ]   # 两个工具的 JSON Schema：从 2.3 节原样复制替换此占位，否则 NameError
+
+# ── 3. 系统提示：给大脑立规矩 ─────────────────────────────
+SYSTEM = ("你是一个严谨的生活助理。涉及实时信息必须调用工具查询，"
+          "禁止编造。拿到结果后用简洁的中文回答。")
+
+def run_agent(user_input: str, max_steps: int = 8) -> str:
+    messages = [{"role": "system", "content": SYSTEM},
+                {"role": "user", "content": user_input}]
+    for _ in range(max_steps):                 # 保险丝：防止无限循环烧钱
+        resp = client.chat.completions.create(
+            model=MODEL, messages=messages, tools=TOOLS_SPEC)
+        msg = resp.choices[0].message
+
+        if not msg.tool_calls:                 # 模型不再要求工具 = 循环终止
+            return msg.content
+
+        messages.append(msg)                   # 关键！先把 assistant 消息放回数组
+        for tc in msg.tool_calls:              # 可能有多个工具调用，逐个执行
+            name = tc.function.name
+            try:
+                args = json.loads(tc.function.arguments or "{}")
+                result = TOOL_IMPL[name](**args)
+            except Exception as e:             # 工具报错也作为"观察"回传，
+                result = {"error": f"{type(e).__name__}: {e}"}  # 让模型自己想办法
+            messages.append({
+                "role": "tool",
+                "tool_call_id": tc.id,         # 与请求对账的凭证
+                "content": json.dumps(result, ensure_ascii=False),
+            })
+    return "已达最大步数，任务未完成。"
+
+if __name__ == "__main__":
+    print(run_agent("明天北京天气怎么样？我想晨跑，怕淋雨。"))</code></pre></div>
+
+ <p>运行后 Agent 内部发生的事（正是第 1 章模拟器里看到的那一幕）：</p>
+ <div class="codeblock"><div class="code-head"><span class="code-lang">text · 运行轨迹</span></div><pre><code>第 1 轮: 模型要求 get_weather(city=北京, date=明天)
+        → 执行 → 回填 {"weather": "小雨", ...}
+第 2 轮: 模型要求 add_reminder(time=明早 07:00, content=带伞)
+        → 执行 → 回填 {"ok": true}
+第 3 轮: 模型不再要求工具，返回最终回答
+"明天北京有小雨，气温 12~20°C，不建议晨跑，已为你设置带伞提醒 ☂️"</code></pre></div>
+
+ <div class="callout warn">
+ <div class="co-title">新手必踩的五个坑（每个都值一次 debug 半小时）</div>
+ <p><b>① 忘记先 <code>messages.append(msg)</code></b>：直接回填 tool 结果会得到 400 错误——API 要求 tool 消息前必须有带对应 tool_calls 的 assistant 消息。<br>
+ <b>② 忘记 arguments 是字符串</b>：要 <code>json.loads</code> 之后才能 <code>**args</code>。<br>
+ <b>③ 工具抛异常直接崩掉循环</b>：应该把异常打包成 <code>{"error": ...}</code> 回传，模型常常能自行纠正（比如换个参数重试）。<br>
+ <b>④ 没有最大步数保险丝</b>：模型陷入循环时，账单会替你记住这个疏忽。<br>
+ <b>⑤ 中文乱码</b>：<code>json.dumps</code> 记得 <code>ensure_ascii=False</code>。</p>
+ </div>
+
+ <div class="callout tip">
+        <div class="co-title">推荐视频</div>
+        <p><b>Karpathy《Let's build GPT from scratch》</b>（2h）——从零手写 GPT，帮你理解调用的到底是什么。<br>
+        <a href="https://www.youtube.com/watch?v=kCc8FmEb1nY" target="_blank" rel="noopener">YouTube</a> ·
+        <a href="https://search.bilibili.com/all?keyword=Karpathy%20build%20GPT%20from%20scratch" target="_blank" rel="noopener">B 站搜索</a></p>
+      </div>
+
+ <h2>2.5 让 Agent 更可靠的五个细节</h2>
+
+ <ol class="steps">
+ <li><b>工具描述 = 给模型的使用说明书</b>
+ <p>模型选工具、填参数全靠 description。五条原则：说清「做什么」；说清「什么时候该用（以及不该用）」；参数描述给<b>示例值</b>；风格统一；宁缺毋滥——不注册当前任务用不到的工具。</p></li>
+ <li><b>结构化输出</b>
+ <p>需要机器可读的结果时用 <code>response_format={"type": "json_object"}</code>（JSON 模式），并在提示词里包含 "json" 字样。比在自由文本里猜格式可靠得多。</p></li>
+ <li><b>温度与终止</b>
+ <p>Agent 主循环建议低温度（0~0.3）——你要的是稳定执行，不是文采。</p></li>
+ <li><b>失败也是信息</b>
+ <p>把工具错误、达到步数上限等情况显式告诉模型，给它自我修复的机会；同时把这些事件记入日志（第 5 章的可观测性）。</p></li>
+ <li><b>控制上下文体积</b>
+ <p>每轮循环都把全部历史发回去。工具结果很长时先做裁剪（比如只保留 JSON 的关键字段），否则 token 费用随步数平方级膨胀——省钱的机制见第 7 章的上下文缓存。</p></li>
+ </ol>
+
+ <h2>2.6 流式输出：打字机效果的原理</h2>
+ <p>你在各种 AI 产品里看到的「逐字吐出」，不是模型在逐字思考，而是<b>传输层把完整回复切成小段（delta）推给你</b>——Server-Sent Events。加上 <code>stream=True</code> 即可：</p>
+
+ <div class="codeblock"><div class="code-head"><span class="code-lang">python · stream_demo.py</span></div><pre><code class="language-python">stream = client.chat.completions.create(
+    model=MODEL,
+    messages=[{"role": "user", "content": "写一首关于智能体的七言绝句"}],
+    stream=True,                          # 关键开关
+)
+
+full = ""
+for chunk in stream:
+    delta = chunk.choices[0].delta        # 每个片段只带增量内容
+    if delta.content:
+        print(delta.content, end="", flush=True)   # 打字机效果
+        full += delta.content
+print()</code></pre></div>
+
+ <div class="callout info">
+ <div class="co-title">两个工程细节</div>
+ <p>① 流式模式下工具调用同样<b>分片到达</b>（<code>delta.tool_calls</code>），需要按 index 把 id、函数名、arguments 碎片拼回完整调用——第 7 章的 Harness 会统一封装这件事；现在先用非流式把核心逻辑学扎实，<b>流式只是传输优化，不改变 Agent Loop 的语义</b>。<br>
+ ② 想在流式里拿到 token 用量，传 <code>stream_options={"include_usage": True}</code>，最后一个 chunk 会携带 usage。</p>
+ </div>
+
+ <h2>2.7 网络会失败：超时、重试与指数退避</h2>
+ <p>真实世界里的 API 调用会碰到三种失败：<b>超时</b>（网络抖动）、<b>429 限流</b>（请求太快）、<b>5xx</b>（服务端故障）。生产级代码必须处理它们，标准做法是<b>指数退避重试</b>：</p>
+
+ <div class="codeblock"><div class="code-head"><span class="code-lang">python · retry.py —— 十行防御</span></div><pre><code class="language-python">import time, random
+from openai import APITimeoutError, APIConnectionError, RateLimitError
+
+def call_llm_with_retry(client, max_retries: int = 3, **kwargs):
+    """只对无副作用的 LLM 调用使用；带副作用的工具执行不要盲目重试"""
+    for attempt in range(max_retries):
+        try:
+            return client.chat.completions.create(**kwargs)
+        except RateLimitError:                    # 429：等待后重试
+            wait = min(2 ** attempt + random.random(), 30)  # 指数退避 + 随机抖动
+            time.sleep(wait)
+        except (APITimeoutError, APIConnectionError):
+            if attempt == max_retries - 1:
+                raise                             # 重试耗尽，向上抛出
+            time.sleep(2 ** attempt)
+    raise RuntimeError(f"重试 {max_retries} 次后仍失败")
+
+# 用法：把原来直接调 client.chat.completions.create(...) 的地方换成
+# call_llm_with_retry(client, model=MODEL, messages=messages, tools=TOOLS_SPEC)</code></pre></div>
+
+ <div class="callout warn">
+ <div class="co-title">重试的边界：幂等性</div>
+ <p>「Chat Completions 请求」没有副作用，失败了重试毫无风险；但「工具执行」可能有副作用——给 <code>add_reminder</code> 的调用重试一次，可能创建两条提醒。<b>传输层重试只包住 API 调用，永远不要包住工具执行</b>；工具自身的失败交给模型在下一轮循环里处理（把错误作为观察回传），那是「任务层韧性」，第 5 章的反思机制会展开。</p>
+ </div>
+
+ <h2>2.8 Node.js 版本（选学）</h2>
+ <details class="fold">
+ <summary>点击展开：同构的 JavaScript 实现</summary>
+ <div class="fold-body">
+ <div class="codeblock"><div class="code-head"><span class="code-lang">javascript · minimal-agent.mjs</span></div><pre><code class="language-javascript">import OpenAI from "openai";
+
+const client = new OpenAI({
+  apiKey: process.env.DEEPSEEK_API_KEY,
+  baseURL: "https://api.deepseek.com",
+});
+const MODEL = "deepseek-chat";
+
+const TOOL_IMPL = {
+  get_weather: ({ city, date }) =>
+    ({ city, date, weather: "小雨", temp: "12~20°C" }),
+  add_reminder: ({ time, content }) =>
+    ({ ok: true, msg: `已在 ${time} 创建提醒：${content}` }),
+};
+// TOOLS_SPEC 与 Python 版完全相同（JSON Schema 是跨语言标准），此处省略
+
+export async function runAgent(userInput, maxSteps = 8) {
+  const messages = [
+    { role: "system", content: "你是一个严谨的生活助理，实时信息必须查工具。" },
+    { role: "user", content: userInput },
+  ];
+  for (let i = 0; i &lt; maxSteps; i++) {
+    const resp = await client.chat.completions.create({
+      model: MODEL, messages, tools: TOOLS_SPEC,
+    });
+    const msg = resp.choices[0].message;
+    if (!msg.tool_calls) return msg.content;
+    messages.push(msg);
+    for (const tc of msg.tool_calls) {
+      let result;
+      try {
+        result = TOOL_IMPL[tc.function.name](JSON.parse(tc.function.arguments || "{}"));
+      } catch (e) {
+        result = { error: `${e.name}: ${e.message}` };
+      }
+      messages.push({ role: "tool", tool_call_id: tc.id, content: JSON.stringify(result) });
+    }
+  }
+  return "已达最大步数";
+}</code></pre></div>
+ </div>
+ </details>
+
+ <h2>2.9 报错速查表</h2>
+ <p>动手时撞到的报错，九成能在这张表里直接对号入座。<b>用法：先拿报错信息里的关键字（状态码 / 异常名）来查，再看「根因」列确认是不是你踩的那个坑。</b></p>
+
+ <div class="tbl-wrap"><table class="tbl">
+ <tr><th>报错信息（关键字）</th><th>根因</th><th>一步处理</th></tr>
+ <tr><td colspan="3"><b>API 层（HTTP 状态码 / SDK 异常）</b></td></tr>
+ <tr><td><code>401 Authentication Fails</code></td><td>Key 无效：环境变量没生效、复制带了空格、Key 已删除</td><td><code>echo $DEEPSEEK_API_KEY</code> 确认非空且无引号空格，必要时重新生成</td></tr>
+ <tr><td><code>402 Insufficient Balance</code></td><td>账户余额不足</td><td>到平台充值后重试</td></tr>
+ <tr><td><code>400 ... role 'tool' must be a response to a preceding message with 'tool_calls'</code></td><td>回填工具结果前忘了 <code>messages.append(msg)</code>（坑①）</td><td>检查循环顺序：先 append assistant 消息，再 append tool 消息</td></tr>
+ <tr><td><code>400 Invalid format</code>（JSON / messages 相关）</td><td>消息序列断裂：tool_call_id 对不上账、arguments 未解析就回填、混入非法 role</td><td>把 messages 打印出来逐条检查——用上面的消息数组可视化对账</td></tr>
+ <tr><td><code>422 Invalid Parameters</code></td><td>参数越界（如 max_tokens 超上限）或模型名拼写错误</td><td>对照官方文档核对参数名与取值范围</td></tr>
+ <tr><td><code>429 Rate limit reached</code></td><td>请求太快触发限流</td><td>指数退避重试（2.7 节的 retry.py），别手动疯狂点重发</td></tr>
+ <tr><td><code>500 / 503 Server Error</code></td><td>服务端故障</td><td>无副作用的请求可重试；连续失败要挂降级兜底</td></tr>
+ <tr><td><code>APITimeoutError / APIConnectionError</code></td><td>网络抖动、超时设得太短、代理问题</td><td>重试 + 加大 timeout；检查代理与网络环境</td></tr>
+ <tr><td colspan="3"><b>代码层（Python 异常）</b></td></tr>
+ <tr><td><code>json.JSONDecodeError: Expecting value</code></td><td><code>arguments</code> 是 JSON <b>字符串</b>，没 <code>json.loads</code> 就 <code>**args</code>；或模型返回了空串（坑②）</td><td><code>json.loads(tc.function.arguments or "{}")</code></td></tr>
+ <tr><td><code>KeyError: 'get_weather'</code></td><td>工具名没在 <code>TOOL_IMPL</code> 注册，或声明与实现的拼写不一致</td><td>把声明（TOOLS_SPEC）与实现（TOOL_IMPL）两处的名字逐一对照</td></tr>
+ <tr><td><code>NameError: name 'TOOLS_SPEC' is not defined</code></td><td>复制 minimal_agent.py 时占位符 <code>TOOLS_SPEC = [ ... ]</code> 没有替换</td><td>从 2.3 节原样复制两个工具的 JSON Schema</td></tr>
+ <tr><td><code>TypeError: ... unexpected keyword argument</code></td><td>Schema 里 <code>properties</code> 的参数名与函数形参不一致（模型按 schema 填参）</td><td>让 schema 与函数签名严格对齐（名字、必填项）</td></tr>
+ <tr><td>回复内容戛然而止，<code>finish_reason=length</code></td><td>撞到 max_tokens 被截断</td><td>加大配额或做续写，<b>截断输出不能当正常结果用</b>（见 2.2 节表）</td></tr>
+ <tr><td>中文显示成 <code>\u5c0f\u96e8</code></td><td><code>json.dumps</code> 默认 <code>ensure_ascii=True</code>（坑⑤）</td><td><code>json.dumps(result, ensure_ascii=False)</code></td></tr>
+ </table></div>
+ <p class="small-note">报错文案与状态码可能随 API 版本微调，以 <a href="https://api-docs.deepseek.com" target="_blank" rel="noopener">官方错误码文档</a> 为准；查不到的报错，把<b>完整的 messages 数组</b>和<b>原始响应</b>贴出来看，别只看最后一行异常。</p>
+
+ <h2>练习（务必动手）</h2>
+ <ol class="steps">
+ <li><b>热身</b><p>给 Agent 增加一个 <code>get_time()</code> 工具（返回当前时间），问它"现在几点了，离明天早上还有多久"。</p></li>
+ <li><b>多步推理</b><p>加一个安全的 <code>calculate(表达式)</code> 工具（用 <code>ast</code> 白名单实现，别直接 <code>eval</code>），让它解一道需要 3 次计算的行程规划题。</p></li>
+ <li><b>观察保险丝</b><p>把 <code>max_steps</code> 改成 1，问一个需要两次工具调用的问题——观察它如何被"截断"。这就是为什么生产系统要精心选择步数预算。</p></li>
+ <li><b>制造幻觉</b><p>把 <code>TOOLS_SPEC</code> 传空数组，再问天气。亲眼见过幻觉，你对工具的价值才有体感。</p></li>
+ <li><b>成本可见化</b><p>在 <code>run_agent</code> 的每一轮循环里打印当轮的 token 用量（<code>resp.usage.prompt_tokens</code> / <code>completion_tokens</code>），观察它如何随步数增长。</p></li>
+ </ol>
+
+ <details class="fold"><summary> 点击展开：练习 1–5 参考答案与要点</summary>
+ <div class="fold-body">
+ <p><b>练习 1（get_time 工具）：</b>无参数工具的 schema 里 <code>properties</code> 留空对象即可。要点在于体会：模型看到工具描述后会<b>自己决定</b>何时调用，你不需要写任何判断逻辑。</p>
+ <p><b>练习 2（安全的计算器）：</b>绝不要对模型生成的字符串用 <code>eval</code>（那是把提示注入直接变成代码执行）。用 <code>ast</code> 白名单：</p>
+ <div class="codeblock"><div class="code-head"><span class="code-lang">python · calculate 参考实现</span></div><pre><code class="language-python">import ast, operator
+
+SAFE_OPS = {ast.Add: operator.add, ast.Sub: operator.sub,
+            ast.Mult: operator.mul, ast.Div: operator.truediv,
+            ast.Pow: operator.pow}
+
+def calculate(expr: str) -> dict:
+    def ev(node):
+        if isinstance(node, ast.Constant) and isinstance(node.value, (int, float)):
+            return node.value
+        if isinstance(node, ast.BinOp) and type(node.op) in SAFE_OPS:
+            return SAFE_OPS[type(node.op)](ev(node.left), ev(node.right))
+        raise ValueError(f"不支持的表达式元素: {ast.dump(node)[:50]}")
+    return {"expr": expr, "result": ev(ast.parse(expr, mode="eval").body)}</code></pre></div>
+ <p><b>练习 3（max_steps=1）：</b>观察到的应是：第一轮返回 tool_calls、工具执行完，循环就结束了——最终输出是「已达最大步数」。教训：步数预算不是越紧越好，<b>它是「成本上限」与「任务完成率」之间的显式权衡</b>，生产系统要按任务难度分配预算。</p>
+ <p><b>练习 4（空工具问天气）：</b>模型要么礼貌拒答，要么（更常见）语气笃定地编一个。这印证了第 1 章实验里的幻觉机制：<b>没有 Observation 锚点时，模型只能靠训练记忆作答。</b></p>
+ <p><b>练习 5（token 统计）：</b>参考实现（放进循环里）：</p>
+ <div class="codeblock"><div class="code-head"><span class="code-lang">python · 每轮用量打印</span></div><pre><code class="language-python">total_in = total_out = 0
+# ……循环内，拿到 resp 之后：
+u = resp.usage
+total_in += u.prompt_tokens; total_out += u.completion_tokens
+print(f"[step] +{u.prompt_tokens} in / +{u.completion_tokens} out "
+      f"| 累计 {total_in}/{total_out}")</code></pre></div>
+ <p>你会发现 prompt_tokens 一轮比一轮大——因为整个历史每轮都在重发。这个观察直接引出第 5 章的「上下文工程」和第 7 章的「前缀缓存」。</p>
+ </div>
+ </details>
+
+ <h2>自测</h2>
+ <details class="quiz"><summary>回填工具结果时，tool_call_id 的作用是什么？什么情况下它会变得极其重要？</summary>
+ <div class="quiz-body"><p><span class="ans-label">答案：</span>它是工具结果与请求的<b>对账凭证</b>。当模型一次返回多个 tool_calls（并行工具调用）时，你的代码会执行多个工具、产生多个结果，API 靠 tool_call_id 把每条 role=tool 消息对应回正确的调用。对不上会直接 400。</p></div>
+ </details>
+ <details class="quiz"><summary>为什么必须先把 assistant 消息（含 tool_calls）append 进数组，再回填 tool 结果？</summary>
+ <div class="quiz-body"><p><span class="ans-label">答案：</span>因为 OpenAI 兼容 API 对消息序列有硬约束：<b>每条 role=tool 消息的前面，必须紧邻着一条包含对应 tool_calls 的 assistant 消息</b>。语义上也合理——"模型请求调用 → 世界给出结果"必须成对出现，否则对话历史在逻辑上是断裂的。</p></div>
+ </details>
+ <details class="quiz"><summary>什么任务适合 deepseek-chat，什么任务值得换 deepseek-reasoner？</summary>
+ <div class="quiz-body"><p><span class="ans-label">答案：</span>主循环里"看历史 → 选工具 → 填参数"这类高频、模式化的决策用 deepseek-chat：快、便宜、工具调用稳定。<b>一次性</b>的重决策——复杂任务拆解规划、多步推理校验、失败后的反思——值得升级 reasoner，用高延迟换推理质量。成熟的 harness 常常两者混用（第 7 章）。</p></div>
+ </details>
+
+ <div class="callout story">
+ <div class="co-title">下一章预告</div>
+ <p>你的 Agent 已经能跑了，但它还很"金鱼"——记不住事、不会规划、工具一多就乱。第 5 章讲把它变成可靠系统的工程方法：上下文工程、记忆、规划、多智能体与安全。</p>
+ </div>
+
+ </div>
+ </main>
+</div>
+
+<script src="assets/js/app.js?v=20"></script>
+<script src="assets/js/lab-agent.js?v=19"></script>
+</body>
+</html>

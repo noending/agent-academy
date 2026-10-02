@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="第 3 章：Prompt 工程与上下文设计——系统提示解剖学、少样本示例、结构化输出与校验重试、参数工程含义、迭代方法。">
+<title>第 3 章 · Prompt 工程与上下文设计 | Agent 学院</title>
+<link rel="stylesheet" href="assets/css/style.css?v=20">
+</head>
+<body data-chapter="ch3">
+
+<header class="topbar">
+ <button class="icon-btn hamburger" id="hamburger" title="打开导航">☰</button>
+ <a class="brand" href="index.html"><span class="logo">学</span> Agent 学院 <small>从零开发智能体 · Ontology · Harness</small></a>
+ <span class="spacer"></span>
+ <span class="progress-pill" id="progress-pill">进度 0/9 章</span>
+ <button class="icon-btn" id="theme-btn">🌙</button>
+</header>
+
+<div class="layout">
+ <aside class="sidebar" id="sidebar"></aside>
+
+ <main class="content">
+ <div class="content-inner">
+
+ <header class="chapter-head">
+ <div class="kicker">CHAPTER 03 · 预计 2 小时 · 代码 + 实验</div>
+ <h1>Prompt 工程<span class="grad">与上下文设计</span></h1>
+ <p class="lead">
+ 第 2 章的系统提示只有两句话，Agent 就能跑——但「能跑」和「稳定可用」之间隔着一门手艺。
+ 模型的所有行为都由上下文决定，而上下文里<b>你能直接写的那一部分，就是提示词</b>。它是你写下的第一段 Harness 代码，也是性价比最高的优化点。
+ </p>
+ <div class="head-meta">
+ <span class="chip">目标：写出可迭代的工业级提示词</span>
+ <span class="chip">交互实验：提示词 A/B 对比器</span>
+ <span class="chip">练习：3 题（带参考答案）</span>
+ </div>
+ </header>
+
+ <div class="callout info">
+ <div class="co-title">本章你将学会</div>
+ <p>① 系统提示的五区解剖结构；② 少样本示例的正确用法；③ 结构化输出与「生成→校验→重试」闭环；④ temperature 等参数的工程含义；⑤ 提示词的迭代方法与反模式清单。</p>
+ </div>
+
+ <h2>3.1 为什么提示词是「第一段 Harness 代码」</h2>
+ <p>先建立一个认知转换：很多人把提示词当成「和 AI 聊天的说话技巧」，但在 Agent 开发里，它是<b>系统的一部分，和函数、配置一样需要设计与版本管理</b>。理由很直接：</p>
+ <ul>
+ <li>模型的行为 = f(上下文)。上下文里的系统提示、工具描述、历史消息，全都是你写进去的；</li>
+ <li>同一个模型，提示词改几行，任务成功率可以从 40% 变 90%——杠杆率超过任何其他单点优化；</li>
+ <li>提示词的缺陷不在运行时报错，而在<b>悄悄劣化输出质量</b>——所以它更需要工程方法（分区、版本、评估），而不是玄学口诀。</li>
+ </ul>
+ <div class="callout key">
+ <div class="co-title">本章的核心心法</div>
+ <p>把「写提示词」重构成「<b>设计上下文</b>」：你不是在对模型说话，而是在定义一个函数的输入规格——输入有哪些区、每区放什么、以什么格式、边界情况怎么处理。第 5 章的「上下文工程」是这个心法的全面展开。</p>
+ </div>
+ <div class="callout story">
+ <div class="co-title">论文精读入口</div>
+ <p>本章方法的三个学术源头：<b>Chain-of-Thought</b>（先推理再作答的起点）、<b>ReAct</b>（推理与行动合流）、<b>Toolformer</b>（模型自学用工具）——按统一模板拆解见 <a href="papers.html#cot">论文精读页</a>，逐段中译见 <a href="translations.html#zh-cot">中文精读版</a>。</p>
+ </div>
+
+ <h2>3.2 系统提示的解剖学：五区结构</h2>
+ <p>生产级系统提示几乎都能拆成五个区。不是每个任务都需要全部五区，但<b>每区的职责要清晰、不要混写</b>：</p>
+
+ <div class="tbl-wrap"><table class="tbl">
+ <tr><th>区</th><th>职责</th><th>写法要点</th></tr>
+ <tr><td><b>① 身份</b></td><td>你是谁、为谁服务</td><td>一两句即可。「你是一个电商客服」比「你是一个乐于助人的AI助手」有用——身份决定了大量隐含行为</td></tr>
+ <tr><td><b>② 能力与规则</b></td><td>怎么做事、做事流程</td><td>祈使句 + 编号列表；写「做什么」而不是「不要做什么」；每条规则只说一件事</td></tr>
+ <tr><td><b>③ 输出契约</b></td><td>格式、长度、语言</td><td>明确到「字段名 + 类型 + 枚举值」；有结构化需求直接给 schema 或示例</td></tr>
+ <tr><td><b>④ 边界与禁止</b></td><td>什么不能做、不确定怎么办</td><td>关键一条：<b>「信息不足时如何表现」</b>（说不知道 / 询问 / 写 null），这是抑制幻觉的主开关</td></tr>
+ <tr><td><b>⑤ 示例</b></td><td>示范理想行为</td><td>见 3.3 节，格式类任务几乎必备</td></tr>
+ </table></div>
+
+ <h3>好提示 vs 差提示：完整对比</h3>
+ <p>任务：一个查询订单状态的智能体的系统提示。</p>
+
+ <div class="codeblock"><div class="code-head"><span class="code-lang">text · ✗ 差提示（全网最常见的写法）</span></div><pre><code>你是一个智能客服助手，请认真回答用户的问题，
+要礼貌、专业、热情。如果用户问订单，请帮他查订单。
+不要回答与订单无关的问题。</code></pre></div>
+
+ <div class="codeblock"><div class="code-head"><span class="code-lang">text · ✓ 好提示（五区结构）</span></div><pre><code>【身份】你是「闪电电商」的订单客服，服务对象是消费者。
+
+【能力与规则】
+1. 查询订单状态时，必须先调用 query_order 工具，禁止凭记忆回答
+2. 回答基于工具返回的信息，逐字段如实转述，不做延伸承诺
+3. 用户问「多久到」时，用工具返回的预计送达时间回答，不自行估计
+
+【输出契约】
+- 中文回答，不超过 3 句话
+- 涉及订单号时完整复述，避免用户抄错
+
+【边界与禁止】
+- 只处理订单相关咨询；其他请求回复：
+  「我是订单客服，这个问题请转人工或联系对应部门」
+- 工具查询失败时如实告知，并建议用户稍后再试，禁止编造订单状态
+- 遇到投诉、退款纠纷，收集订单号后转人工，不要自行给出补偿方案</code></pre></div>
+
+ <p>差异在哪？差提示全是<b>形容词</b>（认真/礼貌/专业/热情），模型无从执行；好提示全是<b>可判定的行为规则</b>——每一条都能在具体对话里打出「遵守了/没遵守」。这正是能用评估集（第 8 章）验证的前提。</p>
+
+ <div class="callout tip">
+ <div class="co-title">五条写作军规</div>
+ <p>① 用祈使句写「做什么」，少写「不要」（负面指令模型遵守得差，且列表越长越互相稀释）；<br>
+ ② 每条规则独立成行、可单独判定；<br>
+ ③ 必须定义「不确定时怎么办」；<br>
+ ④ 输出格式明确到字段级；<br>
+ ⑤ 控制篇幅——系统提示本身也占上下文，300 字能说清的不要写 3000 字。</p>
+ </div>
+
+ <h2>3.3 少样本示例（Few-shot）：给模型看作业范本</h2>
+ <p>规则讲一万句，不如给一个标准答案。在提示里放 2~5 个「输入→理想输出」的示例，就是少样本提示。它解决三类问题：</p>
+ <ul>
+ <li><b>格式模仿</b>：JSON 字段顺序、嵌套结构、标点习惯——用示例秒杀，用文字描述很难对齐；</li>
+ <li><b>风格统一</b>：客服语气、摘要详略、翻译腔调；</li>
+ <li><b>边界判定</b>：哪些算「订单相关」、哪个字段该写 null——示例是最自然的边界说明。</li>
+ </ul>
+
+ <div class="callout tip">
+ <div class="co-title">选例子的三条原则</div>
+ <p>① <b>覆盖典型 + 边界</b>：一半普通样本，一半是容易出错的边界样本（缺失字段、歧义输入）；<br>
+ ② <b>示例之间多样化</b>：别放三个只换名字的例子，模型会以为只有这一点点变化模式；<br>
+ ③ <b>数量克制</b>：2~5 个足够，过多示例挤占上下文且收益递减。动态进阶：输入种类多时，可以按相似度<b>检索最相关的几个示例</b>动态拼进提示（第 4 章向量检索的直接应用）。</p>
+ </div>
+
+ <h2>3.4 结构化输出与「生成 → 校验 → 重试」闭环</h2>
+ <p>Agent 的输出经常要喂给程序（存数据库、触发动作），自由文本不可靠。三层防线，一层比一层强：</p>
+
+ <ol class="steps">
+ <li><b>JSON 模式</b>
+ <p>请求里加 <code>response_format={"type": "json_object"}</code>（DeepSeek / OpenAI 兼容），并在提示词里包含 "json" 字样。保证输出是合法 JSON，但<b>不保证字段和类型符合你的预期</b>。</p></li>
+ <li><b>Schema 校验</b>
+ <p>拿到 JSON 后，用代码校验字段、类型、枚举值（生产环境用 <code>pydantic</code>，教学版手写也就十几行）。</p></li>
+ <li><b>校验失败 → 带着错误重试</b>
+ <p>把校验错误信息连同原输出一起喂回模型重新生成，通常一次就能修好。重试 2 次仍失败就放弃并上报——这个闭环是<b> Harness 的职责</b>，不是指望模型自觉。</p></li>
+ </ol>
+
+ <div class="codeblock"><div class="code-head"><span class="code-lang">python · structured_output.py —— 完整闭环</span></div><pre><code class="language-python">import json
+from openai import OpenAI
+
+client = OpenAI(api_key=os.environ["DEEPSEEK_API_KEY"],
+                base_url="https://api.deepseek.com")
+
+PROMPT = """从用户留言中抽取投诉信息，输出 JSON：
+{"category": "物流|质量|服务|其他", "order_id": string|null, "urgent": boolean}
+category 必须从四个枚举值中选一个；order_id 找不到写 null。
+
+留言：{user_text}
+只输出 JSON。"""
+
+def extract_complaint(user_text: str, max_retries: int = 2) -> dict:
+    messages = [{"role": "user",
+                 "content": PROMPT.format(user_text=user_text)}]
+    last_err = ""
+    for _ in range(max_retries + 1):
+        resp = client.chat.completions.create(
+            model="deepseek-chat",
+            messages=messages,
+            response_format={"type": "json_object"},   # 第一层：JSON 模式
+            temperature=0,
+        )
+        try:
+            data = json.loads(resp.choices[0].message.content)
+            data = validate(data)                      # 第二层：Schema 校验
+            return data
+        except (json.JSONDecodeError, ValueError) as e:
+            last_err = str(e)
+            # 第三层：把错误喂回去重试
+            messages.append({"role": "assistant",
+                             "content": resp.choices[0].message.content})
+            messages.append({"role": "user",
+                             "content": f"输出不合法：{last_err}。请修正后重新只输出 JSON。"})
+    raise ValueError(f"结构化抽取失败: {last_err}")
+
+def validate(d: dict) -> dict:
+    if d.get("category") not in ("物流", "质量", "服务", "其他"):
+        raise ValueError(f"category 非法: {d.get('category')!r}")
+    if not isinstance(d.get("urgent"), bool):
+        raise ValueError("urgent 必须是布尔值")
+    oid = d.get("order_id")
+    if oid is not None and not isinstance(oid, str):
+        raise ValueError("order_id 必须是字符串或 null")
+    return d</code></pre></div>
+
+ <div class="callout key">
+ <div class="co-title">这个模式的价值</div>
+ <p>「生成→校验→带着错误重试」是 Agent 工程里最常用的可靠性模式之一，它把「模型偶尔出错」从<b>致命问题</b>变成了<b>可测量的成本</b>（多一次调用）。同样的模式会反复出现：工具参数校验（第 7 章）、本体写入校验（第 6 章）、评估打分（第 8 章）。</p>
+ </div>
+
+ <h2>3.5 参数的工程含义：temperature、max_tokens、stop</h2>
+ <div class="tbl-wrap"><table class="tbl">
+ <tr><th>参数</th><th>作用</th><th>Agent 场景建议</th></tr>
+ <tr><td><b>temperature</b></td><td>采样随机性：0 ≈ 总选最高概率词，1+ 更发散</td><td><b>工具调用 / 抽取 / 分类用 0~0.3</b>（要稳定）；创意写作用 0.7+；同一个任务在不同温度下表现差异巨大，值得进评估集对比</td></tr>
+ <tr><td><b>max_tokens</b></td><td>输出长度上限</td><td>必须设。既是成本保险丝，也防止模型跑题写论文；注意 <code>finish_reason="length"</code> 表示被截断（第 2 章），要检测</td></tr>
+ <tr><td><b>stop</b></td><td>遇到指定字符串就停止</td><td>让模型只输出 JSON 时可设 <code>stop=["\n\n"]</code> 之类防跑偏；与结构化校验配合使用</td></tr>
+ <tr><td><b>seed</b></td><td>尽量复现随机采样</td><td>调试时固定 seed + temperature=0，让「同一个输入每次结果一样」，否则你改了一行提示词根本不知道效果变化是谁造成的</td></tr>
+ </table></div>
+
+ <h2>交互实验：三代提示词，同一任务</h2>
+ <p>任务：从一段口语化的会议记录中抽取结构化信息（喂给日历程序创建日程）。下面是同一个任务的三代提示词及其模拟输出。先自己读三个提示词预测输出质量，再点按钮逐项核对。</p>
+
+ <div class="lab" id="lab-prompt-ab">
+ <div class="lab-head"> 交互实验 <span class="lab-tag">提示词 A/B 对比器</span></div>
+ <div class="lab-body">
+ <div class="lab-toolbar">
+ <button class="btn primary" data-act="reveal"> 逐项检查三个版本的输出</button>
+ </div>
+ <div class="ab-grid"></div>
+ <div class="viz-note" style="display:none">
+ 三代提示词的进化路径，就是本章的方法论：<b>V1</b> 没有约束（格式、字段、边界全靠模型心情）→
+ <b>V2</b> 加字段与格式规则（但格式没定死、枚举没给、边界没定义）→
+ <b>V3</b> 格式标准化 + 枚举 + 边界规则 + 示例。<b>每一代都只是在回答同一个问题：「模型哪里可能自由发挥？就堵住哪里。」</b>
+ </div>
+ </div>
+ </div>
+
+ <h2>3.6 提示词的迭代方法：像改代码一样改提示词</h2>
+ <ol class="steps">
+ <li><b>先建评估集，再改提示词</b>
+ <p>准备 20 个左右真实输入（含边界样本），在改动前后各跑一遍，对比通过率。<b>没有评估的提示词调优 = 拍脑袋</b>：你永远不知道这次「感觉变好了」是不是幻觉。评估集的做法第 8 章手把手教。</p></li>
+ <li><b>单变量修改</b>
+ <p>一次只改一处（加一条规则 / 换一个示例 / 调一档温度），跑评估，记录结果。连续改五处再测，你永远不知道是哪处起效。</p></li>
+ <li><b>版本留痕</b>
+ <p>提示词放独立文件（<code>prompts/extract_v7.md</code>）进 Git，commit message 写清「改了什么、评估结果如何」。三个月后你会感谢自己。</p></li>
+ <li><b>让模型帮你改，但你把关</b>
+ <p>把「当前提示 + 失败案例 + 期望输出」喂给模型，让它提议修改——模型确实擅长此道。但<b>每一条修改都要过评估集</b>，模型和你一样会过度拟合单个案例。</p></li>
+ </ol>
+
+ <h3>反模式清单（每一条都真实高频）</h3>
+ <ul class="checklist">
+ <li><b>堆砌形容词</b>：「认真、专业、热情、严谨」——不可判定，模型无法执行</li>
+ <li><b>负面指令刷屏</b>：十个「不要……」不如一条「应该……」+ 一个反例</li>
+ <li><b>一大段散文无分区</b>：身份、规则、格式混在一起，模型顾此失彼</li>
+ <li><b>期望读心</b>：「按我平时的风格写」——模型不知道你平时什么风格，给示例</li>
+ <li><b>规则之间互相矛盾</b>：「回答要简短」+「详细解释每个字段」——冲突时行为随机，合并成一条明确的</li>
+ <li><b>所有任务共用一个巨型提示</b>：为每个任务定制精简提示，按需拼装</li>
+ </ul>
+
+ <div class="callout tip">
+        <div class="co-title">推荐视频</div>
+        <p><b>3Blue1Brown《Attention in transformers, visually explained》</b>——注意力可视化。<br>
+        <a href="https://www.youtube.com/watch?v=eMlx5fFNoYc" target="_blank" rel="noopener">YouTube</a> ·
+        <a href="https://search.bilibili.com/all?keyword=3Blue1Brown%20attention" target="_blank" rel="noopener">B 站搜索</a><br>
+        <b>3B1B《How might LLMs store facts》</b>——幻觉为什么不可根除。<br>
+        <a href="https://www.youtube.com/watch?v=9-Jl0dxWQs8" target="_blank" rel="noopener">YouTube</a> ·
+        <a href="https://search.bilibili.com/all?keyword=3Blue1Brown%20LLM%20store%20facts" target="_blank" rel="noopener">B 站搜索</a></p>
+      </div>
+
+ <h2>3.7 全景：LLM 在智能体链路中的五种角色</h2>
+ <p>
+ 学到这里可以回答一个根本问题了——<b>「如何用 LLM 开发智能体？」</b>
+ 答案不是「调用一次 API」，而是：<b>把同一个模型配置成不同角色，编排在 Harness 的循环里协同工作</b>。
+ 盘点前几章出现过的全部 LLM 用法，其实只有五种角色：
+ </p>
+
+ <div class="tbl-wrap"><table class="tbl">
+ <tr><th>角色</th><th>输入 → 输出</th><th>温度</th><th>在课程哪里出现</th></tr>
+ <tr><td><b> 决策器</b></td><td>上下文 + 工具声明 → 下一步行动或最终回答</td><td>0~0.3</td><td>第 1/2 章 Agent Loop 的每一步——Agent 的心脏</td></tr>
+ <tr><td><b> 抽取器</b></td><td>非结构化文本 → JSON（字段、三元组、查询改写）</td><td>0</td><td>本章校验闭环；第 6 章三元组抽取；第 4 章查询改写</td></tr>
+ <tr><td><b> 分类/路由器</b></td><td>输入 → 枚举标签</td><td>0</td><td>意图分类（本章练习 1）；第 7 章模型路由；第 6 章按类目选工具</td></tr>
+ <tr><td><b> 裁判</b></td><td>回答 + 评分标准 → 分数与理由</td><td>0</td><td>第 8 章 LLM-as-Judge，评估集的开放题判分器</td></tr>
+ <tr><td><b> 生成器</b></td><td>主题 + 约束 → 正文内容</td><td>0.7+</td><td>最终回答撰写、报告、摘要——面向用户的那一面</td></tr>
+ </table></div>
+
+ <div class="callout key">
+ <div class="co-title">五个角色背后的统一规律</div>
+ <p>五个角色 = <b>同一个模型的五种「上下文配置」</b>：每一种都是一套「系统提示（本章五区结构）+ 参数（本章 3.5）+ 校验方式（本章闭环）」的组合。</p>
+ <p>这就是入门与精通的分水岭：入门者把 LLM 当成「一个会被调用的接口」；精通者把 LLM 当成<b>一组可配置、可编排、可各自评估的角色</b>——第 6 章 Harness 负责编排，第 8 章评估集负责给每个角色的配置打分，第 9 章毕业项目把它们全部组装起来。从本章起，你写的每一个提示词都请标注：它在为哪个角色服务？</p>
+ </div>
+
+ <h2>3.8 从提示词工程到上下文工程</h2>
+ <p>最后做一次视角升级。模型每轮看到的上下文 = <b>系统提示 + 工具声明 + 对话历史 + 检索到的资料</b>。系统提示只是其中一块，其余三块同样是「你写进去的信息」，同样遵循本章的所有原则：</p>
+ <ul>
+ <li><b>工具描述</b>就是「给模型的迷你系统提示」（第 2 章的五原则）；</li>
+ <li><b>历史消息</b>的设计（留什么、裁什么、压缩什么）是第 5 章的主题；</li>
+ <li><b>检索内容</b>怎么排序、怎么标注来源，决定 RAG 质量（第 5 章）。</li>
+ </ul>
+ <div class="callout key">
+ <div class="co-title">统一的判断标准</div>
+ <p>不管优化哪一块，都问同一个问题：<b>「模型看到这段内容后，做对下一步决策所需的一切信息都在场吗？有没有会误导它的冗余或矛盾？」</b>——这句话就是「上下文工程」的全部定义。</p>
+ </div>
+
+ <h2>自测</h2>
+ <details class="quiz"><summary>「你是XXX，请认真、专业、热情地回答用户」为什么是一句无效提示？</summary>
+ <div class="quiz-body"><p><span class="ans-label">答案：</span>因为它由<b>不可判定的形容词</b>构成——没有任何方法判断一次输出是否「足够热情」，模型只能按训练数据的平均行为行事，这句提示约等于没写。有效提示由<b>可判定的行为规则</b>构成：「不超过 3 句话」「先查工具再回答」「查不到就说查不到」——每条都能打出遵守/不遵守，也才能进评估集被度量。</p></div>
+ </details>
+ <details class="quiz"><summary>JSON 模式（response_format=json_object）保证了什么、没保证什么？</summary>
+ <div class="quiz-body"><p><span class="ans-label">答案：</span>保证了输出是<b>语法合法的 JSON</b>（能被 json.loads 解析）。没保证：字段齐全、类型正确、枚举值合法、语义符合预期——这些必须由<b>你自己的 Schema 校验</b>负责，校验失败走「带错误重试」闭环。两层防线各管一段，缺一不可。</p></div>
+ </details>
+ <details class="quiz"><summary>什么任务该用 temperature=0，什么任务故意调高？同一个任务怎么确定最优温度？</summary>
+ <div class="quiz-body"><p><span class="ans-label">答案：</span>工具调用、信息抽取、分类、代码修改等「要稳定复现」的任务用 0~0.3；头脑风暴、文案创作、起名字等「要多样性」的任务调高。确定方法不是猜：把温度作为变量进评估集，跑 2~3 档对比通过率——第 8 章的评估管线让这种实验只要几分钟。</p></div>
+ </details>
+ <details class="quiz"><summary>为什么说「把提示词放进 Git 做版本管理」而不是存在代码里的字符串常量？</summary>
+ <div class="quiz-body"><p><span class="ans-label">答案：</span>三个理由：① 提示词是被高频迭代的部分，独立文件 + commit 留痕，才能回溯「哪个版本的提示词配合哪个评估结果」；② 独立文件便于同一提示词被多处复用、便于做 A/B（加载不同版本对比）；③ 把提示词从代码逻辑里分离，改提示词不需要重新审查代码 diff——提示词的变更频率远高于代码。</p></div>
+ </details>
+
+ <h2>动手练习（带参考答案）</h2>
+
+ <details class="fold"><summary>练习 1 · 为「退换货意图分类」写一个工业级系统提示</summary>
+ <div class="fold-body">
+ <p><b>任务：</b>客服系统需要把用户留言分类到 <code>return（退货）/ exchange（换货）/ repair（维修）/ other（其他）</code>，同时判断是否情绪激动（agitated: bool）。写出完整系统提示（输出 JSON）。</p>
+ <div class="codeblock"><div class="code-head"><span class="code-lang">text · 参考答案</span></div><pre><code>你是电商客服系统的意图分类模块。输入是一条用户留言，输出一个 JSON，
+不要输出任何其他内容。
+
+【字段定义】
+- intent: "return" | "exchange" | "repair" | "other"
+  - return：用户表达了退钱/退货意愿
+  - exchange：用户想换货（换尺寸、换颜色、换货不退钱）
+  - repair：商品故障，用户想要维修
+  - other：咨询、投诉、闲聊等一切非上述意图
+- agitated: boolean，出现明显愤怒、威胁投诉、连续感叹号时为 true
+
+【规则】
+1. 一条留言同时涉及退货和换货时，以用户最终诉求为准
+   （例：「换个新的吧，不要这个了，太差了」→ 换货行为但意图是不要了 → return）
+2. 只表达不满但没说要什么解决的，intent 为 "other"
+3. 判断不准时，intent 取 "other"，不要猜
+
+【示例】
+输入：「手机屏幕摔碎了开不了机，我才买一个月！」
+输出：{"intent": "repair", "agitated": true}
+
+输入：「麻烦帮我退了，用了两天不喜欢」
+输出：{"intent": "return", "agitated": false}</code></pre></div>
+ <p><b>自查要点：</b>枚举值全部显式列出 ✓；每条边界规则都对应一个具体案例 ✓；给了含边界情形的示例 ✓；「判断不准怎么办」有明确出口（other）而不是留给模型猜 ✓。把这个提示词接上第 2 章的 API 调用，就是一个能上线的分类模块。</p>
+ </div>
+ </details>
+
+ <details class="fold"><summary>练习 2 · 地址标准化：设计一组 few-shot 示例</summary>
+ <div class="fold-body">
+ <p><b>任务：</b>把用户随手写的地址转成 <code>{"province","city","district","detail"}</code>。请设计 3 个示例，覆盖最容易出错的边界。</p>
+ <p><b>参考答案（选例思路比答案本身更重要）：</b></p>
+ <div class="codeblock"><div class="code-head"><span class="code-lang">text · 三个覆盖关键边界的示例</span></div><pre><code>输入：上海市浦东新区张江高科纳贤路800弄10栋301
+输出：{"province":"上海市","city":"上海市","district":"浦东新区",
+       "detail":"张江高科纳贤路800弄10栋301"}
+      （边界1：直辖市——province 和 city 相同，不能把 city 写成空）
+
+输入：杭州西湖区文三路 100 号
+输出：{"province":"浙江省","city":"杭州市","district":"西湖区",
+       "detail":"文三路100号"}
+      （边界2：用户省略省份——按城市补全省份，这是补全而不是编造）
+
+输入：深圳南山那边有个科技园的，具体门牌我忘了
+输出：{"province":"广东省","city":"深圳市","district":"南山区",
+       "detail":null}
+      （边界3：细节缺失——detail 写 null，禁止编造门牌号）</code></pre></div>
+ <p><b>要点：</b>三个示例分别教会模型「直辖市怎么填」「缺省份要补全」「缺失信息写 null」。这三类错误恰好是这类任务最高频的三种失败——<b>示例的价值在于精准覆盖失败模式</b>，而不是数量多。</p>
+ </div>
+ </details>
+
+ <details class="fold"><summary>练习 3 · 补全校验重试闭环中的 validate 函数</summary>
+ <div class="fold-body">
+ <p><b>任务：</b>为「日程抽取」输出实现校验：要求字段 <code>title(str)、date("YYYY-MM-DD")、start_time("HH:MM")、attendees(list[str])</code>，date 必须是合法日期且不早于今天，start_time 必须是合法时间。</p>
+ <div class="codeblock"><div class="code-head"><span class="code-lang">python · 参考答案</span></div><pre><code class="language-python">from datetime import date, datetime
+
+def validate(d: dict) -> dict:
+    if not isinstance(d.get("title"), str) or not d["title"].strip():
+        raise ValueError("title 必须是非空字符串")
+    try:
+        d_date = datetime.strptime(d["date"], "%Y-%m-%d").date()
+    except (KeyError, ValueError):
+        raise ValueError(f"date 缺失或不是 YYYY-MM-DD: {d.get('date')!r}")
+    if d_date &lt; date.today():
+        raise ValueError(f"date {d['date']} 早于今天，日程不能创建在过去")
+    try:
+        datetime.strptime(d["start_time"], "%H:%M")
+    except (KeyError, ValueError):
+        raise ValueError(f"start_time 缺失或不是 HH:MM: {d.get('start_time')!r}")
+    if not isinstance(d.get("attendees"), list) or \
+       not all(isinstance(a, str) for a in d["attendees"]):
+        raise ValueError("attendees 必须是字符串列表")
+    return d</code></pre></div>
+           <p><b>pydantic 对照版（生产推荐）：</b>声明即校验，错误明细自动生成：</p>
+          <div class="codeblock"><div class="code-head"><span class="code-lang">python · pydantic 版</span></div><pre><code class="language-python">from pydantic import BaseModel, Field, field_validator
+from datetime import date
+
+class Schedule(BaseModel):
+    title: str = Field(min_length=1)
+    date: date                                    # 类型不合法直接抛错
+    start_time: str = Field(pattern=r"^\d{2}:\d{2}$")
+    attendees: list[str] = Field(default_factory=list)
+
+    @field_validator("date")
+    @classmethod
+    def not_past(cls, v: date) -> date:
+        if v &lt; date.today():
+            raise ValueError("日程不能创建在过去")
+        return v
+
+# Schedule.model_validate(data) 失败时抛 ValidationError，
+# str(e) 自带「哪个字段、什么原因」的明细——直接喂回模型走闭环</code></pre></div>
+<p><b>要点：</b>错误信息必须<b>具体到能指导修正</b>（「date 非法」不如「date 早于今天」）——因为这段错误信息会被原样喂回模型。同时注意：校验代码跑在你这边，<b>永远不要相信模型自称「我已按要求输出」</b>，要用代码验证。</p>
+ </div>
+ </details>
+
+ <div class="callout story">
+ <div class="co-title">下一章预告</div>
+ <p>提示词是静态的设计，而 Agent 运行时的上下文是动态生长的：历史越滚越长、工具结果塞满窗口、该记住的忘了、该忘的占着地方。第 5 章讲上下文工程与记忆系统的全部实战：压缩、外置、检索，以及多智能体编排的完整代码。</p>
+ </div>
+
+ </div>
+ </main>
+</div>
+
+<script src="assets/js/app.js?v=20"></script>
+<script src="assets/js/lab-prompt.js?v=19"></script>
+</body>
+</html>

@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="第 9 章：毕业项目——四个里程碑构建「知识驱动的科研小助手」：本体与三元组记忆、本体化工具与 Harness、LLM 抽取管线、评估与 Web UI。">
+<title>第 9 章 · 综合实战：知识驱动的智能体 | Agent 学院</title>
+<link rel="stylesheet" href="assets/css/style.css?v=20">
+</head>
+<body data-chapter="ch9">
+
+<header class="topbar">
+ <button class="icon-btn hamburger" id="hamburger" title="打开导航">☰</button>
+ <a class="brand" href="index.html"><span class="logo">学</span> Agent 学院 <small>从零开发智能体 · Ontology · Harness</small></a>
+ <span class="spacer"></span>
+ <span class="progress-pill" id="progress-pill">进度 0/9 章</span>
+ <button class="icon-btn" id="theme-btn">🌙</button>
+</header>
+
+<div class="layout">
+ <aside class="sidebar" id="sidebar"></aside>
+
+ <main class="content">
+ <div class="content-inner">
+
+ <header class="chapter-head">
+ <div class="kicker">CHAPTER 09 · 预计 4 小时 · 毕业项目</div>
+ <h1>综合实战：<span class="grad">知识驱动的智能体</span></h1>
+ <p class="lead">
+ 七章零件，一次总装。毕业项目 <b>ScholarMate 科研小助手</b>：用本体组织记忆与工具（第 6 章）、跑在带权限与 Trace 的 Harness 上（第 7 章）、
+ 用 LLM 自动抽取三元组（第 3 + 6 章）、最后用评估集与 Web UI 上线（第 8 章）。
+ <b>四个里程碑，每个都有任务、验收标准和参考实现</b>——做完它，你就完成了从「学过」到「会做」的跨越。
+ </p>
+ <div class="head-meta">
+ <span class="chip">4 个里程碑 · 步步有验收</span>
+ <span class="chip">融合第 3–7 章全部主线</span>
+ <span class="chip">完整参考实现</span>
+ </div>
+ </header>
+
+ <h2>9.0 项目总览</h2>
+ <p>ScholarMate 要能胜任这样的真实使用：</p>
+ <div class="codeblock"><div class="code-head"><span class="code-lang">text · 目标场景</span></div><pre><code>你: 我在研究 RAG 的检索质量优化，帮我记一笔：我的课题叫「GraphRAG对比实验」。
+它: 已记录（写入图谱：Alice —leads→ GraphRAG对比实验）
+
+你: 把「混合检索」和「重排序」记为这个课题的两个技术点，另外我刚读了
+    arXiv 2404.07503，摘要里提到的方法也记一下。
+它: 调用抽取管线从摘要自动抽取出合法三元组并入图；
+    非法关系被本体校验拦下并向你解释。
+
+你: 我的课题涉及哪些技术点？支撑它们的论文有哪些？
+它: 查图后多跳作答，并注明依据的三元组——这类关系型问题，
+    向量记忆会漏，图谱不会。</code></pre></div>
+
+ <p>架构总览（每个模块都来自某一章）：</p>
+ <div class="flow">
+ <span class="flow-node accent">用户（Gradio UI）</span><span class="flow-arrow">⇄</span>
+ <span class="flow-node"> LLM<br><small>deepseek-chat</small></span>
+ <span class="flow-arrow">⇄</span>
+ <span class="flow-node"> Harness 主循环<br><small>第 1 / 7 章</small></span>
+ <span class="flow-arrow">⇄</span>
+ <span class="flow-node"> 本体化工具注册表<br><small>第 6 / 7 章</small></span>
+ <span class="flow-arrow">⇄</span>
+ <span class="flow-node"> TripleStore 记忆<br><small>第 5 / 6 章</small></span>
+ <span class="flow-arrow">⇄</span>
+ <span class="flow-node"> 抽取管线<br><small>第 3 / 6 章</small></span>
+ <div class="flow-note">权限分级 + 全量 Trace + CostMeter 贯穿全程；评估集守护质量（第 8 章）</div>
+ </div>
+
+ <div class="tbl-wrap"><table class="tbl">
+ <tr><th>里程碑</th><th>内容</th><th>时长</th><th>用到</th></tr>
+ <tr><td><b>M0</b> 环境与骨架</td><td>项目结构、API 连通性自检</td><td>15 min</td><td>第 2 章</td></tr>
+ <tr><td><b>M1</b> 本体 + 记忆</td><td>Ontology 校验器、TripleStore、单元测试</td><td>45 min</td><td>第 6 章</td></tr>
+ <tr><td><b>M2</b> 工具 + Harness</td><td>注册表、主循环、Trace、权限、五个工具</td><td>60 min</td><td>第 7 章</td></tr>
+ <tr><td><b>M3</b> 抽取管线</td><td>ingest_text 工具：从论文摘要自动入图</td><td>45 min</td><td>第 3 / 6 章</td></tr>
+ <tr><td><b>M4</b> 评估 + 上线</td><td>20 条评估集、Gradio 界面</td><td>60 min</td><td>第 8 章</td></tr>
+ </table></div>
+
+ <h2>M0 · 环境与骨架（15 分钟）</h2>
+ <p><b>任务：</b>建立项目结构，确认 API 连通。</p>
+ <div class="codeblock"><div class="code-head"><span class="code-lang">bash · 初始化</span></div><pre><code class="language-bash">mkdir scholar-mate &amp;&amp; cd scholar-mate
+touch scholar.py onto.py memory.py registry.py harness.py extract.py evals.jsonl
+python3 -m venv .venv &amp;&amp; source .venv/bin/activate
+pip install openai gradio
+export DEEPSEEK_API_KEY="sk-你的密钥"</code></pre></div>
+ <div class="codeblock"><div class="code-head"><span class="code-lang">python · scholar.py（先放一个自检入口）</span></div><pre><code class="language-python">import os, sys
+from openai import OpenAI
+
+def check():
+    client = OpenAI(api_key=os.environ["DEEPSEEK_API_KEY"],
+                    base_url="https://api.deepseek.com")
+    r = client.chat.completions.create(
+        model="deepseek-chat",
+        messages=[{"role": "user", "content": "回复 OK 两个字母即可"}],
+        max_tokens=5)
+    print("API 连通:", r.choices[0].message.content)
+    print("自检通过 ")
+
+if __name__ == "__main__":
+    check()</code></pre></div>
+ <div class="callout key">
+ <div class="co-title">M0 验收标准</div>
+ <p><code>python scholar.py</code> 输出「自检通过」。就一条——但请真的跑通再进 M1：<b>环境问题要在最便宜的时候暴露</b>。</p>
+ </div>
+
+ <h2>M1 · 本体 + 三元组记忆（45 分钟）</h2>
+ <p><b>任务：</b>实现 <code>onto.py</code>（类、关系、check 校验）与 <code>memory.py</code>（TripleStore），并用 5 条单元测试锁住它们。这是第 6 章「轻量本体」的直接落地：</p>
+ <details class="fold"><summary> 参考实现：onto.py + memory.py + 测试</summary>
+ <div class="fold-body">
+ <div class="codeblock"><div class="code-head"><span class="code-lang">python · onto.py</span></div><pre><code class="language-python">CLASSES = {"Thing": None, "Human": "Thing", "Project": "Thing",
+           "Technique": "Thing", "Paper": "Thing", "Tool": "Thing"}
+RELATIONS = {"leads": ("Human", "Project"),
+             "belongs_to": ("Project", "Project"),
+             "uses": ("Project", "Technique"),
+             "cites": ("Paper", "Paper"),
+             "supports": ("Paper", "Technique"),
+             "implemented_by": ("Technique", "Tool")}
+
+class Ontology:
+    def check(self, rel, subj, obj):
+        """合法返回 True；否则返回人类可读的错误说明（会喂回模型/展示给用户）"""
+        if rel not in RELATIONS:
+            return f"未知关系 {rel}，可用: {sorted(RELATIONS)}"
+        d, r = RELATIONS[rel]
+        # 轻量版只拦「明确冲突」；实体类型由注册表在写入时登记
+        self._registry = getattr(self, "_registry", {})
+        for name, cls in ((subj, d), (obj, r)):
+            known = self._registry.get(name)
+            if known and known not in _ancestors(known, CLASSES) | {known}:
+                return f"{name} 的类型 {known} 与 {rel} 的要求不符"
+        self._registry.setdefault(subj, d)
+        self._registry.setdefault(obj, r)
+        return True
+
+def _ancestors(cls, classes):
+    out = set()
+    c = classes.get(cls)
+    while c:
+        out.add(c); c = classes.get(c)
+    return out</code></pre></div>
+ <div class="codeblock"><div class="code-head"><span class="code-lang">python · memory.py</span></div><pre><code class="language-python">import json, pathlib
+
+class TripleStore:
+    def __init__(self, path="kg.json"):
+        self.path = pathlib.Path(path)
+        self.triples = (json.loads(self.path.read_text("utf-8"))
+                        if self.path.exists() else [])
+
+    def add(self, rel, subj, obj):
+        t = (rel, subj, obj)
+        if t not in self.triples:
+            self.triples.append(t)
+            self.path.write_text(
+                json.dumps(self.triples, ensure_ascii=False, indent=1), "utf-8")
+        return {"ok": True, "stored": f"{subj} -{rel}-> {obj}"}
+
+    def query(self, rel=None, subj=None, obj=None):
+        hits = [t for t in self.triples
+                if (rel is None or t[0] == rel)
+                and (subj is None or t[1] == subj)
+                and (obj is None or t[2] == obj)]
+        return {"count": len(hits),
+                "triples": [f"{s} -{r}-> {o}" for r, s, o in hits]}
+
+    def summary(self):
+        return {"triples": [f"{s} -{r}-> {o}" for r, s, o in self.triples]}</code></pre></div>
+ <div class="codeblock"><div class="code-head"><span class="code-lang">python · test_m1.py —— pytest 直接可跑</span></div><pre><code class="language-python">from onto import Ontology
+from memory import TripleStore
+
+def test_unknown_relation_rejected():
+    assert Ontology().check("loves", "Alice", "猫") != True
+
+def test_wrong_domain_detected():
+    onto = Ontology()
+    onto.check("leads", "Alice", "P1")            # Alice 登记为 Human
+    assert Ontology().check("uses", "Alice", "重排序") != True  # Human 不能 uses
+
+def test_add_and_query():
+    s = TripleStore(":memory:")                   # 测试用独立路径
+    s.add("leads", "Alice", "GraphRAG对比实验")
+    assert s.query(subj="Alice")["count"] == 1
+    assert s.query(rel="cites")["count"] == 0
+
+def test_dedup():
+    s = TripleStore(":memory:")
+    s.add("leads", "Alice", "P1"); s.add("leads", "Alice", "P1")
+    assert len(s.triples) == 1
+
+def test_persistence(tmp_path):
+    p = tmp_path / "kg.json"
+    TripleStore(p).add("leads", "A", "B")
+    assert TripleStore(p).query(subj="A")["count"] == 1</code></pre></div>
+ </div>
+ </details>
+ <div class="callout key">
+ <div class="co-title">M1 验收标准</div>
+ <p><code>pytest test_m1.py</code> 5 条全绿。特别说明最后一条（持久化）：记忆库<b>必须活过重启</b>，否则你的 Agent 是金鱼——这是第 5 章「外置记忆」原则的最小兑现。</p>
+ </div>
+
+ <h2>M2 · 工具注册 + Harness（60 分钟）</h2>
+ <p><b>任务：</b>实现 <code>registry.py</code>（带本体类目的注册表 + 权限分级）与 <code>harness.py</code>（主循环 + Trace + CostMeter），注册五个工具：<code>remember_triple / query_graph / graph_summary / clear_all_memory(confirm) / ingest_text(M3 再实现，先返回错误)</code>。</p>
+ <details class="fold"><summary> 参考实现：registry.py + harness.py</summary>
+ <div class="fold-body">
+ <div class="codeblock"><div class="code-head"><span class="code-lang">python · registry.py</span></div><pre><code class="language-python">class OntoRegistry:
+    def __init__(self, onto, store):
+        self.onto = onto; self.store = store; self._tools = {}
+
+    def register(self, spec, impl, permission="auto", category="general"):
+        self._tools[spec["function"]["name"]] = (spec, impl, permission, category)
+
+    def specs_for(self, categories=None):
+        return [t[0] for t in self._tools.values()
+                if categories is None or t[3] in categories]
+
+    def call(self, name, args, confirm_fn):
+        if name not in self._tools:
+            return {"error": f"未知工具 {name}，可用: {sorted(self._tools)}"}
+        _, impl, perm, cat = self._tools[name]
+        if perm == "confirm" and not confirm_fn(f"执行 {name}({args})?"):
+            return {"error": "用户拒绝执行该操作。"}
+        if cat == "memory-write":                      # 本体校验作为闸门
+            ok = self.onto.check(args.get("rel"),
+                                 args.get("subj"), args.get("obj"))
+            if ok is not True:
+                return {"error": ok}
+        try:
+            return impl(**args)
+        except Exception as e:
+            return {"error": f"{type(e).__name__}: {e}"}</code></pre></div>
+ <div class="codeblock"><div class="code-head"><span class="code-lang">python · harness.py</span></div><pre><code class="language-python">import json, time
+from openai import OpenAI
+
+client = OpenAI(api_key=os.environ["DEEPSEEK_API_KEY"],
+                base_url="https://api.deepseek.com")
+
+class Trace:
+    def __init__(self, path="trace.jsonl"): self.path = path; self.t0 = time.time()
+    def log(self, kind, **kw):
+        rec = {"t": round(time.time() - self.t0, 2), "kind": kind, **kw}
+        with open(self.path, "a", encoding="utf-8") as f:
+            f.write(json.dumps(rec, ensure_ascii=False) + "\\n")
+
+class Harness:
+    def __init__(self, registry, system_prompt, max_steps=10):
+        self.reg = registry; self.sys = system_prompt
+        self.max_steps = max_steps; self.trace = Trace()
+
+    def confirm(self, question):                    # CLI 版；M4 换成 Web 审批
+        return input(f"  {question} [y/N] ").strip().lower() == "y"
+
+    def run(self, user_input):
+        messages = [{"role": "system", "content": self.sys},
+                    {"role": "user", "content": user_input}]
+        for step in range(self.max_steps):
+            resp = client.chat.completions.create(
+                model="deepseek-chat", messages=messages,
+                tools=self.reg.specs_for(), temperature=0)
+            self.trace.log("llm", step=step, tokens=resp.usage.total_tokens)
+            msg = resp.choices[0].message
+            if not msg.tool_calls:
+                self.trace.log("final", step=step)
+                return msg.content
+            messages.append(msg)
+            for tc in msg.tool_calls:
+                args = json.loads(tc.function.arguments or "{}")
+                self.trace.log("tool", step=step, name=tc.function.name, args=args)
+                result = self.reg.call(tc.function.name, args, self.confirm)
+                messages.append({"role": "tool", "tool_call_id": tc.id,
+                                 "content": json.dumps(result, ensure_ascii=False)})
+        return "已达最大步数，任务未完成。"</code></pre></div>
+ <div class="codeblock"><div class="code-head"><span class="code-lang">python · 工具注册（scholar.py 组装段）</span></div><pre><code class="language-python">def f(name, desc, props, req):
+    return {"type": "function", "function": {"name": name, "description": desc,
+            "parameters": {"type": "object", "properties": props, "required": req}}}
+
+onto = Ontology(); store = TripleStore(); reg = OntoRegistry(onto, store)
+
+reg.register(f("remember_triple",
+    "把一条知识写入用户的知识图谱。用户陈述事实/偏好/计划时主动调用。",
+    {"rel": {"type": "string", "description": "必须是: " + "/".join(RELATIONS)},
+     "subj": {"type": "string"}, "obj": {"type": "string"}},
+    ["rel", "subj", "obj"]),
+    impl=lambda rel, subj, obj: store.add(rel, subj, obj),
+    category="memory-write")
+
+reg.register(f("query_graph",
+    "按条件查询知识图谱。回答涉及用户过往信息前必须先查图，禁止凭空回忆。",
+    {"rel": {"type": "string"}, "subj": {"type": "string"}, "obj": {"type": "string"}}, []),
+    impl=lambda rel=None, subj=None, obj=None: store.query(rel, subj, obj),
+    category="memory-read")
+
+reg.register(f("graph_summary",
+    "返回整个知识图谱的内容。用户问『我都记了什么』时使用。",
+    {}, []),
+    impl=lambda: store.summary(), category="memory-read")
+
+reg.register(f("clear_all_memory", "清空整个知识图谱（危险操作，需确认）。", {}, []),
+    impl=lambda: (store.triples.clear(),
+                  store.path.write_text("[]", "utf-8"), {"ok": True})[2],
+    permission="confirm", category="memory-admin")
+
+reg.register(f("ingest_text",
+    "从一段文本（论文摘要/笔记）中自动抽取三元组并入图。",
+    {"text": {"type": "string", "description": "要抽取的原文"}}, ["text"]),
+    impl=lambda text: ingest_text(text), category="ingest")</code></pre></div>
+ </div>
+ </details>
+ <div class="callout key">
+ <div class="co-title">M2 验收标准（三个场景脚本）</div>
+ <p>① 说「记住我的课题叫 GraphRAG对比实验」→ 回复包含「已记录」且图里多一条 leads；<br>
+ ② 问「我的课题叫什么」→ 模型<b>先调 query_graph 再回答</b>（看 Trace 确认）；<br>
+ ③ 调 clear_all_memory → 弹出确认，回答 N → 工具返回「用户拒绝」且图谱无损、模型体面收场。</p>
+ </div>
+
+ <h2>M3 · LLM 抽取管线（45 分钟）</h2>
+ <p><b>任务：</b>实现 <code>extract.py</code> 的 <code>ingest_text(text)</code>（第 6 章抽取管线的成品化）：调用 LLM 抽三元组 → 本体校验 → 入库，返回「接受 / 拦截」清单。校验失败的错误信息要<b>原样返回给模型</b>，让它有机会向用户解释。</p>
+ <div class="callout tip">
+ <div class="co-title">实现提示</div>
+ <p>① 抽取提示词直接用第 6 章的 EXTRACT_PROMPT（关系枚举已与本体对齐）；② 逐条校验而不是整批拒绝——一条坏三元组不该连累合法的；③ 实体规范化从最简单的做起：把「GraphRAG对比实验」「graphrag 对比实验」都交给模型输出成你在图谱里的规范名（在提示词里列出已有实体清单），这是实体对齐的 80 分做法。</p>
+ </div>
+ <div class="callout key">
+ <div class="co-title">M3 验收标准</div>
+ <p>喂入真实的 arXiv 摘要一段，满足：<b>①</b> 图谱新增 ≥3 条合法三元组；<b>②</b> 至少一条非法三元组被拦截并打印原因（如果没有，构造一条「重排序 implemented_by Alice」喂进去）；<b>③</b> 之后问「支撑重排序的论文有哪些」能得到多跳答案。</p>
+ </div>
+
+ <h2>M4 · 评估 + Web UI（60 分钟）</h2>
+ <p><b>任务 A：</b>写出 20 条评估集（第 8 章练习 3 的完整版：12 能力 + 5 边界 + 3 回归），接入 <code>run_eval</code>。</p>
+ <p><b>任务 B：</b>用 Gradio 包一个界面（第 8 章代码直接可用），把 CLI 的 input 确认改为简易审批：<code>confirm</code> 级工具触发时，在聊天流里插入一条卡片消息并挂起，用户回复「批准」后继续——不必做按钮，文本确认即可，重点是<b>审批语义没有因换 UI 而丢失</b>。</p>
+ <div class="callout key">
+ <div class="co-title">M4 验收标准（毕业线）</div>
+ <ul class="checklist">
+ <li><code>run_eval</code> 20 条用例通过率 ≥ 80%，结果已存档</li>
+ <li>Gradio 界面可连续对话，重启进程后图谱记忆仍在</li>
+ <li>危险操作（clear_all_memory）在 Web 端必须经过审批</li>
+ <li>trace.jsonl 能完整回放一次多轮会话的每一步工具调用</li>
+ <li>CostMeter 报告：你能报出单次会话的平均成本</li>
+ </ul>
+ </div>
+
+ <h2>常见坑（往届「毕业生」的血泪）</h2>
+ <ul class="checklist">
+ <li><b>模型自说自话不查图</b>：系统提示里「先查图再回答」要写成硬规则，并配一条 evals 用例盯着（看 Trace 有没有 query_graph）</li>
+ <li><b>关系枚举漂移</b>：模型发明新关系「研究」——schema 描述里把枚举写死，校验兜底</li>
+ <li><b>实体名不统一</b>：图谱里出现「GraphRAG对比实验」「我的课题」两个节点——抽取提示词里带上已有实体清单</li>
+ <li><b>确认流形同虚设</b>：Web 版把 confirm 做成了「自动通过」——验收时专测这一条</li>
+ <li><b>只测晴天</b>：评估集全是顺利场景——边界层的 5 条一条都不能少</li>
+ </ul>
+
+ <h2>毕业之后的路</h2>
+ <ol class="steps">
+ <li><b>本体升级</b><p>用 <code>rdflib</code> 替换 TripleStore，跑 RDFS 推理与 SPARQL 聚合查询（第 6 章代码直接搬）。</p></li>
+ <li><b>引擎分工</b><p>规划/反思步骤路由到 deepseek-reasoner，执行保持 deepseek-chat，用 CostMeter 分档记账验证收益（第 7 章）。</p></li>
+ <li><b>多智能体</b><p>阅读类请求派子 Agent 并行读论文、只回结论（第 5 章 orchestrator 模式）。</p></li>
+ <li><b>接入 MCP</b><p>把工具实现改造成 MCP server，体会「接口标准化（MCP）+ 语义组织（本体）」的互补。</p></li>
+ <li><b>服务化</b><p>FastAPI 包一层（第 8 章骨架），加上会话管理与日预算熔断——它就真的能挂到公网给同学用了。</p></li>
+ </ol>
+
+ <div class="callout story">
+ <div class="co-title">结业</div>
+ <p>你现在已经掌握了：Agent 的第一性原理（循环与 ReAct）→ 用 DeepSeek 亲手实现并加固 → 上下文工程与记忆系统 → Ontology 的完整知识体系与动手建图 → Harness 的解剖与设计 → 调试、评估与上线的全套方法 → 以及一个四里程碑验收通过的作品。<br>
+ <b>Agent 领域的框架每月都在翻新，但循环、工具、上下文、共同语言、运行时这五样是十年不动摇的地基——你已经在地基上了。下一步想把这个技能变成职业？看 <a href="fde.html">FDE 能力地图</a>——课程到岗位的完整映射与 90 天计划。书单见 <a href="resources.html">资源页</a>。！</b></p>
+ </div>
+
+ </div>
+ </main>
+</div>
+
+<script src="assets/js/app.js?v=20"></script>
+</body>
+</html>

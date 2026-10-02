@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="LLM 基础速成：预训练/SFT/RLHF 三阶段、token 与上下文窗口、采样温度、幻觉的统计学本质、嵌入 vs 生成模型——智能体开发者需要的最小大模型知识集。">
+<title>附录 · LLM 基础速成 | Agent 学院</title>
+<link rel="stylesheet" href="assets/css/style.css?v=20">
+</head>
+<body data-chapter="basics">
+
+<header class="topbar">
+  <button class="icon-btn hamburger" id="hamburger" title="打开导航">☰</button>
+  <a class="brand" href="index.html"><span class="logo">学</span> Agent 学院 <small>从零开发智能体 · Ontology · Harness</small></a>
+  <span class="spacer"></span>
+  <span class="progress-pill" id="progress-pill">进度 0/9 章</span>
+  <button class="icon-btn" id="theme-btn">🌙</button>
+</header>
+
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <main class="content">
+    <div class="content-inner">
+
+      <header class="chapter-head">
+        <div class="kicker">APPENDIX · LLM 基础速成 · 预计 1 小时</div>
+        <h1>大语言模型<span class="grad">基础速成</span></h1>
+        <p class="lead">
+          本站承诺「不需要机器学习背景」，但有些大模型的知识<b>直接决定你写代码的方式</b>——温度怎么设、为什么幻觉不可根除、上下文窗口意味着什么。
+          这一页用 1 小时补齐这块地基：只讲影响工程决策的部分，不碰数学推导。每节末尾都标注「对 Agent 开发意味着什么」。
+        </p>
+        <div class="head-meta">
+          <span class="chip">🎯 目标：建立正确的大模型心智模型</span>
+          <span class="chip">交互实验：采样温度实验室</span>
+          <span class="chip">📝 自测：2 题</span>
+        </div>
+      </header>
+
+      <div class="callout info">
+        <div class="co-title">本章你将学会</div>
+        <p>① LLM 的三段成长史（预训练 / SFT / RLHF）各教会它什么；② token 与上下文窗口的真实含义；③ 温度等采样参数的原理；④ 幻觉为什么是统计机器的本性而非缺陷；⑤ 嵌入模型与生成模型的分工；⑥ 读模型卡时该看什么。</p>
+      </div>
+
+      <h2>① 一个模型的成长史：三个阶段</h2>
+      <div class="seg seg-method">
+        <div class="seg-label">方法机制 · 训练流水线</div>
+        <div class="seg-zh"><b>阶段一 · 预训练（Pre-training）</b>：在海量文本（数万亿 token）上做一件事——<b>预测下一个词</b>。重复数万亿次之后，模型学会了语法、事实、风格、推理模式……全部压缩进参数。这一阶段产出的叫<b>基础模型（base model）</b>：它是个超级补全机器，你问它问题，它可能继续「列出更多问题」而不是回答。<br>
+        <b>阶段二 · 监督微调（SFT）</b>：用几万到几百万条「人类写的高质量问答示范」继续训练，教会模型<b>像助手一样响应</b>——这就是「你是xx助手」行为的来源。<br>
+        <b>阶段三 · 人类反馈强化学习（RLHF）及后续</b>：让人类（或 AI）对多个回答排序，用奖励信号把模型往「更有帮助、更安全」的方向推。DeepSeek-R1 展示的新路线是用<b>可验证奖励的强化学习</b>训练出长思维链——推理模型的由来。</div>
+        <div class="p-note"><b>解读：</b>对 Agent 开发的三个推论：① 模型的世界知识来自预训练，<b>它的"知识截止日期"是训练数据的日子</b>——想更新知识靠外挂（第 4 章），不靠念咒；② 助手行为是 SFT 后天习得的薄层，<b>极端提示下可能"露馅"</b>，所以系统提示要稳固人设；③ 不同阶段决定了不同能力，<b>不要指望微调注入事实知识后模型就变得可靠</b>——那是 RAG 的活（第 4 章）。</div>
+      </div>
+
+      <h2>② Token 与上下文窗口</h2>
+      <div class="seg seg-method">
+        <div class="seg-label">方法机制 · 模型眼里的文字</div>
+        <div class="seg-zh">模型不认识「字」，它认识 <b>token</b>——把文本切出的统计片段。英文约 4 字符一个 token；<b>中文约 1~1.5 个字一个 token</b>（所以中文内容"更贵"）。所有输入输出都以 token 计价、计量，<b>上下文窗口就是一次请求能处理的最大 token 数</b>（deepseek-chat 为 128K 量级）。</div>
+        <div class="p-note"><b>解读：</b>三个工程后果：① <b>费用按 token 算</b>——中文prompt的成本要按 1.5 倍字数预估（第 6 章 CostMeter 的意义）；② <b>窗口 = 模型的全部工作记忆</b>——第 4 章的裁剪压缩外置都是在给窗口腾地方；③ <b>乱码或截断常是 token 边界问题</b>——检查 finish_reason 是否为 length（第 2 章）。</div>
+      </div>
+
+      <h2>③ 采样与温度：模型为什么"每次说得不一样"</h2>
+      <div class="seg seg-method">
+        <div class="seg-label">方法机制 · 下一个词是个概率分布</div>
+        <div class="seg-zh">模型每一步输出的不是"一个词"，而是<b>整张词表上的概率分布</b>。采样策略决定从这个分布里怎么挑：<b>贪心</b>（永远选最高概率，temperature≈0）、<b>温度采样</b>（temperature 控制分布被"压尖"还是"摊平"）、<b>top-p</b>（只从累计概率前 p 的候选里挑）。<b>温度的数学</b>：把原始概率取对数后除以 T 再 softmax——T 越小分布越尖（接近贪心），T 越大越平（长尾词越有机会）。</div>
+      </div>
+
+      <h2>交互实验：温度采样实验室</h2>
+      <p>上下文固定为「今天天气真___」，模型给出的原始分布已定。拖动温度滑块，观察分布如何变形；点「采样一次」按当前分布抽词——多抽几次，感受不同温度下的"手感"：</p>
+
+      <div class="lab" id="lab-sampling">
+        <div class="lab-head">交互实验 <span class="lab-tag">采样温度实验室</span></div>
+        <div class="lab-body">
+          <div class="temp-wrap">
+            <div>
+              <div class="temp-bars"></div>
+              <div style="margin-top:14px">
+                <label style="font-size:13px;color:var(--text-2)">温度 T：<b id="temp-val" style="font-family:var(--mono)">0.70</b></label>
+                <input class="temp-slider" id="temp-slider" type="range" min="0.1" max="2" step="0.05" value="0.7">
+              </div>
+              <div class="lab-toolbar" style="margin-top:10px">
+                <button class="btn primary" data-act="sample">按当前分布采样一次</button>
+                <button class="btn" data-act="reset">↺ 重置</button>
+              </div>
+              <div class="temp-samples"></div>
+            </div>
+            <div class="temp-read"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout key">
+        <div class="co-title">🔑 温度选型的论文级依据</div>
+        <p>CoT 论文（见全文翻译版）的消融证明：推理质量靠<b>逐步表达</b>而非采样随机性；第 8 章的路由策略给了实践版——<b>工具调用 / 抽取 / 分类 / 裁判 → T=0~0.3；创意生成 → T=0.7+</b>；调试时固定 T=0 让结果可复现。另一个容易被忽略的点：<b>temperature=0 在服务端并非严格确定</b>（并行计算的浮点误差），要完全可复现还要配合 seed 参数。</p>
+      </div>
+
+      <h2>④ 幻觉的统计学本质</h2>
+      <div class="seg seg-core">
+        <div class="seg-label">核心论点 · 为什么幻觉不可根除</div>
+        <div class="seg-zh">模型的训练目标是「<b>给定上下文，输出最可能的下一串词</b>」。「最可能的续写」和「事实正确的回答」<b>是两个不同的优化目标</b>——当用户问一个训练数据里没有的事实（或用引导性方式提问）时，模型会流畅地生成一个"统计上像答案"的序列，这就是幻觉。<b>它不是 bug，是这套机器的本性</b>：一个只会自信续写的系统，除非被教会说"不知道"，否则永远不会主动说不知道。</div>
+        <div class="p-note"><b>解读：</b>由此推出第 3、4 章全部反幻觉手段的原理：<b>① 给它真实的 Observation（工具/检索）——让"最可能的续写"建立在事实上；② 教会说"不知道"（边界规则）；③ 让它引用来源（可追责）。</b>幻觉无法消灭，只能被架构性压制——这是第 4 章知识库存在的根本理由。</div>
+      </div>
+
+      <h2>⑤ 嵌入模型 vs 生成模型：同一个 Transformer 的两种用法</h2>
+      <div class="seg seg-method">
+        <div class="seg-label">方法机制 · 两种输出</div>
+        <div class="seg-zh"><b>生成模型</b>：输入文本 → 输出<b>下一个 token</b>（自回归地一段段吐出回答）。<b>嵌入模型</b>：输入文本 → 输出<b>一个固定长度的向量</b>（把整段语义压成一个几何点）。两者是同一架构的两种用法：一个「往外写字」，一个「往内压缩」。</div>
+        <div class="p-note"><b>解读：</b>这个区分解释了第 4 章的分工：<b>生成模型负责"说"，嵌入模型负责"找"</b>。检索用嵌入（语义相似 = 向量距离），回答用生成（忠实转述），两者用错场景（用生成模型做相似度、用嵌入做回答）都是常见新手错误。中文语料的嵌入选型见第 4 章 4.4 节。</div>
+      </div>
+
+      <h2>⑥ 涌现、规模定律与"读一张模型卡"</h2>
+      <div class="seg seg-method">
+        <div class="seg-label">方法机制 · 规模带来什么</div>
+        <div class="seg-zh"><b>规模定律（Scaling Laws）</b>：模型性能随「参数 × 数据 × 计算」的投入按可预测的幂律提升。<b>涌现（Emergence）</b>：某些能力（多步推理、指令遵循）在小模型上为零、越过某个规模后骤然出现（CoT 论文的 §3.2 就是其经典证据）。<b>代价</b>：更大 = 更贵、更慢——所以第 8 章「模型路由」才有意义。</div>
+      </div>
+      <div class="para">
+        <div class="p-zh">选模型时，<b>模型卡（model card）上真正影响 Agent 开发的字段</b>是这些——按重要性排序：</div>
+      </div>
+      <div class="tbl-wrap"><table class="tbl">
+        <tr><th>字段</th><th>为什么重要</th><th>对应课程</th></tr>
+        <tr><td><b>上下文窗口</b></td><td>决定 Agent 能"记多少、读多少"——太小的窗口直接跑不动多步循环</td><td>第 4 章、第 7 章（SWE-agent 论文淘汰 8K 窗口模型）</td></tr>
+        <tr><td><b>工具调用支持</b></td><td>Function Calling 的质量与格式稳定性——Agent 的生命线</td><td>第 2 章</td></tr>
+        <tr><td><b>思维链 / 推理模式</b></td><td>是否有 reasoning_content、适合规划还是执行</td><td>第 2 章、第 7 章模型路由</td></tr>
+        <tr><td><b>知识截止日期</b></td><td>这之后的世界它一无所知——决定你是否必须配检索</td><td>第 4 章</td></tr>
+        <tr><td><b>价格与缓存</b></td><td>输入/输出单价、前缀缓存折扣——直接决定 Agent 经济学</td><td>第 6 章 CostMeter</td></tr>
+        <tr><td><b>许可证与部署方式</b></td><td>API only 还是开放权重（能否自托管）</td><td>第 7 章自托管小节</td></tr>
+      </table></div>
+
+      <h2>⑦ 心智模型校准：LLM 不是什么</h2>
+      <ul class="checklist">
+        <li><b>不是数据库</b>：它"知道"的东西是压缩后的统计影子，无法按需精确调取——精确调取交给检索（第 4 章）。</li>
+        <li><b>不是搜索引擎</b>：它不联网、不更新——实时信息交给工具（第 2 章）。</li>
+        <li><b>不是计算器</b>：数字是 token，算术是"背出来的模式"——精确计算交给代码工具（Toolformer 论文的起点）。</li>
+        <li><b>不是查表系统</b>：同样的输入可以有不同输出（温度采样）——需要确定性时设 T=0 并接受工程上的近似。</li>
+        <li><b>是一个极其强大的"条件续写器"</b>：你给它什么上下文，它就续写什么——<b>所以本站的一切工程（提示词、工具、记忆、检索）本质上都是在设计上下文。</b></li>
+      </ul>
+
+      <h2>📝 自测</h2>
+      <details class="quiz"><summary>为什么"再微调一下模型让它知道最新政策"通常不是更新知识的好方案？</summary>
+        <div class="quiz-body"><p><span class="ans-label">答案：</span>微调改的是参数记忆：成本高、周期长，且容易把事实"压"进模型的同时损害其他能力（灾难性遗忘），还无法保证精确调取——模型可能仍然回答模糊版本。政策的特征是<b>私有、频繁变化、需要精确引用与溯源</b>，全部指向非参数记忆：知识库 + 检索（第 4 章），增删文档分钟级生效。微调适合改"行为方式"（输出风格、格式习惯），不适合灌"事实"。</p></div>
+      </details>
+      <details class="quiz"><summary>同一个模型，为什么 Agent 主循环要低温、创意写作要高温？温度到底改变了什么？</summary>
+        <div class="quiz-body"><p><span class="ans-label">答案：</span>温度改变采样分布的形状：低温把概率质量压向最高概率词（稳定、可复现、几乎不做意外选择），高温摊平分布（长尾词被放大，输出更多样）。主循环里每一步都是"选工具、填参数"的决策——你需要的是稳定执行，随机性只会增加选错工具的概率；创意写作里"最可能的下一词"往往是最平庸的表达，需要高温换来多样性。判断标准：这一步的输出是要<b>被程序消费</b>（低温）还是要<b>被人阅读</b>（可高温）。</p></div>
+      </details>
+
+      <div class="callout story">
+        <div class="co-title">🧭 地基打好了</div>
+        <p>有了这页的心智模型，回到主线会发现很多设计突然"有了解释"：为什么工具描述要写成说明书（模型靠上下文决策）、为什么上下文是最稀缺资源（窗口 + 注意力）、为什么检索先于调参（幻觉的统计本质）。<b>推荐顺序：先读本页 → 再进第 1 章，或者学完第 4 章后回来二刷——两个时机都有收获。</b></p>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/app.js?v=20"></script>
+<script src="assets/js/lab-sampling.js?v=19"></script>
+</body>
+</html>
