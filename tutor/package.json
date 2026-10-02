@@ -1,0 +1,19 @@
+{
+  "name": "tutor",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "node test/smoke.mjs",
+    "start": "node src/tutor.mjs",
+    "build:kb": "node scripts/build-kb.mjs"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "@mariozechner/pi-agent-core": "^0.73.1",
+    "@mariozechner/pi-ai": "^0.73.1"
+  }
+}

@@ -1,0 +1,14 @@
+.DS_Store
+.mimosa/
+
+# tutor 运行时与生成物(可重建: npm run build:kb)
+tutor/node_modules/
+tutor/students/
+tutor/kb/course-chunks.json
+
+# macOS App 构建产物(build.sh 可重建)
+macos-app/dist/
+macos-app/.build/
+macos-app/.site-bundle/
+macos-app/AppIcon.icns
+macos-app/.icon-1024.png

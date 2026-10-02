@@ -1,0 +1,242 @@
+#!/usr/bin/env node
+// Agent 学院 · 开发导师 —— 基于 pi-agent-core 的教学智能体 CLI。
+//
+// 用法:
+//   node src/tutor.mjs                      # 交互模式(需要 DEEPSEEK_API_KEY)
+//   node src/tutor.mjs --mock               # 无 Key 冒烟模式(脚本化模型,验证全链路)
+//   node src/tutor.mjs --once "问题"        # 单轮模式,适合测试
+//   node src/tutor.mjs --student alice      # 指定学生档案
+//   node src/tutor.mjs --pack packs/agent-dev
+import { Agent } from "@mariozechner/pi-agent-core";
+import { AssistantMessageEventStream, getModel, getEnvApiKey } from "@mariozechner/pi-ai";
+import { readFileSync, existsSync, appendFileSync, mkdirSync } from "node:fs";
+import { join, resolve, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
+import readline from "node:readline/promises";
+import { CourseIndex } from "./retrieval.mjs";
+import { loadProfile, saveProfile, renderProfile } from "./memory.mjs";
+import { buildTools } from "./tools.mjs";
+
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
+
+// ---------- 参数 ----------
+const args = process.argv.slice(2);
+function argOf(flag) {
+  const i = args.indexOf(flag);
+  return i >= 0 ? args[i + 1] : null;
+}
+const MOCK = args.includes("--mock");
+const ONCE = argOf("--once");
+const STUDENT = argOf("--student") || "default";
+const PACK_DIR = resolve(argOf("--pack") || join(ROOT, "packs", "agent-dev"));
+
+// ---------- 教学包 ----------
+const pack = JSON.parse(readFileSync(join(PACK_DIR, "pack.json"), "utf8"));
+let systemPrompt = readFileSync(join(PACK_DIR, "system-prompt.md"), "utf8");
+
+// ---------- 知识库(缺失时自动构建) ----------
+const KB = resolve(ROOT, pack.kb);
+if (!existsSync(KB)) {
+  console.log("知识库不存在,自动构建中…");
+  const { execFileSync } = await import("node:child_process");
+  execFileSync(process.execPath, [join(ROOT, "scripts", "build-kb.mjs")], { stdio: "inherit" });
+}
+const index = CourseIndex.load(KB);
+
+// ---------- 学生记忆 ----------
+const profile = loadProfile(ROOT, STUDENT);
+profile.sessions += 1;
+saveProfile(ROOT, profile);
+systemPrompt = systemPrompt.replace("{student_profile}", renderProfile(profile));
+
+// ---------- 模型 ----------
+const provider = process.env.TUTOR_PROVIDER || pack.model.provider;
+const modelId = process.env.TUTOR_MODEL || pack.model.id;
+const model = MOCK ? null : getModel(provider, modelId);
+
+function assertApiKey() {
+  if (MOCK) return true;
+  const key = getEnvApiKey(provider);
+  if (!key) {
+    console.error(`\n✗ 缺少 ${provider} 的 API Key。请设置环境变量:`);
+    console.error(`  export DEEPSEEK_API_KEY="sk-..."   # platform.deepseek.com`);
+    console.error(`  或换模型: TUTOR_PROVIDER=openai TUTOR_MODEL=gpt-4.1-mini node src/tutor.mjs\n`);
+    return false;
+  }
+  return true;
+}
+
+// ---------- mock 模型:脚本化两阶段(先查课程 → 再回答),验证 loop 全链路 ----------
+function mockStreamFn(_model, context) {
+  const stream = new AssistantMessageEventStream();
+  const msgs = context.messages;
+  const last = msgs[msgs.length - 1];
+  const base = {
+    role: "assistant",
+    api: "openai-completions",
+    provider: "mock",
+    model: "mock-tutor-1",
+    usage: {
+      input: 0, output: 0, cacheRead: 0, cacheWrite: 0, totalTokens: 0,
+      cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 },
+    },
+    timestamp: Date.now(),
+  };
+  const emitText = (text) => {
+    const partial = { ...base, content: [], stopReason: "stop" };
+    stream.push({ type: "start", partial });
+    stream.push({ type: "text_start", contentIndex: 0, partial });
+    const chunks = text.match(/.{1,12}/gs) || [];
+    let acc = "";
+    for (const c of chunks) {
+      acc += c;
+      stream.push({
+        type: "text_delta", contentIndex: 0, delta: c,
+        partial: { ...partial, content: [{ type: "text", text: acc }] },
+      });
+    }
+    const message = { ...partial, content: [{ type: "text", text }], stopReason: "stop" };
+    stream.push({ type: "text_end", contentIndex: 0, content: text, partial: message });
+    stream.push({ type: "done", reason: "stop", message });
+    stream.end(message);
+  };
+  (async () => {
+    if (last?.role === "user") {
+      // 第一阶段:调一次工具,验证工具执行链路
+      const toolCall = { type: "toolCall", id: "mock-tc-1", name: "lookup_course", arguments: { query: "Agent Loop 四要素" } };
+      const partial = { ...base, content: [], stopReason: "toolUse" };
+      stream.push({ type: "start", partial });
+      stream.push({ type: "toolcall_start", contentIndex: 0, partial });
+      stream.push({ type: "toolcall_end", toolCall, partial: { ...partial, content: [toolCall], stopReason: "toolUse" } });
+      const message = { ...partial, content: [toolCall], stopReason: "toolUse" };
+      stream.push({ type: "done", reason: "toolUse", message });
+      stream.end(message);
+    } else {
+      const hit = last?.role === "toolResult" ? "已检索到课程资料。" : "";
+      emitText(`【mock 回应】${hit}这是验证模式下的教学回复。全链路(检索工具 → loop 续跑 → 流式输出)工作正常。请配置 DEEPSEEK_API_KEY 后体验真实教学。`);
+    }
+  })();
+  return stream;
+}
+
+// ---------- 组装 Agent ----------
+const tools = buildTools({ index, profile, root: ROOT });
+
+const agent = new Agent({
+  initialState: { systemPrompt, model, tools },
+  ...(MOCK ? { streamFn: mockStreamFn } : {}),
+  convertToLlm: (m) => m.filter((x) => typeof x === "object" && x !== null && "role" in x),
+});
+
+// ---------- 会话日志(JSONL,pi 风格) ----------
+mkdirSync(join(ROOT, "students"), { recursive: true });
+const sessionFile = join(ROOT, "students", `${STUDENT}.session.jsonl`);
+const log = (rec) => appendFileSync(sessionFile, JSON.stringify({ ts: new Date().toISOString(), ...rec }) + "\n");
+
+// ---------- 事件渲染 ----------
+let totalCost = 0;
+let printing = false;
+
+agent.subscribe((event) => {
+  if (event.type === "message_update" && event.assistantMessageEvent?.type === "text_delta") {
+    if (!printing) printing = true;
+    process.stdout.write(event.assistantMessageEvent.delta);
+  }
+  if (event.type === "tool_execution_start") {
+    if (printing) { process.stdout.write("\n"); printing = false; }
+    const brief = JSON.stringify(event.args ?? {});
+    console.log(`\n  ⚙ [${event.toolName}] ${brief.length > 90 ? brief.slice(0, 90) + "…" : brief}`);
+  }
+  if (event.type === "tool_execution_end" && event.isError) {
+    console.log(`  ⚠ 工具执行出错`);
+  }
+  if (event.type === "turn_end") {
+    if (printing) { process.stdout.write("\n"); printing = false; }
+    const u = event.message?.usage;
+    if (u?.cost) totalCost += u.cost.total ?? 0;
+  }
+  if (event.type === "agent_end") {
+    for (const m of event.messages) {
+      if (m.role === "user") log({ student: STUDENT, role: "user", text: typeof m.content === "string" ? m.content : JSON.stringify(m.content) });
+      if (m.role === "assistant") {
+        const text = (m.content || []).filter((c) => c.type === "text").map((c) => c.text).join("");
+        if (text) log({ student: STUDENT, role: "assistant", text, stopReason: m.stopReason });
+        for (const c of m.content || []) {
+          if (c.type === "toolCall") log({ student: STUDENT, role: "tool_call", name: c.name, args: c.arguments });
+        }
+      }
+      if (m.role === "toolResult") {
+        const t = (m.content || []).filter((c) => c.type === "text").map((c) => c.text).join("");
+        log({ student: STUDENT, role: "tool_result", name: m.toolName, preview: t.slice(0, 200), isError: m.isError });
+      }
+    }
+  }
+});
+
+// ---------- 入口横幅 ----------
+const packTitle = pack.title || pack.name;
+console.log(`\n${"═".repeat(56)}
+  ${packTitle}
+  知识库: ${index.chunks.length} 块 · 模型: ${MOCK ? "mock(脚本化)" : `${provider}/${modelId}`} · 学生: ${STUDENT}
+  命令: /profile 看档案 · /reset 清对话 · /exit 退出
+${"═".repeat(56)}\n`);
+
+async function runTurn(userText) {
+  log({ student: STUDENT, role: "user", text: userText });
+  await agent.prompt(userText);
+}
+
+// ---------- 主循环 ----------
+if (ONCE) {
+  await runTurn(ONCE);
+  saveProfile(ROOT, profile);
+  process.exit(0);
+}
+
+if (!assertApiKey()) process.exit(1);
+
+// 输入队列:行到达即缓存(而非依赖 rl.question 的时点),
+// 这样 LLM 回复期间到达的输入不会丢失——管道/程序化多轮输入的前提。
+const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+const lineQueue = [];
+const lineWaiters = [];
+let stdinClosed = false;
+rl.on("line", (l) => {
+  if (lineWaiters.length) lineWaiters.shift()(l);
+  else lineQueue.push(l);
+});
+rl.on("close", () => {
+  stdinClosed = true;
+  while (lineWaiters.length) lineWaiters.shift()("/exit");
+});
+function nextLine() {
+  if (lineQueue.length) return Promise.resolve(lineQueue.shift());
+  if (stdinClosed) return Promise.resolve("/exit");
+  return new Promise((resolve) => lineWaiters.push(resolve));
+}
+process.on("SIGINT", () => { console.log("\n(中断当前回复,继续输入,或 /exit 退出)"); agent.abort(); });
+
+while (true) {
+  process.stdout.write("你 › ");
+  const input = await nextLine();
+  const text = input.trim();
+  if (!text) continue;
+  if (text === "/exit" || text === "/quit" || text === "/q") break;
+  if (text === "/profile") { console.log(renderProfile(profile) + "\n(完整档案: students/" + STUDENT + ".json)"); continue; }
+  if (text === "/reset") { agent.reset(); console.log("(已清空对话,学习档案保留)\n"); continue; }
+  if (text === "/help") { console.log("直接输入即对话。/profile /reset /exit\n"); continue; }
+  try {
+    await runTurn(text);
+  } catch (e) {
+    console.error(`\n✗ 出错了: ${e.message}\n`);
+  }
+  saveProfile(ROOT, profile); // 每轮落盘,防丢
+  console.log();
+}
+
+saveProfile(ROOT, profile);
+rl.close();
+console.log(`\n学习档案已保存 → students/${STUDENT}.json`);
+console.log(`会话记录已保存 → ${sessionFile}`);
+if (totalCost > 0) console.log(`本次会话成本 ≈ $${totalCost.toFixed(4)}`);
+console.log("下次来会接着上次的进度继续教。再见!\n");
