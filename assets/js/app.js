@@ -17,14 +17,15 @@ const NAV = [
   { id: "ch7", file: "07-harness.html", no: "07", title: "深入理解 Harness", group: "第三部分 · 两大核心概念" },
   { id: "ch8", file: "08-ship-it.html", no: "08", title: "调试、评估与上线", group: "第四部分 · 上线与毕业" },
   { id: "ch9", file: "09-capstone.html", no: "09", title: "综合实战项目", group: "第四部分 · 上线与毕业" },
-  { id: "fde", file: "fde.html", icon: "职", title: "FDE 能力地图", group: "第四部分 · 上线与毕业" },
+  { id: "ch10", file: "10-design-patterns.html", no: "10", title: "智能体设计模式", group: "第五部分 · 模式与拓展" },
+  { id: "fde", file: "fde.html", icon: "职", title: "FDE 能力地图", group: "第五部分 · 模式与拓展" },
   { id: "briefs", file: "briefs.html", icon: "实", title: "企业简报库", group: "实训 · 企业简报" },
   { id: "papers", file: "papers.html", icon: "论", title: "论文精读", group: "附录" },
   { id: "translations", file: "translations.html", icon: "译", title: "中文精读版", group: "附录" },
   { id: "full", file: "full-react.html", icon: "全", title: "全文翻译（8 篇）", group: "附录" },
   { id: "res", file: "resources.html", icon: "索", title: "资源与术语表", group: "附录" },
 ];
-const CHAPTER_IDS = ["ch1", "ch2", "ch3", "ch4", "ch5", "ch6", "ch7", "ch8", "ch9"];
+const CHAPTER_IDS = ["ch1", "ch2", "ch3", "ch4", "ch5", "ch6", "ch7", "ch8", "ch9", "ch10"];
 
 /* ---------- localStorage 安全封装 ---------- */
 const store = {
@@ -92,13 +93,13 @@ function renderSidebar() {
   if (navOpen) html += `</nav>`;
   const doneCount = Progress.count();
   html += `<div class="side-meta">
-    学习进度：<b style="color:var(--accent)">${doneCount} / 9 章</b><br>
+    学习进度：<b style="color:var(--accent)">${doneCount} / ${CHAPTER_IDS.length} 章</b><br>
     进度保存在浏览器本地，<br>随时中断、随时继续。
   </div>`;
   aside.innerHTML = html;
 
   const pill = document.getElementById("progress-pill");
-  if (pill) pill.innerHTML = `进度 <b>${doneCount}/9</b> 章`;
+  if (pill) pill.innerHTML = `进度 <b>${doneCount}/${CHAPTER_IDS.length}</b> 章`;
 }
 
 function initHamburger() {
@@ -294,7 +295,7 @@ function initChapterFooter() {
     btn.textContent = nowDone ? "✓ 已标记学完（点击取消）" : "☐ 标记本章已学完";
     renderSidebar();
     const pill = document.getElementById("progress-pill");
-    if (pill) pill.innerHTML = `进度 <b>${Progress.count()}/9</b> 章`;
+    if (pill) pill.innerHTML = `进度 <b>${Progress.count()}/${CHAPTER_IDS.length}</b> 章`;
   });
 }
 

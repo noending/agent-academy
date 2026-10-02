@@ -33,16 +33,30 @@ export class CourseIndex {
     }
   }
 
-  static load(path) {
+  static load(path, sourceLabel = "course") {
     const { chunks } = JSON.parse(readFileSync(path, "utf8"));
+    for (const c of chunks) c.source = c.source || sourceLabel;
     return new CourseIndex(chunks);
   }
 
-  search(query, topK = 3, filterChapter = null) {
+  // 双源合并索引:课程 + Gulli《Agentic Design Patterns》等外部教材,统一 BM25 排序
+  static loadMerged(sources) {
+    let all = [];
+    for (const { path, source } of sources) {
+      const { chunks } = JSON.parse(readFileSync(path, "utf8"));
+      for (const c of chunks) c.source = c.source || source;
+      all = all.concat(chunks);
+    }
+    return new CourseIndex(all);
+  }
+
+  search(query, topK = 3, filterChapter = null, filterSource = null) {
     const qTokens = tokenize(query).filter((t) => (this.df.get(t) || 0) > 0);
     const N = this.docs.length;
     const scores = this.docs.map((tf, i) => {
-      if (filterChapter && this.chunks[i].chapter !== filterChapter) return -1;
+      const c = this.chunks[i];
+      if (filterSource && c.source !== filterSource) return -1;
+      if (filterChapter && c.chapter !== filterChapter) return -1;
       const len = [...tf.values()].reduce((a, b) => a + b, 0);
       let score = 0;
       for (const t of qTokens) {
@@ -64,10 +78,13 @@ export class CourseIndex {
   formatHits(hits) {
     if (!hits.length) return "课程库中没有找到相关内容。";
     return hits
-      .map(
-        (h, n) =>
-          `【${n + 1}】${h.section ? h.section + " " : ""}${h.title}(第${h.chapter}章 · ${h.chapterTitle},相关度 ${h.score})\n${h.text}`
-      )
+      .map((h, n) => {
+        const label =
+          h.source === "gulli"
+            ? `《Agentic Design Patterns》${h.chapterTitle} · ${h.title.replace(/^Chapter\s+\d+\s*[-:.]\s*/, "")}`
+            : `${h.section ? h.section + " " : ""}${h.title}(第${h.chapter}章 · ${h.chapterTitle})`;
+        return `【${n + 1}】${label} · 相关度 ${h.score}\n${h.text}`;
+      })
       .join("\n\n———\n\n");
   }
 }

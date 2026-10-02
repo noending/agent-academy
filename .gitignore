@@ -1,10 +1,11 @@
 .DS_Store
 .mimosa/
 
-# tutor 运行时与生成物(可重建: npm run build:kb)
+# tutor 运行时与生成物(可重建: npm run build:kb / python3 scripts/build-gulli-kb.py)
 tutor/node_modules/
 tutor/students/
 tutor/kb/course-chunks.json
+tutor/kb/gulli-patterns.json
 
 # macOS App 构建产物(build.sh 可重建)
 macos-app/dist/

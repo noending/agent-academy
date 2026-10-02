@@ -44,7 +44,10 @@ if (!existsSync(KB)) {
   const { execFileSync } = await import("node:child_process");
   execFileSync(process.execPath, [join(ROOT, "scripts", "build-kb.mjs")], { stdio: "inherit" });
 }
-const index = CourseIndex.load(KB);
+// 第二知识源:Gulli《Agentic Design Patterns》整本教材(缺 PDF 时优雅降级为单源)
+const GULLI_KB = join(ROOT, "kb", "gulli-patterns.json");
+const gulliSource = existsSync(GULLI_KB) ? [{ path: GULLI_KB, source: "gulli" }] : [];
+const index = CourseIndex.loadMerged([{ path: KB, source: "course" }, ...gulliSource]);
 
 // ---------- 学生记忆 ----------
 const profile = loadProfile(ROOT, STUDENT);

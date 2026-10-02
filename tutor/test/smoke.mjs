@@ -25,6 +25,20 @@ check("检索: RAG 管线命中第 4 章", t3.some((h) => h.chapter === 4), t3[0
 const t4 = index.search("RAG 有哪些失败模式怎么诊断", 1);
 check("检索: RAG 失败模式命中 4.5", t4[0]?.section === "4.5", t4[0] && `top1=${t4[0].section}`);
 
+// 1b. 双源检索(Gulli《Agentic Design Patterns》)
+const gulliPath = join(ROOT, "kb", "gulli-patterns.json");
+check("Gulli 知识库已生成", existsSync(gulliPath));
+if (existsSync(gulliPath)) {
+  const dual = CourseIndex.loadMerged([
+    { path: join(ROOT, "kb", "course-chunks.json"), source: "course" },
+    { path: gulliPath, source: "gulli" },
+  ]);
+  const tg = dual.search("Model Context Protocol MCP server tools 接入", 3);
+  check("检索: MCP 命中 Gulli 第 10 章", tg.some((h) => h.source === "gulli" && h.chapter === 10), tg[0] && `top1=${tg[0].source}:${tg[0].chapterTitle}`);
+  check("检索: 课程问题仍命中课程源", dual.search("Agent Loop 的核心是什么", 3).some((h) => h.source === "course"));
+  check("检索: source 过滤生效", dual.search("guardrails", 3, null, "gulli").every((h) => h.source === "gulli"));
+}
+
 // 2. 学生记忆
 const testStudent = "smoke-test";
 rmSync(join(ROOT, "students", `${testStudent}.json`), { force: true });

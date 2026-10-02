@@ -19,14 +19,15 @@ export function buildTools({ index, profile, root }) {
   const lookup_course = makeTool(
     "lookup_course",
     "查课程",
-    `检索《Agent 学院》课程知识库。教学前先查对应小节,回答时引用章节号(如 1.3)。query 用自然语言或关键词。可选 chapter 过滤(1-9)。`,
+    `检索课程知识库(两个来源:《Agent 学院》9 章中文课程 + Gulli《Agentic Design Patterns》英文教材)。教学前先查对应内容,引用时标注来源(课程 X.X 节 / Gulli 第 N 章)。query 用自然语言或关键词;不确定来源就不填 source。`,
     Type.Object({
       query: Type.String({ description: "检索关键词或问题" }),
-      chapter: Type.Optional(Type.Integer({ description: "限定章号 1-9,不确定就别填" })),
+      chapter: Type.Optional(Type.Integer({ description: "限定章号:课程 1-9;source=gulli 时为 Gulli 章节 1-21(100+ 为附录)" })),
+      source: Type.Optional(Type.Union([Type.Literal("course"), Type.Literal("gulli")])),
     }),
     async (_id, params) => {
-      const hits = index.search(params.query, 3, params.chapter ?? null);
-      return textResult(index.formatHits(hits), { hits: hits.map((h) => h.id) });
+      const hits = index.search(params.query, 3, params.chapter ?? null, params.source ?? null);
+      return textResult(index.formatHits(hits), { hits: hits.map((h) => `${h.source}:${h.id}`) });
     }
   );
 
