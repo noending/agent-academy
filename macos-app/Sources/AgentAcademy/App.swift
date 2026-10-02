@@ -186,12 +186,21 @@ struct AgentAcademyApp: App {
     @State private var showFind = false
     @State private var findText = ""
     @State private var findMissed = false
+    @State private var showTutor = false
+    @StateObject private var tutor = TutorModel()
     @FocusState private var findFieldFocused: Bool
 
     var body: some Scene {
         WindowGroup("Agent 学院") {
-            SiteView(coordinator: coordinator)
-                .frame(minWidth: 1000, minHeight: 660)
+            HStack(spacing: 0) {
+                SiteView(coordinator: coordinator)
+                if showTutor {
+                    Divider()
+                    TutorPanel(model: tutor)
+                        .frame(width: 390)
+                }
+            }
+            .frame(minWidth: 1000, minHeight: 660)
                 .overlay(alignment: .topTrailing) { findBar }
                 .toolbar {
                     ToolbarItemGroup(placement: .navigation) {
@@ -218,6 +227,10 @@ struct AgentAcademyApp: App {
                         Button { toggleFind() } label: { Image(systemName: "magnifyingglass") }
                             .keyboardShortcut("f", modifiers: .command)
                             .help("页内查找 (⌘F)")
+                        Divider()
+                        Button { toggleTutor() } label: { Image(systemName: "graduationcap.fill") }
+                            .keyboardShortcut("t", modifiers: [.command, .shift])
+                            .help("导师模式 (⇧⌘T)")
                     }
                 }
         }
@@ -227,6 +240,10 @@ struct AgentAcademyApp: App {
     private func toggleFind() {
         showFind.toggle()
         if showFind { findFieldFocused = true }
+    }
+
+    private func toggleTutor() {
+        showTutor.toggle()
     }
 
     @ViewBuilder
