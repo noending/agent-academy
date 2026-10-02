@@ -4,7 +4,10 @@ import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 
 export function studentsDir(root) {
-  return join(root, "students");
+  // TUTOR_DATA_DIR:嵌入方(App)用来把学生数据重定向到 Application Support;默认跟随程序目录
+  return process.env.TUTOR_DATA_DIR
+    ? join(process.env.TUTOR_DATA_DIR, "students")
+    : join(root, "students");
 }
 
 export function loadProfile(root, id) {

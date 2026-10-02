@@ -58,7 +58,21 @@ check("记忆工具: record_progress 写入且去重", reloaded.mastered.filter(
 check("记忆工具: record_misconception 写入", reloaded.misconceptions.some((m) => m.topic === "冒烟概念"));
 check("记忆工具: update_plan 写入", reloaded.currentFocus === "冒烟焦点" && reloaded.nextStep === "冒烟下一步");
 
-// 4. mock 全链路(清理状态后跑 --once,验证会话 JSONL 与工具调用落盘)
+// 4. 上下文修剪
+const { pruneMessages, estimateTokens } = await import(join(ROOT, "src", "context.mjs"));
+const long = [];
+for (let i = 0; i < 500; i++) {
+  long.push({ role: "user", content: "学生消息".repeat(150) + i, timestamp: 1 });
+  long.push({ role: "assistant", content: [{ type: "text", text: "导师回答".repeat(150) }], timestamp: 1 });
+}
+check("上下文: 超长对话触发修剪", pruneMessages(long, 20_000).length < long.length);
+const pruned = pruneMessages(long, 20_000);
+check("上下文: 切割点在 user 边界(工具对不被拆散)", pruned[1].role === "user");
+check("上下文: 最近消息保留完整", pruned[pruned.length - 1].role === "assistant");
+check("上下文: 短对话原样返回", pruneMessages(long.slice(0, 10), 20_000).length === 10);
+check("上下文: 估算函数返回正数", estimateTokens(long) > 0);
+
+// 5. mock 全链路(清理状态后跑 --once,验证会话 JSONL 与工具调用落盘)
 rmSync(join(ROOT, "students", "smoke-mock.session.jsonl"), { force: true });
 const out = spawnSync(process.execPath, [join(ROOT, "src", "tutor.mjs"), "--mock", "--once", "什么是 Agent Loop?", "--student", "smoke-mock"], { encoding: "utf8", cwd: ROOT, timeout: 60000 });
 check("mock 全链路: 进程正常退出", out.status === 0, out.status !== 0 ? (out.stderr || "").slice(0, 300) : "");
@@ -71,6 +85,53 @@ if (existsSync(sessionPath)) {
   check("会话记录: 含 user/assistant/tool_call/tool_result", ["user", "assistant", "tool_call", "tool_result"].every((r) => lines.some((l) => l.role === r)));
   const tr = lines.find((l) => l.role === "tool_result" && l.name === "lookup_course");
   check("会话记录: 检索结果非空且非错误", tr && !tr.isError && tr.preview.includes("Agent"), tr && tr.preview.slice(0, 60));
+}
+
+// 6. RPC 协议全链路(mock 模型):stdin JSONL → stdout 事件流
+{
+  const { spawn } = await import("node:child_process");
+  const child = spawn(process.execPath, [join(ROOT, "src", "tutor.mjs"), "--mock", "--rpc", "--student", "smoke-rpc"], { cwd: ROOT, stdio: ["pipe", "pipe", "pipe"] });
+  const events = [];
+  let buf = "";
+  child.stdout.on("data", (d) => {
+    buf += d;
+    let i;
+    while ((i = buf.indexOf("\n")) >= 0) {
+      const s = buf.slice(0, i); buf = buf.slice(i + 1);
+      try { events.push(JSON.parse(s)); } catch {}
+    }
+  });
+  const waitEvent = (type, timeoutMs = 20_000) => new Promise((res, rej) => {
+    const t0 = Date.now();
+    const tick = () => {
+      const e = events.find((x) => x.type === type);
+      if (e) return res(e);
+      if (Date.now() - t0 > timeoutMs) return rej(new Error(`等待 ${type} 超时`));
+      setTimeout(tick, 50);
+    };
+    tick();
+  });
+  const hello = await waitEvent("hello").catch(() => null);
+  check("RPC: hello 握手", !!hello);
+  child.stdin.write(JSON.stringify({ type: "user", text: "你好" }) + "\n");
+  const deltas = [];
+  try {
+    await waitEvent("ready");
+    check("RPC: 一轮后收到 ready", true);
+  } catch { check("RPC: 一轮后收到 ready", false); }
+  check("RPC: 流式 delta 事件", events.some((x) => x.type === "delta" && x.text));
+  check("RPC: tool_start 事件(mock 会调 lookup_course)", events.some((x) => x.type === "tool_start" && x.name === "lookup_course"));
+  child.stdin.write(JSON.stringify({ type: "control", cmd: "exit" }) + "\n");
+  const exited = await new Promise((res) => {
+    const t0 = Date.now();
+    const tick = () => (child.exitCode !== null ? res(true) : Date.now() - t0 > 8000 ? res(false) : setTimeout(tick, 50));
+    tick();
+  });
+  check("RPC: exit 控制后进程干净退出", exited === true && child.exitCode === 0, `exitCode=${child.exitCode}`);
+  const rpcProfile = join(ROOT, "students", "smoke-rpc.json");
+  check("RPC: 学生档案落盘", existsSync(rpcProfile));
+  rmSync(rpcProfile, { force: true });
+  rmSync(join(ROOT, "students", "smoke-rpc.session.jsonl"), { force: true });
 }
 
 console.log(failed ? `\n${failed} 项失败` : "\n全部通过 ✓");

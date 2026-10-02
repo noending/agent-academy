@@ -4,6 +4,7 @@
 // 用法:
 //   node src/tutor.mjs                      # 交互模式(需要 DEEPSEEK_API_KEY)
 //   node src/tutor.mjs --mock               # 无 Key 冒烟模式(脚本化模型,验证全链路)
+//   node src/tutor.mjs --rpc                # RPC 模式:stdin/stdout JSONL 协议,供 App 等嵌入方使用
 //   node src/tutor.mjs --once "问题"        # 单轮模式,适合测试
 //   node src/tutor.mjs --student alice      # 指定学生档案
 //   node src/tutor.mjs --pack packs/agent-dev
@@ -14,8 +15,9 @@ import { join, resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import readline from "node:readline/promises";
 import { CourseIndex } from "./retrieval.mjs";
-import { loadProfile, saveProfile, renderProfile } from "./memory.mjs";
+import { loadProfile, saveProfile, renderProfile, studentsDir } from "./memory.mjs";
 import { buildTools } from "./tools.mjs";
+import { pruneMessages } from "./context.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -26,6 +28,7 @@ function argOf(flag) {
   return i >= 0 ? args[i + 1] : null;
 }
 const MOCK = args.includes("--mock");
+const RPC = args.includes("--rpc");
 const ONCE = argOf("--once");
 const STUDENT = argOf("--student") || "default";
 const PACK_DIR = resolve(argOf("--pack") || join(ROOT, "packs", "agent-dev"));
@@ -126,34 +129,44 @@ const agent = new Agent({
   initialState: { systemPrompt, model, tools },
   ...(MOCK ? { streamFn: mockStreamFn } : {}),
   convertToLlm: (m) => m.filter((x) => typeof x === "object" && x !== null && "role" in x),
+  // 长课保护:超预算时修剪最早的完整轮次(工具调用/结果成对保留)
+  transformContext: (m) => pruneMessages(m, 24_000),
 });
 
 // ---------- 会话日志(JSONL,pi 风格) ----------
-mkdirSync(join(ROOT, "students"), { recursive: true });
-const sessionFile = join(ROOT, "students", `${STUDENT}.session.jsonl`);
+mkdirSync(studentsDir(ROOT), { recursive: true });
+const sessionFile = join(studentsDir(ROOT), `${STUDENT}.session.jsonl`);
 const log = (rec) => appendFileSync(sessionFile, JSON.stringify({ ts: new Date().toISOString(), ...rec }) + "\n");
 
-// ---------- 事件渲染 ----------
+// ---------- 事件分发(CLI:本地渲染 / RPC:JSONL 事件) ----------
 let totalCost = 0;
 let printing = false;
+const send = (obj) => process.stdout.write(JSON.stringify(obj) + "\n");
 
 agent.subscribe((event) => {
   if (event.type === "message_update" && event.assistantMessageEvent?.type === "text_delta") {
-    if (!printing) printing = true;
-    process.stdout.write(event.assistantMessageEvent.delta);
+    const d = event.assistantMessageEvent.delta;
+    if (RPC) send({ type: "delta", text: d });
+    else { printing = true; process.stdout.write(d); }
   }
   if (event.type === "tool_execution_start") {
-    if (printing) { process.stdout.write("\n"); printing = false; }
-    const brief = JSON.stringify(event.args ?? {});
-    console.log(`\n  ⚙ [${event.toolName}] ${brief.length > 90 ? brief.slice(0, 90) + "…" : brief}`);
+    if (RPC) {
+      send({ type: "tool_start", name: event.toolName, args: event.args });
+    } else {
+      if (printing) { process.stdout.write("\n"); printing = false; }
+      const brief = JSON.stringify(event.args ?? {});
+      console.log(`\n  ⚙ [${event.toolName}] ${brief.length > 90 ? brief.slice(0, 90) + "…" : brief}`);
+    }
   }
   if (event.type === "tool_execution_end" && event.isError) {
-    console.log(`  ⚠ 工具执行出错`);
+    if (RPC) send({ type: "tool_end", name: event.toolName, isError: true });
+    else console.log(`  ⚠ 工具执行出错`);
   }
   if (event.type === "turn_end") {
     if (printing) { process.stdout.write("\n"); printing = false; }
     const u = event.message?.usage;
     if (u?.cost) totalCost += u.cost.total ?? 0;
+    if (RPC) send({ type: "turn_end", cost: u?.cost?.total ?? 0 });
   }
   if (event.type === "agent_end") {
     for (const m of event.messages) {
@@ -173,70 +186,103 @@ agent.subscribe((event) => {
   }
 });
 
-// ---------- 入口横幅 ----------
-const packTitle = pack.title || pack.name;
-console.log(`\n${"═".repeat(56)}
+// ---------- 入口 ----------
+if (RPC) {
+  if (!assertApiKey()) process.exit(1);
+  send({ type: "hello", student: STUDENT, model: MOCK ? "mock" : `${provider}/${modelId}` });
+  const rlRpc = readline.createInterface({ input: process.stdin });
+  rlRpc.on("line", (l) => {
+    let msg;
+    try { msg = JSON.parse(l); } catch { return; }
+    if (msg.type === "user" && msg.text) {
+      (async () => {
+        log({ student: STUDENT, role: "user", text: msg.text });
+        try {
+          await agent.prompt(msg.text);
+        } catch (e) {
+          send({ type: "error", message: String(e?.message || e) });
+        }
+        saveProfile(ROOT, profile);
+        send({ type: "ready", totalCost: +totalCost.toFixed(4) });
+      })();
+    } else if (msg.type === "control") {
+      if (msg.cmd === "reset") {
+        agent.reset();
+        send({ type: "ready", totalCost: +totalCost.toFixed(4) });
+      } else if (msg.cmd === "profile") {
+        send({ type: "profile", profile });
+      } else if (msg.cmd === "exit") {
+        saveProfile(ROOT, profile);
+        send({ type: "bye" });
+        process.exit(0);
+      }
+    }
+  });
+  rlRpc.on("close", () => { saveProfile(ROOT, profile); process.exit(0); });
+} else {
+  const packTitle = pack.title || pack.name;
+  console.log(`\n${"═".repeat(56)}
   ${packTitle}
   知识库: ${index.chunks.length} 块 · 模型: ${MOCK ? "mock(脚本化)" : `${provider}/${modelId}`} · 学生: ${STUDENT}
   命令: /profile 看档案 · /reset 清对话 · /exit 退出
 ${"═".repeat(56)}\n`);
 
-async function runTurn(userText) {
-  log({ student: STUDENT, role: "user", text: userText });
-  await agent.prompt(userText);
-}
-
-// ---------- 主循环 ----------
-if (ONCE) {
-  await runTurn(ONCE);
-  saveProfile(ROOT, profile);
-  process.exit(0);
-}
-
-if (!assertApiKey()) process.exit(1);
-
-// 输入队列:行到达即缓存(而非依赖 rl.question 的时点),
-// 这样 LLM 回复期间到达的输入不会丢失——管道/程序化多轮输入的前提。
-const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-const lineQueue = [];
-const lineWaiters = [];
-let stdinClosed = false;
-rl.on("line", (l) => {
-  if (lineWaiters.length) lineWaiters.shift()(l);
-  else lineQueue.push(l);
-});
-rl.on("close", () => {
-  stdinClosed = true;
-  while (lineWaiters.length) lineWaiters.shift()("/exit");
-});
-function nextLine() {
-  if (lineQueue.length) return Promise.resolve(lineQueue.shift());
-  if (stdinClosed) return Promise.resolve("/exit");
-  return new Promise((resolve) => lineWaiters.push(resolve));
-}
-process.on("SIGINT", () => { console.log("\n(中断当前回复,继续输入,或 /exit 退出)"); agent.abort(); });
-
-while (true) {
-  process.stdout.write("你 › ");
-  const input = await nextLine();
-  const text = input.trim();
-  if (!text) continue;
-  if (text === "/exit" || text === "/quit" || text === "/q") break;
-  if (text === "/profile") { console.log(renderProfile(profile) + "\n(完整档案: students/" + STUDENT + ".json)"); continue; }
-  if (text === "/reset") { agent.reset(); console.log("(已清空对话,学习档案保留)\n"); continue; }
-  if (text === "/help") { console.log("直接输入即对话。/profile /reset /exit\n"); continue; }
-  try {
-    await runTurn(text);
-  } catch (e) {
-    console.error(`\n✗ 出错了: ${e.message}\n`);
+  async function runTurn(userText) {
+    log({ student: STUDENT, role: "user", text: userText });
+    await agent.prompt(userText);
   }
-  saveProfile(ROOT, profile); // 每轮落盘,防丢
-  console.log();
-}
 
-saveProfile(ROOT, profile);
-rl.close();
-console.log(`\n学习档案已保存 → students/${STUDENT}.json`);
-console.log(`会话记录已保存 → ${sessionFile}`);
-if (totalCost > 0) console.log(`本次会话成本 ≈ $${totalCost.toFixed(4)}`);
-console.log("下次来会接着上次的进度继续教。再见!\n");
+  if (ONCE) {
+    await runTurn(ONCE);
+    saveProfile(ROOT, profile);
+    process.exit(0);
+  }
+
+  if (!assertApiKey()) process.exit(1);
+
+  // 输入队列:行到达即缓存(而非依赖 rl.question 的时点),
+  // 这样 LLM 回复期间到达的输入不会丢失——管道/程序化多轮输入的前提。
+  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+  const lineQueue = [];
+  const lineWaiters = [];
+  let stdinClosed = false;
+  rl.on("line", (l) => {
+    if (lineWaiters.length) lineWaiters.shift()(l);
+    else lineQueue.push(l);
+  });
+  rl.on("close", () => {
+    stdinClosed = true;
+    while (lineWaiters.length) lineWaiters.shift()("/exit");
+  });
+  function nextLine() {
+    if (lineQueue.length) return Promise.resolve(lineQueue.shift());
+    if (stdinClosed) return Promise.resolve("/exit");
+    return new Promise((resolve) => lineWaiters.push(resolve));
+  }
+  process.on("SIGINT", () => { console.log("\n(中断当前回复,继续输入,或 /exit 退出)"); agent.abort(); });
+
+  while (true) {
+    process.stdout.write("你 › ");
+    const input = await nextLine();
+    const text = input.trim();
+    if (!text) continue;
+    if (text === "/exit" || text === "/quit" || text === "/q") break;
+    if (text === "/profile") { console.log(renderProfile(profile) + "\n(完整档案: students/" + STUDENT + ".json)"); continue; }
+    if (text === "/reset") { agent.reset(); console.log("(已清空对话,学习档案保留)\n"); continue; }
+    if (text === "/help") { console.log("直接输入即对话。/profile /reset /exit\n"); continue; }
+    try {
+      await runTurn(text);
+    } catch (e) {
+      console.error(`\n✗ 出错了: ${e.message}\n`);
+    }
+    saveProfile(ROOT, profile); // 每轮落盘,防丢
+    console.log();
+  }
+
+  saveProfile(ROOT, profile);
+  rl.close();
+  console.log(`\n学习档案已保存 → students/${STUDENT}.json`);
+  console.log(`会话记录已保存 → ${sessionFile}`);
+  if (totalCost > 0) console.log(`本次会话成本 ≈ $${totalCost.toFixed(4)}`);
+  console.log("下次来会接着上次的进度继续教。再见!\n");
+}
