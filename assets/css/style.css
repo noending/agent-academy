@@ -1205,3 +1205,58 @@ h2, h3, [id] { scroll-margin-top: 86px; }
   border-radius: 4px; color: #fff; background: var(--text); margin-bottom: 6px;
 }
 .brief-badge.red { background: var(--accent); }
+
+/* ---------- 第 10 章 · 路由模拟器 ---------- */
+.rt-flow {
+  display: flex; flex-wrap: wrap; gap: 10px; align-items: stretch;
+  margin: 14px 0 10px;
+}
+.rt-node {
+  flex: 1 1 140px; border: 1.5px dashed var(--line); border-radius: 10px;
+  padding: 10px 12px; background: var(--surface); transition: all .25s;
+}
+.rt-node .rt-name { font-weight: 700; font-size: 14px; }
+.rt-node .rt-note { font-size: 12px; color: var(--text-2); margin-top: 3px; }
+.rt-node.rt-on { border-style: solid; border-color: var(--accent);
+  background: var(--accent-soft); transform: translateY(-2px); }
+.rt-node.rt-on .rt-name { color: var(--accent); }
+.rt-reason {
+  font-size: 13.5px; line-height: 1.8; padding: 10px 14px;
+  border-left: 3px solid var(--accent); background: var(--surface-2);
+  border-radius: 0 8px 8px 0; margin: 10px 0;
+}
+.rt-score { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+.rt-score .cell {
+  flex: 1 1 150px; border: 1px solid var(--line); border-radius: 10px;
+  padding: 10px 12px; font-size: 12.5px; color: var(--text-2); background: var(--surface);
+}
+.rt-score .cell b { display: block; font-size: 19px; color: var(--text); margin-top: 2px; }
+
+/* ---------- 第 10 章 · MCP 握手模拟器 ---------- */
+.mcp-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 12px 0; }
+@media (max-width: 760px) { .mcp-cols { grid-template-columns: 1fr; } }
+.mcp-col {
+  border: 1px solid var(--line); border-radius: 12px; overflow: hidden;
+  background: var(--surface); min-height: 130px;
+}
+.mcp-col .col-head {
+  padding: 8px 14px; font-size: 12.5px; font-weight: 700;
+  background: var(--surface-2); border-bottom: 1px solid var(--line);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.mcp-tool-card {
+  margin: 10px 12px; padding: 10px 12px; border: 1.5px dashed var(--line);
+  border-radius: 10px; font-family: var(--mono); font-size: 12.5px; transition: all .25s;
+}
+.mcp-tool-card.mcp-active { border-style: solid; border-color: var(--ok); background: var(--accent-soft); }
+.mcp-wire {
+  margin: 0 12px 12px; padding: 10px 12px; border-radius: 8px;
+  background: var(--code-bg, #0d1226); color: #cdd6f4;
+  font-family: var(--mono); font-size: 12px; line-height: 1.75;
+  white-space: pre-wrap; min-height: 88px;
+}
+.mcp-desc {
+  font-size: 13.5px; line-height: 1.85; padding: 10px 14px;
+  border-left: 3px solid var(--accent); background: var(--surface-2);
+  border-radius: 0 8px 8px 0; margin: 10px 0;
+}

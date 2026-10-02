@@ -69,7 +69,7 @@ export function buildTools({ index, profile, root }) {
   const record_misconception = makeTool(
     "record_misconception",
     "记误解",
-    `发现学生理解有偏差时调用(如"以为模型会自己执行工具")。后续教学要针对性纠正这个误解。`,
+    `检测到学生理解有偏差的【同一轮】就要调用本工具,先记录、再开始教学——即使你当场已经纠正、即使偏差还未完全展开。误解例子:「以为模型会自己执行工具」「以为工具越多越强」「以为提示词约束可以替代代码护栏」。留档是跨会话因材施教的依据。`,
     Type.Object({
       topic: Type.String({ description: "相关概念名" }),
       note: Type.String({ description: "误解的具体内容" }),

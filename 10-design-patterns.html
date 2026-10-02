@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="第 10 章：智能体设计模式——MCP、Guardrails 安全、人机协同、A2A、异常恢复，五大课程空缺模式的卡片式精讲。">
 <title>第 10 章 · 智能体设计模式 | Agent 学院</title>
-<link rel="stylesheet" href="assets/css/style.css?v=20">
+<link rel="stylesheet" href="assets/css/style.css?v=21">
 </head>
 <body data-chapter="ch10">
 
@@ -88,6 +88,35 @@ if __name__ == "__main__":
  <p><b>反模式：</b>① 把内部敏感数据（工资表、生产库）裸暴露成无鉴权的 MCP Resource;
  ② Server 返回未过滤的外部网页内容——工具结果会进入模型上下文,是提示注入的入口（见 10.2）;
  ③ 在 Server 里藏业务逻辑:协议层应当薄,业务逻辑留在你自己的代码里。</p>
+
+ <div class="callout tip">
+ <div class="co-title">交互实验:六步走完一次 MCP 握手</div>
+ <p>点「下一步」逐步执行:<b>连接 → 发现工具 → 注入对话 → 模型点名 → tools/call → 观察回填</b>。
+ 左边是 MCP Server(协议侧),右边是宿主 Agent 的消息数组(Loop 侧)——盯住两侧的分工,你就不会再把「协议」和「循环」混为一谈。</p>
+ </div>
+
+ <div class="lab" id="lab-mcp">
+ <div class="lab-head"> 交互实验 <span class="lab-tag">MCP 握手模拟器</span></div>
+ <div class="lab-body">
+ <div class="mcp-cols">
+ <div class="mcp-col">
+ <div class="col-head"><span>MCP Server · weather</span><span data-m="light">○ 待机</span></div>
+ <div class="mcp-tool-card">tool · get_weather(city: string)<br><span style="color:var(--text-2)">"查询指定城市的当前天气"</span></div>
+ <div class="mcp-wire">// 协议报文会出现在这里</div>
+ </div>
+ <div class="mcp-col">
+ <div class="col-head"><span>宿主 Agent · 消息数组</span></div>
+ <div class="hlog" style="min-height:130px"></div>
+ </div>
+ </div>
+ <div class="mcp-desc">六步走完一次完整的 MCP 交互。注意每一步:<b>谁在执行</b>?报文里出现过几次模型?——模型只在 ④⑥ 出现,它永远只输出文字。</div>
+ <div class="lab-toolbar">
+ <button class="btn primary" data-act="next">下一步</button>
+ <button class="btn small" data-act="reset">重来</button>
+ <span style="font-family:var(--mono);font-size:12.5px;color:var(--text-2)">步数 <span data-m="step">0 / 6</span></span>
+ </div>
+ </div>
+ </div>
 
  <details class="quiz"><summary>为什么说 MCP 解决的是「M×N 集成地狱」？它把哪一部分标准化了？</summary>
  <div class="quiz-body"><p><span class="ans-label">答案：</span>没有 MCP 时,M 个 Agent 应用要各写 N 份工具胶水（M×N）。MCP 把「工具如何被发现与调用」标准化成协议后,工具方只需实现一次 Server（N 份）,应用方只需实现一次 Client（M 份）,复杂度降为 M+N。它标准化的<b>不是工具本身</b>,而是<b>发现、描述、调用工具的那段协议</b>——工具的 JSON Schema 与调用语义,和第 2 章的 Function Calling 完全同构。</p></div>
@@ -344,6 +373,62 @@ def resume(session_id):                                     # 崩溃后从断点
  <div class="quiz-body"><p><span class="ans-label">答案：</span>不能盲目重试——你不知道失败发生在「订单未创建」还是「创建成功但响应丢失」,盲目重试会重复下单。正确姿势按序:① 请求携带幂等键（idempotency key）,服务端对同键请求返回同一结果;② 没有幂等键时,先调用查询接口确认订单状态,再决定重发还是继续;③ 两者都没有时,把不确定性如实回喂模型/用户,由人确认,而不是让代码赌一把。这也是 10.3 审批门存在的意义之一:不可逆操作,值得多一道门。</p></div>
  </details>
 
+ <!-- ================= 10.6 模式速览 ================= -->
+ <h2 id="chain-route-parallel">10.6 模式速览:提示链 · 路由 · 并行化(Gulli 1–3 章)</h2>
+ <p>这三个模式是同一句话的三种展开——<b>「一个大提示词搞不定的任务,拆」</b>。课程 5.1 讲过上下文工程的角度,这里补上「模式」视角(Gulli 1–3 章把它们各自命名成章):</p>
+ <ul class="res-list">
+ <li><b>提示链(Prompt Chaining)</b>:任务沿流水线串行传递——大纲 → 初稿 → 修改 → 校对,每步一个专职提示词,前一步的输出是后一步的输入。<b>换来的</b>是每一步都短小、可单独调试;<b>付出的</b>是延迟线性累加、上一步的错误会流向下游。适合边界清晰的固定流程(生成 → 提炼 → 格式化),不适合路径未知的探索式任务。</li>
+ <li><b>路由(Routing)</b>:先放一个(便宜的)分类器判断输入属于哪类,再<b>派发给专职处理者</b>——小问题走小模型,技术故障才动用大模型 + 检索工具。它把「平均用力」变成「按需用力」,是少数几个<b>能直接算出省钱账</b>的模式。风险在分类错误与置信度不足:路由器的兜底策略(转大模型)决定下限。</li>
+ <li><b>并行化(Parallelization)</b>:子任务之间无依赖时同时开工——分段翻译再拼合、多路检索再汇总;或「生成 + 独立评审」并行跑取优。收益是延迟从累加变取最大值;<b>只在子任务真正独立时成立</b>——需要前一步结论的步骤硬拆并行,合并的逻辑会把错误放大。</li>
+ </ul>
+ <p>下面的路由模拟器把三者的经济账跑给你看:同一个客服入口,「路由模式」与「全量上大模型」两种策略,累计成本与延迟的差距会随着点击次数拉开——注意第五类输入(路由器看不懂的),看看兜底路径的成本。</p>
+
+ <div class="callout tip">
+ <div class="co-title">交互实验:给客服系统装一个路由器</div>
+ <p>点示例问题(或输入你的),观察路由判断、路径高亮,以及下方<b>两条策略的累计成本/延迟差</b>。试试把四类问题各点几遍,再看一次「模糊问题」——负节省也是教学的一部分。</p>
+ </div>
+
+ <div class="lab" id="lab-routing">
+ <div class="lab-head"> 交互实验 <span class="lab-tag">路由模拟器</span></div>
+ <div class="lab-body">
+ <div class="lab-toolbar">
+ <button class="btn small" data-q="会员积分怎么兑换?">FAQ · 积分怎么兑换</button>
+ <button class="btn small" data-q="我的订单三天了还没发货,退款要多久到账?">订单 · 发货退款</button>
+ <button class="btn small" data-q="调用你们 API 一直报 500 超时错误,网关日志显示异常">技术 · API 报 500</button>
+ <button class="btn small" data-q="帮我看看今天心情怎么样">模糊 · 无明确意图</button>
+ <input data-act="input" type="text" placeholder="或输入任意问题…" style="flex:1;min-width:180px;padding:7px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--text);font-size:13.5px">
+ <button class="btn primary small" data-act="send">发送</button>
+ </div>
+
+ <div class="rt-flow">
+ <div class="rt-node" data-path="route"><div class="rt-name">🧭 路由器</div><div class="rt-note">小模型 · 只做分类 · $0.0004/次</div></div>
+ <div class="rt-node" data-path="faq"><div class="rt-name">📋 FAQ 专员</div><div class="rt-note">小模型 + 知识库</div></div>
+ <div class="rt-node" data-path="order"><div class="rt-name">📦 订单专员</div><div class="rt-note">中档模型 + 订单工具</div></div>
+ <div class="rt-node" data-path="tech"><div class="rt-name">🔧 技术支持</div><div class="rt-note">大模型 + 检索工具</div></div>
+ <div class="rt-node" data-path="fallback"><div class="rt-name">🚨 兜底</div><div class="rt-note">置信度低 → 大模型</div></div>
+ </div>
+ <div class="rt-reason"><b>路由判断:</b>等待输入…</div>
+
+ <div class="rt-score">
+ <div class="cell">策略A · 路由模式 累计成本<b>$<span data-m="cost-r">0</span></b></div>
+ <div class="cell">策略B · 全量大模型 累计成本<b>$<span data-m="cost-f">0</span></b></div>
+ <div class="cell">策略A · 累计延迟<b><span data-m="lat-r">0</span>s</b></div>
+ <div class="cell">策略B · 累计延迟<b><span data-m="lat-f">0</span>s</b></div>
+ <div class="cell">💡 对比结论<b style="font-size:13.5px" data-m="saved">累计 0 次</b></div>
+ </div>
+
+ <div class="hlog" style="margin-top:12px;max-height:170px"></div>
+
+ <div class="lab-toolbar" style="margin-top:10px">
+ <button class="btn small" data-act="reset">重置计数</button>
+ </div>
+ </div>
+ </div>
+
+ <details class="quiz"><summary>路由模式什么时候反而更贵？兜底设计的意义是什么？</summary>
+ <div class="quiz-body"><p><span class="ans-label">答案：</span>当输入大多是「路由器看不懂的」复杂任务时,路由路径 = 路由器成本 + 兜底大模型成本,比直接上大模型<b>更贵且更慢</b>(模拟器里点「模糊问题」就能看到负节省)。兜底设计的意义不是省钱,而是<b>控下限</b>:分类器是概率组件,一定有看不懂的输入;有了「置信度低 → 转大模型」的确定性行为,路由的最坏情况只是多付一次分类的钱,而不是把技术故障当 FAQ 敷衍。这与 10.2 的 fail closed 是同一条工程哲学:先保证不出事,再谈省成本。</p></div>
+ </details>
+
  <h2>自测</h2>
  <details class="quiz"><summary>四个协议/模式各管一段：MCP、A2A、Guardrails、HITL 分别解决什么问题？一句话定位。</summary>
  <div class="quiz-body"><p><span class="ans-label">答案：</span>MCP——<b>工具怎么被发现和调用</b>（agent↔工具的标准化）;A2A——<b>任务怎么委派给另一个自主 Agent</b>（agent↔agent 的标准化）;Guardrails——<b>什么绝对不能发生</b>（确定性安全边界,fail closed）;HITL——<b>什么必须由人拍板</b>（不可逆/高风险决策的人工闸门）。合起来是一台完整 Agent 的「外设接口、协作接口、安全带、刹车」。</p></div>
@@ -454,5 +539,7 @@ def translate_one(client, text: str) -> str:
 </div>
 
 <script src="assets/js/app.js?v=21"></script>
+<script src="assets/js/lab-routing.js?v=1"></script>
+<script src="assets/js/lab-mcp.js?v=1"></script>
 </body>
 </html>
