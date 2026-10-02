@@ -17,6 +17,8 @@ rsync -a \
   --exclude 'tutor/' \
   --exclude 'macos-app/' \
   --exclude '.mimosa/' \
+  --exclude '.git/' \
+  --exclude '.gitignore' \
   --exclude '.DS_Store' \
   ../ "$STAGING/"
 
