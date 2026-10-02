@@ -31,15 +31,20 @@ final class TutorModel: ObservableObject {
     private var stdinHandle: FileHandle?
 
     private var tutorScript: URL? {
-        // 优先 App 包内(便携版预留),否则用源码树(dist/Agent 学院.app → ../../tutor)
+        // 1) App 包内(为便携版预留)
         if let bundled = Bundle.main.resourceURL?.appendingPathComponent("tutor/src/tutor.mjs"),
            FileManager.default.fileExists(atPath: bundled.path) {
             return bundled
         }
-        let srcTree = Bundle.main.bundleURL
-            .deletingLastPathComponent().deletingLastPathComponent()
-            .appendingPathComponent("tutor/src/tutor.mjs")
-        return FileManager.default.fileExists(atPath: srcTree.path) ? srcTree : nil
+        // 2) 源码树:.app 本身是一层目录,dist/Agent 学院.app 到 agent-academy 需上溯 3 层;
+        //    也兼容 App 直接放在 macos-app/ 下(上溯 2 层)
+        for up in [3, 2] {
+            var url = Bundle.main.bundleURL
+            for _ in 0..<up { url = url.deletingLastPathComponent() }
+            let candidate = url.appendingPathComponent("tutor/src/tutor.mjs")
+            if FileManager.default.fileExists(atPath: candidate.path) { return candidate }
+        }
+        return nil
     }
 
     private var tutorRoot: URL? { tutorScript?.deletingLastPathComponent().deletingLastPathComponent() }
@@ -71,7 +76,7 @@ final class TutorModel: ObservableObject {
     func ensureStarted() {
         guard process == nil, failureReason == nil else { return }
         guard let script = tutorScript, let root = tutorRoot else {
-            failureReason = "找不到 tutor 引擎(需要 agent-academy/tutor 源码目录在 App 旁边)"; return
+            failureReason = "找不到 tutor 引擎(已探测 App 包内 Resources/tutor,以及 \(Bundle.main.bundleURL.deletingLastPathComponent().path) 上溯目录);请保持 App 在 agent-academy/macos-app/dist/ 下运行"; return
         }
         guard let node = nodePath() else { failureReason = "找不到 Node.js,请先安装(https://nodejs.org)"; return }
         guard FileManager.default.fileExists(atPath: root.appendingPathComponent("node_modules").path) else {
