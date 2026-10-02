@@ -24,6 +24,15 @@ open "dist/Agent 学院.app"
 | 回到学习路径 | ⇧⌘H 或工具栏 🏠 |
 | 字号缩放(0.5x–3x,记忆) | ⌘+ / ⌘- / ⌘0 |
 | 页内查找 | ⌘F,回车下一个 |
+| **导师模式** | ⇧⌘T 或工具栏 🎓,侧栏对话,复用 tutor 学生档案 |
+
+**导师模式的运行条件**(App 会自动检测,缺什么面板里会提示):
+1. `tutor/` 源码目录在 App 包旁边(即保持仓库布局 `agent-academy/macos-app/dist/*.app`);
+2. Node.js(`/opt/homebrew/bin/node` 等);
+3. `tutor/node_modules` 已安装(`cd tutor && npm install`);
+4. `~/.zshenv` / `~/.zprofile` / `~/.zshrc` 中配置了 `DEEPSEEK_API_KEY`。
+
+学生数据存在 `~/Library/Application Support/AgentAcademy/students/`,与 CLI 的 `tutor/students/` 相互独立(复制文件即可互通)。
 
 ## 结构
 

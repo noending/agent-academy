@@ -47,6 +47,15 @@ npm start                          # 开始上课
 | `/reset` | 清空当前对话(档案保留) |
 | `/exit` | 保存并退出 |
 
+## 嵌入模式(--rpc)与数据目录
+
+```bash
+node src/tutor.mjs --rpc      # stdin: {"type":"user","text":…} / {"type":"control","cmd":"reset|profile|exit"}
+                              # stdout: hello → delta* → tool_start/tool_end → turn_end → ready(一轮结束)
+```
+
+macOS App 的「导师模式」就是这个协议的客户端。学生数据默认写 `tutor/students/`;嵌入方设 `TUTOR_DATA_DIR=<数据根>` 重定向(其下建 `students/`)。长对话超 24k token 自动修剪最早的完整轮次(工具调用/结果成对保留)。
+
 ## 文件结构
 
 ```
