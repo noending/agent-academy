@@ -9,7 +9,7 @@
 //   node src/tutor.mjs --student alice      # 指定学生档案
 //   node src/tutor.mjs --pack packs/agent-dev
 import { Agent } from "@mariozechner/pi-agent-core";
-import { AssistantMessageEventStream, getModel, getEnvApiKey } from "@mariozechner/pi-ai";
+import { AssistantMessageEventStream, getModel, getModels, getEnvApiKey, clampThinkingLevel } from "@mariozechner/pi-ai";
 import { readFileSync, existsSync, appendFileSync, mkdirSync } from "node:fs";
 import { join, resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -55,7 +55,22 @@ systemPrompt = systemPrompt.replace("{student_profile}", renderProfile(profile))
 // ---------- 模型 ----------
 const provider = process.env.TUTOR_PROVIDER || pack.model.provider;
 const modelId = process.env.TUTOR_MODEL || pack.model.id;
-const model = MOCK ? null : getModel(provider, modelId);
+
+// 注册表滞后于平台命名时(如 DeepSeek 新名 deepseek-flash),克隆同 provider 基础型号、仅换请求 id。
+// 注意:getModel 对未知 id 不抛错而是返回 undefined,必须显式判空。
+function resolveModel(provider, id) {
+  const known = getModels(provider).find((m) => m.id === id);
+  if (known) return known;
+  const base = getModels(provider)[0];
+  if (!base) throw new Error(`未知 provider: ${provider}`);
+  console.error(`(注册表未收录 ${provider}/${id},按 ${base.id} 的接入参数发起请求)`);
+  return { ...base, id, name: `${base.name} (${id})` };
+}
+
+const model = MOCK ? null : resolveModel(provider, modelId);
+// 思考级别:pack.thinkingLevel 或 TUTOR_THINKING,默认 off;按模型实际支持范围收敛
+const requestedLevel = process.env.TUTOR_THINKING || pack.thinkingLevel || "off";
+const thinkingLevel = model ? clampThinkingLevel(model, requestedLevel) : requestedLevel;
 
 function assertApiKey() {
   if (MOCK) return true;
@@ -126,7 +141,7 @@ function mockStreamFn(_model, context) {
 const tools = buildTools({ index, profile, root: ROOT });
 
 const agent = new Agent({
-  initialState: { systemPrompt, model, tools },
+  initialState: { systemPrompt, model, tools, thinkingLevel },
   ...(MOCK ? { streamFn: mockStreamFn } : {}),
   convertToLlm: (m) => m.filter((x) => typeof x === "object" && x !== null && "role" in x),
   // 长课保护:超预算时修剪最早的完整轮次(工具调用/结果成对保留)
@@ -182,6 +197,13 @@ agent.subscribe((event) => {
         const t = (m.content || []).filter((c) => c.type === "text").map((c) => c.text).join("");
         log({ student: STUDENT, role: "tool_result", name: m.toolName, preview: t.slice(0, 200), isError: m.isError });
       }
+    }
+    // 流式协议把请求失败编码在消息里(不抛异常),必须在这里浮出
+    const failed = event.messages.find((m) => m.role === "assistant" && m.stopReason === "error");
+    if (failed) {
+      const msgText = failed.errorMessage || "模型请求失败";
+      if (RPC) send({ type: "error", message: msgText });
+      else console.log(`\n  ✗ ${msgText}`);
     }
   }
 });

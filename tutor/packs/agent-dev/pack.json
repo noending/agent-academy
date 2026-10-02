@@ -2,6 +2,7 @@
   "name": "agent-dev",
   "title": "Agent 学院 · 开发导师",
   "kb": "kb/course-chunks.json",
-  "model": { "provider": "deepseek", "id": "deepseek-v4-flash" },
-  "description": "只教一件事:真正理解智能体的开发。知识库为 Agent 学院 9 章内容。"
+  "model": { "provider": "deepseek", "id": "deepseek-flash" },
+  "thinkingLevel": "off",
+  "description": "只教一件事:真正理解智能体的开发。知识库为 Agent 学院 9 章内容。模型 id 为 DeepSeek 官方新命名(DeepSeek-V4.1-Flash);思考级别可选 off/high/xhigh。"
 }
