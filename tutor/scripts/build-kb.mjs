@@ -61,7 +61,7 @@ function extractMainHtml(raw) {
 }
 
 const files = readdirSync(SITE)
-  .filter((f) => /^0[1-9]-.*\.html$/.test(f))
+  .filter((f) => /^\d{2}-.*\.html$/.test(f)) // 章节页:01 ~ 10(新增章节自动纳入)
   .sort();
 
 const chunks = [];

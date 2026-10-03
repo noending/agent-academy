@@ -15,6 +15,7 @@ function check(name, cond, extra = "") {
 
 // 1. 检索质量
 const { CourseIndex } = await import(join(ROOT, "src", "retrieval.mjs"));
+const { compactMessages, pruneMessages, estimateTokens } = await import(join(ROOT, "src", "context.mjs"));
 const index = CourseIndex.load(join(ROOT, "kb", "course-chunks.json"));
 const t1 = index.search("Agent Loop 的核心是什么", 3);
 check("检索: Agent Loop 命中第 1 章", t1.some((h) => h.chapter === 1), t1[0] && `top1=${t1[0].section ?? t1[0].title}`);
@@ -25,18 +26,57 @@ check("检索: RAG 管线命中第 4 章", t3.some((h) => h.chapter === 4), t3[0
 const t4 = index.search("RAG 有哪些失败模式怎么诊断", 1);
 check("检索: RAG 失败模式命中 4.5", t4[0]?.section === "4.5", t4[0] && `top1=${t4[0].section}`);
 
-// 1b. 双源检索(Gulli《Agentic Design Patterns》)
+// 1b. 双源检索(Gulli《Agentic Design Patterns》)+ 上下文化索引
 const gulliPath = join(ROOT, "kb", "gulli-patterns.json");
 check("Gulli 知识库已生成", existsSync(gulliPath));
-if (existsSync(gulliPath)) {
-  const dual = CourseIndex.loadMerged([
-    { path: join(ROOT, "kb", "course-chunks.json"), source: "course" },
-    { path: gulliPath, source: "gulli" },
-  ]);
-  const tg = dual.search("Model Context Protocol MCP server tools 接入", 3);
-  check("检索: MCP 命中 Gulli 第 10 章", tg.some((h) => h.source === "gulli" && h.chapter === 10), tg[0] && `top1=${tg[0].source}:${tg[0].chapterTitle}`);
-  check("检索: 课程问题仍命中课程源", dual.search("Agent Loop 的核心是什么", 3).some((h) => h.source === "course"));
-  check("检索: source 过滤生效", dual.search("guardrails", 3, null, "gulli").every((h) => h.source === "gulli"));
+const ctxCourse = join(ROOT, "kb", "course-chunks-ctx.json");
+const ctxGulli = join(ROOT, "kb", "gulli-patterns-ctx.json");
+const useCtx = existsSync(ctxCourse) && existsSync(ctxGulli);
+check("上下文化索引已生成(ctx 文件)", useCtx);
+const dual = CourseIndex.loadMerged([
+  { path: useCtx ? ctxCourse : join(ROOT, "kb", "course-chunks.json"), source: "course" },
+  ...(existsSync(gulliPath) ? [{ path: useCtx ? ctxGulli : gulliPath, source: "gulli" }] : []),
+]);
+const tg = dual.search("Model Context Protocol MCP server tools 接入", 3);
+check("检索: MCP 命中 Gulli 第 10 章", tg.some((h) => h.source === "gulli" && h.chapter === 10), tg[0] && `top1=${tg[0].source}:${tg[0].chapterTitle}`);
+check("检索: 课程问题仍命中课程源", dual.search("Agent Loop 的核心是什么", 3).some((h) => h.source === "course"));
+check("检索: source 过滤生效", dual.search("guardrails", 3, null, "gulli").every((h) => h.source === "gulli"));
+if (useCtx) {
+  // 上下文前缀参与匹配:用前缀里的定位词可直接命中对应小节(这是上下文化索引的确定性收益;
+  // 「换说法」的语义召回属向量检索领域,BM25 不承诺)
+  const tg2 = dual.search("设计模式章的护栏 fail closed 原则", 3);
+  check("检索(ctx): 前缀定位词命中 10.2 护栏", tg2.some((h) => h.source === "course" && h.title.includes("10.2")), tg2[0] && `top1=${tg2[0].title}`);
+  const tg3 = dual.search("模型上下文协议 标准化接口", 3);
+  check("检索(ctx): MCP 中文译名命中 Gulli 第 10 章", tg3.some((h) => h.source === "gulli" && h.chapter === 10), tg3[0] && `top1=${tg3[0].title}`);
+}
+
+// 1c. 总结式压缩 + 上下文修剪
+{
+  let calls = 0;
+  const fakeSummarize = async (transcript) => {
+    calls++;
+    if (transcript.includes("[学生] 早期问题")) return "摘要:学生问过早期问题,已解答。目标:做论文笔记 Agent。";
+    throw new Error("模拟摘要失败");
+  };
+  const long = [];
+  long.push({ role: "user", content: "早期问题:" + "背景".repeat(200), timestamp: 1 });
+  long.push({ role: "assistant", content: [{ type: "text", text: "回答".repeat(200) }], timestamp: 1 });
+  for (let i = 0; i < 200; i++) {
+    long.push({ role: "user", content: "学生消息".repeat(150) + i, timestamp: 1 });
+    long.push({ role: "assistant", content: [{ type: "text", text: "导师回答".repeat(150) }], timestamp: 1 });
+  }
+  const compacted = await compactMessages(long, { maxTokens: 20_000, summarize: fakeSummarize });
+  check("压缩: 超长对话生成历史摘要", compacted[0].role === "user" && compacted[0].content.includes("历史摘要") && compacted[0].content.includes("早期问题"));
+  check("压缩: 最近消息保留", compacted[compacted.length - 1].role === "assistant");
+  const again = await compactMessages(long, { maxTokens: 20_000, summarize: fakeSummarize });
+  check("压缩: 摘要按前缀缓存(第二次不再调用)", calls === 1, `calls=${calls}`);
+  // 摘要失败 → 回退丢弃式
+  const bad = long.map((m, i) => (i === 0 ? { ...m, content: "无关开头" + m.content.slice(4) } : m));
+  const fallback = await compactMessages(bad, { maxTokens: 20_000, summarize: fakeSummarize });
+  check("压缩: 摘要失败回退丢弃式(修剪提示)", fallback[0].content.includes("已被修剪"));
+  check("压缩: 短对话原样返回", (await compactMessages(long.slice(0, 10), { maxTokens: 20_000, summarize: fakeSummarize })).length === 10);
+  check("压缩: pruneMessages 仍可用(同步兜底)", pruneMessages(long, 20_000).length < long.length);
+  check("压缩: token 估算函数返回正数", estimateTokens(long) > 0);
 }
 
 // 2. 学生记忆
@@ -72,8 +112,7 @@ check("记忆工具: record_progress 写入且去重", reloaded.mastered.filter(
 check("记忆工具: record_misconception 写入", reloaded.misconceptions.some((m) => m.topic === "冒烟概念"));
 check("记忆工具: update_plan 写入", reloaded.currentFocus === "冒烟焦点" && reloaded.nextStep === "冒烟下一步");
 
-// 4. 上下文修剪
-const { pruneMessages, estimateTokens } = await import(join(ROOT, "src", "context.mjs"));
+// 4. 上下文修剪(同步丢弃式,作为总结式压缩的兜底已被 1c 覆盖主路径)
 const long = [];
 for (let i = 0; i < 500; i++) {
   long.push({ role: "user", content: "学生消息".repeat(150) + i, timestamp: 1 });
@@ -84,7 +123,6 @@ const pruned = pruneMessages(long, 20_000);
 check("上下文: 切割点在 user 边界(工具对不被拆散)", pruned[1].role === "user");
 check("上下文: 最近消息保留完整", pruned[pruned.length - 1].role === "assistant");
 check("上下文: 短对话原样返回", pruneMessages(long.slice(0, 10), 20_000).length === 10);
-check("上下文: 估算函数返回正数", estimateTokens(long) > 0);
 
 // 5. mock 全链路(清理状态后跑 --once,验证会话 JSONL 与工具调用落盘)
 rmSync(join(ROOT, "students", "smoke-mock.session.jsonl"), { force: true });

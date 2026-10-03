@@ -57,7 +57,7 @@ node src/tutor.mjs --rpc      # stdin: {"type":"user","text":…} / {"type":"con
 
 `context` 消息上报学生当前阅读页面(嵌入方翻页时推送);tutor 在下一条学生消息前注入 `[正在学习: …]` 前缀,教学贴合当前章节,并记录进会话日志的 `page` 字段。
 
-macOS App 的「导师模式」就是这个协议的客户端。学生数据默认写 `tutor/students/`;嵌入方设 `TUTOR_DATA_DIR=<数据根>` 重定向(其下建 `students/`)。长对话超 24k token 自动修剪最早的完整轮次(工具调用/结果成对保留)。
+macOS App 的「导师模式」就是这个协议的客户端。学生数据默认写 `tutor/students/`;嵌入方设 `TUTOR_DATA_DIR=<数据根>` 重定向(其下建 `students/`)。长对话超 24k token 触发**总结式压缩**:被剪前缀由 LLM 压成要点摘要(按前缀缓存,不重复付费;摘要失败自动回退丢弃式修剪,工具调用/结果成对保留)。
 
 ## 文件结构
 
@@ -65,6 +65,8 @@ macOS App 的「导师模式」就是这个协议的客户端。学生数据默�
 tutor/
 ├── packs/agent-dev/        # 教学包:pack.json + system-prompt.md(教学法都在这里)
 ├── scripts/build-kb.mjs    # 知识库构建(HTML → 切块 JSON)
+├── scripts/build-gulli-kb.py # 教材 PDF → 切块(pypdf layout 模式)
+├── scripts/build-context.mjs  # 上下文化索引(Anthropic Contextual Retrieval:LLM 为每块生成中文定位前缀,8 并发/断点续跑)
 ├── kb/course-chunks.json   # 构建产物(可重建,勿手改)
 ├── src/
 │   ├── tutor.mjs           # 入口:Agent loop + CLI + 会话日志

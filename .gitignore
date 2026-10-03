@@ -13,3 +13,5 @@ macos-app/.build/
 macos-app/.site-bundle/
 macos-app/AppIcon.icns
 macos-app/.icon-1024.png
+tutor/kb/course-chunks-ctx.json
+tutor/kb/gulli-patterns-ctx.json

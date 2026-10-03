@@ -17,9 +17,10 @@ export class CourseIndex {
   constructor(chunks) {
     this.chunks = chunks;
     this.docs = chunks.map((c) => {
+      // 上下文化索引:LLM 生成的前缀参与匹配,展示仍用原文
+      const body = (c.context ? c.context + " " : "") + `${c.title} ${c.title} ${c.text}`;
       const tf = new Map();
-      for (const t of tokenize(`${c.title} ${c.title} ${c.text}`)) {
-        // 标题加权:计两次
+      for (const t of tokenize(body)) {
         tf.set(t, (tf.get(t) || 0) + 1);
       }
       return tf;

@@ -9,7 +9,7 @@
 //   node src/tutor.mjs --student alice      # 指定学生档案
 //   node src/tutor.mjs --pack packs/agent-dev
 import { Agent } from "@mariozechner/pi-agent-core";
-import { AssistantMessageEventStream, getModel, getModels, getEnvApiKey, clampThinkingLevel } from "@mariozechner/pi-ai";
+import { AssistantMessageEventStream, getModel, getModels, getEnvApiKey, clampThinkingLevel, completeSimple } from "@mariozechner/pi-ai";
 import { readFileSync, existsSync, appendFileSync, mkdirSync } from "node:fs";
 import { join, resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -17,7 +17,7 @@ import readline from "node:readline/promises";
 import { CourseIndex } from "./retrieval.mjs";
 import { loadProfile, saveProfile, renderProfile, studentsDir } from "./memory.mjs";
 import { buildTools } from "./tools.mjs";
-import { pruneMessages } from "./context.mjs";
+import { compactMessages } from "./context.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -38,14 +38,19 @@ const pack = JSON.parse(readFileSync(join(PACK_DIR, "pack.json"), "utf8"));
 let systemPrompt = readFileSync(join(PACK_DIR, "system-prompt.md"), "utf8");
 
 // ---------- 知识库(缺失时自动构建) ----------
-const KB = resolve(ROOT, pack.kb);
+// 优先加载上下文化索引(build-context.mjs 生成,LLM 为每块生成中文前缀,提升"换说法"召回)
+function pickKb(base) {
+  const ctx = join(ROOT, "kb", base.replace(/\.json$/, "-ctx.json"));
+  return existsSync(ctx) ? ctx : join(ROOT, "kb", base);
+}
+const KB = pickKb("course-chunks.json");
 if (!existsSync(KB)) {
   console.log("知识库不存在,自动构建中…");
   const { execFileSync } = await import("node:child_process");
   execFileSync(process.execPath, [join(ROOT, "scripts", "build-kb.mjs")], { stdio: "inherit" });
 }
 // 第二知识源:Gulli《Agentic Design Patterns》整本教材(缺 PDF 时优雅降级为单源)
-const GULLI_KB = join(ROOT, "kb", "gulli-patterns.json");
+const GULLI_KB = pickKb("gulli-patterns.json");
 const gulliSource = existsSync(GULLI_KB) ? [{ path: GULLI_KB, source: "gulli" }] : [];
 const index = CourseIndex.loadMerged([{ path: KB, source: "course" }, ...gulliSource]);
 
@@ -147,9 +152,24 @@ const agent = new Agent({
   initialState: { systemPrompt, model, tools, thinkingLevel },
   ...(MOCK ? { streamFn: mockStreamFn } : {}),
   convertToLlm: (m) => m.filter((x) => typeof x === "object" && x !== null && "role" in x),
-  // 长课保护:超预算时修剪最早的完整轮次(工具调用/结果成对保留)
-  transformContext: (m) => pruneMessages(m, 24_000),
+  // 长课保护:超预算时把被剪前缀交给 LLM 压成要点摘要(总结式压缩,课程 5.1 的生产版);
+  // 摘要失败自动回退丢弃式;摘要按前缀缓存,不会重复付费
+  transformContext: (m) => compactMessages(m, { maxTokens: 24_000, summarize: summarizeHistory }),
 });
+
+// ② 历史摘要器:把被剪掉的前缀压缩成要点(mock 模式/无模型时抛错,compactMessages 自动回退)
+const SUMMARY_SYSTEM = "你是会话压缩器。把这段教学对话压缩成要点摘要,必须保留:学生的目标与水平、已确认掌握的概念、已记录的误解、进行中的任务与未决问题、重要约束与承诺。用要点列表,总量不超过 400 字,只输出摘要。";
+
+async function summarizeHistory(dropped) {
+  if (MOCK || !model) throw new Error("mock 模式无摘要器");
+  const r = await completeSimple(model, {
+    systemPrompt: SUMMARY_SYSTEM,
+    messages: [{ role: "user", content: dropped, timestamp: Date.now() }],
+  }, { apiKey: getEnvApiKey(provider), maxTokens: 800, temperature: 0 });
+  const text = (r.content || []).filter((c) => c.type === "text").map((c) => c.text).join("").trim();
+  if (!text) throw new Error("摘要为空");
+  return text;
+}
 
 // ---------- 会话日志(JSONL,pi 风格) ----------
 mkdirSync(studentsDir(ROOT), { recursive: true });
