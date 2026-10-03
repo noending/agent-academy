@@ -16,6 +16,12 @@ python3 -m http.server 8080
 # 然后访问 http://localhost:8080
 ```
 
+改完内容后跑一遍站点检查（标签平衡 / 内链锚点 / 进度口径 / 缓存版本 / 外链安全）：
+
+```bash
+node scripts/check-site.mjs   # 全绿再发布
+```
+
 ## 学习路线
 
 | 章 | 主题 | 亮点 |
@@ -91,6 +97,7 @@ export DEEPSEEK_API_KEY="sk-你的密钥"
 - **Gulli《Agentic Design Patterns》全本教材上站**（papers.html #gulli-book，署名教育用途）并作为站内导师第二知识源（`lookup_course` 双源检索，21 章 + 7 附录切块入库）
 - 进度口径 9 → 10 章；`app.js` 缓存版本升至 v=21
 - 新增两个交互实验室（第 10 章）：**路由模拟器**（含双策略成本账）、**MCP 握手模拟器**（六步协议流程）；实验室总数 8 → 10
+- 新增 **scripts/check-site.mjs** 站点静态检查器；修复其发现的历史欠账（标签未闭合 2 处、`target=_blank` 缺 `rel="noopener"` 26 处）
 - macOS App 同步打包教材 PDF 与第 10 章
 
 ### v1.1

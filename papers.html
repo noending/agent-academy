@@ -57,7 +57,7 @@
  <h2 id="transformer">① Attention Is All You Need（Transformer）—— 一切的起点</h2>
  <div class="callout info">
  <div class="co-title">元信息</div>
- <p>Vaswani et al., NeurIPS 2017 · <a href="https://arxiv.org/abs/1706.03762" target="_blank" rel="noopener">arXiv:1706.03762</a> · <a href="papers/pdf/transformer.pdf" target="_blank"> 原文 PDF（本站）</a> · <a href="translations.html#zh-transformer" style="color:var(--violet)"> 中文精读版</a> · <a href="full-transformer.html" style="color:var(--ok)">全文翻译</a></p>
+ <p>Vaswani et al., NeurIPS 2017 · <a href="https://arxiv.org/abs/1706.03762" target="_blank" rel="noopener">arXiv:1706.03762</a> · <a href="papers/pdf/transformer.pdf" target="_blank" rel="noopener"> 原文 PDF（本站）</a> · <a href="translations.html#zh-transformer" style="color:var(--violet)"> 中文精读版</a> · <a href="full-transformer.html" style="color:var(--ok)">全文翻译</a></p>
  </div>
  <p><b>它解决什么问题：</b>2017 年之前的序列模型（RNN/LSTM）逐词处理文本，长距离依赖记不住、训练没法并行。机器翻译的质量与速度都卡在这里。</p>
  <p><b>核心思想：</b>彻底扔掉循环结构，只靠<b>自注意力（self-attention）</b>：序列中每个词直接「看」所有其他词并按相关性加权聚合信息——任意两个位置之间的信息路径长度从 O(n) 变成 O(1)。</p>
@@ -80,7 +80,7 @@
  <h2 id="cot">② Chain-of-Thought（思维链）—— 让模型把中间步骤写出来</h2>
  <div class="callout info">
  <div class="co-title">元信息</div>
- <p>Wei et al., NeurIPS 2022 · <a href="https://arxiv.org/abs/2201.11903" target="_blank" rel="noopener">arXiv:2201.11903</a> · <a href="papers/pdf/cot.pdf" target="_blank"> 原文 PDF（本站）</a> · <a href="translations.html#zh-cot" style="color:var(--violet)"> 中文精读版</a> · <a href="full-cot.html" style="color:var(--ok)">全文翻译</a></p>
+ <p>Wei et al., NeurIPS 2022 · <a href="https://arxiv.org/abs/2201.11903" target="_blank" rel="noopener">arXiv:2201.11903</a> · <a href="papers/pdf/cot.pdf" target="_blank" rel="noopener"> 原文 PDF（本站）</a> · <a href="translations.html#zh-cot" style="color:var(--violet)"> 中文精读版</a> · <a href="full-cot.html" style="color:var(--ok)">全文翻译</a></p>
  </div>
  <p><b>它解决什么问题：</b>模型直接回答多步推理题时错误率很高——输出一步到位，错了不知道错在哪，更没机会纠。</p>
  <p><b>核心思想：</b>在提示词里给几个<b>带完整推理步骤的示例</b>，模型就会模仿着先输出中间推导、再给最终答案。没有改任何模型参数。</p>
@@ -103,7 +103,7 @@
  <h2 id="react">③ ReAct—— 智能体范式的原点（逐节精读）</h2>
  <div class="callout info">
  <div class="co-title">元信息</div>
- <p>Yao et al., ICLR 2023 · <a href="https://arxiv.org/abs/2210.03629" target="_blank" rel="noopener">arXiv:2210.03629</a> · <a href="papers/pdf/react.pdf" target="_blank"> 原文 PDF（本站）</a> · <a href="translations.html#zh-react" style="color:var(--violet)"> 中文精读版</a> · <a href="full-react.html" style="color:var(--ok)">全文翻译</a> · 课程第 1 章的主角</p>
+ <p>Yao et al., ICLR 2023 · <a href="https://arxiv.org/abs/2210.03629" target="_blank" rel="noopener">arXiv:2210.03629</a> · <a href="papers/pdf/react.pdf" target="_blank" rel="noopener"> 原文 PDF（本站）</a> · <a href="translations.html#zh-react" style="color:var(--violet)"> 中文精读版</a> · <a href="full-react.html" style="color:var(--ok)">全文翻译</a> · 课程第 1 章的主角</p>
  </div>
  <p><b>它解决什么问题：</b>两条路线各有硬伤：只会推理（CoT）的模型<b>没有真实世界信息</b>，幻觉频发；只会行动（行为 agent）<b>不会规划</b>，动作随机。问答、操作、游戏三类任务都在等统一范式。</p>
 
@@ -146,7 +146,7 @@
  <h2 id="toolformer">④ Toolformer—— 模型自学用工具</h2>
  <div class="callout info">
  <div class="co-title">元信息</div>
- <p>Schick et al., NeurIPS 2023 · <a href="https://arxiv.org/abs/2302.04761" target="_blank" rel="noopener">arXiv:2302.04761</a> · <a href="papers/pdf/toolformer.pdf" target="_blank"> 原文 PDF（本站）</a> · <a href="translations.html#zh-toolformer" style="color:var(--violet)"> 中文精读版</a> · <a href="full-toolformer.html" style="color:var(--ok)">全文翻译</a></p>
+ <p>Schick et al., NeurIPS 2023 · <a href="https://arxiv.org/abs/2302.04761" target="_blank" rel="noopener">arXiv:2302.04761</a> · <a href="papers/pdf/toolformer.pdf" target="_blank" rel="noopener"> 原文 PDF（本站）</a> · <a href="translations.html#zh-toolformer" style="color:var(--violet)"> 中文精读版</a> · <a href="full-toolformer.html" style="color:var(--ok)">全文翻译</a></p>
  </div>
  <p><b>它解决什么问题：</b>教模型用工具需要人工标注"这里该调哪个 API、参数是什么"——贵到不可扩展。</p>
  <p><b>核心思想：</b>让模型<b>自监督地给自己造训练数据</b>：海量插入"可能的 API 调用"候选 → 执行 → 只保留"调用确实有帮助"的样本 → 用它们微调模型自身。</p>
@@ -169,7 +169,7 @@
  <h2 id="rag">⑤ RAG—— 知识库链路的奠基之作（逐节精读）</h2>
  <div class="callout info">
  <div class="co-title">元信息</div>
- <p>Lewis et al., NeurIPS 2020 · <a href="https://arxiv.org/abs/2005.11401" target="_blank" rel="noopener">arXiv:2005.11401</a> · <a href="papers/pdf/rag.pdf" target="_blank"> 原文 PDF（本站）</a> · <a href="translations.html#zh-rag" style="color:var(--violet)"> 中文精读版</a> · <a href="full-rag.html" style="color:var(--ok)">全文翻译</a> · 课程第 4 章的源头</p>
+ <p>Lewis et al., NeurIPS 2020 · <a href="https://arxiv.org/abs/2005.11401" target="_blank" rel="noopener">arXiv:2005.11401</a> · <a href="papers/pdf/rag.pdf" target="_blank" rel="noopener"> 原文 PDF（本站）</a> · <a href="translations.html#zh-rag" style="color:var(--violet)"> 中文精读版</a> · <a href="full-rag.html" style="color:var(--ok)">全文翻译</a> · 课程第 4 章的源头</p>
  </div>
  <p><b>它解决什么问题：</b>模型的知识全部冻在参数里：过时、无法更新、无法溯源、私有知识根本没有。「把知识塞进参数」（微调）成本高且依然会幻觉。</p>
 
@@ -204,7 +204,7 @@
  <h2 id="reflexion">⑥ Reflexion—— 失败后用语言自我改进</h2>
  <div class="callout info">
  <div class="co-title">元信息</div>
- <p>Shinn et al., NeurIPS 2023 · <a href="https://arxiv.org/abs/2303.11366" target="_blank" rel="noopener">arXiv:2303.11366</a> · <a href="papers/pdf/reflexion.pdf" target="_blank"> 原文 PDF（本站）</a> · <a href="translations.html#zh-reflexion" style="color:var(--violet)"> 中文精读版</a> · <a href="full-reflexion.html" style="color:var(--ok)">全文翻译</a> · 课程第 5 章反思机制的源头</p>
+ <p>Shinn et al., NeurIPS 2023 · <a href="https://arxiv.org/abs/2303.11366" target="_blank" rel="noopener">arXiv:2303.11366</a> · <a href="papers/pdf/reflexion.pdf" target="_blank" rel="noopener"> 原文 PDF（本站）</a> · <a href="translations.html#zh-reflexion" style="color:var(--violet)"> 中文精读版</a> · <a href="full-reflexion.html" style="color:var(--ok)">全文翻译</a> · 课程第 5 章反思机制的源头</p>
  </div>
  <p><b>它解决什么问题：</b>强化学习微调又贵又慢；Agent 失败后，下一次尝试通常原样再错一遍。</p>
  <p><b>核心思想：</b>失败后让模型<b>用自然语言反思</b>（"我错在没考虑 X"），存进<b>情景记忆</b>；下次尝试同一任务时把反思注入上下文。用「语言」替代「梯度」做自我改进。</p>
@@ -223,7 +223,7 @@
  <h2 id="graphrag">⑦ GraphRAG—— 知识库与知识图谱合流</h2>
  <div class="callout info">
  <div class="co-title">元信息</div>
- <p>Microsoft Research, 2024 · <a href="https://arxiv.org/abs/2404.16130" target="_blank" rel="noopener">arXiv:2404.16130</a> · <a href="papers/pdf/graphrag.pdf" target="_blank"> 原文 PDF（本站）</a> · <a href="translations.html#zh-graphrag" style="color:var(--violet)"> 中文精读版</a> · <a href="full-graphrag.html" style="color:var(--ok)">全文翻译</a> · 课程第 4、6 章的交汇点</p>
+ <p>Microsoft Research, 2024 · <a href="https://arxiv.org/abs/2404.16130" target="_blank" rel="noopener">arXiv:2404.16130</a> · <a href="papers/pdf/graphrag.pdf" target="_blank" rel="noopener"> 原文 PDF（本站）</a> · <a href="translations.html#zh-graphrag" style="color:var(--violet)"> 中文精读版</a> · <a href="full-graphrag.html" style="color:var(--ok)">全文翻译</a> · 课程第 4、6 章的交汇点</p>
  </div>
  <p><b>它解决什么问题：</b>向量 RAG 擅长"这个问题在哪段话里说过"，答不了<b>全局性、汇总性问题</b>："这批文档的核心主题是什么？"——答案不存在于任何一个片段里，Top-K 检索注定残缺。</p>
  <p><b>核心思想：</b>离线用 LLM 从全部文档<b>抽取实体关系建图</b> → 社区检测聚成主题 → <b>逐社区生成摘要</b>（层级化）→ 在线按问题粒度选层级做 map-reduce 汇总。本质：<b>用 LLM 把文档预消化成多层"理解产物"，查询时拿消化过的理解替代原始片段</b>。</p>
@@ -242,7 +242,7 @@
  <h2 id="sweagent">⑧ SWE-agent—— 接口设计 = 被低估的性能杠杆</h2>
  <div class="callout info">
  <div class="co-title">元信息</div>
- <p>Yang et al., NeurIPS 2024 · <a href="https://arxiv.org/abs/2405.15793" target="_blank" rel="noopener">arXiv:2405.15793</a> · <a href="papers/pdf/sweagent.pdf" target="_blank"> 原文 PDF（本站）</a> · <a href="translations.html#zh-sweagent" style="color:var(--violet)"> 中文精读版</a> · <a href="full-sweagent.html" style="color:var(--ok)">全文翻译</a> · 课程第 7 章的核心论据</p>
+ <p>Yang et al., NeurIPS 2024 · <a href="https://arxiv.org/abs/2405.15793" target="_blank" rel="noopener">arXiv:2405.15793</a> · <a href="papers/pdf/sweagent.pdf" target="_blank" rel="noopener"> 原文 PDF（本站）</a> · <a href="translations.html#zh-sweagent" style="color:var(--violet)"> 中文精读版</a> · <a href="full-sweagent.html" style="color:var(--ok)">全文翻译</a> · 课程第 7 章的核心论据</p>
  </div>
  <p><b>它解决什么问题：</b>给模型一台"电脑"让它修真实 GitHub issue，成功率一开始很低。问题出在哪：模型？还是它面对的那套"键盘和屏幕"？</p>
  <p><b>核心思想：</b>提出 <b>ACI（Agent-Computer Interface）</b>：为模型设计命令与反馈格式要像 HCI 为人类设计 UI 一样严肃。三条原则：<b>① 反馈回路</b>（编辑后立刻 lint 报错行，模型当场自纠）；<b>② 高效交互</b>（专用文件查看器替代裸 cat）；<b>③ 不让模型做人类也做不好的事</b>。</p>
@@ -261,7 +261,7 @@
  <h2 id="gulli-book">教材 · Agentic Design Patterns——21 个智能体设计模式百科</h2>
  <div class="callout info">
  <div class="co-title">元信息</div>
- <p>Antonio Gulli 著，2025（424 页，版税捐赠 Save the Children） · <a href="https://github.com/evoiz/Agentic-Design-Patterns" target="_blank" rel="noopener">GitHub 仓库</a> · <a href="papers/pdf/gulli-agentic-design-patterns.pdf" target="_blank"> 原书 PDF（本站，17.7MB）</a> · 中文讲解 → 课程第 10 章「设计模式卡片」</p>
+ <p>Antonio Gulli 著，2025（424 页，版税捐赠 Save the Children） · <a href="https://github.com/evoiz/Agentic-Design-Patterns" target="_blank" rel="noopener">GitHub 仓库</a> · <a href="papers/pdf/gulli-agentic-design-patterns.pdf" target="_blank" rel="noopener"> 原书 PDF（本站，17.7MB）</a> · 中文讲解 → 课程第 10 章「设计模式卡片」</p>
  </div>
  <p><b>它是什么：</b>一本把智能体工程经验整理成 <b>21 个命名模式</b> 的实战手册——提示链、路由、并行化、反思、工具调用、规划、多智能体、记忆、MCP、A2A、Guardrails 安全、人机协同、异常恢复、评估、资源感知……每个模式配 Python notebook（MIT 许可，见仓库 <code>chapter_notebooks/</code>）。</p>
  <p><b>怎么用：</b>① 配合课程第 10 章的<b>模式卡片</b>精读（五个课程空缺的高价值模式已卡片化：MCP、Guardrails 安全、人机协同、A2A、异常恢复）；② 它也是<b>站内导师的第二知识源</b>——在导师模式里问 MCP、A2A 之类的问题，导师会引用这本书的章节；③ 21 章已有课程覆盖的（工具调用、RAG、记忆、多智能体、评估），读课程即可，本书作交叉印证。</p>
