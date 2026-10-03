@@ -215,15 +215,22 @@ agent.subscribe((event) => {
 if (RPC) {
   if (!assertApiKey()) process.exit(1);
   send({ type: "hello", student: STUDENT, model: MOCK ? "mock" : `${provider}/${modelId}` });
+  let currentPage = null; // 嵌入方上报的当前页面(App 里学生正在读哪页)
   const rlRpc = readline.createInterface({ input: process.stdin });
   rlRpc.on("line", (l) => {
     let msg;
     try { msg = JSON.parse(l); } catch { return; }
-    if (msg.type === "user" && msg.text) {
+    if (msg.type === "context" && msg.page) {
+      currentPage = msg.page; // { file, title }
+    } else if (msg.type === "user" && msg.text) {
       (async () => {
-        log({ student: STUDENT, role: "user", text: msg.text });
+        // 页面上下文以「正在学习」前缀注入,导师教学贴合当前章节
+        const text = currentPage
+          ? `[正在学习: ${currentPage.title || currentPage.file}]\n\n${msg.text}`
+          : msg.text;
+        log({ student: STUDENT, role: "user", text: msg.text, page: currentPage?.file ?? null });
         try {
-          await agent.prompt(msg.text);
+          await agent.prompt(text);
         } catch (e) {
           send({ type: "error", message: String(e?.message || e) });
         }

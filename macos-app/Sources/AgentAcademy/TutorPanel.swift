@@ -11,6 +11,88 @@ struct TutorChatMessage: Identifiable {
     var text: String
 }
 
+struct PageContext: Equatable {
+    let file: String
+    let title: String
+}
+
+// MARK: - 每个课程页面的预置问题(键 = 文件名)
+
+let PRESET_QUESTIONS: [String: [String]] = [
+    "index.html": [
+        "我是零基础,应该从哪一章开始?",
+        "学完整个课程我能做出什么?",
+        "为什么把 Ontology 和 Harness 单独拿出来讲?",
+    ],
+    "llm-basics.html": [
+        "温度(temperature)调高调低有什么区别?",
+        "token 和字数是什么关系?",
+        "为什么模型会一本正经地胡说八道?",
+    ],
+    "01-agent-basics.html": [
+        "Agent 和 Chatbot 的本质区别是什么?",
+        "用大白话讲讲 Agent Loop",
+        "ReAct 里的「行动」是谁执行的?",
+    ],
+    "02-first-agent.html": [
+        "Function Calling 的完整流程是什么?",
+        "流式模式下工具调用分片怎么拼接?",
+        "重试为什么要加指数退避?",
+    ],
+    "03-prompt-engineering.html": [
+        "系统提示词的「五区结构」是什么?",
+        "few-shot 示例该怎么挑?",
+        "为什么提示词一长就失灵?",
+    ],
+    "04-knowledge-base.html": [
+        "RAG 的完整链路有哪几步?",
+        "切块大小怎么选?",
+        "检索质量差,先排查哪一步?",
+    ],
+    "05-agent-patterns.html": [
+        "上下文压缩丢了关键信息怎么办?",
+        "什么时候才真的需要多智能体?",
+        "外置记忆和长上下文是什么关系?",
+    ],
+    "06-ontology.html": [
+        "Ontology 到底解决什么问题?",
+        "RDF/OWL/SPARQL 要学到什么深度?",
+        "LLM 怎么自动抽取本体?",
+    ],
+    "07-harness.html": [
+        "Harness 的八大组件是什么?",
+        "为什么说「模型决定上限,Harness 决定下限」?",
+        "自建 Harness 和 Pi Agent 怎么选?",
+    ],
+    "08-ship-it.html": [
+        "上线前必须做哪几件事?",
+        "LLM-as-Judge 可靠吗?",
+        "成本和延迟怎么优化?",
+    ],
+    "09-capstone.html": [
+        "毕业项目的四个里程碑怎么规划?",
+        "「整理论文笔记」的选题该怎么做本体设计?",
+        "验收标准怎么写才可测?",
+    ],
+    "10-design-patterns.html": [
+        "MCP 和 Function Calling 什么关系?",
+        "护栏为什么必须 fail closed?",
+        "A2A 和 MCP 分别用在什么场景?",
+        "幂等键是什么,为什么重试前要考虑它?",
+    ],
+    "papers.html": [
+        "论文该按什么顺序读?",
+        "ReAct 论文的核心贡献是什么?",
+        "Gulli 教材和课程怎么配合?",
+    ],
+]
+
+let DEFAULT_QUESTIONS = [
+    "我在当前页面卡住了,帮我讲解重点",
+    "给我出一道和本页相关的练习题",
+    "用大白话总结这一页",
+]
+
 // MARK: - 行缓冲(readabilityHandler 在非主线程回调,独立引用类型避免 actor 隔离冲突;回调串行,无数据竞争)
 
 private final class LineBuffer {
@@ -26,6 +108,22 @@ final class TutorModel: ObservableObject {
     @Published var statusText: String?
     @Published var totalCost = 0.0
     @Published var failureReason: String? // 非 nil = 引擎起不来,展示给用户
+    @Published private(set) var currentPage: PageContext?
+
+    private var pageDirty = false // 页面变化后还没上报过
+
+    /// 学生翻到新页面时由 WebView 回调;标题可能晚到,以 file 为主键、title 取最新
+    func updatePage(file: String, title: String) {
+        let clean = title.trimmingCharacters(in: .whitespaces)
+        if currentPage?.file != file || currentPage?.title != clean {
+            currentPage = PageContext(file: file, title: clean)
+            pageDirty = true
+        }
+    }
+
+    func presets() -> [String] {
+        PRESET_QUESTIONS[currentPage?.file ?? ""] ?? DEFAULT_QUESTIONS
+    }
 
     private var process: Process?
     private var stdinHandle: FileHandle?
@@ -175,6 +273,10 @@ final class TutorModel: ObservableObject {
         messages.append(TutorChatMessage(isUser: true, text: t))
         messages.append(TutorChatMessage(isUser: false, text: "")) // 占位,接收流式输出
         thinking = true
+        if pageDirty, let p = currentPage { // 先上报页面,再发消息,顺序保证
+            writeLine(["type": "context", "page": ["file": p.file, "title": p.title]])
+            pageDirty = false
+        }
         writeLine(["type": "user", "text": t])
     }
 
@@ -205,6 +307,7 @@ struct TutorPanel: View {
             Divider()
             chatList
             Divider()
+            presetBar
             inputBar
         }
         .background(Color(nsColor: .windowBackgroundColor))
@@ -281,6 +384,41 @@ struct TutorPanel: View {
         } else {
             Text(m.text).textSelection(.enabled)
         }
+    }
+
+    /// 页面徽章 + 预置问题 chips(点一下填入输入框,可改再发)
+    private var presetBar: some View {
+        VStack(spacing: 6) {
+            if let p = model.currentPage {
+                HStack(spacing: 4) {
+                    Image(systemName: "book.fill").font(.caption2)
+                    Text(p.title.isEmpty ? p.file : p.title).lineLimit(1)
+                    Spacer()
+                }
+                .font(.caption2).foregroundStyle(.secondary)
+                .padding(.horizontal, 10)
+            }
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 6) {
+                    ForEach(model.presets(), id: \.self) { q in
+                        Button {
+                            draft = q
+                            inputFocused = true
+                        } label: {
+                            Text(q).lineLimit(1)
+                                .font(.caption)
+                                .padding(.horizontal, 9).padding(.vertical, 5)
+                                .background(Capsule().fill(Color.accentColor.opacity(0.10)))
+                                .overlay(Capsule().strokeBorder(Color.accentColor.opacity(0.35)))
+                        }
+                        .buttonStyle(.plain)
+                        .help(q)
+                    }
+                }
+                .padding(.horizontal, 10)
+            }
+        }
+        .padding(.vertical, 6)
     }
 
     private var inputBar: some View {

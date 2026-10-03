@@ -88,6 +88,8 @@ final class WebViewCoordinator: NSObject, WKNavigationDelegate {
     private let siteRoot: URL
     private let defaults = UserDefaults.standard
     private var frameAutosaveDone = false
+    /// 学生正在读的页面变化时回调(file, 已截短的页面标题)——导师面板用它做页面相关预置问题
+    var onPageChange: ((String, String) -> Void)?
 
     override init() {
         siteRoot = Bundle.main.resourceURL!.appendingPathComponent("site")
@@ -168,7 +170,15 @@ final class WebViewCoordinator: NSObject, WKNavigationDelegate {
             if keyPath == "URL", let url = webView.url, url.host == "site" {
                 defaults.set(url.path, forKey: "lastPage") // 下次启动回到这里
             }
+            emitPage() // URL 或标题任一变化都上报一次(标题可能晚于 URL 到达)
         }
+    }
+
+    private func emitPage() {
+        guard let url = webView.url, url.host == "site" else { return }
+        guard let file = url.path.components(separatedBy: "/").last, !file.isEmpty else { return }
+        let title = (webView.title ?? "").components(separatedBy: " | ").first ?? ""
+        onPageChange?(file, title)
     }
 }
 
@@ -201,6 +211,12 @@ struct AgentAcademyApp: App {
                 }
             }
             .frame(minWidth: 1000, minHeight: 660)
+            .onAppear {
+                // 站点翻页 → 导师面板:上报当前页面,预置问题与教学上下文随之切换
+                coordinator.onPageChange = { [weak tutor] file, title in
+                    tutor?.updatePage(file: file, title: title)
+                }
+            }
                 .overlay(alignment: .topTrailing) { findBar }
                 .toolbar {
                     ToolbarItemGroup(placement: .navigation) {

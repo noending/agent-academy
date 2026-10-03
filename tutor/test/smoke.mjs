@@ -127,7 +127,8 @@ if (existsSync(sessionPath)) {
   });
   const hello = await waitEvent("hello").catch(() => null);
   check("RPC: hello 握手", !!hello);
-  child.stdin.write(JSON.stringify({ type: "user", text: "你好" }) + "\n");
+  child.stdin.write(JSON.stringify({ type: "context", page: { file: "03-prompt-engineering.html", title: "第 3 章 · Prompt 工程与上下文设计" } }) + "\n");
+  child.stdin.write(JSON.stringify({ type: "user", text: "什么是五区结构?" }) + "\n");
   const deltas = [];
   try {
     await waitEvent("ready");
@@ -144,6 +145,10 @@ if (existsSync(sessionPath)) {
   check("RPC: exit 控制后进程干净退出", exited === true && child.exitCode === 0, `exitCode=${child.exitCode}`);
   const rpcProfile = join(ROOT, "students", "smoke-rpc.json");
   check("RPC: 学生档案落盘", existsSync(rpcProfile));
+  const rpcLog = readFileSync(join(ROOT, "students", "smoke-rpc.session.jsonl"), "utf8")
+    .trim().split("\n").map((l) => JSON.parse(l));
+  const rpcUser = rpcLog.find((l) => l.role === "user");
+  check("RPC: 页面上下文落盘", rpcUser?.page === "03-prompt-engineering.html", rpcUser && `page=${rpcUser.page}`);
   rmSync(rpcProfile, { force: true });
   rmSync(join(ROOT, "students", "smoke-rpc.session.jsonl"), { force: true });
 }
