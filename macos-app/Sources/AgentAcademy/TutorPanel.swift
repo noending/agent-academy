@@ -85,6 +85,16 @@ let PRESET_QUESTIONS: [String: [String]] = [
         "ReAct 论文的核心贡献是什么?",
         "Gulli 教材和课程怎么配合?",
     ],
+    "fde.html": [
+        "FDE 是什么职位?和普通工程师的区别?",
+        "八项能力栈里我最缺哪一块?",
+        "90 天养成计划怎么执行?",
+    ],
+    "briefs.html": [
+        "三份企业简报该按什么顺序做?",
+        "验收测试全红起步,第一刀从哪切?",
+        "交付五件套文档分别是什么?",
+    ],
 ]
 
 let DEFAULT_QUESTIONS = [
@@ -239,6 +249,8 @@ final class TutorModel: ObservableObject {
 
     private func handle(_ obj: [String: Any]) {
         switch obj["type"] as? String {
+        case "hello":
+            requestGreeting() // 引擎就绪,导师主动开场(档案 + 当前页面驱动)
         case "delta":
             let t = obj["text"] as? String ?? ""
             if let last = messages.indices.last, !messages[last].isUser {
@@ -280,11 +292,29 @@ final class TutorModel: ObservableObject {
         writeLine(["type": "user", "text": t])
     }
 
+    /// 面板打开(引擎已就绪)或重置后,让导师主动打招呼
+    func greetIfIdle() {
+        guard process != nil, failureReason == nil, messages.isEmpty, !thinking else { return }
+        requestGreeting()
+    }
+
+    private func requestGreeting() {
+        guard process != nil, !thinking, messages.isEmpty else { return }
+        thinking = true
+        messages.append(TutorChatMessage(isUser: false, text: "")) // 占位,接收流式开场白
+        if pageDirty, let p = currentPage {
+            writeLine(["type": "context", "page": ["file": p.file, "title": p.title]])
+            pageDirty = false
+        }
+        writeLine(["type": "greet"])
+    }
+
     func resetConversation() {
         guard process != nil else { return }
         messages = []
         thinking = false
         writeLine(["type": "control", "cmd": "reset"])
+        requestGreeting() // 重置后重新开场
     }
 
     private func writeLine(_ obj: [String: Any]) {
@@ -311,7 +341,10 @@ struct TutorPanel: View {
             inputBar
         }
         .background(Color(nsColor: .windowBackgroundColor))
-        .onAppear { model.ensureStarted() }
+        .onAppear {
+            model.ensureStarted()
+            model.greetIfIdle() // 引擎已在跑且没有对话时(如关开面板),也补开场
+        }
     }
 
     private var header: some View {

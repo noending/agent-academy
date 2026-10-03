@@ -50,9 +50,12 @@ npm start                          # 开始上课
 ## 嵌入模式(--rpc)与数据目录
 
 ```bash
-node src/tutor.mjs --rpc      # stdin: {"type":"user","text":…} / {"type":"control","cmd":"reset|profile|exit"}
+node src/tutor.mjs --rpc      # stdin: {"type":"user","text":…} / {"type":"context","page":{"file","title"}}
+                              #        / {"type":"control","cmd":"reset|profile|exit"}
                               # stdout: hello → delta* → tool_start/tool_end → turn_end → ready(一轮结束)
 ```
+
+`context` 消息上报学生当前阅读页面(嵌入方翻页时推送);tutor 在下一条学生消息前注入 `[正在学习: …]` 前缀,教学贴合当前章节,并记录进会话日志的 `page` 字段。
 
 macOS App 的「导师模式」就是这个协议的客户端。学生数据默认写 `tutor/students/`;嵌入方设 `TUTOR_DATA_DIR=<数据根>` 重定向(其下建 `students/`)。长对话超 24k token 自动修剪最早的完整轮次(工具调用/结果成对保留)。
 

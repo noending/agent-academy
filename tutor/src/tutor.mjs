@@ -222,6 +222,21 @@ if (RPC) {
     try { msg = JSON.parse(l); } catch { return; }
     if (msg.type === "context" && msg.page) {
       currentPage = msg.page; // { file, title }
+    } else if (msg.type === "greet") {
+      // 面板打开/重置时的开场:导师根据档案与当前页面主动打招呼
+      (async () => {
+        log({ student: STUDENT, role: "greet", page: currentPage?.file ?? null });
+        try {
+          await agent.prompt(
+            `[系统事件: 学生刚刚打开了导师面板,这是本次会话的开场]${currentPage ? `\n(学生当前页面: ${currentPage.title || currentPage.file})` : ""}\n` +
+            `请根据学生档案与当前页面,用 1~3 句话打个招呼:点出他的目标或上次学到哪,并给出一个现在就能做的小行动。保持简短,结尾可以留一个钩子问题;不要长篇大论,不要重复档案原文。`
+          );
+        } catch (e) {
+          send({ type: "error", message: String(e?.message || e) });
+        }
+        saveProfile(ROOT, profile);
+        send({ type: "ready", totalCost: +totalCost.toFixed(4) });
+      })();
     } else if (msg.type === "user" && msg.text) {
       (async () => {
         // 页面上下文以「正在学习」前缀注入,导师教学贴合当前章节

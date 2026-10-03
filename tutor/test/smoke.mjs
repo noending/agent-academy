@@ -115,23 +115,29 @@ if (existsSync(sessionPath)) {
       try { events.push(JSON.parse(s)); } catch {}
     }
   });
-  const waitEvent = (type, timeoutMs = 20_000) => new Promise((res, rej) => {
+  const waitEvent = (type, nth = 1, timeoutMs = 20_000) => new Promise((res, rej) => {
     const t0 = Date.now();
     const tick = () => {
-      const e = events.find((x) => x.type === type);
-      if (e) return res(e);
-      if (Date.now() - t0 > timeoutMs) return rej(new Error(`等待 ${type} 超时`));
+      const found = events.filter((x) => x.type === type);
+      if (found.length >= nth) return res(found[nth - 1]);
+      if (Date.now() - t0 > timeoutMs) return rej(new Error(`等待第${nth}个 ${type} 超时`));
       setTimeout(tick, 50);
     };
     tick();
   });
   const hello = await waitEvent("hello").catch(() => null);
   check("RPC: hello 握手", !!hello);
+
+  // greet 开场(档案 + 页面驱动的主动打招呼)
+  child.stdin.write(JSON.stringify({ type: "greet" }) + "\n");
+  await waitEvent("ready", 1).catch(() => null);
+  check("RPC: greet 开场回复", events.some((x) => x.type === "delta" && x.text));
+
   child.stdin.write(JSON.stringify({ type: "context", page: { file: "03-prompt-engineering.html", title: "第 3 章 · Prompt 工程与上下文设计" } }) + "\n");
   child.stdin.write(JSON.stringify({ type: "user", text: "什么是五区结构?" }) + "\n");
   const deltas = [];
   try {
-    await waitEvent("ready");
+    await waitEvent("ready", 2);
     check("RPC: 一轮后收到 ready", true);
   } catch { check("RPC: 一轮后收到 ready", false); }
   check("RPC: 流式 delta 事件", events.some((x) => x.type === "delta" && x.text));
@@ -147,7 +153,8 @@ if (existsSync(sessionPath)) {
   check("RPC: 学生档案落盘", existsSync(rpcProfile));
   const rpcLog = readFileSync(join(ROOT, "students", "smoke-rpc.session.jsonl"), "utf8")
     .trim().split("\n").map((l) => JSON.parse(l));
-  const rpcUser = rpcLog.find((l) => l.role === "user");
+  // agent_end 会额外落一条带前缀的内部 prompt 消息(page 为空);要找的是显式记录的学生消息
+  const rpcUser = rpcLog.find((l) => l.role === "user" && typeof l.page === "string");
   check("RPC: 页面上下文落盘", rpcUser?.page === "03-prompt-engineering.html", rpcUser && `page=${rpcUser.page}`);
   rmSync(rpcProfile, { force: true });
   rmSync(join(ROOT, "students", "smoke-rpc.session.jsonl"), { force: true });
