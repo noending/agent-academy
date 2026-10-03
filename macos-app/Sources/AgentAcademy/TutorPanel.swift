@@ -2,6 +2,7 @@
 // 通过 Process 启动 tutor 的 --rpc 模式(JSONL 协议),复用学生档案与教学工具。
 import SwiftUI
 import AppKit
+import MarkdownUI
 
 // MARK: - 会话消息模型
 
@@ -324,177 +325,47 @@ final class TutorModel: ObservableObject {
     }
 }
 
-// MARK: - 轻量 Markdown 分块渲染(表格/代码块/标题/列表;SwiftUI Text 原生不支持这些块级元素)
+// MARK: - Markdown 主题(MarkdownUI · gitHub 预设打底,贴面板字号)
 
-private enum MDBlock {
-    case heading(String, Int)
-    case paragraph(String)
-    case code(String)
-    case table([[String]])
-    case list([String])
-}
-
-private enum MDParser {
-    static func parse(_ text: String) -> [MDBlock] {
-        var blocks: [MDBlock] = []
-        let lines = text.components(separatedBy: "\n")
-        var i = 0
-        func isBlockStart(_ l: String) -> Bool {
-            l.hasPrefix("```") || l.hasPrefix("#") || l.hasPrefix("|") ||
-            isListItem(l) || l.trimmingCharacters(in: .whitespaces).isEmpty
-        }
-        while i < lines.count {
-            let line = lines[i]
-            if line.hasPrefix("```") {
-                var body: [String] = []
-                i += 1
-                while i < lines.count && !lines[i].hasPrefix("```") { body.append(lines[i]); i += 1 }
-                i += 1 // 跳过收尾 ```
-                blocks.append(.code(body.joined(separator: "\n")))
-                continue
+extension Theme {
+    static var tutorPanel: Theme {
+        .gitHub
+            .paragraph { config in
+                config.label
+                    .font(.system(size: 13.5))
+                    .lineSpacing(5)
             }
-            if line.hasPrefix("|") {
-                var rows: [String] = []
-                while i < lines.count && lines[i].hasPrefix("|") { rows.append(lines[i]); i += 1 }
-                let cells = rows.map(parseRow).filter { !$0.isSeparator }.map { $0.cells }
-                if !cells.isEmpty { blocks.append(.table(cells)) }
-                continue
+            .heading1 { config in
+                config.label.font(.system(size: 16, weight: .semibold))
             }
-            if line.hasPrefix("#") {
-                let level = line.prefix(while: { $0 == "#" }).count
-                let t = line.drop(while: { $0 == "#" }).trimmingCharacters(in: .whitespaces)
-                if !t.isEmpty { blocks.append(.heading(t, min(level, 3))) }
-                i += 1
-                continue
+            .heading2 { config in
+                config.label.font(.system(size: 15, weight: .semibold))
             }
-            if isListItem(line) {
-                var items: [String] = []
-                while i < lines.count && isListItem(lines[i]) { items.append(lines[i]); i += 1 }
-                blocks.append(.list(items))
-                continue
+            .heading3 { config in
+                config.label.font(.system(size: 14, weight: .semibold))
             }
-            if line.trimmingCharacters(in: .whitespaces).isEmpty { i += 1; continue }
-            var para: [String] = []
-            while i < lines.count && !isBlockStart(lines[i]) { para.append(lines[i]); i += 1 }
-            blocks.append(.paragraph(para.joined(separator: "\n")))
-        }
-        return blocks
-    }
-
-    private static func isListItem(_ l: String) -> Bool {
-        let t = l.trimmingCharacters(in: .whitespaces)
-        if t.isEmpty { return false }
-        if t.hasPrefix("- ") || t.hasPrefix("* ") { return true }
-        return t.first?.isNumber == true && t.contains(". ")
-    }
-
-    private static func parseRow(_ line: String) -> (cells: [String], isSeparator: Bool) {
-        var t = line
-        if t.hasPrefix("|") { t.removeFirst() }
-        if t.hasSuffix("|") { t.removeLast() }
-        let cells = t.components(separatedBy: "|").map { $0.trimmingCharacters(in: .whitespaces) }
-        let isSeparator = !cells.isEmpty && cells.allSatisfy { $0.range(of: "^:?-{2,}:?$", options: .regularExpression) != nil }
-        return (cells, isSeparator)
-    }
-}
-
-/// 聊天气泡内的 Markdown 视图
-struct TutorMarkdown: View {
-    let text: String
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            ForEach(Array(MDParser.parse(text).enumerated()), id: \.offset) { _, block in
-                render(block)
+            .code {
+                FontFamilyVariant(.monospaced)
+                FontSize(.em(0.92))
+                ForegroundColor(.purple)
+                BackgroundColor(.purple.opacity(0.08))
             }
-        }
-        .textSelection(.enabled)
-    }
-
-    @ViewBuilder
-    private func render(_ b: MDBlock) -> some View {
-        switch b {
-        case .heading(let t, let level):
-            Text(inlineMD(t))
-                .font(.system(size: level <= 1 ? 16 : 14.5, weight: .semibold))
-        case .paragraph(let t):
-            Text(inlineMD(t))
-                .font(.system(size: 13.5))
-                .lineSpacing(5)
-        case .list(let items):
-            VStack(alignment: .leading, spacing: 4) {
-                ForEach(Array(items.enumerated()), id: \.offset) { idx, item in
-                    HStack(alignment: .firstTextBaseline, spacing: 6) {
-                        Text(listMarker(item, index: idx))
-                            .font(.system(size: 13.5, weight: .medium))
-                            .foregroundStyle(Color.accentColor)
-                        Text(inlineMD(stripMarker(item)))
-                            .font(.system(size: 13.5))
-                    }
-                }
-            }
-        case .code(let code):
-            ScrollView(.horizontal, showsIndicators: false) {
-                Text(code)
-                    .font(.system(size: 12, design: .monospaced))
-                    .foregroundStyle(Color(nsColor: .textColor))
-            }
-            .padding(10)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(RoundedRectangle(cornerRadius: 8).fill(Color(nsColor: .underPageBackgroundColor)))
-            .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(Color(nsColor: .separatorColor).opacity(0.5)))
-        case .table(let rows):
-            let header = rows.first ?? []
-            ScrollView(.horizontal, showsIndicators: false) {
-                Grid(alignment: .leading, horizontalSpacing: 16, verticalSpacing: 5) {
-                    if !header.isEmpty {
-                        GridRow {
-                            ForEach(Array(header.enumerated()), id: \.offset) { _, cell in
-                                Text(inlineMD(cell))
-                                    .font(.system(size: 12.5, weight: .semibold))
-                                    .foregroundStyle(Color.purple)
-                            }
-                        }
-                        Rectangle().fill(Color(nsColor: .separatorColor)).frame(height: 1)
-                            .gridCellColumns(max(header.count, 1))
-                    }
-                    ForEach(Array(rows.dropFirst().enumerated()), id: \.offset) { _, row in
-                        GridRow {
-                            ForEach(Array(row.enumerated()), id: \.offset) { _, cell in
-                                Text(inlineMD(cell))
-                                    .font(.system(size: 12.5))
-                            }
-                        }
-                    }
+            .codeBlock { config in
+                ScrollView(.horizontal, showsIndicators: false) {
+                    config.label
+                        .font(.system(size: 12, design: .monospaced))
+                        .textSelection(.enabled)
                 }
                 .padding(10)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color(nsColor: .underPageBackgroundColor))
+                .cornerRadius(8)
+                .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(Color(nsColor: .separatorColor).opacity(0.5)))
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(RoundedRectangle(cornerRadius: 8).fill(Color(nsColor: .underPageBackgroundColor)))
-            .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(Color(nsColor: .separatorColor).opacity(0.5)))
-        }
-    }
-
-    private func listMarker(_ item: String, index: Int) -> String {
-        let t = item.trimmingCharacters(in: .whitespaces)
-        if t.hasPrefix("- ") || t.hasPrefix("* ") { return "•" }
-        let digits = t.prefix(while: { $0.isNumber })
-        return digits.isEmpty ? "•" : digits + "."
-    }
-
-    private func stripMarker(_ item: String) -> String {
-        let t = item.trimmingCharacters(in: .whitespaces)
-        if t.hasPrefix("- ") || t.hasPrefix("* ") { return String(t.dropFirst(2)) }
-        if let first = t.first, first.isNumber, let sp = t.firstIndex(of: " ") {
-            return String(t[t.index(after: sp)...])
-        }
-        return t
-    }
-
-    /// 行内 markdown(粗体/行内代码/链接);解析失败退回纯文本
-    private func inlineMD(_ s: String) -> AttributedString {
-        if let a = try? AttributedString(markdown: s, options: .init(interpretedSyntax: .inlineOnly)) { return a }
-        return AttributedString(s)
+            .table { config in
+                config.label
+                    .font(.system(size: 12.5))
+            }
     }
 }
 
@@ -594,7 +465,7 @@ struct TutorPanel: View {
         if m.text.isEmpty {
             ProgressView().controlSize(.small).padding(.vertical, 2)
         } else {
-            TutorMarkdown(text: m.text)
+            Markdown(m.text).markdownTheme(.tutorPanel)
         }
     }
 
