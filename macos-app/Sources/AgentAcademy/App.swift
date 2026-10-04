@@ -146,6 +146,12 @@ final class WebViewCoordinator: NSObject, WKNavigationDelegate {
         webView.load(URLRequest(url: URL(string: "\(scheme)://site\(homePath)")!))
     }
 
+    /// 在主窗口打开本地生成的草稿页(内容工厂产物)
+    func openLocalPage(_ file: String) {
+        guard !file.isEmpty else { return }
+        webView.load(URLRequest(url: URL(string: "\(scheme)://site/\(file)")!))
+    }
+
     func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction,
                  decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
         if navigationAction.navigationType == .linkActivated,
@@ -197,6 +203,7 @@ struct AgentAcademyApp: App {
     @State private var findText = ""
     @State private var findMissed = false
     @State private var showTutor = false
+    @State private var showFactory = false
     @StateObject private var tutor = TutorModel()
     @FocusState private var findFieldFocused: Bool
 
@@ -211,6 +218,15 @@ struct AgentAcademyApp: App {
                 }
             }
             .frame(minWidth: 1000, minHeight: 660)
+            .sheet(isPresented: $showFactory) {
+                FactorySheet(
+                    onDone: { showFactory = false; tutor.reloadPacks() },
+                    onOpenDraft: { file in
+                        showFactory = false
+                        coordinator.openLocalPage(file)
+                    })
+                .frame(width: 480, height: 560)
+            }
             .onAppear {
                 // 站点翻页 → 导师面板:上报当前页面,预置问题与教学上下文随之切换
                 coordinator.onPageChange = { [weak tutor] file, title in
@@ -243,6 +259,9 @@ struct AgentAcademyApp: App {
                         Button { toggleFind() } label: { Image(systemName: "magnifyingglass") }
                             .keyboardShortcut("f", modifiers: .command)
                             .help("页内查找 (⌘F)")
+                        Divider()
+                        Button { showFactory = true } label: { Image(systemName: "shippingbox.fill") }
+                            .help("内容工厂:论文 / 仓库 / 课题 → 课程")
                         Divider()
                         Button { toggleTutor() } label: { Image(systemName: "graduationcap.fill") }
                             .keyboardShortcut("t", modifiers: [.command, .shift])

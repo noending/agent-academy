@@ -106,7 +106,7 @@ let DEFAULT_QUESTIONS = [
 
 // MARK: - 行缓冲(readabilityHandler 在非主线程回调,独立引用类型避免 actor 隔离冲突;回调串行,无数据竞争)
 
-private final class LineBuffer {
+final class LineBuffer {
     var data = Data()
 }
 
