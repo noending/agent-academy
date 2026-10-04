@@ -1,0 +1,168 @@
+{
+  "name": "llm",
+  "title": "LLM训练到部署",
+  "kb": "kb/llm-kb.json",
+  "sources": [
+    {
+      "file": "kb/llm-kb.json",
+      "source": "llm",
+      "label": "LLM训练到部署"
+    }
+  ],
+  "model": {
+    "provider": "deepseek",
+    "id": "deepseek-flash"
+  },
+  "thinkingLevel": "off",
+  "description": "由课题「LLM从训练到部署」自动生成。本课程适合对LLM感兴趣的开发者与运维人员，从零开始掌握大语言模型训练、微调、优化与部署全流程，最终能独立完成生产级部署。",
+  "curriculum": [
+    {
+      "no": 1,
+      "title": "LLM基础概念",
+      "goal": "理解LLM核心概念与工作原理",
+      "outline": [
+        "什么是语言模型：从统计到神经网络",
+        "Transformer架构与自注意力机制",
+        "预训练与微调范式",
+        "LLM的能力与局限性"
+      ],
+      "keyTerms": [
+        "LLM (Large Language Model)",
+        "Transformer",
+        "Self-Attention",
+        "Pre-training",
+        "Fine-tuning"
+      ]
+    },
+    {
+      "no": 2,
+      "title": "数据准备与预处理",
+      "goal": "掌握构建高质量训练数据集的方法",
+      "outline": [
+        "数据收集：来源与版权考量",
+        "数据清洗：去重、过滤与格式化",
+        "分词器原理与训练",
+        "数据集划分与批处理"
+      ],
+      "keyTerms": [
+        "Tokenization",
+        "Data Cleaning",
+        "Dataset Splitting",
+        "Batching"
+      ]
+    },
+    {
+      "no": 3,
+      "title": "模型训练基础",
+      "goal": "能够配置并启动LLM训练任务",
+      "outline": [
+        "训练环境搭建：GPU与分布式",
+        "损失函数与优化器选择",
+        "训练循环与检查点保存",
+        "常见训练问题与调试"
+      ],
+      "keyTerms": [
+        "Loss Function",
+        "Optimizer",
+        "Checkpoint",
+        "Distributed Training"
+      ]
+    },
+    {
+      "no": 4,
+      "title": "微调与对齐",
+      "goal": "使用微调技术适配下游任务",
+      "outline": [
+        "全参数微调与参数高效微调",
+        "LoRA与QLoRA原理与实践",
+        "指令微调与RLHF简介",
+        "评估微调效果"
+      ],
+      "keyTerms": [
+        "Fine-tuning",
+        "LoRA",
+        "QLoRA",
+        "RLHF",
+        "Instruction Tuning"
+      ]
+    },
+    {
+      "no": 5,
+      "title": "模型优化与压缩",
+      "goal": "优化模型推理速度与资源占用",
+      "outline": [
+        "量化：PTQ与QAT",
+        "剪枝与知识蒸馏",
+        "推理加速：ONNX与TensorRT",
+        "内存优化与批处理策略"
+      ],
+      "keyTerms": [
+        "Quantization",
+        "Pruning",
+        "Knowledge Distillation",
+        "ONNX",
+        "TensorRT"
+      ]
+    },
+    {
+      "no": 6,
+      "title": "部署架构与API",
+      "goal": "设计并实现LLM服务API",
+      "outline": [
+        "部署模式：本地、云、边缘",
+        "RESTful API与gRPC接口设计",
+        "使用FastAPI构建推理服务",
+        "负载均衡与自动扩缩容"
+      ],
+      "keyTerms": [
+        "Deployment",
+        "RESTful API",
+        "gRPC",
+        "FastAPI",
+        "Load Balancing"
+      ]
+    },
+    {
+      "no": 7,
+      "title": "实战：训练小型LLM",
+      "goal": "完成一个小型LLM的训练与微调",
+      "outline": [
+        "项目规划与数据准备",
+        "训练配置与启动",
+        "微调与评估",
+        "模型导出与保存"
+      ],
+      "keyTerms": [
+        "Project Planning",
+        "Training Configuration",
+        "Evaluation",
+        "Model Export"
+      ]
+    },
+    {
+      "no": 8,
+      "title": "实战：生产环境部署",
+      "goal": "将训练好的LLM部署到生产环境",
+      "outline": [
+        "容器化与Kubernetes部署",
+        "监控与日志收集",
+        "性能测试与优化",
+        "安全与权限管理"
+      ],
+      "keyTerms": [
+        "Docker",
+        "Kubernetes",
+        "Monitoring",
+        "Performance Testing",
+        "Security"
+      ]
+    }
+  ],
+  "starterQuestions": [
+    "训练LLM需要多少数据和计算资源？",
+    "微调与提示工程哪个更有效？",
+    "如何选择适合的量化方法？",
+    "部署LLM时如何保证低延迟和高并发？"
+  ],
+  "generated": true
+}

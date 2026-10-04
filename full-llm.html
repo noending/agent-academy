@@ -1,0 +1,1357 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="课题「LLM从训练到部署」自动生成课程(机器初稿,未经人工审校)。">
+<title>课题课程 · LLM训练到部署 | Agent 学院</title>
+<link rel="stylesheet" href="assets/css/style.css?v=21">
+</head>
+<body data-chapter="full">
+
+<header class="topbar">
+  <button class="icon-btn hamburger" id="hamburger" title="打开导航">☰</button>
+  <a class="brand" href="index.html"><span class="logo">学</span> Agent 学院 <small>从零开发智能体 · Ontology · Harness</small></a>
+  <span class="spacer"></span>
+  <span class="progress-pill" id="progress-pill">进度 0/10 章</span>
+  <button class="icon-btn" id="theme-btn">🌙</button>
+</header>
+
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <main class="content">
+    <div class="content-inner">
+
+      <header class="chapter-head">
+        <div class="kicker">课题生成课程 · 机器初稿 · 未审勿发布</div>
+        <h1>LLM训练到部署<span style="color:var(--warn)">(机器初稿)</span></h1>
+        <p class="lead">
+          课题:「LLM从训练到部署」 · 学习目标: 从基础入门到部署
+          <br><b style="color:var(--warn)">本课程由内容工厂按课题自动生成,章节内容来自模型知识、无外部引用——发布前必须逐条核实事实。</b>
+          共 8 章;配套导师: <code>node tutor/src/tutor.mjs --pack packs/llm</code>
+        </p>
+      </header>
+
+      <div class="callout warn">
+        <div class="co-title">人审须知(发布前必读)</div>
+        <p>① 逐章核实事实与代码可运行性(模型知识可能过时或有错);② 补充权威引用与延伸阅读;③ 删除全部「机器初稿/待审」字样;
+        ④ 通过后加入 index.html 学习路径与导航;⑤ 发布即代表确认内容质量由发布者负责。</p>
+      </div>
+
+ <h2>第1章 · LLM基础概念</h2>
+ <p><b>本章目标：</b>理解LLM核心概念与工作原理</p>
+ <h3>从统计语言模型到神经网络语言模型</h3>
+ <p>语言模型（Language Model）的核心任务很简单：<b>计算一个词序列出现的概率</b>。比如“今天天气真不错”这句话，语言模型会给出它作为一个合法句子的概率。早期我们用统计方法，比如 N-gram：假设每个词只依赖前面 N-1 个词。N=2 时，“不错”只依赖“真”。这种方法简单，但有两个致命问题：<b>数据稀疏</b>（很多词组合在语料里根本没出现过，概率为 0）和<b>上下文窗口太短</b>（无法捕捉长距离依赖）。</p><p>神经网络语言模型改变了游戏规则。它把词映射成稠密向量（词嵌入），然后用神经网络根据前面的词预测下一个词。这样即使没见过“真不错”这个组合，模型也能从“真好”“很棒”等相似语境中泛化。2017 年 Transformer 的出现，让模型可以并行处理整个序列，并且通过自注意力机制直接建模任意两个词之间的关系，这才有了今天的大语言模型（LLM）。</p><p>下面是一个用 PyTorch 实现的最简神经网络语言模型（Bigram 版），帮你直观感受“用神经网络预测下一个词”是怎么回事：</p><pre><code class="language-python">import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+# 假设词表只有 5 个词：我, 爱, 学习, 人工智能, &amp;lt;eos&amp;gt;
+vocab_size = 5
+embed_dim = 8
+
+class BigramLM(nn.Module):
+    def __init__(self):
+        super().__init__()
+        # 输入词索引 -&amp;gt; 嵌入向量
+        self.embed = nn.Embedding(vocab_size, embed_dim)
+        # 嵌入向量 -&amp;gt; 下一个词的 logits
+        self.linear = nn.Linear(embed_dim, vocab_size)
+
+    def forward(self, x):
+        # x: (batch, seq_len) 词索引
+        emb = self.embed(x)          # (batch, seq_len, embed_dim)
+        logits = self.linear(emb)    # (batch, seq_len, vocab_size)
+        return logits
+
+model = BigramLM()
+# 输入序列：我 爱 学习
+x = torch.tensor([[0, 1, 2]])
+logits = model(x)
+# 对最后一个位置的输出做 softmax，得到下一个词的概率分布
+probs = F.softmax(logits[0, -1], dim=-1)
+print(probs)  # 例如 tensor([0.1, 0.2, 0.3, 0.3, 0.1])
+</code></pre><p>这个模型只根据当前词预测下一个词，非常简陋，但已经包含了现代 LLM 的基本要素：<b>词嵌入 + 神经网络 + 概率输出</b>。真正的 LLM 只是把这个结构堆叠得极深、极宽，并用海量文本训练。</p>
+ <h3>Transformer 与自注意力机制</h3>
+ <p>Transformer 是 LLM 的骨架。它的核心是<b>自注意力（Self-Attention）</b>：对于序列中的每个词，计算它与其他所有词的关联程度，然后加权求和，得到新的表示。这样，每个词都能“看到”整个句子，并动态决定关注哪些部分。</p><p>自注意力的计算可以概括为三步：</p><ol><li>把每个词的向量分别投影成 Query（查询）、Key（键）、Value（值）三个向量。</li><li>用 Query 和所有 Key 做点积，得到注意力分数，再除以 √d 防止梯度消失，然后 softmax 归一化。</li><li>用归一化后的分数对 Value 加权求和，得到输出。</li></ol><p>用公式表示就是：<code>Attention(Q, K, V) = softmax(QK^T / √d) V</code>。多头注意力（Multi-Head Attention）则是并行做多组这样的计算，让模型从不同子空间捕捉信息。</p><p>下面是一个可运行的单头自注意力最小实现：</p><pre><code class="language-python">import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import math
+
+class SelfAttention(nn.Module):
+    def __init__(self, embed_dim):
+        super().__init__()
+        self.embed_dim = embed_dim
+        self.q_proj = nn.Linear(embed_dim, embed_dim)
+        self.k_proj = nn.Linear(embed_dim, embed_dim)
+        self.v_proj = nn.Linear(embed_dim, embed_dim)
+
+    def forward(self, x):
+        # x: (batch, seq_len, embed_dim)
+        Q = self.q_proj(x)
+        K = self.k_proj(x)
+        V = self.v_proj(x)
+        # 计算注意力分数
+        scores = torch.matmul(Q, K.transpose(-2, -1)) / math.sqrt(self.embed_dim)
+        attn = F.softmax(scores, dim=-1)
+        out = torch.matmul(attn, V)
+        return out, attn
+
+# 模拟一个 batch=1, seq_len=3, embed_dim=4 的输入
+x = torch.randn(1, 3, 4)
+attn_layer = SelfAttention(embed_dim=4)
+out, attn_weights = attn_layer(x)
+print('输出形状:', out.shape)          # torch.Size([1, 3, 4])
+print('注意力权重形状:', attn_weights.shape)  # torch.Size([1, 3, 3])
+print('注意力权重（每行和为1）:\n', attn_weights)
+</code></pre><p>运行后你会看到，每个位置对三个位置的注意力权重加起来是 1。这就是自注意力的直观含义：<b>每个词都在问“我应该关注谁？”</b>。Transformer 还包含前馈网络、残差连接、层归一化等组件，但自注意力是它区别于 RNN/CNN 的关键。</p>
+ <h3>预训练与微调范式</h3>
+ <p>现代 LLM 的训练分为两个阶段：<b>预训练（Pre-training）</b>和<b>微调（Fine-tuning）</b>。</p><p><b>预训练</b>是在海量无标注文本上进行的自监督学习。最常见的任务是“预测下一个词”（自回归语言建模，如 GPT 系列）或“完形填空”（掩码语言建模，如 BERT）。模型通过反复预测被遮住或接下来的词，学会了语法、事实知识、推理能力等。这个阶段计算量极大，通常需要数千 GPU/TPU 训练数周，成本极高。</p><p><b>微调</b>是在预训练模型的基础上，用少量标注数据（或指令数据）继续训练，让模型适应特定任务或领域。比如用医疗问答数据微调，模型就能更好地回答医学问题。微调需要的计算资源远小于预训练，是开发者最常接触的环节。</p><p>近年来还出现了<b>参数高效微调（PEFT）</b>，如 LoRA、Prefix Tuning，只训练极少量参数就能达到接近全量微调的效果，大大降低了门槛。</p><p>下面用 Hugging Face Transformers 演示一个极简的微调流程（以文本分类为例）：</p><pre><code class="language-python">from transformers import AutoTokenizer, AutoModelForSequenceClassification, Trainer, TrainingArguments
+import torch
+from torch.utils.data import Dataset
+
+# 加载预训练模型和分词器（这里用一个小模型演示）
+model_name = 'distilbert-base-uncased'
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=2)
+
+# 模拟一些训练数据
+texts = ['I love this movie', 'This is terrible', 'Great film', 'Awful experience']
+labels = [1, 0, 1, 0]
+
+class SimpleDataset(Dataset):
+    def __init__(self, texts, labels):
+        self.encodings = tokenizer(texts, truncation=True, padding=True, return_tensors='pt')
+        self.labels = labels
+    def __len__(self):
+        return len(self.labels)
+    def __getitem__(self, idx):
+        item = {key: val[idx] for key, val in self.encodings.items()}
+        item['labels'] = torch.tensor(self.labels[idx])
+        return item
+
+dataset = SimpleDataset(texts, labels)
+
+training_args = TrainingArguments(
+    output_dir='./results',
+    num_train_epochs=3,
+    per_device_train_batch_size=2,
+    logging_steps=1,
+    save_steps=10,
+)
+
+trainer = Trainer(
+    model=model,
+    args=training_args,
+    train_dataset=dataset,
+)
+
+trainer.train()
+print('微调完成！')
+</code></pre><p>这段代码展示了微调的标准流程：加载预训练模型 → 准备数据 → 配置训练参数 → 训练。实际项目中，你会用更大的模型和更多数据，但核心逻辑不变。</p>
+ <h3>LLM 的能力与局限性</h3>
+ <p>LLM 展现出了令人惊讶的能力：</p><ul><li><b>语言理解与生成</b>：流畅地写文章、翻译、总结、问答。</li><li><b>上下文学习（In-Context Learning）</b>：给几个例子，模型就能学会新任务，无需更新参数。</li><li><b>推理与代码</b>：能进行一定程度的逻辑推理，并生成可运行的代码。</li><li><b>知识存储</b>：预训练过程中“记住”了大量事实知识。</li></ul><p>但 LLM 也有明显的局限性：</p><ul><li><b>幻觉（Hallucination）</b>：模型会自信地编造不存在的事实。这是因为它的目标是预测下一个词，而不是追求真理。</li><li><b>上下文窗口有限</b>：虽然现在有 128K 甚至更长的上下文，但依然无法处理无限长的输入，且长上下文中的信息检索能力会下降。</li><li><b>知识截止</b>：预训练数据有时间截止点，模型不知道之后发生的事情。</li><li><b>推理能力不稳定</b>：在复杂数学、多步逻辑上容易出错。</li><li><b>计算成本高</b>：训练和推理都需要大量算力，部署时需要考虑延迟和吞吐。</li></ul><p>理解这些局限性，才能在后续章节中设计出更可靠的系统，比如用 RAG（检索增强生成）缓解幻觉，用缓存和量化优化推理速度。</p>
+ <h3>常见误区</h3>
+ <ul>
+ <li>LLM 真的“理解”语言。实际上，LLM 是通过统计规律预测下一个词，它的“理解”与人类不同，缺乏真实世界的体验和常识。</li>
+ <li>预训练和微调是一回事。预训练是在海量无标注数据上学习通用语言表示，微调是在特定任务数据上调整参数，两者目标、数据、成本都不同。</li>
+ <li>自注意力机制中每个词只关注自己。实际上，自注意力让每个词关注序列中所有词（包括自己），权重由学习得到，并非固定。</li>
+ </ul>
+ <h3>自测</h3>
+ <details class="quiz"><summary>请简要解释自注意力机制中 Query、Key、Value 的作用。</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>Query 代表当前词的查询需求，Key 代表其他词提供的索引信息，Value 代表其他词的实际内容。通过 Query 和 Key 的点积计算相关性权重，再用权重对 Value 加权求和，得到当前词的新表示。</p></div></details>
+ <details class="quiz"><summary>预训练和微调的主要区别是什么？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>预训练是在海量无标注文本上通过自监督任务（如预测下一个词）学习通用语言表示，计算成本极高；微调是在预训练模型基础上，用少量标注数据针对特定任务继续训练，计算成本较低，目的是让模型适应下游任务。</p></div></details>
+ <h3>动手练习（带参考方案）</h3>
+ <details class="fold"><summary>动手练习 · 使用 PyTorch 实现一个简单的多头自注意力模块（Multi-Head Self-Attenti…</summary><div class="fold-body"><p><b>任务：</b>使用 PyTorch 实现一个简单的多头自注意力模块（Multi-Head Self-Attention），输入形状为 (batch_size, seq_len, embed_dim)，输出形状相同。要求包含线性投影、分头、缩放点积注意力、合并头等步骤。</p><p><b>参考方案：</b></p>import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import math
+
+class MultiHeadSelfAttention(nn.Module):
+    def __init__(self, embed_dim, num_heads):
+        super().__init__()
+        assert embed_dim % num_heads == 0, 'embed_dim 必须能被 num_heads 整除'
+        self.embed_dim = embed_dim
+        self.num_heads = num_heads
+        self.head_dim = embed_dim // num_heads
+        self.q_proj = nn.Linear(embed_dim, embed_dim)
+        self.k_proj = nn.Linear(embed_dim, embed_dim)
+        self.v_proj = nn.Linear(embed_dim, embed_dim)
+        self.out_proj = nn.Linear(embed_dim, embed_dim)
+
+    def forward(self, x):
+        batch_size, seq_len, _ = x.shape
+        # 线性投影
+        Q = self.q_proj(x)  # (batch, seq_len, embed_dim)
+        K = self.k_proj(x)
+        V = self.v_proj(x)
+        # 分头: (batch, seq_len, num_heads, head_dim) -&gt; (batch, num_heads, seq_len, head_dim)
+        Q = Q.view(batch_size, seq_len, self.num_heads, self.head_dim).transpose(1, 2)
+        K = K.view(batch_size, seq_len, self.num_heads, self.head_dim).transpose(1, 2)
+        V = V.view(batch_size, seq_len, self.num_heads, self.head_dim).transpose(1, 2)
+        # 缩放点积注意力
+        scores = torch.matmul(Q, K.transpose(-2, -1)) / math.sqrt(self.head_dim)
+        attn = F.softmax(scores, dim=-1)
+        out = torch.matmul(attn, V)  # (batch, num_heads, seq_len, head_dim)
+        # 合并头
+        out = out.transpose(1, 2).contiguous().view(batch_size, seq_len, self.embed_dim)
+        out = self.out_proj(out)
+        return out
+
+# 测试
+x = torch.randn(2, 5, 16)
+mha = MultiHeadSelfAttention(embed_dim=16, num_heads=4)
+out = mha(x)
+print(out.shape)  # torch.Size([2, 5, 16])</div></details>
+
+ <h2>第2章 · 数据准备与预处理</h2>
+ <p><b>本章目标：</b>掌握构建高质量训练数据集的方法</p>
+ <h3>数据收集：来源与版权考量</h3>
+ <p>训练一个LLM，第一步不是写模型代码，而是找数据。数据质量直接决定模型的上限。常见的数据来源包括：公开网页（如Common Crawl）、书籍、学术论文、代码仓库、对话数据等。但收集数据时，<b>版权和合规性</b>是必须优先考虑的问题。</p><p>你需要关注：</p><ul><li><b>许可证</b>：数据是否允许商用？例如CC-BY-NC禁止商用，而MIT、Apache 2.0则相对宽松。</li><li><b>隐私</b>：是否包含个人身份信息（PII）？如姓名、电话、地址，必须脱敏。</li><li><b>偏见与毒性</b>：数据中可能包含歧视性言论，需要过滤。</li><li><b>来源可信度</b>：低质量网站（如内容农场）会污染模型。</li></ul><p>实际操作中，可以优先使用已清洗的开源数据集（如The Pile、C4、Wikipedia），或使用爬虫时遵守robots.txt并记录来源。一个简单的数据收集示例：从Hugging Face Datasets加载公开数据集。</p><pre><code class="language-python">from datasets import load_dataset
+
+# 加载wikitext-2数据集作为示例
+dataset = load_dataset('wikitext', 'wikitext-2-raw-v1', split='train')
+print(dataset[0])
+# 输出: {'text': '\n = Valkyria Chronicles III = \n'}</code></pre><p>记住：<b>数据收集不是越多越好，而是越相关、越干净越好</b>。在训练前，务必确认数据集的许可证和隐私政策。</p>
+ <h3>数据清洗：去重、过滤与格式化</h3>
+ <p>原始数据往往包含重复、噪声、格式混乱等问题。清洗的目标是得到<b>干净、一致、高质量</b>的文本。主要步骤包括：</p><ul><li><b>去重</b>：删除完全重复或近似重复的文档。重复数据会导致模型过拟合，降低泛化能力。常用方法：精确哈希（MD5）、SimHash、MinHash。</li><li><b>过滤</b>：移除低质量内容，如过短文本、乱码、HTML标签、广告等。可以基于规则（长度、特殊字符比例）或模型（质量分类器）。</li><li><b>格式化</b>：统一文本格式，如去除多余空格、换行，标准化Unicode字符。</li></ul><p>下面是一个简单的清洗示例，使用Python进行去重和过滤：</p><pre><code class="language-python">import hashlib
+from datasets import load_dataset
+
+def clean_text(text):
+    # 去除首尾空白，替换多个空格为单个
+    text = ' '.join(text.split())
+    return text
+
+def is_quality(text, min_len=50):
+    # 过滤过短文本
+    return len(text) &gt;= min_len
+
+dataset = load_dataset('wikitext', 'wikitext-2-raw-v1', split='train')
+seen_hashes = set()
+cleaned = []
+for example in dataset:
+    text = clean_text(example['text'])
+    if not is_quality(text):
+        continue
+    # 精确去重
+    h = hashlib.md5(text.encode()).hexdigest()
+    if h in seen_hashes:
+        continue
+    seen_hashes.add(h)
+    cleaned.append(text)
+
+print(f'原始样本数: {len(dataset)}, 清洗后: {len(cleaned)}')</code></pre><p><b>去重和过滤是数据清洗的核心</b>，能显著提升训练效率和模型质量。对于大规模数据，可以使用Spark或Dask进行分布式处理。</p>
+ <h3>分词器原理与训练</h3>
+ <p>分词器（Tokenizer）负责将文本转换为模型可处理的数字序列（token IDs）。<b>分词器的选择直接影响模型效果和推理速度</b>。主流的分词算法有BPE（Byte Pair Encoding）、WordPiece和SentencePiece。</p><p>以BPE为例，它从字符开始，反复合并出现频率最高的相邻字符对，直到达到预设的词表大小。这样既能处理未登录词，又能控制词表规模。</p><p>训练一个分词器通常使用Hugging Face的<code>tokenizers</code>库。下面是一个训练BPE分词器的最小示例：</p><pre><code class="language-python">from tokenizers import Tokenizer
+from tokenizers.models import BPE
+from tokenizers.trainers import BpeTrainer
+from tokenizers.pre_tokenizers import Whitespace
+
+# 初始化BPE分词器
+tokenizer = Tokenizer(BPE(unk_token='[UNK]'))
+tokenizer.pre_tokenizer = Whitespace()
+
+# 训练器：词表大小1000，特殊token
+trainer = BpeTrainer(special_tokens=['[UNK]', '[CLS]', '[SEP]', '[PAD]', '[MASK]'], vocab_size=1000)
+
+# 使用清洗后的文本训练
+tokenizer.train_from_iterator(cleaned, trainer=trainer)
+
+# 测试编码
+output = tokenizer.encode('Hello, world!')
+print(output.tokens)  # ['Hello', ',', 'world', '!']
+print(output.ids)     # [123, 45, 678, 90]</code></pre><p>训练完成后，保存分词器供后续使用：<code>tokenizer.save('tokenizer.json')</code>。<b>分词器必须与模型训练时使用的保持一致</b>，否则会导致性能下降。</p>
+ <h3>数据集划分与批处理</h3>
+ <p>在训练前，需要将数据集划分为训练集、验证集和测试集。通常比例为80/10/10或90/5/5。<b>验证集用于调参和早停，测试集用于最终评估</b>。划分时要确保数据分布一致，避免泄漏。</p><p>批处理（Batching）是将数据分成小批次输入模型，以提高训练效率和内存利用率。对于变长文本，需要填充（padding）到相同长度，或使用动态批处理（按长度分组）。</p><p>使用Hugging Face Datasets的<code>map</code>和<code>DataLoader</code>可以方便地实现：</p><pre><code class="language-python">from datasets import Dataset
+from transformers import DataCollatorWithPadding
+from torch.utils.data import DataLoader
+
+# 假设cleaned是清洗后的文本列表
+dataset = Dataset.from_dict({'text': cleaned})
+
+# 划分数据集
+train_test = dataset.train_test_split(test_size=0.2, seed=42)
+train_val = train_test['train'].train_test_split(test_size=0.1, seed=42)
+train_dataset = train_val['train']
+val_dataset = train_val['test']
+test_dataset = train_test['test']
+
+# 使用分词器编码
+def tokenize_function(examples):
+    return tokenizer(examples['text'], truncation=True, padding=False, max_length=128)
+
+train_dataset = train_dataset.map(tokenize_function, batched=True)
+val_dataset = val_dataset.map(tokenize_function, batched=True)
+
+# 动态填充的collator
+data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
+
+# 创建DataLoader
+train_loader = DataLoader(train_dataset, batch_size=8, shuffle=True, collate_fn=data_collator)
+
+# 查看一个批次
+batch = next(iter(train_loader))
+print(batch['input_ids'].shape)  # torch.Size([8, 128])</code></pre><p><b>动态批处理能减少填充，提升训练速度</b>。对于大规模数据，可以使用<code>IterableDataset</code>流式加载，避免内存不足。</p>
+ <h3>常见误区</h3>
+ <ul>
+ <li>数据越多越好：实际上，低质量或重复数据会损害模型性能，清洗和去重比单纯增加数据量更重要。</li>
+ <li>分词器可以随意选择：分词器必须与模型预训练时使用的保持一致，否则token分布不匹配，导致模型效果大幅下降。</li>
+ <li>验证集和测试集可以混用：测试集只能用于最终评估，如果用于调参会导致过拟合，失去客观性。</li>
+ </ul>
+ <h3>自测</h3>
+ <details class="quiz"><summary>为什么数据去重对LLM训练很重要？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>重复数据会导致模型在训练中多次看到相同样本，容易过拟合，降低泛化能力，同时浪费计算资源。去重可以提升数据多样性和训练效率。</p></div></details>
+ <details class="quiz"><summary>训练分词器时，词表大小（vocab_size）设置过小或过大分别有什么问题？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>词表过小会导致很多词被拆分成多个子词，序列变长，增加计算负担；词表过大则会导致参数矩阵变大，模型复杂度增加，且低频词可能训练不充分。需要根据任务和语料规模权衡。</p></div></details>
+ <h3>动手练习（带参考方案）</h3>
+ <details class="fold"><summary>动手练习 · 使用Hugging Face Datasets加载'wikitext-2-raw-v1'数据集，完成…</summary><div class="fold-body"><p><b>任务：</b>使用Hugging Face Datasets加载'wikitext-2-raw-v1'数据集，完成以下任务：1) 清洗文本（去除空行、过短文本，长度至少50字符）；2) 精确去重；3) 划分训练集、验证集、测试集（比例8:1:1）；4) 训练一个BPE分词器（词表大小500）；5) 使用分词器编码并创建DataLoader，批大小4，动态填充。输出各数据集大小和一个批次的input_ids形状。</p><p><b>参考方案：</b></p>import hashlib
+from datasets import load_dataset, Dataset
+from tokenizers import Tokenizer
+from tokenizers.models import BPE
+from tokenizers.trainers import BpeTrainer
+from tokenizers.pre_tokenizers import Whitespace
+from transformers import DataCollatorWithPadding
+from torch.utils.data import DataLoader
+
+# 1. 加载数据
+dataset = load_dataset('wikitext', 'wikitext-2-raw-v1', split='train')
+
+# 2. 清洗与去重
+cleaned = []
+seen = set()
+for example in dataset:
+    text = ' '.join(example['text'].split())
+    if len(text) &lt; 50:
+        continue
+    h = hashlib.md5(text.encode()).hexdigest()
+    if h in seen:
+        continue
+    seen.add(h)
+    cleaned.append(text)
+
+print(f'清洗后样本数: {len(cleaned)}')
+
+# 3. 划分数据集
+dataset = Dataset.from_dict({'text': cleaned})
+train_test = dataset.train_test_split(test_size=0.2, seed=42)
+train_val = train_test['train'].train_test_split(test_size=0.125, seed=42)  # 0.125*0.8=0.1
+train_dataset = train_val['train']
+val_dataset = train_val['test']
+test_dataset = train_test['test']
+print(f'训练集: {len(train_dataset)}, 验证集: {len(val_dataset)}, 测试集: {len(test_dataset)}')
+
+# 4. 训练分词器
+tokenizer = Tokenizer(BPE(unk_token='[UNK]'))
+tokenizer.pre_tokenizer = Whitespace()
+trainer = BpeTrainer(special_tokens=['[UNK]', '[CLS]', '[SEP]', '[PAD]', '[MASK]'], vocab_size=500)
+tokenizer.train_from_iterator(cleaned, trainer=trainer)
+
+# 5. 编码与DataLoader
+def tokenize_function(examples):
+    return tokenizer(examples['text'], truncation=True, padding=False, max_length=128)
+
+train_dataset = train_dataset.map(tokenize_function, batched=True)
+val_dataset = val_dataset.map(tokenize_function, batched=True)
+test_dataset = test_dataset.map(tokenize_function, batched=True)
+
+data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
+train_loader = DataLoader(train_dataset, batch_size=4, shuffle=True, collate_fn=data_collator)
+
+batch = next(iter(train_loader))
+print(batch['input_ids'].shape)  # 例如 torch.Size([4, 128])</div></details>
+
+ <h2>第3章 · 模型训练基础</h2>
+ <p><b>本章目标：</b>能够配置并启动LLM训练任务</p>
+ <h3>训练环境搭建：GPU与分布式</h3>
+ <p>要训练大语言模型，首先得把环境搭好。核心是<b>GPU</b>和<b>分布式训练</b>。单卡显存有限，模型大了就得用多卡甚至多机。</p><p>先检查你的GPU：</p><pre><code class="language-python">import torch
+print(torch.cuda.is_available())
+print(torch.cuda.device_count())
+print(torch.cuda.get_device_name(0))</code></pre><p>分布式训练常用<b>数据并行</b>（Data Parallelism），每个GPU持有完整模型副本，处理不同数据批次，梯度同步。PyTorch提供<code>DistributedDataParallel</code>（DDP）。启动方式：</p><pre><code class="language-python"># 单机多卡启动示例（命令行）
+torchrun --nproc_per_node=4 train.py</code></pre><p>在代码中初始化进程组：</p><pre><code class="language-python">import torch.distributed as dist
+dist.init_process_group(backend='nccl')
+local_rank = int(os.environ['LOCAL_RANK'])
+torch.cuda.set_device(local_rank)
+model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[local_rank])</code></pre><p><b>关键结论：</b>分布式训练能线性提升吞吐，但要注意学习率随全局批次大小调整。</p>
+ <h3>损失函数与优化器选择</h3>
+ <p>语言模型训练通常用<b>交叉熵损失</b>（CrossEntropyLoss），预测下一个token。PyTorch中：</p><pre><code class="language-python">import torch.nn as nn
+criterion = nn.CrossEntropyLoss(ignore_index=-100)  # 忽略padding</code></pre><p>优化器首选<b>AdamW</b>，它修正了权重衰减，适合Transformer。学习率常用预热+余弦衰减。</p><pre><code class="language-python">from transformers import AdamW, get_cosine_schedule_with_warmup
+optimizer = AdamW(model.parameters(), lr=5e-5, weight_decay=0.01)
+scheduler = get_cosine_schedule_with_warmup(optimizer, num_warmup_steps=1000, num_training_steps=10000)</code></pre><p><b>关键结论：</b>损失函数选交叉熵，优化器选AdamW，学习率要预热。</p>
+ <h3>训练循环与检查点保存</h3>
+ <p>训练循环是核心，包括前向传播、计算损失、反向传播、优化器更新。每若干步保存<b>检查点</b>（Checkpoint），防止训练中断丢失进度。</p><pre><code class="language-python">model.train()
+for epoch in range(epochs):
+    for step, batch in enumerate(dataloader):
+        inputs = batch['input_ids'].to(device)
+        labels = batch['labels'].to(device)
+        outputs = model(inputs, labels=labels)
+        loss = outputs.loss
+        loss.backward()
+        optimizer.step()
+        scheduler.step()
+        optimizer.zero_grad()
+        if step % 100 == 0:
+            torch.save({
+                'epoch': epoch,
+                'model_state_dict': model.state_dict(),
+                'optimizer_state_dict': optimizer.state_dict(),
+                'loss': loss.item()
+            }, f'checkpoint-{step}.pt')</code></pre><p><b>关键结论：</b>定期保存检查点，包含模型、优化器状态和当前步数。</p>
+ <h3>常见训练问题与调试</h3>
+ <p>训练中常遇到<b>损失不下降</b>、<b>梯度爆炸</b>、<b>显存不足</b>。调试方法：</p><ul><li>损失不降：检查学习率、数据标签、模型初始化。</li><li>梯度爆炸：使用梯度裁剪<code>torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)</code>。</li><li>显存不足：减小批次大小、使用梯度累积、混合精度训练。</li></ul><p>混合精度训练示例：</p><pre><code class="language-python">from torch.cuda.amp import autocast, GradScaler
+scaler = GradScaler()
+with autocast():
+    outputs = model(inputs, labels=labels)
+    loss = outputs.loss
+scaler.scale(loss).backward()
+scaler.step(optimizer)
+scaler.update()</code></pre><p><b>关键结论：</b>梯度裁剪和混合精度是稳定训练的利器。</p>
+ <h3>常见误区</h3>
+ <ul>
+ <li>学习率越大训练越快：过大的学习率会导致损失震荡甚至发散，需要预热和衰减。</li>
+ <li>检查点只保存模型权重就够了：恢复训练还需要优化器状态、学习率调度器状态和当前步数。</li>
+ <li>分布式训练一定比单卡快：如果通信开销大或批次太小，加速比可能很低，甚至变慢。</li>
+ </ul>
+ <h3>自测</h3>
+ <details class="quiz"><summary>为什么训练大语言模型通常使用AdamW而不是标准Adam？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>AdamW将权重衰减与梯度更新解耦，更适用于Transformer等模型，能防止过拟合且训练更稳定。</p></div></details>
+ <details class="quiz"><summary>保存检查点时除了模型参数，还应该保存什么？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>还应保存优化器状态、学习率调度器状态、当前epoch和step，以便精确恢复训练。</p></div></details>
+ <h3>动手练习（带参考方案）</h3>
+ <details class="fold"><summary>动手练习 · 编写一个简单的训练循环，使用PyTorch训练一个线性回归模型，要求包含损失函数、优化器、每10步打…</summary><div class="fold-body"><p><b>任务：</b>编写一个简单的训练循环，使用PyTorch训练一个线性回归模型，要求包含损失函数、优化器、每10步打印损失并保存检查点。</p><p><b>参考方案：</b></p>import torch
+import torch.nn as nn
+import torch.optim as optim
+
+# 数据
+X = torch.randn(100, 1)
+y = 3 * X + 2 + 0.1 * torch.randn(100, 1)
+
+# 模型
+model = nn.Linear(1, 1)
+criterion = nn.MSELoss()
+optimizer = optim.AdamW(model.parameters(), lr=0.01)
+
+for epoch in range(100):
+    model.train()
+    optimizer.zero_grad()
+    outputs = model(X)
+    loss = criterion(outputs, y)
+    loss.backward()
+    optimizer.step()
+    if epoch % 10 == 0:
+        print(f'Epoch {epoch}, Loss: {loss.item():.4f}')
+        torch.save({
+            'epoch': epoch,
+            'model_state_dict': model.state_dict(),
+            'optimizer_state_dict': optimizer.state_dict(),
+            'loss': loss.item()
+        }, f'checkpoint-{epoch}.pt')</div></details>
+
+ <h2>第4章 · 微调与对齐</h2>
+ <p><b>本章目标：</b>使用微调技术适配下游任务</p>
+ <h3>4.1 全参数微调 vs 参数高效微调：为什么需要 LoRA？</h3>
+ <p>大家好，欢迎来到第4章。前面我们已经预训练或拿到了一个基础模型，但它可能只会“续写”，不会“听话”。微调就是让模型适配下游任务的关键一步。</p><p>最直接的方法是<b>全参数微调（Full Fine-tuning）</b>：拿预训练权重，在下游数据上继续用较小的学习率训练所有参数。效果通常最好，但代价也最大——一个 7B 模型全量微调，优化器状态 + 梯度 + 参数本身，显存轻松超过 80GB，而且每个任务都要存一份完整权重。</p><p>于是有了<b>参数高效微调（PEFT）</b>，代表就是 <b>LoRA（Low-Rank Adaptation）</b>。它的核心思想非常优雅：<b>冻结原模型权重，只在旁边插入一小对低秩矩阵，训练时只更新这对小矩阵。</b></p><p>具体来说，对于原权重 <code>W ∈ R^{d×k}</code>，LoRA 不直接改 W，而是学习一个增量 <code>ΔW = B·A</code>，其中 <code>A ∈ R^{r×k}</code>，<code>B ∈ R^{d×r}</code>，秩 <code>r</code> 远小于 d、k。前向变成：</p><pre><code class="language-python">h = Wx + (alpha / r) * B(Ax)</code></pre><p>初始化时 A 用高斯随机，B 全零，所以训练开始时 ΔW=0，不破坏原模型。训练完只需要保存 A 和 B，一个 7B 模型的 LoRA 权重可能只有几十 MB。</p><p>下面是一个用 HuggingFace PEFT 库给模型加 LoRA 的最小示例：</p><pre><code class="language-python">from transformers import AutoModelForCausalLM
+from peft import LoraConfig, get_peft_model
+
+model = AutoModelForCausalLM.from_pretrained("gpt2")
+
+lora_config = LoraConfig(
+    r=8,                      # 低秩维度
+    lora_alpha=16,            # 缩放系数
+    target_modules=["c_attn"], # 对哪些层加 LoRA
+    lora_dropout=0.05,
+    bias="none",
+    task_type="CAUSAL_LM"
+)
+
+model = get_peft_model(model, lora_config)
+model.print_trainable_parameters()
+# 输出类似: trainable params: 294,912 || all params: 124,734,720 || trainable%: 0.24%
+</code></pre><p>可以看到，可训练参数只有 0.24%。<b>LoRA 用极小的训练成本，换来了接近全量微调的效果</b>，这就是它成为当前微调事实标准的原因。</p>
+ <h3>4.2 QLoRA：把大模型塞进单卡</h3>
+ <p>LoRA 已经省了很多，但基座模型本身还是要占显存。一个 7B 模型用 fp16 加载就要约 14GB，加上激活值，单张 24GB 卡还是紧张。于是 <b>QLoRA（Quantized LoRA）</b> 登场了。</p><p>QLoRA 做了三件事：</p><ul><li><b>4-bit 量化基座模型</b>：用 NF4（Normal Float 4）这种信息论上对正态分布权重最优的 4-bit 数据类型加载原模型，显存直接降到约 1/4。</li><li><b>双重量化</b>：对量化常数再量化一次，进一步省显存。</li><li><b>分页优化器</b>：用 NVIDIA 统一内存，避免显存尖峰导致 OOM。</li></ul><p>关键点：<b>基座是 4-bit 冻结的，只有 LoRA 适配器用 bf16 训练</b>。所以梯度精度不受量化影响，效果几乎不掉。</p><p>用 bitsandbytes + PEFT 实现 QLoRA 的最小代码：</p><pre><code class="language-python">import torch
+from transformers import AutoModelForCausalLM, BitsAndBytesConfig
+from peft import LoraConfig, get_peft_model
+
+bnb_config = BitsAndBytesConfig(
+    load_in_4bit=True,
+    bnb_4bit_quant_type="nf4",
+    bnb_4bit_compute_dtype=torch.bfloat16,
+    bnb_4bit_use_double_quant=True,
+)
+
+model = AutoModelForCausalLM.from_pretrained(
+    "meta-llama/Llama-2-7b-hf",
+    quantization_config=bnb_config,
+    device_map="auto",
+)
+
+lora_config = LoraConfig(
+    r=16, lora_alpha=32,
+    target_modules=["q_proj", "v_proj"],
+    lora_dropout=0.05, bias="none", task_type="CAUSAL_LM"
+)
+model = get_peft_model(model, lora_config)
+model.print_trainable_parameters()
+</code></pre><p>这样一张 24GB 的 4090 就能微调 7B 模型，甚至 33B 模型也能在 48GB 卡上跑起来。<b>QLoRA 让“个人开发者微调大模型”从不可能变成了日常。</b></p><p>实践建议：<code>r</code> 一般取 8~64，任务越复杂取越大；<code>target_modules</code> 至少覆盖 q_proj 和 v_proj，追求效果可以加上 k_proj、o_proj 和 MLP 层。</p>
+ <h3>4.3 指令微调与 RLHF：让模型“听懂人话”</h3>
+ <p>光会续写的模型不是好助手。要让它遵循指令，需要 <b>指令微调（Instruction Tuning）</b>：用大量“指令-回答”对训练，格式通常长这样：</p><pre><code class="language-python">### Instruction:
+把下面的句子翻译成英文。
+### Input:
+今天天气很好。
+### Response:
+The weather is nice today.</code></pre><p>指令微调让模型学会“看到指令就执行”，这是 ChatGPT 类模型的第一阶段对齐。</p><p>第二阶段是 <b>RLHF（Reinforcement Learning from Human Feedback，基于人类反馈的强化学习）</b>，经典三步：</p><ol><li><b>监督微调（SFT）</b>：用高质量示范数据微调，就是上面的指令微调。</li><li><b>训练奖励模型（RM）</b>：让人类对同一问题的多个回答排序，训练一个模型去预测“人类更喜欢哪个回答”。</li><li><b>PPO 强化学习</b>：用奖励模型当裁判，让语言模型生成更受偏好的回答，同时加 KL 惩罚防止跑偏。</li></ol><p>RLHF 效果很好但工程复杂、不稳定。现在更流行 <b>DPO（Direct Preference Optimization）</b>：跳过奖励模型和 PPO，直接用偏好数据对优化策略，简单又稳定。很多开源模型（如 Zephyr、Llama-3-Instruct）都用 DPO 或类似方法。</p><p>一个用 TRL 做 DPO 的极简片段：</p><pre><code class="language-python">from trl import DPOTrainer, DPOConfig
+
+config = DPOConfig(
+    beta=0.1,               # KL 约束强度
+    learning_rate=5e-5,
+    per_device_train_batch_size=2,
+    num_train_epochs=1,
+)
+
+trainer = DPOTrainer(
+    model=model,
+    ref_model=None,         # 用 PEFT 时可传 None
+    args=config,
+    train_dataset=preference_dataset,  # 含 prompt/chosen/rejected
+    tokenizer=tokenizer,
+)
+trainer.train()
+</code></pre><p><b>一句话总结：SFT 教模型“怎么做”，RLHF/DPO 教模型“做什么更好”。</b></p>
+ <h3>4.4 如何评估微调效果？</h3>
+ <p>训练完不是结束，评估才是决定能不能上线的关键。微调评估分三个层次：</p><ul><li><b>任务指标</b>：分类任务看准确率/F1，生成任务看 ROUGE、BLEU、BERTScore，代码任务看 pass@k。</li><li><b>通用能力</b>：用 MMLU、GSM8K 等基准检查是否“灾难性遗忘”——微调后模型变笨了没有。</li><li><b>人工/模型评估</b>：用 GPT-4 或人工对回答打分，看有用性、安全性、格式遵循度。</li></ul><p>一个常见的坑：只看训练 loss 下降就以为成功了。实际上小数据集上 loss 很快降到 0，但模型可能只是背下了答案，泛化很差。</p><p>推荐做法：</p><ol><li>留出验证集，训练时监控验证 loss。</li><li>用 lm-evaluation-harness 跑标准基准，对比微调前后。</li><li>准备 20~50 条真实业务问题，人工盲评。</li><li>检查输出格式是否稳定（比如 JSON 是否总能解析）。</li></ol><p>下面用 lm-eval 跑一个基准的例子：</p><pre><code class="language-python"># 命令行方式
+# lm_eval --model hf \
+#   --model_args pretrained=./my-lora-merged \
+#   --tasks mmlu,gsm8k \
+#   --batch_size 8
+
+# Python 方式
+import lm_eval
+results = lm_eval.simple_evaluate(
+    model="hf",
+    model_args="pretrained=./my-lora-merged",
+    tasks=["mmlu", "gsm8k"],
+    batch_size=8,
+)
+print(results["results"])
+</code></pre><p><b>记住：没有评估的微调等于赌博。</b>每次微调都要有基线对比，才能知道改动到底有没有用。</p>
+ <h3>常见误区</h3>
+ <ul>
+ <li>LoRA 只能用于注意力层，其实也可以加到 MLP、LayerNorm 等模块，target_modules 的选择会显著影响效果。</li>
+ <li>QLoRA 的 4-bit 量化会严重损失效果，实际上 NF4 + 双重量化在多数任务上几乎无损，因为 LoRA 适配器仍以 bf16 训练。</li>
+ <li>RLHF 一定比 DPO 好，实际上 DPO 在很多场景下效果相当甚至更稳定，且实现简单得多，是当前主流选择。</li>
+ </ul>
+ <h3>自测</h3>
+ <details class="quiz"><summary>LoRA 为什么能大幅减少可训练参数量？它的前向计算是如何进行的？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>LoRA 冻结原权重 W，只训练两个低秩矩阵 A 和 B，用 ΔW = B·A 近似权重更新。前向为 h = Wx + (alpha/r)·B(Ax)。因为 r 远小于原维度，可训练参数从 d×k 降到 r×(d+k)，通常只有原模型的 0.1%~1%。</p></div></details>
+ <details class="quiz"><summary>QLoRA 相比 LoRA 多了哪些关键技术？为什么它能在单卡上微调 7B 模型？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>QLoRA 在 LoRA 基础上增加了：4-bit NF4 量化基座模型、双重量化、分页优化器。基座以 4-bit 加载使显存降到约 1/4，而 LoRA 适配器仍用 bf16 训练保证精度，因此 24GB 单卡即可微调 7B 模型。</p></div></details>
+ <h3>动手练习（带参考方案）</h3>
+ <details class="fold"><summary>动手练习 · 使用 HuggingFace 生态，对一个开源小模型（如 gpt2 或 TinyLlama）进行 L…</summary><div class="fold-body"><p><b>任务：</b>使用 HuggingFace 生态，对一个开源小模型（如 gpt2 或 TinyLlama）进行 LoRA 微调，完成一个简单的指令跟随任务（例如：给定中文句子，输出英文翻译）。要求：1) 构造至少 50 条指令-回答数据；2) 配置 LoRA 并训练；3) 保存适配器；4) 加载适配器进行推理，对比微调前后的输出。</p><p><b>参考方案：</b></p>import torch
+from datasets import Dataset
+from transformers import AutoTokenizer, AutoModelForCausalLM, TrainingArguments, Trainer
+from peft import LoraConfig, get_peft_model, PeftModel
+
+# 1. 构造数据
+data = [
+    {"instruction": "把下面的句子翻译成英文。", "input": "今天天气很好。", "output": "The weather is nice today."},
+    {"instruction": "把下面的句子翻译成英文。", "input": "我喜欢吃苹果。", "output": "I like eating apples."},
+    # ... 至少 50 条
+]
+
+def format_example(ex):
+    return {"text": f"### Instruction:\n{ex['instruction']}\n### Input:\n{ex['input']}\n### Response:\n{ex['output']}"}
+
+dataset = Dataset.from_list(data).map(format_example)
+
+# 2. 加载模型和 tokenizer
+tokenizer = AutoTokenizer.from_pretrained("gpt2")
+tokenizer.pad_token = tokenizer.eos_token
+model = AutoModelForCausalLM.from_pretrained("gpt2")
+
+# 3. 配置 LoRA
+lora_config = LoraConfig(
+    r=8, lora_alpha=16,
+    target_modules=["c_attn"],
+    lora_dropout=0.05, bias="none", task_type="CAUSAL_LM"
+)
+model = get_peft_model(model, lora_config)
+model.print_trainable_parameters()
+
+# 4. tokenize
+def tokenize(ex):
+    out = tokenizer(ex["text"], truncation=True, padding="max_length", max_length=128)
+    out["labels"] = out["input_ids"].copy()
+    return out
+
+tokenized = dataset.map(tokenize, remove_columns=dataset.column_names)
+
+# 5. 训练
+training_args = TrainingArguments(
+    output_dir="./lora-out",
+    per_device_train_batch_size=2,
+    num_train_epochs=5,
+    learning_rate=2e-4,
+    logging_steps=10,
+    save_strategy="epoch",
+    report_to="none",
+)
+
+trainer = Trainer(
+    model=model,
+    args=training_args,
+    train_dataset=tokenized,
+)
+trainer.train()
+
+# 6. 保存适配器
+model.save_pretrained("./lora-adapter")
+
+# 7. 推理对比
+prompt = "### Instruction:\n把下面的句子翻译成英文。\n### Input:\n今天天气很好。\n### Response:\n"
+
+# 微调前
+base = AutoModelForCausalLM.from_pretrained("gpt2")
+inputs = tokenizer(prompt, return_tensors="pt")
+print("微调前:", tokenizer.decode(base.generate(**inputs, max_new_tokens=30)[0], skip_special_tokens=True))
+
+# 微调后
+peft_model = PeftModel.from_pretrained(base, "./lora-adapter")
+print("微调后:", tokenizer.decode(peft_model.generate(**inputs, max_new_tokens=30)[0], skip_special_tokens=True))
+</div></details>
+
+ <h2>第5章 · 模型优化与压缩</h2>
+ <p><b>本章目标：</b>优化模型推理速度与资源占用</p>
+ <h3>量化：PTQ与QAT</h3>
+ <p>量化是把模型参数和激活值从高精度（如FP32）转换为低精度（如INT8）的过程，能大幅减少内存占用和加速推理。<b>训练后量化（PTQ）</b>无需重新训练，直接对训练好的模型进行量化，简单快速但可能损失精度；<b>量化感知训练（QAT）</b>在训练过程中模拟量化误差，让模型适应低精度，通常精度更高但需要训练资源。</p><p>下面是一个使用PyTorch进行动态量化的最小示例，对线性层进行INT8量化：</p><pre><code class="language-python">import torch
+import torch.quantization
+
+# 定义一个简单模型
+class SimpleModel(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.fc = torch.nn.Linear(10, 5)
+    def forward(self, x):
+        return self.fc(x)
+
+model = SimpleModel()
+# 动态量化（仅量化权重，激活在运行时量化）
+quantized_model = torch.quantization.quantize_dynamic(
+    model, {torch.nn.Linear}, dtype=torch.qint8
+)
+print(quantized_model)
+# 比较大小
+print(f"原始模型大小: {sum(p.numel() for p in model.parameters()) * 4} bytes")
+print(f"量化模型大小: {sum(p.numel() for p in quantized_model.parameters()) * 1} bytes")</code></pre><p>运行后可以看到量化模型大小约为原始模型的1/4。<b>PTQ适合快速部署，QAT适合对精度要求高的场景。</b></p>
+ <h3>剪枝与知识蒸馏</h3>
+ <p><b>剪枝</b>通过移除模型中不重要的权重或神经元来减少参数量和计算量。常见方法有非结构化剪枝（移除单个权重）和结构化剪枝（移除整个通道或层）。<b>知识蒸馏</b>让一个小模型（学生）模仿大模型（教师）的输出分布，从而获得接近大模型的性能。</p><p>下面是一个简单的知识蒸馏训练示例，使用KL散度损失：</p><pre><code class="language-python">import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+# 教师模型（大）和学生模型（小）
+teacher = nn.Sequential(nn.Linear(10, 100), nn.ReLU(), nn.Linear(100, 5))
+student = nn.Sequential(nn.Linear(10, 20), nn.ReLU(), nn.Linear(20, 5))
+
+# 模拟数据
+x = torch.randn(32, 10)
+
+# 蒸馏损失：学生模仿教师的软输出
+teacher.eval()
+with torch.no_grad():
+    teacher_logits = teacher(x)
+    teacher_probs = F.softmax(teacher_logits / 2.0, dim=1)  # 温度T=2
+
+student_logits = student(x)
+student_log_probs = F.log_softmax(student_logits / 2.0, dim=1)
+loss = F.kl_div(student_log_probs, teacher_probs, reduction='batchmean')
+print(f"蒸馏损失: {loss.item():.4f}")</code></pre><p><b>剪枝和蒸馏可以结合使用，先剪枝再蒸馏微调，能进一步压缩模型。</b></p>
+ <h3>推理加速：ONNX与TensorRT</h3>
+ <p><b>ONNX</b>（Open Neural Network Exchange）是一种开放的模型格式，支持跨框架转换和优化。<b>TensorRT</b>是NVIDIA的高性能推理SDK，能对ONNX模型进一步优化，利用GPU加速。</p><p>将PyTorch模型导出为ONNX格式的示例：</p><pre><code class="language-python">import torch
+import torch.onnx
+
+# 定义一个简单模型
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.fc = torch.nn.Linear(10, 5)
+    def forward(self, x):
+        return self.fc(x)
+
+model = Model()
+dummy_input = torch.randn(1, 10)
+
+# 导出为ONNX
+torch.onnx.export(
+    model, dummy_input, "model.onnx",
+    input_names=["input"], output_names=["output"],
+    dynamic_axes={"input": {0: "batch"}, "output": {0: "batch"}}
+)
+print("ONNX模型已导出")
+
+# 使用ONNX Runtime推理
+import onnxruntime as ort
+import numpy as np
+
+ort_session = ort.InferenceSession("model.onnx")
+input_data = np.random.randn(1, 10).astype(np.float32)
+outputs = ort_session.run(None, {"input": input_data})
+print("ONNX Runtime推理输出形状:", outputs[0].shape)</code></pre><p>对于TensorRT，可以使用<code>torch-tensorrt</code>或<code>trtexec</code>工具将ONNX转换为TensorRT引擎，获得更低的延迟。<b>ONNX提供跨平台兼容性，TensorRT则针对NVIDIA GPU极致优化。</b></p>
+ <h3>内存优化与批处理策略</h3>
+ <p>内存优化和批处理能显著提升推理吞吐量。<b>梯度检查点</b>用计算换内存，<b>混合精度训练</b>减少显存占用，<b>动态批处理</b>将多个请求合并处理以提高GPU利用率。</p><p>下面是一个使用PyTorch进行混合精度推理的示例：</p><pre><code class="language-python">import torch
+
+model = torch.nn.Linear(1000, 1000).cuda()
+input_data = torch.randn(32, 1000).cuda()
+
+# 混合精度推理
+with torch.cuda.amp.autocast():
+    output = model(input_data)
+print(f"输出类型: {output.dtype}")  # 应为float16
+
+# 动态批处理模拟：将多个小批次合并
+batch1 = torch.randn(4, 1000).cuda()
+batch2 = torch.randn(4, 1000).cuda()
+combined = torch.cat([batch1, batch2], dim=0)
+with torch.no_grad():
+    out = model(combined)
+print(f"合并批次输出形状: {out.shape}")</code></pre><p><b>合理设置批大小和采用动态批处理能最大化硬件利用率，但需注意延迟与吞吐的权衡。</b></p>
+ <h3>常见误区</h3>
+ <ul>
+ <li>量化一定会导致明显的精度下降，实际上PTQ在多数模型上精度损失很小，QAT可以几乎无损。</li>
+ <li>剪枝后模型一定变小，非结构化剪枝需要特定硬件支持才能加速，否则只是稀疏存储。</li>
+ <li>知识蒸馏只能用于分类任务，实际上蒸馏可用于各种任务，包括生成任务。</li>
+ </ul>
+ <h3>自测</h3>
+ <details class="quiz"><summary>PTQ和QAT的主要区别是什么？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>PTQ是训练后量化，无需重新训练，简单快速但可能损失精度；QAT是量化感知训练，在训练中模拟量化，精度更高但需要训练资源。</p></div></details>
+ <details class="quiz"><summary>ONNX和TensorRT在推理加速中分别扮演什么角色？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>ONNX是一种开放的模型交换格式，实现跨框架兼容；TensorRT是NVIDIA的推理优化器，针对GPU进一步加速，通常将ONNX转换为TensorRT引擎。</p></div></details>
+ <h3>动手练习（带参考方案）</h3>
+ <details class="fold"><summary>动手练习 · 使用PyTorch定义一个简单的全连接模型，分别进行动态量化和静态量化（PTQ），比较模型大小和推理…</summary><div class="fold-body"><p><b>任务：</b>使用PyTorch定义一个简单的全连接模型，分别进行动态量化和静态量化（PTQ），比较模型大小和推理速度。</p><p><b>参考方案：</b></p>import torch
+import torch.quantization
+import time
+
+# 定义模型
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.fc1 = torch.nn.Linear(100, 50)
+        self.relu = torch.nn.ReLU()
+        self.fc2 = torch.nn.Linear(50, 10)
+    def forward(self, x):
+        return self.fc2(self.relu(self.fc1(x)))
+
+model = Model()
+model.eval()
+
+# 动态量化
+dynamic_quantized = torch.quantization.quantize_dynamic(
+    model, {torch.nn.Linear}, dtype=torch.qint8
+)
+
+# 静态量化（PTQ）
+model.qconfig = torch.quantization.get_default_qconfig('fbgemm')
+static_quantized = torch.quantization.prepare(model, inplace=False)
+# 校准（用一些数据）
+calib_data = torch.randn(100, 100)
+static_quantized(calib_data)
+static_quantized = torch.quantization.convert(static_quantized, inplace=False)
+
+# 比较大小
+def model_size(m):
+    return sum(p.numel() for p in m.parameters()) * 4  # 假设FP32
+
+print(f"原始模型大小: {model_size(model)} bytes")
+print(f"动态量化模型大小: {model_size(dynamic_quantized)} bytes")
+print(f"静态量化模型大小: {model_size(static_quantized)} bytes")
+
+# 推理速度测试
+input_data = torch.randn(1, 100)
+
+with torch.no_grad():
+    start = time.time()
+    for _ in range(1000):
+        model(input_data)
+    print(f"原始模型推理时间: {time.time() - start:.4f}s")
+
+    start = time.time()
+    for _ in range(1000):
+        dynamic_quantized(input_data)
+    print(f"动态量化推理时间: {time.time() - start:.4f}s")
+
+    start = time.time()
+    for _ in range(1000):
+        static_quantized(input_data)
+    print(f"静态量化推理时间: {time.time() - start:.4f}s")</div></details>
+
+ <h2>第6章 · 部署架构与API</h2>
+ <p><b>本章目标：</b>设计并实现LLM服务API</p>
+ <h3>部署模式：本地、云、边缘</h3>
+ <p>部署大语言模型时，首先要决定模型跑在哪里。常见模式有三种：<b>本地部署</b>、<b>云部署</b>和<b>边缘部署</b>。它们各有优劣，选择取决于你的业务需求、预算和延迟要求。</p><ul><li><b>本地部署</b>：模型运行在自己的服务器或工作站上。优点：数据不出内网，隐私安全；无网络延迟；一次性硬件投入。缺点：需要维护硬件，扩展性差，前期成本高。适合对数据安全要求极高的场景，如金融、医疗。</li><li><b>云部署</b>：模型托管在云服务器（如 AWS、GCP、阿里云）上。优点：弹性伸缩，按需付费，免运维。缺点：数据需上传云端，有网络延迟，长期使用成本可能较高。适合大多数互联网应用。</li><li><b>边缘部署</b>：模型运行在终端设备（如手机、IoT 设备）上。优点：超低延迟，离线可用，隐私保护好。缺点：算力有限，只能跑小模型或量化模型。适合移动端 AI 助手、智能摄像头等。</li></ul><p>实际生产中，常采用<b>混合部署</b>：核心模型在云上，轻量模型在边缘，敏感数据在本地处理。例如，一个智能客服系统可以在云端跑大模型，在手机端跑意图识别小模型。</p><p>下面是一个简单的 Python 脚本，用于检测当前环境适合哪种部署模式（根据可用内存和 GPU）。</p><pre><code class="language-python">import psutil
+import torch
+
+def suggest_deployment():
+    mem_gb = psutil.virtual_memory().total / (1024**3)
+    has_gpu = torch.cuda.is_available()
+    if has_gpu and mem_gb &gt;= 32:
+        return "本地/云服务器（可跑大模型）"
+    elif mem_gb &gt;= 16:
+        return "云服务器（中等模型）"
+    else:
+        return "边缘设备（需量化小模型）"
+
+print(suggest_deployment())</code></pre><p>运行前需安装 <code>psutil</code> 和 <code>torch</code>。这个例子帮你快速判断当前机器适合哪种部署模式。</p>
+ <h3>RESTful API 与 gRPC 接口设计</h3>
+ <p>模型部署后，需要对外提供接口。最常用的是 <b>RESTful API</b> 和 <b>gRPC</b>。RESTful API 基于 HTTP/1.1，使用 JSON 传输，简单通用，适合 Web 和移动端。gRPC 基于 HTTP/2，使用 Protocol Buffers 二进制传输，性能高，适合内部服务间通信。</p><p><b>RESTful API 设计要点</b>：</p><ul><li>使用名词表示资源，如 <code>/v1/completions</code>。</li><li>用 HTTP 方法表示操作：GET 获取，POST 创建，PUT 更新，DELETE 删除。</li><li>状态码：200 成功，400 客户端错误，500 服务器错误。</li><li>请求和响应使用 JSON。</li></ul><p><b>gRPC 设计要点</b>：</p><ul><li>定义 <code>.proto</code> 文件，声明服务和消息格式。</li><li>支持四种流式：一元、服务器流、客户端流、双向流。</li><li>适合低延迟、高吞吐场景，如模型推理。</li></ul><p>下面是一个简单的 gRPC 服务定义示例（<code>inference.proto</code>）：</p><pre><code class="language-python">syntax = "proto3";
+
+service Inference {
+  rpc Predict (PredictRequest) returns (PredictResponse);
+}
+
+message PredictRequest {
+  string prompt = 1;
+  int32 max_tokens = 2;
+}
+
+message PredictResponse {
+  string text = 1;
+}</code></pre><p>对应的 RESTful API 可能长这样：</p><pre><code class="language-python">POST /v1/predict
+Content-Type: application/json
+
+{
+  "prompt": "你好",
+  "max_tokens": 50
+}
+
+响应：
+{
+  "text": "你好！有什么可以帮你的吗？"
+}</code></pre><p><b>选择建议</b>：对外公开 API 用 RESTful，内部微服务间用 gRPC。如果团队熟悉 HTTP，RESTful 更易上手；如果追求极致性能，选 gRPC。</p>
+ <h3>使用 FastAPI 构建推理服务</h3>
+ <p>FastAPI 是一个现代、高性能的 Python Web 框架，非常适合构建 LLM 推理服务。它支持异步、自动生成文档，并且与 Pydantic 集成良好。</p><p>下面是一个完整的 FastAPI 推理服务示例，使用 Hugging Face 的 <code>transformers</code> 加载一个小模型（如 GPT-2）进行文本生成。</p><pre><code class="language-python">from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+from transformers import pipeline
+import uvicorn
+
+app = FastAPI(title="LLM Inference API")
+
+# 加载模型（首次运行会下载）
+generator = pipeline("text-generation", model="gpt2")
+
+class GenerationRequest(BaseModel):
+    prompt: str
+    max_length: int = 50
+    temperature: float = 0.7
+
+class GenerationResponse(BaseModel):
+    generated_text: str
+
+@app.post("/v1/generate", response_model=GenerationResponse)
+async def generate(request: GenerationRequest):
+    try:
+        result = generator(
+            request.prompt,
+            max_length=request.max_length,
+            temperature=request.temperature,
+            do_sample=True
+        )
+        return GenerationResponse(generated_text=result[0]["generated_text"])
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)</code></pre><p>运行方式：<code>python app.py</code>，然后访问 <code>http://localhost:8000/docs</code> 查看自动生成的 API 文档。你可以用 curl 测试：</p><pre><code class="language-python">curl -X POST http://localhost:8000/v1/generate -H "Content-Type: application/json" -d '{"prompt": "Hello, world", "max_length": 30}'</code></pre><p><b>关键点</b>：使用 <code>async def</code> 定义异步端点，避免阻塞；用 Pydantic 模型校验请求和响应；通过 <code>uvicorn</code> 启动服务。对于生产环境，建议使用 Gunicorn 管理多个 Uvicorn worker。</p>
+ <h3>负载均衡与自动扩缩容</h3>
+ <p>当请求量增大时，单个服务实例可能扛不住。这时需要<b>负载均衡</b>和<b>自动扩缩容</b>。</p><p><b>负载均衡</b>：将请求分发到多个服务实例。常见策略：轮询、最少连接、IP 哈希。工具：Nginx、HAProxy、云厂商的 LB（如 AWS ALB）。</p><p><b>自动扩缩容</b>：根据指标（如 CPU、QPS）动态调整实例数量。Kubernetes 的 HPA（Horizontal Pod Autoscaler）是典型方案。它监控 Pod 的 CPU/内存使用率，自动增加或减少副本数。</p><p>下面是一个 Kubernetes HPA 配置示例，针对我们的 FastAPI 服务：</p><pre><code class="language-python">apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: llm-inference-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: llm-inference
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70</code></pre><p>这个 HPA 会在 CPU 平均利用率超过 70% 时增加 Pod，最多 10 个；低于时减少，最少 2 个。</p><p>对于 LLM 服务，由于模型加载慢，扩缩容需要预热。建议使用<b>就绪探针</b>确保模型加载完成后再接收流量。另外，可以结合队列（如 Redis）做请求缓冲，避免突发流量打垮服务。</p><p><b>总结</b>：负载均衡提高可用性，自动扩缩容应对流量波动。两者结合，才能构建稳定的生产级 LLM 服务。</p>
+ <h3>常见误区</h3>
+ <ul>
+ <li>认为本地部署一定比云部署便宜：实际上，本地部署需要购买 GPU 服务器、支付电费和运维人力，长期看可能比云服务更贵，尤其对于波动负载。</li>
+ <li>认为 gRPC 总是比 RESTful 好：gRPC 性能高但调试复杂，浏览器支持有限，对外 API 用 RESTful 更通用。</li>
+ <li>忽略模型加载时间，直接做快速扩缩容：LLM 加载可能需几分钟，扩缩容必须配合就绪探针和预热，否则新实例无法及时处理请求。</li>
+ </ul>
+ <h3>自测</h3>
+ <details class="quiz"><summary>RESTful API 和 gRPC 的主要区别是什么？各自适用什么场景？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>RESTful 基于 HTTP/1.1 和 JSON，简单通用，适合对外 API 和浏览器调用；gRPC 基于 HTTP/2 和 Protobuf，性能高，适合内部服务间通信和高吞吐场景。</p></div></details>
+ <details class="quiz"><summary>在 Kubernetes 中，HPA 如何实现自动扩缩容？针对 LLM 服务需要注意什么？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>HPA 根据 CPU/内存等指标自动调整 Pod 副本数。针对 LLM 服务，由于模型加载慢，需要配置就绪探针，确保模型加载完成后再接收流量，并考虑预热和请求队列。</p></div></details>
+ <h3>动手练习（带参考方案）</h3>
+ <details class="fold"><summary>动手练习 · 使用 FastAPI 构建一个简单的文本生成 API，要求：1) 接收 JSON 请求，包含 pro…</summary><div class="fold-body"><p><b>任务：</b>使用 FastAPI 构建一个简单的文本生成 API，要求：1) 接收 JSON 请求，包含 prompt 和 max_length；2) 返回生成的文本；3) 添加一个健康检查端点 /health；4) 使用 uvicorn 运行，并用 curl 测试。</p><p><b>参考方案：</b></p>参考代码：
+
+from fastapi import FastAPI
+from pydantic import BaseModel
+from transformers import pipeline
+import uvicorn
+
+app = FastAPI()
+generator = pipeline("text-generation", model="gpt2")
+
+class Request(BaseModel):
+    prompt: str
+    max_length: int = 50
+
+@app.post("/generate")
+async def generate(req: Request):
+    result = generator(req.prompt, max_length=req.max_length, do_sample=True)
+    return {"text": result[0]["generated_text"]}
+
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)
+
+测试：
+curl -X POST http://localhost:8000/generate -H "Content-Type: application/json" -d '{"prompt": "Hello", "max_length": 30}'
+curl http://localhost:8000/health</div></details>
+
+ <h2>第7章 · 实战：训练小型LLM</h2>
+ <p><b>本章目标：</b>完成一个小型LLM的训练与微调</p>
+ <h3>项目规划与数据准备</h3>
+ <p>训练一个小型LLM，第一步不是写代码，而是想清楚<b>要它做什么</b>。比如，我们想训练一个能生成简单英文句子的模型，或者一个能回答简单问题的助手。明确目标后，再规划模型大小、数据来源和训练时间。</p><p>数据是模型的粮食。对于小型LLM，我们可以使用公开的小型文本数据集，比如莎士比亚作品、新闻文章或代码片段。数据需要经过清洗、分词，并转换为模型可以处理的格式。</p><p>下面是一个最小示例：下载一个小型文本数据集，进行简单的预处理，并构建一个字符级的分词器。</p><pre><code class="language-python">import torch
+from torch.utils.data import Dataset, DataLoader
+
+# 假设我们有一个文本文件 'input.txt'
+with open('input.txt', 'r', encoding='utf-8') as f:
+    text = f.read()
+
+# 构建字符级词汇表
+chars = sorted(list(set(text)))
+vocab_size = len(chars)
+stoi = {ch: i for i, ch in enumerate(chars)}
+itos = {i: ch for i, ch in enumerate(chars)}
+
+# 编码函数
+def encode(s):
+    return [stoi[c] for c in s]
+
+def decode(l):
+    return ''.join([itos[i] for i in l])
+
+# 将文本转换为张量
+data = torch.tensor(encode(text), dtype=torch.long)
+
+# 划分训练集和验证集
+n = int(0.9 * len(data))
+train_data = data[:n]
+val_data = data[n:]
+
+# 定义数据集类
+class TextDataset(Dataset):
+    def __init__(self, data, block_size):
+        self.data = data
+        self.block_size = block_size
+    def __len__(self):
+        return len(self.data) - self.block_size
+    def __getitem__(self, idx):
+        x = self.data[idx:idx+self.block_size]
+        y = self.data[idx+1:idx+self.block_size+1]
+        return x, y
+
+block_size = 128
+train_dataset = TextDataset(train_data, block_size)
+val_dataset = TextDataset(val_data, block_size)
+train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
+val_loader = DataLoader(val_dataset, batch_size=32, shuffle=False)
+
+print(f'词汇表大小: {vocab_size}, 训练样本数: {len(train_dataset)}')</code></pre><p>这段代码展示了数据准备的核心步骤：读取文本、构建词汇表、编码、划分数据集，并创建PyTorch数据加载器。<b>数据质量直接决定模型效果</b>，所以务必确保文本干净、格式统一。</p>
+ <h3>训练配置与启动</h3>
+ <p>有了数据，接下来要定义模型结构和训练配置。对于小型LLM，我们可以使用一个简单的Transformer解码器，比如GPT的简化版。关键配置包括：层数、注意力头数、嵌入维度、学习率、批次大小等。</p><p>下面是一个极简的GPT模型定义和训练循环。我们使用PyTorch实现，并假设你已经安装了torch。</p><pre><code class="language-python">import torch.nn as nn
+import torch.nn.functional as F
+
+class Head(nn.Module):
+    def __init__(self, head_size, n_embd, block_size, dropout=0.1):
+        super().__init__()
+        self.key = nn.Linear(n_embd, head_size, bias=False)
+        self.query = nn.Linear(n_embd, head_size, bias=False)
+        self.value = nn.Linear(n_embd, head_size, bias=False)
+        self.register_buffer('tril', torch.tril(torch.ones(block_size, block_size)))
+        self.dropout = nn.Dropout(dropout)
+    def forward(self, x):
+        B, T, C = x.shape
+        k = self.key(x)
+        q = self.query(x)
+        wei = q @ k.transpose(-2, -1) * (C ** -0.5)
+        wei = wei.masked_fill(self.tril[:T, :T] == 0, float('-inf'))
+        wei = F.softmax(wei, dim=-1)
+        wei = self.dropout(wei)
+        v = self.value(x)
+        out = wei @ v
+        return out
+
+class MultiHeadAttention(nn.Module):
+    def __init__(self, num_heads, head_size, n_embd, block_size, dropout=0.1):
+        super().__init__()
+        self.heads = nn.ModuleList([Head(head_size, n_embd, block_size, dropout) for _ in range(num_heads)])
+        self.proj = nn.Linear(n_embd, n_embd)
+        self.dropout = nn.Dropout(dropout)
+    def forward(self, x):
+        out = torch.cat([h(x) for h in self.heads], dim=-1)
+        out = self.dropout(self.proj(out))
+        return out
+
+class FeedForward(nn.Module):
+    def __init__(self, n_embd, dropout=0.1):
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.Linear(n_embd, 4 * n_embd),
+            nn.ReLU(),
+            nn.Linear(4 * n_embd, n_embd),
+            nn.Dropout(dropout),
+        )
+    def forward(self, x):
+        return self.net(x)
+
+class Block(nn.Module):
+    def __init__(self, n_embd, n_head, block_size, dropout=0.1):
+        super().__init__()
+        head_size = n_embd // n_head
+        self.sa = MultiHeadAttention(n_head, head_size, n_embd, block_size, dropout)
+        self.ffwd = FeedForward(n_embd, dropout)
+        self.ln1 = nn.LayerNorm(n_embd)
+        self.ln2 = nn.LayerNorm(n_embd)
+    def forward(self, x):
+        x = x + self.sa(self.ln1(x))
+        x = x + self.ffwd(self.ln2(x))
+        return x
+
+class MiniGPT(nn.Module):
+    def __init__(self, vocab_size, n_embd=128, n_head=4, n_layer=4, block_size=128, dropout=0.1):
+        super().__init__()
+        self.token_embedding = nn.Embedding(vocab_size, n_embd)
+        self.position_embedding = nn.Embedding(block_size, n_embd)
+        self.blocks = nn.Sequential(*[Block(n_embd, n_head, block_size, dropout) for _ in range(n_layer)])
+        self.ln_f = nn.LayerNorm(n_embd)
+        self.lm_head = nn.Linear(n_embd, vocab_size)
+        self.block_size = block_size
+    def forward(self, idx, targets=None):
+        B, T = idx.shape
+        tok_emb = self.token_embedding(idx)
+        pos_emb = self.position_embedding(torch.arange(T, device=idx.device))
+        x = tok_emb + pos_emb
+        x = self.blocks(x)
+        x = self.ln_f(x)
+        logits = self.lm_head(x)
+        if targets is None:
+            loss = None
+        else:
+            B, T, C = logits.shape
+            logits = logits.view(B*T, C)
+            targets = targets.view(B*T)
+            loss = F.cross_entropy(logits, targets)
+        return logits, loss
+    def generate(self, idx, max_new_tokens):
+        for _ in range(max_new_tokens):
+            idx_cond = idx[:, -self.block_size:]
+            logits, _ = self(idx_cond)
+            logits = logits[:, -1, :]
+            probs = F.softmax(logits, dim=-1)
+            idx_next = torch.multinomial(probs, num_samples=1)
+            idx = torch.cat((idx, idx_next), dim=1)
+        return idx
+
+# 训练配置
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+model = MiniGPT(vocab_size=vocab_size, n_embd=128, n_head=4, n_layer=4, block_size=block_size).to(device)
+optimizer = torch.optim.AdamW(model.parameters(), lr=3e-4)
+
+# 训练循环
+epochs = 10
+for epoch in range(epochs):
+    model.train()
+    for x, y in train_loader:
+        x, y = x.to(device), y.to(device)
+        logits, loss = model(x, y)
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+    print(f'Epoch {epoch+1}, Loss: {loss.item():.4f}')
+
+# 保存模型
+torch.save(model.state_dict(), 'mini_gpt.pth')</code></pre><p>这段代码定义了一个4层、4头的MiniGPT，并在训练集上训练了10个epoch。<b>训练配置需要根据硬件调整</b>，如果显存不足，可以减小批次大小或模型维度。</p>
+ <h3>微调与评估</h3>
+ <p>训练完成后，模型可能已经能生成一些文本，但可能不符合我们的具体需求。这时可以进行微调，比如在特定领域数据上继续训练，或者使用指令微调让模型学会回答问题。</p><p>评估是检验模型效果的关键。对于语言模型，常用的评估指标是困惑度（Perplexity），它衡量模型对文本的预测能力。我们也可以在验证集上计算损失。</p><p>下面展示如何在验证集上评估模型，并计算困惑度。</p><pre><code class="language-python">import math
+
+model.eval()
+total_loss = 0
+with torch.no_grad():
+    for x, y in val_loader:
+        x, y = x.to(device), y.to(device)
+        logits, loss = model(x, y)
+        total_loss += loss.item()
+
+avg_loss = total_loss / len(val_loader)
+perplexity = math.exp(avg_loss)
+print(f'验证集损失: {avg_loss:.4f}, 困惑度: {perplexity:.2f}')
+
+# 生成示例
+context = torch.zeros((1, 1), dtype=torch.long, device=device)
+generated = model.generate(context, max_new_tokens=100)
+print(decode(generated[0].tolist()))</code></pre><p>困惑度越低，说明模型对数据的预测越准确。<b>通常困惑度在20以下表示模型表现不错</b>，但具体取决于任务和数据集。</p><p>如果效果不理想，可以尝试：增加数据量、调整模型大小、改变学习率、或进行更长时间的训练。</p>
+ <h3>模型导出与保存</h3>
+ <p>训练完成后，我们需要保存模型以便后续部署。PyTorch提供了多种保存方式：保存整个模型、保存状态字典、或导出为ONNX格式以便在其他框架中使用。</p><p>推荐保存状态字典（state_dict），因为它更灵活，加载时需要重新实例化模型结构。</p><pre><code class="language-python"># 保存模型状态字典
+torch.save(model.state_dict(), 'mini_gpt.pth')
+
+# 加载模型
+model_loaded = MiniGPT(vocab_size=vocab_size, n_embd=128, n_head=4, n_layer=4, block_size=block_size)
+model_loaded.load_state_dict(torch.load('mini_gpt.pth'))
+model_loaded.to(device)
+model_loaded.eval()
+
+# 导出为ONNX格式（可选）
+dummy_input = torch.randint(0, vocab_size, (1, block_size), device=device)
+torch.onnx.export(
+    model_loaded,
+    dummy_input,
+    'mini_gpt.onnx',
+    input_names=['input'],
+    output_names=['output'],
+    dynamic_axes={'input': {0: 'batch_size', 1: 'sequence'}, 'output': {0: 'batch_size', 1: 'sequence'}}
+)
+print('模型已保存为 mini_gpt.pth 和 mini_gpt.onnx')</code></pre><p>保存后，你可以将模型文件部署到服务器，或集成到应用程序中。<b>记得同时保存词汇表（stoi和itos）</b>，因为推理时需要它们来编码和解码文本。</p><p>至此，你已经完成了小型LLM的训练、微调、评估和导出全流程。接下来可以尝试更大的模型或更复杂的数据集。</p>
+ <h3>常见误区</h3>
+ <ul>
+ <li>训练LLM必须要有大量数据和强大算力，小型LLM无法产生有意义的结果。实际上，小型LLM可以在小数据集上训练，并用于特定任务，如文本生成或简单对话。</li>
+ <li>模型保存只需要保存权重文件，不需要保存模型结构或词汇表。实际上，加载模型时需要相同的模型结构，并且推理时需要词汇表来编码和解码文本。</li>
+ <li>困惑度越低模型越好，所以应该无限降低困惑度。实际上，过低的困惑度可能意味着过拟合，模型在验证集上表现好但在新数据上表现差。</li>
+ </ul>
+ <h3>自测</h3>
+ <details class="quiz"><summary>在训练小型LLM时，为什么需要划分训练集和验证集？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>训练集用于训练模型参数，验证集用于评估模型在未见过的数据上的表现，从而监控过拟合和调整超参数。</p></div></details>
+ <details class="quiz"><summary>保存模型时，为什么推荐保存状态字典（state_dict）而不是整个模型？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>保存状态字典更灵活，因为它只包含参数，不包含模型结构。加载时需要重新实例化模型结构，这样可以避免因代码变更导致的兼容性问题，并且文件更小。</p></div></details>
+ <h3>动手练习（带参考方案）</h3>
+ <details class="fold"><summary>动手练习 · 使用提供的MiniGPT代码，在莎士比亚文本数据集上训练一个字符级语言模型，并生成一段文本。要求：1…</summary><div class="fold-body"><p><b>任务：</b>使用提供的MiniGPT代码，在莎士比亚文本数据集上训练一个字符级语言模型，并生成一段文本。要求：1. 下载莎士比亚文本（可从https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt 获取）；2. 训练至少5个epoch；3. 计算验证集困惑度；4. 生成100个字符的文本并打印。</p><p><b>参考方案：</b></p>import torch
+import torch.nn as nn
+import torch.nn.functional as F
+from torch.utils.data import Dataset, DataLoader
+import math
+import urllib.request
+
+# 下载数据
+url = 'https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt'
+urllib.request.urlretrieve(url, 'shakespeare.txt')
+with open('shakespeare.txt', 'r', encoding='utf-8') as f:
+    text = f.read()
+
+# 构建词汇表
+chars = sorted(list(set(text)))
+vocab_size = len(chars)
+stoi = {ch: i for i, ch in enumerate(chars)}
+itos = {i: ch for i, ch in enumerate(chars)}
+encode = lambda s: [stoi[c] for c in s]
+decode = lambda l: ''.join([itos[i] for i in l])
+
+data = torch.tensor(encode(text), dtype=torch.long)
+n = int(0.9 * len(data))
+train_data = data[:n]
+val_data = data[n:]
+
+block_size = 128
+batch_size = 32
+
+class TextDataset(Dataset):
+    def __init__(self, data, block_size):
+        self.data = data
+        self.block_size = block_size
+    def __len__(self):
+        return len(self.data) - self.block_size
+    def __getitem__(self, idx):
+        x = self.data[idx:idx+self.block_size]
+        y = self.data[idx+1:idx+self.block_size+1]
+        return x, y
+
+train_dataset = TextDataset(train_data, block_size)
+val_dataset = TextDataset(val_data, block_size)
+train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
+
+# 定义模型（与教程相同，此处省略以节省空间，实际应包含完整定义）
+# 假设已定义 MiniGPT 类
+
+# 训练配置
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+model = MiniGPT(vocab_size=vocab_size, n_embd=128, n_head=4, n_layer=4, block_size=block_size).to(device)
+optimizer = torch.optim.AdamW(model.parameters(), lr=3e-4)
+
+# 训练
+epochs = 5
+for epoch in range(epochs):
+    model.train()
+    for x, y in train_loader:
+        x, y = x.to(device), y.to(device)
+        logits, loss = model(x, y)
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+    print(f'Epoch {epoch+1}, Loss: {loss.item():.4f}')
+
+# 评估
+model.eval()
+total_loss = 0
+with torch.no_grad():
+    for x, y in val_loader:
+        x, y = x.to(device), y.to(device)
+        logits, loss = model(x, y)
+        total_loss += loss.item()
+avg_loss = total_loss / len(val_loader)
+perplexity = math.exp(avg_loss)
+print(f'验证集困惑度: {perplexity:.2f}')
+
+# 生成
+context = torch.zeros((1, 1), dtype=torch.long, device=device)
+generated = model.generate(context, max_new_tokens=100)
+print(decode(generated[0].tolist()))</div></details>
+
+ <h2>第8章 · 实战：生产环境部署</h2>
+ <p><b>本章目标：</b>将训练好的LLM部署到生产环境</p>
+ <h3>容器化与Kubernetes部署</h3>
+ <p>把训练好的LLM部署到生产环境，第一步就是容器化。Docker能把模型、依赖、代码打包成一个镜像，保证在任何环境都能一致运行。对于LLM，镜像通常包含推理框架（如vLLM、TGI）、模型权重和启动脚本。</p><p>一个最小化的Dockerfile示例：</p><pre><code class="language-python"># 使用官方Python镜像作为基础
+FROM python:3.10-slim
+
+# 安装依赖
+RUN pip install vllm fastapi uvicorn
+
+# 复制模型权重（假设已下载到本地）
+COPY ./model /app/model
+
+# 复制启动脚本
+COPY server.py /app/server.py
+
+WORKDIR /app
+
+# 暴露端口
+EXPOSE 8000
+
+# 启动服务
+CMD ["python", "server.py"]</code></pre><p>对应的<code>server.py</code>可以这样写：</p><pre><code class="language-python">from vllm import LLM, SamplingParams
+from fastapi import FastAPI
+
+app = FastAPI()
+llm = LLM(model="/app/model")
+
+@app.post("/generate")
+async def generate(prompt: str):
+    sampling_params = SamplingParams(temperature=0.7, max_tokens=100)
+    outputs = llm.generate([prompt], sampling_params)
+    return {"text": outputs[0].outputs[0].text}</code></pre><p>构建并运行：</p><pre><code class="language-python">docker build -t llm-server .
+docker run -p 8000:8000 --gpus all llm-server</code></pre><p>当需要横向扩展时，Kubernetes（K8s）是首选。你需要定义Deployment和Service。Deployment管理Pod副本，Service提供稳定访问入口。对于GPU资源，需要在Pod中声明<code>nvidia.com/gpu</code>。</p><p>一个简单的Deployment YAML：</p><pre><code class="language-python">apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: llm-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: llm
+  template:
+    metadata:
+      labels:
+        app: llm
+    spec:
+      containers:
+      - name: llm
+        image: llm-server:latest
+        ports:
+        - containerPort: 8000
+        resources:
+          limits:
+            nvidia.com/gpu: 1</code></pre><p><b>关键点：</b>容器化保证环境一致性，K8s提供弹性伸缩和高可用。生产环境建议使用Helm管理复杂配置。</p>
+ <h3>监控与日志收集</h3>
+ <p>部署后，必须监控服务的健康状态和性能指标。常用的监控栈是Prometheus + Grafana。Prometheus负责采集指标，Grafana负责可视化。对于LLM服务，关键指标包括：请求延迟、吞吐量、GPU利用率、显存占用、错误率。</p><p>在FastAPI中暴露Prometheus指标：</p><pre><code class="language-python">from prometheus_fastapi_instrumentator import Instrumentator
+
+app = FastAPI()
+Instrumentator().instrument(app).expose(app)</code></pre><p>这样<code>/metrics</code>端点就会输出指标，Prometheus可以定期抓取。</p><p>日志收集推荐使用ELK（Elasticsearch, Logstash, Kibana）或Loki + Grafana。结构化日志（JSON格式）便于查询。例如：</p><pre><code class="language-python">import logging
+import json_log_formatter
+
+formatter = json_log_formatter.JSONFormatter()
+handler = logging.StreamHandler()
+handler.setFormatter(formatter)
+logger = logging.getLogger(__name__)
+logger.addHandler(handler)
+logger.setLevel(logging.INFO)
+
+logger.info("Request processed", extra={"prompt_length": 10, "latency_ms": 150})</code></pre><p><b>关键点：</b>监控要覆盖基础设施（CPU/GPU/内存）和应用层（QPS、延迟、错误）。设置告警规则，如延迟超过阈值或错误率上升时通知。</p>
+ <h3>性能测试与优化</h3>
+ <p>性能测试是确保LLM服务满足SLA的关键。常用工具：Locust、wrk、JMeter。测试时关注吞吐量（tokens/s）、延迟（P50、P95、P99）和并发能力。</p><p>一个简单的Locust测试脚本：</p><pre><code class="language-python">from locust import HttpUser, task, between
+
+class LLMUser(HttpUser):
+    wait_time = between(1, 3)
+
+    @task
+    def generate(self):
+        self.client.post("/generate", json={"prompt": "Hello, how are you?"})</code></pre><p>运行：<code>locust -f locustfile.py --host=http://localhost:8000</code></p><p>优化手段包括：</p><ul><li><b>批处理（Batching）</b>：将多个请求合并成一个批次，提高GPU利用率。vLLM支持连续批处理。</li><li><b>量化</b>：使用FP16、INT8或4-bit量化减少显存占用，提升推理速度。</li><li><b>缓存</b>：对常见请求结果进行缓存，减少重复计算。</li><li><b>模型编译</b>：使用TensorRT、ONNX Runtime等加速推理。</li></ul><p>例如，vLLM启动时开启量化：</p><pre><code class="language-python">llm = LLM(model="/app/model", quantization="awq")</code></pre><p><b>关键点：</b>性能优化需要权衡延迟和吞吐，根据业务场景调整批处理大小和量化级别。</p>
+ <h3>安全与权限管理</h3>
+ <p>生产环境必须考虑安全。主要方面：API认证、授权、输入验证、模型安全、网络安全。</p><p><b>API认证</b>：使用API Key或JWT。FastAPI中可以通过依赖注入实现：</p><pre><code class="language-python">from fastapi import Depends, HTTPException, status
+from fastapi.security import APIKeyHeader
+
+api_key_header = APIKeyHeader(name="X-API-Key")
+
+async def verify_api_key(api_key: str = Depends(api_key_header)):
+    if api_key != "your-secret-key":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid API Key")
+
+@app.post("/generate", dependencies=[Depends(verify_api_key)])
+async def generate(prompt: str):
+    ...</code></pre><p><b>授权</b>：不同用户可能有不同配额。可以使用Redis记录使用量，并限制速率。</p><p><b>输入验证</b>：防止提示注入和恶意输入。对输入长度、内容进行过滤。</p><p><b>模型安全</b>：防止模型被窃取。可以通过加密模型文件、限制访问权限。</p><p><b>网络安全</b>：使用HTTPS、网络策略（NetworkPolicy）限制Pod间通信。</p><p><b>关键点：</b>安全要贯穿整个生命周期，从镜像构建到服务暴露，遵循最小权限原则。</p>
+ <h3>常见误区</h3>
+ <ul>
+ <li>容器化后就不需要管理依赖了：实际上，容器内仍需正确安装依赖，且镜像大小和构建时间需要优化。</li>
+ <li>监控只需要看GPU利用率：应用层的延迟、错误率、吞吐量同样重要，否则无法定位性能瓶颈。</li>
+ <li>性能测试一次就够了：随着模型更新、流量变化，需要持续进行性能测试和优化。</li>
+ </ul>
+ <h3>自测</h3>
+ <details class="quiz"><summary>在Kubernetes中部署LLM服务时，如何申请GPU资源？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>在Pod的容器资源限制中声明nvidia.com/gpu，例如：resources: limits: nvidia.com/gpu: 1。同时需要集群安装NVIDIA设备插件。</p></div></details>
+ <details class="quiz"><summary>列举三种LLM推理性能优化的方法。</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>批处理（Batching）、量化（如FP16/INT8/4-bit）、缓存（结果缓存）、模型编译（TensorRT/ONNX Runtime）等。</p></div></details>
+ <h3>动手练习（带参考方案）</h3>
+ <details class="fold"><summary>动手练习 · 将你微调好的LLM模型使用Docker容器化，并编写一个FastAPI服务提供/generate接口…</summary><div class="fold-body"><p><b>任务：</b>将你微调好的LLM模型使用Docker容器化，并编写一个FastAPI服务提供/generate接口。然后使用Locust进行性能测试，测量在并发10用户下的平均延迟和吞吐量。</p><p><b>参考方案：</b></p>1. 编写Dockerfile：
+FROM python:3.10-slim
+RUN pip install vllm fastapi uvicorn prometheus-fastapi-instrumentator
+COPY ./model /app/model
+COPY server.py /app/server.py
+WORKDIR /app
+EXPOSE 8000
+CMD ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8000"]
+
+2. server.py：
+from fastapi import FastAPI
+from vllm import LLM, SamplingParams
+from prometheus_fastapi_instrumentator import Instrumentator
+
+app = FastAPI()
+llm = LLM(model="/app/model")
+Instrumentator().instrument(app).expose(app)
+
+@app.post("/generate")
+async def generate(prompt: str):
+    sampling_params = SamplingParams(temperature=0.7, max_tokens=100)
+    outputs = llm.generate([prompt], sampling_params)
+    return {"text": outputs[0].outputs[0].text}
+
+3. 构建并运行：
+docker build -t llm-server .
+docker run -p 8000:8000 --gpus all llm-server
+
+4. Locust测试脚本 locustfile.py：
+from locust import HttpUser, task, between
+
+class LLMUser(HttpUser):
+    wait_time = between(1, 3)
+    @task
+    def generate(self):
+        self.client.post("/generate", json={"prompt": "Hello, how are you?"})
+
+5. 运行Locust：
+locust -f locustfile.py --host=http://localhost:8000 --users 10 --spawn-rate 2 --run-time 1m --headless
+
+6. 查看结果：Locust会输出平均延迟、RPS等指标。</div></details>
+
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/app.js?v=21"></script>
+</body>
+</html>
