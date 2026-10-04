@@ -120,8 +120,32 @@ final class TutorModel: ObservableObject {
     @Published var totalCost = 0.0
     @Published var failureReason: String? // 非 nil = 引擎起不来,展示给用户
     @Published private(set) var currentPage: PageContext?
+    @Published private(set) var packName = "agent-dev"
+    @Published private(set) var packTitle = "Agent 学院 · 开发导师"
+    @Published private(set) var packs: [(name: String, title: String)] = []
 
     private var pageDirty = false // 页面变化后还没上报过
+
+    /// 扫描 tutor/packs/ 下可用教学包
+    func reloadPacks() {
+        guard let root = tutorRoot else { return }
+        loadPacks(root: root)
+    }
+
+    private func loadPacks(root: URL) {
+        let dir = root.appendingPathComponent("packs")
+        guard let entries = try? FileManager.default.contentsOfDirectory(atPath: dir.path) else { return }
+        var list: [(String, String)] = []
+        for e in entries.sorted() {
+            let pj = dir.appendingPathComponent(e).appendingPathComponent("pack.json")
+            guard let data = try? Data(contentsOf: pj),
+                  let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  let name = obj["name"] as? String else { continue }
+            let title = (obj["title"] as? String) ?? name
+            list.append((name, title))
+        }
+        packs = list
+    }
 
     /// 学生翻到新页面时由 WebView 回调;标题可能晚到,以 file 为主键、title 取最新
     func updatePage(file: String, title: String) {
@@ -198,7 +222,7 @@ final class TutorModel: ObservableObject {
 
         let p = Process()
         p.executableURL = URL(fileURLWithPath: node)
-        p.arguments = [script.path, "--rpc", "--student", "liam"]
+        p.arguments = [script.path, "--rpc", "--pack", "packs/\(packName)", "--student", "liam"]
         p.currentDirectoryURL = root
         var env = ProcessInfo.processInfo.environment
         env["DEEPSEEK_API_KEY"] = key
@@ -222,11 +246,14 @@ final class TutorModel: ObservableObject {
                 }
             }
         }
-        p.terminationHandler = { [weak self] _ in
+        p.terminationHandler = { [weak self] terminated in
             DispatchQueue.main.async {
-                self?.process = nil
-                self?.stdinHandle = nil
-                self?.thinking = false
+                // 只清理仍在位的进程(切换课程重启时,旧进程退出不能动新进程)
+                if self?.process === terminated {
+                    self?.process = nil
+                    self?.stdinHandle = nil
+                    self?.thinking = false
+                }
             }
         }
 
@@ -291,6 +318,23 @@ final class TutorModel: ObservableObject {
             pageDirty = false
         }
         writeLine(["type": "user", "text": t])
+    }
+
+    /// 切换教学包:重启引擎进程(对话清空,档案按包隔离)
+    func switchPack(_ name: String) {
+        guard name != packName else { return }
+        if let p = process { p.terminate() }
+        process = nil
+        stdinHandle = nil
+        thinking = false
+        messages = []
+        totalCost = 0
+        statusText = nil
+        failureReason = nil
+        pageDirty = false
+        if let found = packs.first(where: { $0.name == name }) { packTitle = found.title }
+        packName = name
+        ensureStarted()
     }
 
     /// 面板打开(引擎已就绪)或重置后,让导师主动打招呼
@@ -387,6 +431,7 @@ struct TutorPanel: View {
         }
         .background(Color(nsColor: .windowBackgroundColor))
         .onAppear {
+            model.reloadPacks()
             model.ensureStarted()
             model.greetIfIdle() // 引擎已在跑且没有对话时(如关开面板),也补开场
         }
@@ -395,7 +440,27 @@ struct TutorPanel: View {
     private var header: some View {
         HStack(spacing: 8) {
             Image(systemName: "graduationcap.fill").foregroundStyle(.purple)
-            Text("开发导师").font(.headline)
+            Menu {
+                ForEach(model.packs, id: \.name) { p in
+                    Button {
+                        model.switchPack(p.name)
+                    } label: {
+                        if p.name == model.packName {
+                            Label(p.title, systemImage: "checkmark")
+                        } else {
+                            Text(p.title)
+                        }
+                    }
+                }
+            } label: {
+                HStack(spacing: 4) {
+                    Text(model.packTitle).font(.headline).lineLimit(1)
+                    Image(systemName: "chevron.down").font(.caption2).foregroundStyle(.secondary)
+                }
+            }
+            .menuStyle(.borderlessButton)
+            .fixedSize()
+            .help("切换课程(切换会重启导师会话,学习档案按课程隔离)")
             Spacer()
             if model.totalCost > 0 {
                 Text(String(format: "$%.4f", model.totalCost))

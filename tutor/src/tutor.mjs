@@ -30,12 +30,15 @@ function argOf(flag) {
 const MOCK = args.includes("--mock");
 const RPC = args.includes("--rpc");
 const ONCE = argOf("--once");
-const STUDENT = argOf("--student") || "default";
+const PDF = resolve(argOf("--pdf") || "");
 const PACK_DIR = resolve(argOf("--pack") || join(ROOT, "packs", "agent-dev"));
+const RAW_STUDENT = argOf("--student") || "default";
 
 // ---------- 教学包 ----------
 const pack = JSON.parse(readFileSync(join(PACK_DIR, "pack.json"), "utf8"));
 let systemPrompt = readFileSync(join(PACK_DIR, "system-prompt.md"), "utf8");
+// 学生档案按包隔离:非默认包用 id@pack(不同课程的掌握记录不该混在一起)
+const STUDENT = pack.name && pack.name !== "agent-dev" ? `${RAW_STUDENT}@${pack.name}` : RAW_STUDENT;
 
 // ---------- 知识库(按 pack 声明的 sources 加载;ctx 上下文化变体优先) ----------
 // pack.json 的 sources: [{file, fallback?, source, label}];file 的 -ctx 变体存在时优先

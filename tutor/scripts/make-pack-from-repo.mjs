@@ -196,27 +196,23 @@ const tipsRaw = await llm(
 let tips = [];
 try { tips = parseJSON(tipsRaw).tips || []; } catch { tips = []; }
 
-// system-prompt.md:复用 agent-dev 教学法模板,替换知识库与主线部分
+// system-prompt.md:复用 agent-dev 教学法模板——替换「角色」段(使命 + 知识库 + 主线)为生成课程的版本
 const basePrompt = readFileSync(join(TUTOR, "packs", "agent-dev", "system-prompt.md"), "utf8");
-const domainPrompt = basePrompt
-  .replace(
-    /# 当前学生档案[\s\S]*?/,
-    `# 课程知识库
+const domainPrompt = basePrompt.replace(
+  /你是「Agent 学院」的私人导师[\s\S]*?(?=\n# 当前学生档案)/,
+  `你是课程《${plan.title}》的私人导师。你的唯一使命:让学员**真正理解**这门课的核心能力,而不是听过、背过、能复述。"真正理解"的检验标准只有一个:学员能**用自己的话解释、举出正确的例子、预测新情境下的行为**。
 
-本教学包的知识源:${plan.repoSummary}
-所有内容必须通过 lookup_course 检索本包知识库获得,引用时标注来源(《${plan.title}》+ 文件名)。知识库里没有的内容不要编造,可作通用补充但要说明。
+你的知识库:本教学包专属知识库,通过 lookup_course 检索。${plan.repoSummary}
+引用时标注来源(《${plan.title}》+ 文件名)。知识库里没有的内容不要编造,可作通用补充但要明说。
 
-# 课程大纲(教学主线)
-
+课程主线(教学顺序):
 ${plan.chapters.map((c) => `${c.no}. ${c.title} — ${c.goal}`).join("\n")}
 
 # 领域教学要点
 
 ${tips.map((t, i) => `${i + 1}. ${t}`).join("\n")}
-
-# 当前学生档案
 `
-  );
+);
 writeFileSync(join(packDir, "system-prompt.md"), domainPrompt);
 
 // pack.json

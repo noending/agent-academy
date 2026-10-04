@@ -67,6 +67,10 @@ tutor/
 ├── scripts/build-kb.mjs    # 知识库构建(HTML → 切块 JSON)
 ├── scripts/build-gulli-kb.py # 教材 PDF → 切块(pypdf layout 模式)
 ├── scripts/build-context.mjs  # 上下文化索引(Anthropic Contextual Retrieval:LLM 为每块生成中文定位前缀,8 并发/断点续跑)
+├── scripts/extract-pdf.py     # 通用 PDF 提取(pypdf layout 模式)
+├── scripts/make-paper-page.mjs   # M1 论文管线: PDF → 翻译+解读 → 草稿页 + 人审清单
+├── scripts/make-pack-from-repo.mjs # M2 仓库管线: GitHub 仓库 → 教学包(课程规划器)
+├── scripts/make-course-from-topic.mjs # M3 课题管线: 课题 → 整门课(教学包+站点草稿;内容为模型知识,须人审核实)
 ├── kb/course-chunks.json   # 构建产物(可重建,勿手改)
 ├── src/
 │   ├── tutor.mjs           # 入口:Agent loop + CLI + 会话日志
