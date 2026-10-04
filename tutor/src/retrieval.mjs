@@ -80,10 +80,10 @@ export class CourseIndex {
     if (!hits.length) return "课程库中没有找到相关内容。";
     return hits
       .map((h, n) => {
-        const label =
-          h.source === "gulli"
-            ? `《Agentic Design Patterns》${h.chapterTitle} · ${h.title.replace(/^Chapter\s+\d+\s*[-:.]\s*/, "")}`
-            : `${h.section ? h.section + " " : ""}${h.title}(第${h.chapter}章 · ${h.chapterTitle})`;
+        let label;
+        if (h.sourceLabel) label = `《${h.sourceLabel}》${h.chapterTitle ? " " + h.chapterTitle : ""} · ${h.title}`;
+        else if (h.source === "gulli") label = `《Agentic Design Patterns》${h.chapterTitle} · ${h.title.replace(/^Chapter\s+\d+\s*[-:.]\s*/, "")}`;
+        else label = `${h.section ? h.section + " " : ""}${h.title}(第${h.chapter}章 · ${h.chapterTitle})`;
         return `【${n + 1}】${label} · 相关度 ${h.score}\n${h.text}`;
       })
       .join("\n\n———\n\n");

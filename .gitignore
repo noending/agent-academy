@@ -1,11 +1,11 @@
 .DS_Store
 .mimosa/
 
-# tutor 运行时与生成物(可重建: npm run build:kb / python3 scripts/build-gulli-kb.py)
+# tutor 运行时与生成物(可重建: build:kb / build-gulli-kb.py / build-context.mjs / make-pack-from-repo.mjs)
 tutor/node_modules/
 tutor/students/
-tutor/kb/course-chunks.json
-tutor/kb/gulli-patterns.json
+tutor/kb/
+tutor/checkpoints/
 
 # macOS App 构建产物(build.sh 可重建)
 macos-app/dist/
@@ -13,5 +13,3 @@ macos-app/.build/
 macos-app/.site-bundle/
 macos-app/AppIcon.icns
 macos-app/.icon-1024.png
-tutor/kb/course-chunks-ctx.json
-tutor/kb/gulli-patterns-ctx.json

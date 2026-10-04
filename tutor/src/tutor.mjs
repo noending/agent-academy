@@ -37,22 +37,33 @@ const PACK_DIR = resolve(argOf("--pack") || join(ROOT, "packs", "agent-dev"));
 const pack = JSON.parse(readFileSync(join(PACK_DIR, "pack.json"), "utf8"));
 let systemPrompt = readFileSync(join(PACK_DIR, "system-prompt.md"), "utf8");
 
-// ---------- 知识库(缺失时自动构建) ----------
-// 优先加载上下文化索引(build-context.mjs 生成,LLM 为每块生成中文前缀,提升"换说法"召回)
-function pickKb(base) {
-  const ctx = join(ROOT, "kb", base.replace(/\.json$/, "-ctx.json"));
-  return existsSync(ctx) ? ctx : join(ROOT, "kb", base);
+// ---------- 知识库(按 pack 声明的 sources 加载;ctx 上下文化变体优先) ----------
+// pack.json 的 sources: [{file, fallback?, source, label}];file 的 -ctx 变体存在时优先
+function resolveKbFile(src) {
+  const ctx = join(ROOT, src.file.replace(/\.json$/, "-ctx.json"));
+  if (existsSync(ctx)) return ctx;
+  const base = join(ROOT, src.fallback || src.file);
+  return existsSync(base) ? base : null;
 }
-const KB = pickKb("course-chunks.json");
-if (!existsSync(KB)) {
-  console.log("知识库不存在,自动构建中…");
-  const { execFileSync } = await import("node:child_process");
-  execFileSync(process.execPath, [join(ROOT, "scripts", "build-kb.mjs")], { stdio: "inherit" });
+let kbSources;
+if (Array.isArray(pack.sources) && pack.sources.length) {
+  kbSources = pack.sources
+    .map((s) => ({ path: resolveKbFile(s), source: s.source, label: s.label }))
+    .filter((s) => s.path);
+  const missing = pack.sources.length - kbSources.length;
+  if (missing > 0) console.log(`(⚠ ${missing} 个知识源文件缺失,已跳过——若是课程库请先运行 npm run build:kb)`);
+  if (!kbSources.length) { console.error("✗ 教学包没有任何可用知识源"); process.exit(1); }
+} else {
+  // 兼容旧 pack:单 kb 字段,缺失时自动构建(仅默认课程库可自动构建)
+  const KB = join(ROOT, "kb", "course-chunks.json");
+  if (!existsSync(KB)) {
+    console.log("知识库不存在,自动构建中…");
+    const { execFileSync } = await import("node:child_process");
+    execFileSync(process.execPath, [join(ROOT, "scripts", "build-kb.mjs")], { stdio: "inherit" });
+  }
+  kbSources = [{ path: KB, source: "course" }];
 }
-// 第二知识源:Gulli《Agentic Design Patterns》整本教材(缺 PDF 时优雅降级为单源)
-const GULLI_KB = pickKb("gulli-patterns.json");
-const gulliSource = existsSync(GULLI_KB) ? [{ path: GULLI_KB, source: "gulli" }] : [];
-const index = CourseIndex.loadMerged([{ path: KB, source: "course" }, ...gulliSource]);
+const index = CourseIndex.loadMerged(kbSources);
 
 // ---------- 学生记忆 ----------
 const profile = loadProfile(ROOT, STUDENT);
