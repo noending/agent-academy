@@ -197,7 +197,7 @@
      <button class="btn primary" id="lite-launch">▶ 启动 JupyterLite（首次加载需数十秒）</button>
      <div id="lite-host" style="display:none">
        <iframe id="lite-full" style="width:100%;height:560px;border:0;border-radius:8px;background:#fff;display:block" allow="clipboard-read; clipboard-write"></iframe>
-       <p class="small-note">启动后试一试：<code>import sys; print(sys.version)</code>。第三方纯 Python 包可先执行 <code>import micropip; await micropip.install("rdflib")</code> 再导入；numpy、pandas 等已内置。需要联网 API（如 DeepSeek）或本地文件的示例请在本地运行。</p>
+       <p class="small-note">启动后试一试：<code>import sys; print(sys.version)</code>。课程代码块的 <b>⚡ 运行</b> 会自动检测 import 并安装缺失的纯 Python 包（rdflib / pydantic / openai / numpy / pandas 等，首次约 10-30 秒）；<b>🔌 需本地运行</b> 标记的代码块依赖联网 API（如 DeepSeek）或本地文件，请在本地环境执行。</p>
      </div>
    </div>
  </div>
@@ -223,6 +223,6 @@
  </main>
 </div>
 
-<script src="assets/js/app.js?v=21"></script>
+<script src="assets/js/app.js?v=22"></script>
 </body>
 </html>

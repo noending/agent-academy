@@ -205,8 +205,50 @@ function initCodeBlocks() {
 
 /* ---------- JupyterLite 在线运行（CDN 引入官方 REPL，点击代码块按钮时才加载 iframe） ---------- */
 const LITE_BASE = "https://jupyterlite.github.io/demo/repl/index.html";
-// 依赖外部 API / 本地环境的示例在浏览器内核里跑不通，不提供在线运行按钮
-const LITE_SKIP = ["hello_deepseek.py", "minimal_agent.py", "minimal-agent.mjs", "retry.py", "stream_demo.py"];
+// import 名 → pip 包名(Pyodide 内置或纯 Python wheel,可 micropip 自动安装);
+// 不在表内且非标准库的 import → 该块标记「需本地运行」
+const LITE_PKG_MAP = {
+  numpy: "numpy", pandas: "pandas", matplotlib: "matplotlib", scipy: "scipy",
+  sklearn: "scikit-learn", rdflib: "rdflib", owlrl: "owlrl", pydantic: "pydantic",
+  openai: "openai", httpx: "httpx", tqdm: "tqdm", yaml: "pyyaml",
+  bs4: "beautifulsoup4", networkx: "networkx", dotenv: "python-dotenv",
+};
+const LITE_STDLIB = new Set(("abc asyncio base64 collections copy csv dataclasses datetime enum functools hashlib "
+  + "heapq inspect itertools json math os pathlib pickle random re secrets shutil statistics string "
+  + "sys textwrap time typing uuid warnings zipfile").split(" "));
+// 出现这些用法 → 浏览器内必然失败(联网 API / 本地文件 / 无法在 Pyodide 运行的框架)
+const LITE_LOCAL_ONLY = /client\.chat\.completions|OpenAI\(|api_key\s*=|\.launch\(|gradio|torch|transformers|pd\.read_csv|requests\.(get|post)|urlopen|embeddings\.create/;
+
+function liteAnalyze(code) {
+  const imports = new Set();
+  for (const line of code.split("\n")) {
+    let m = line.match(/^\s*import\s+([a-zA-Z_][\w.]*)/);
+    if (m) imports.add(m[1].split(".")[0]);
+    m = line.match(/^\s*from\s+([a-zA-Z_][\w.]*)/);
+    if (m) imports.add(m[1].split(".")[0]);
+  }
+  const needs = [...imports].filter((m) => LITE_PKG_MAP[m]);
+  const unknown = [...imports].filter((m) => !LITE_PKG_MAP[m] && !LITE_STDLIB.has(m));
+  return { needs, unknown, localOnly: LITE_LOCAL_ONLY.test(code) || unknown.length > 0 };
+}
+
+function litePrelude(pkgs) {
+  if (!pkgs.length) return "";
+  const imports = JSON.stringify(pkgs);
+  const map = JSON.stringify(Object.fromEntries(pkgs.map((p) => [p, LITE_PKG_MAP[p]])));
+  return [
+    "# ⚡ 以下为 Agent 学院自动注入的依赖安装(课程代码在后面)",
+    "import importlib.util as _ilu, micropip as _mp",
+    `_need = ${imports}`,
+    `_pip = ${map}`,
+    "_missing = [m for m in _need if _ilu.find_spec(m) is None]",
+    "if _missing:",
+    "    print('⏳ 自动安装缺失依赖:', ', '.join(_missing), '(首次约 10-30 秒)…')",
+    "    await _mp.install([_pip[m] for m in _missing])",
+    "    print('✓ 依赖就绪,下面运行课程代码')",
+    ""
+  ].join("\n");
+}
 function liteSrc(code) {
   const dark = document.documentElement.getAttribute("data-theme") === "dark";
   return LITE_BASE + "?kernel=python&toolbar=1&execute=0&showBanner=0"
@@ -222,22 +264,36 @@ function initLite() {
     const label = head.querySelector(".code-lang");
     if (lang !== "python" || !label) return;
     if (LITE_SKIP.some(name => label.textContent.includes(name))) return;
+
+    const code = codeEl.textContent;
+    const { needs, unknown, localOnly } = liteAnalyze(code);
+
+    // 需本地运行:联网 API / 本地文件 / 无法在 Pyodide 运行的包——不给 ⚡,给明确提示
+    if (localOnly) {
+      const badge = document.createElement("span");
+      badge.className = "lite-local";
+      const why = unknown.length ? "用到浏览器内无法安装的包: " + unknown.join(", ")
+                                 : "需要联网 API 或本地文件";
+      badge.innerHTML = "🔌 需本地运行(" + why + ")";
+      badge.title = "请在本地 Python 环境运行(课程第 2 章有环境配置);代码仍可复制学习";
+      head.insertBefore(badge, head.querySelector(".copy-btn"));
+      return;
+    }
+
     const btn = document.createElement("button");
     btn.className = "lite-btn"; btn.textContent = "⚡ 运行";
-    btn.title = "在浏览器内的 JupyterLite（Pyodide）中运行，无需安装任何东西";
+    btn.title = "在浏览器内的 JupyterLite(Pyodide)中运行;缺失的纯 Python 包会自动安装";
     btn.addEventListener("click", () => {
       const old = block.querySelector(".lite-frame");
       if (old) { old.remove(); btn.textContent = "⚡ 运行"; return; }
       const frame = document.createElement("div");
       frame.className = "lite-frame";
       frame.innerHTML =
-        '<div class="lite-note">⏳ 正在加载浏览器内 Python 环境（首次需下载内核，几秒到几十秒）。' +
-        '代码已预填，等提示符出现后按 <b>Shift + Enter</b> 运行。' +
-        '第三方纯 Python 包可先执行 <code>import micropip; await micropip.install("包名")</code>；' +
-        '需要联网 API 的示例请本地运行。</div>';
+        '<div class="lite-note">⏳ 正在加载浏览器内 Python 环境(首次需下载内核,几秒到几十秒)。' +
+        '代码已预填(缺失依赖会自动安装),等提示符出现后按 <b>Shift + Enter</b> 运行。</div>';
       const iframe = document.createElement("iframe");
       iframe.setAttribute("allow", "clipboard-read; clipboard-write");
-      iframe.src = liteSrc(codeEl.textContent);
+      iframe.src = liteSrc(litePrelude(needs) + code);
       iframe.addEventListener("load", () => frame.classList.add("ready"));
       frame.appendChild(iframe);
       block.appendChild(frame);
