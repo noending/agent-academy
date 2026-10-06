@@ -97,6 +97,8 @@ final class WebViewCoordinator: NSObject, WKNavigationDelegate {
     private var frameAutosaveDone = false
     /// 学生正在读的页面变化时回调(file, 已截短的页面标题)——导师面板用它做页面相关预置问题
     var onPageChange: ((String, String) -> Void)?
+    /// 站点页面发出的内部命令深链(host, 参数)——如 switch-pack / delete-course
+    var onCommand: ((String, String) -> Void)?
 
     override init() {
         var roots: [URL] = []
@@ -186,6 +188,15 @@ final class WebViewCoordinator: NSObject, WKNavigationDelegate {
             decisionHandler(.cancel)
             return
         }
+        // 站点页面的内部命令深链: academy://switch-pack/<skill> / academy://delete-course/<skill>
+        if navigationAction.navigationType == .linkActivated,
+           let url = navigationAction.request.url, url.scheme == scheme,
+           let host = url.host, host != "site" {
+            let arg = url.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+            decisionHandler(.cancel)
+            DispatchQueue.main.async { self.onCommand?(host, arg) }
+            return
+        }
         decisionHandler(.allow)
     }
 
@@ -257,6 +268,36 @@ struct AgentAcademyApp: App {
                 // 站点翻页 → 导师面板:上报当前页面,预置问题与教学上下文随之切换
                 coordinator.onPageChange = { [weak tutor] file, title in
                     tutor?.updatePage(file: file, title: title)
+                }
+                // 课程管理页深链: 切换课程 / 删除课程
+                coordinator.onCommand = { [weak tutor] cmd, arg in
+                    guard let tutor else { return }
+                    switch cmd {
+                    case "switch-pack":
+                        showTutor = true
+                        tutor.switchPack(arg)
+                    case "delete-course":
+                        let alert = NSAlert()
+                        alert.messageText = "删除课程「\(arg)」?"
+                        alert.informativeText = "将同时删除教学包、知识库与草稿页,不可恢复。"
+                        alert.addButton(withTitle: "删除")
+                        alert.addButton(withTitle: "取消")
+                        alert.alertStyle = .warning
+                        if alert.runModal() == .alertFirstButtonReturn {
+                            if let root = tutor.engineRootURL() {
+                                let p = Process()
+                                p.executableURL = URL(fileURLWithPath: findNodePath() ?? "/usr/bin/env")
+                                p.arguments = [root.appendingPathComponent("scripts/remove-course.mjs").path,
+                                               "--skill", arg]
+                                p.currentDirectoryURL = root
+                                try? p.run()
+                            }
+                            tutor.reloadPacks()
+                            coordinator.webView.reload()
+                        }
+                    default:
+                        break
+                    }
                 }
             }
                 .overlay(alignment: .topTrailing) { findBar }

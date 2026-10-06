@@ -204,6 +204,9 @@ final class TutorModel: ObservableObject {
 
     private var tutorRoot: URL? { tutorScript?.deletingLastPathComponent().deletingLastPathComponent() }
 
+    /// 课程管理页删除流程用:引擎根目录(跑 remove-course.mjs)
+    func engineRootURL() -> URL? { tutorRoot }
+
     private func nodePath() -> String? {
         for c in ["/opt/homebrew/bin/node", "/usr/local/bin/node", "/usr/bin/node"] {
             if FileManager.default.fileExists(atPath: c) { return c }
