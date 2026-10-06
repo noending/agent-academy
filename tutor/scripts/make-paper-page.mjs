@@ -11,6 +11,7 @@ import { join, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { execFileSync } from "node:child_process";
 import { completeSimple, getModel } from "@mariozechner/pi-ai";
+import { updateManifest } from "./factory-common.mjs";
 
 const TUTOR = join(dirname(fileURLToPath(import.meta.url)), "..");
 const SITE = join(TUTOR, "..");
@@ -253,6 +254,11 @@ const reviewMd = `# 人审清单 · ${NAME}
 const reviewDir = join(SITE, "drafts", SLUG);
 mkdirSync(reviewDir, { recursive: true });
 writeFileSync(join(reviewDir, "REVIEW.md"), reviewMd);
+updateManifest({
+  kind: "paper", slug: SLUG, title: paperTitleZh || TITLE_EN, titleEn: TITLE_EN,
+  description: `论文翻译与解读(机器初稿)`, page: `full-${SLUG}.html`, pack: null,
+  review: `drafts/${SLUG}/REVIEW.md`, generated: true,
+});
 console.log(`\n✓ 草稿页: ${outPage}`);
 console.log(`✓ 人审清单: ${join(reviewDir, "REVIEW.md")}`);
 console.log("  下一步: 人工审校 → 按 REVIEW.md 发布步骤操作");

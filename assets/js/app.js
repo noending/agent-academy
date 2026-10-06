@@ -20,6 +20,7 @@ const NAV = [
   { id: "ch10", file: "10-design-patterns.html", no: "10", title: "智能体设计模式", group: "第五部分 · 模式与拓展" },
   { id: "fde", file: "fde.html", icon: "职", title: "FDE 能力地图", group: "第五部分 · 模式与拓展" },
   { id: "briefs", file: "briefs.html", icon: "实", title: "企业简报库", group: "实训 · 企业简报" },
+  { id: "courses", file: "courses.html", icon: "管", title: "课程管理", group: "附录" },
   { id: "papers", file: "papers.html", icon: "论", title: "论文精读", group: "附录" },
   { id: "translations", file: "translations.html", icon: "译", title: "中文精读版", group: "附录" },
   { id: "full", file: "full-react.html", icon: "全", title: "全文翻译（8 篇）", group: "附录" },

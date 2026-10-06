@@ -44,6 +44,12 @@ for (const f of pages) {
   const refs = [...html.matchAll(/\b(href|src)="([^"]+)"/g)].map((m) => m[2]);
   for (const ref of refs) {
     if (/^(https?:|mailto:|data:|javascript:)/.test(ref)) continue;
+    if (/^academy:/.test(ref)) {
+      // 内部深链:academy://site/<file> 校验文件;其余为 App 命令(switch-pack 等)跳过
+      const sitePart = ref.match(/^academy:\/\/site\/([^#?]*)/);
+      if (sitePart && !existsSync(join(ROOT, sitePart[1]))) linkIssues.push(`${f}: 深链指向不存在的文件 ${sitePart[1]}`);
+      continue;
+    }
     const clean = ref.split("#");
     const pathPart = clean[0].split("?")[0]; // 去掉锚点与缓存版本查询串
     const anchor = clean[1];

@@ -1,0 +1,137 @@
+{
+  "name": "llm-termlogies",
+  "title": "LLM术语精通",
+  "kb": "kb/llm-termlogies-kb.json",
+  "sources": [
+    {
+      "file": "kb/llm-termlogies-kb.json",
+      "source": "llm-termlogies",
+      "label": "LLM术语精通"
+    }
+  ],
+  "model": {
+    "provider": "deepseek",
+    "id": "deepseek-flash"
+  },
+  "thinkingLevel": "off",
+  "description": "由课题「精通llms术语」自动生成。适合AI初学者、产品经理和开发者，系统掌握LLM核心术语、评测方法与硬件算力知识，能快速读懂技术文档并落地实践。",
+  "curriculum": [
+    {
+      "no": 1,
+      "title": "LLM基础概念",
+      "goal": "理解LLM基本定义、发展历程与核心能力",
+      "outline": [
+        "LLM定义与核心思想：从规则到统计语言模型",
+        "发展简史：从n-gram到Transformer到GPT",
+        "关键能力：生成、理解、推理与涌现",
+        "常见误区：LLM不是知识库，而是概率模型"
+      ],
+      "keyTerms": [
+        "大语言模型 (Large Language Model, LLM)",
+        "Transformer",
+        "自注意力 (Self-Attention)",
+        "预训练 (Pre-training)"
+      ],
+      "questions": [
+        "LLM和传统语言模型有什么区别？",
+        "为什么Transformer成为LLM的主流架构？",
+        "LLM真的能理解语言吗？"
+      ]
+    },
+    {
+      "no": 2,
+      "title": "核心架构与训练",
+      "goal": "掌握LLM架构组件与训练流程关键术语",
+      "outline": [
+        "Transformer架构：编码器、解码器与注意力机制",
+        "训练三阶段：预训练、微调、对齐",
+        "关键训练技术：RLHF、指令微调、LoRA",
+        "模型规模：参数量、层数、隐藏维度与上下文长度"
+      ],
+      "keyTerms": [
+        "编码器 (Encoder)",
+        "解码器 (Decoder)",
+        "微调 (Fine-tuning)",
+        "基于人类反馈的强化学习 (RLHF)"
+      ],
+      "questions": [
+        "预训练和微调到底有什么区别？",
+        "RLHF是如何让模型更符合人类偏好的？",
+        "模型参数量越大效果越好吗？"
+      ]
+    },
+    {
+      "no": 3,
+      "title": "推理与优化",
+      "goal": "理解LLM推理过程与优化技术术语",
+      "outline": [
+        "推理流程：输入编码、前向传播、输出解码",
+        "解码策略：贪心、束搜索、采样与温度",
+        "优化技术：量化、剪枝、蒸馏与KV缓存",
+        "推理框架：vLLM、TensorRT-LLM、ONNX Runtime"
+      ],
+      "keyTerms": [
+        "推理 (Inference)",
+        "量化 (Quantization)",
+        "知识蒸馏 (Knowledge Distillation)",
+        "KV缓存 (KV Cache)"
+      ],
+      "questions": [
+        "温度参数如何影响生成结果？",
+        "量化会损失多少模型精度？",
+        "为什么KV缓存能加速推理？"
+      ]
+    },
+    {
+      "no": 4,
+      "title": "模型评测实战",
+      "goal": "能设计并执行LLM评测方案，解读评测指标",
+      "outline": [
+        "评测维度：准确性、流畅性、安全性、效率",
+        "常用基准：MMLU、GLUE、HELM、BIG-bench",
+        "评测方法：自动评估、人工评估、对抗测试",
+        "实战：使用OpenCompass评测开源模型"
+      ],
+      "keyTerms": [
+        "基准测试 (Benchmark)",
+        "困惑度 (Perplexity)",
+        "BLEU分数 (BLEU Score)",
+        "人类评估 (Human Evaluation)"
+      ],
+      "questions": [
+        "如何选择适合的评测基准？",
+        "自动评估和人工评估哪个更可靠？",
+        "评测结果如何指导模型优化？"
+      ]
+    },
+    {
+      "no": 5,
+      "title": "算力硬件测评",
+      "goal": "掌握GPU等硬件选型与性能测评方法",
+      "outline": [
+        "关键硬件指标：算力、显存、带宽、功耗",
+        "主流AI芯片：NVIDIA GPU、TPU、昇腾、寒武纪",
+        "测评工具：MLPerf、CUDA基准、实际模型推理测试",
+        "实战：使用MLPerf或自定义脚本测评GPU"
+      ],
+      "keyTerms": [
+        "图形处理器 (GPU)",
+        "张量处理单元 (TPU)",
+        "每秒浮点运算次数 (FLOPS)",
+        "显存带宽 (Memory Bandwidth)"
+      ],
+      "questions": [
+        "如何根据模型规模选择GPU？",
+        "MLPerf测评结果如何解读？",
+        "国产AI芯片与NVIDIA差距有多大？"
+      ]
+    }
+  ],
+  "starterQuestions": [
+    "学习LLM术语需要哪些前置知识？",
+    "如何快速记住这么多LLM术语？",
+    "评测LLM时最常犯的错误是什么？",
+    "没有高端GPU如何实践LLM测评？"
+  ],
+  "generated": true
+}

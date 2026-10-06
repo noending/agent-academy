@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="课程管理:查看、打开与管理所有主课程与内容工厂生成的课程。">
+<title>课程管理 | Agent 学院</title>
+<link rel="stylesheet" href="assets/css/style.css?v=22">
+</head>
+<body data-chapter="courses">
+
+<header class="topbar">
+  <button class="icon-btn hamburger" id="hamburger" title="打开导航">☰</button>
+  <a class="brand" href="index.html"><span class="logo">学</span> Agent 学院 <small>从零开发智能体 · Ontology · Harness</small></a>
+  <span class="spacer"></span>
+  <span class="progress-pill" id="progress-pill">进度 0/10 章</span>
+  <button class="icon-btn" id="theme-btn">🌙</button>
+</header>
+
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <main class="content">
+    <div class="content-inner">
+
+      <header class="chapter-head">
+        <div class="kicker">课程管理 · 内容工厂产物 · 动态清单</div>
+        <h1>我的<span class="grad">课程</span></h1>
+        <p class="lead">
+          主课程 <b>Agent 学院</b> 之外,内容工厂生成的课程都会出现在这里:
+          <b>打开课程页、在导师中切换学习、查看人审清单、删除</b>。
+          生成入口:论文/仓库/课题 → App 工具栏 <b>📦 内容工厂</b>。
+        </p>
+      </header>
+
+      <div class="callout warn" id="mgmt-note" style="display:none">
+        <div class="co-title">⚠️ 机器初稿须知</div>
+        <p>下方带「机器初稿」标记的课程由 AI 生成:<b>课题类</b>课程内容来自模型知识、无外部引用,发布前必须逐条核实事实与代码;<b>仓库类</b>课程内容可溯源到原仓库。人审清单见各课程的 REVIEW.md。</p>
+      </div>
+
+      <div id="course-list"><div class="callout info"><div class="co-title">加载中…</div></div></div>
+
+    </div>
+  </main>
+</div>
+
+<script>
+/* 课程管理页:从 courses-manifest.json 动态渲染(由内容工厂维护) */
+(function () {
+  const KIND_LABEL = { paper: "论文翻译", repo: "仓库课程", topic: "课题课程" };
+  const list = document.getElementById("course-list");
+
+  function esc(s) { return String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+
+  function card(c) {
+    const chapters = (c.chapters || []).map(ch =>
+      `<li><b>${ch.no}. ${esc(ch.title)}</b> — ${esc(ch.goal)}` +
+      ((ch.questions || []).length ? `<div class="ch-qs">${(ch.questions || []).map(q => "<span>" + esc(q) + "</span>").join("")}</div>` : "") +
+      `</li>`).join("");
+    const btns = [];
+    if (c.page) btns.push(`<a class="btn" href="${esc(c.page)}">📖 打开课程页</a>`);
+    if (c.pack) btns.push(`<a class="btn primary" href="academy://switch-pack/${esc(c.pack)}">🎓 在导师中学习</a>`);
+    if (c.review) btns.push(`<a class="btn" href="${esc(c.review)}">📋 人审清单</a>`);
+    if (c.slug !== "agent-dev") btns.push(`<a class="btn danger" href="academy://delete-course/${esc(c.slug)}" data-del="${esc(c.slug)}">🗑 删除</a>`);
+    return `<div class="course-card">
+      <div class="cc-head">
+        <span class="cc-kind">${KIND_LABEL[c.kind] || c.kind || "课程"}</span>
+        ${c.generated ? '<span class="cc-badge">机器初稿 · 待人审</span>' : '<span class="cc-badge ok">已审定</span>'}
+      </div>
+      <h3><a href="${c.page ? esc(c.page) : "#"}">${esc(c.title)}</a></h3>
+      <p class="cc-desc">${esc(c.description || "")}</p>
+      ${(c.chapters || []).length ? `<details class="fold"><summary>课程目录(${(c.chapters || []).length} 章)</summary><div class="fold-body"><ol class="cc-toc">${chapters}</ol></div></details>` : ""}
+      <div class="cc-btns">${btns.join("")}</div>
+    </div>`;
+  }
+
+  fetch("courses-manifest.json", { cache: "no-store" })
+    .then(r => (r.ok ? r.json() : Promise.reject(r.status)))
+    .then(m => {
+      const courses = (m.courses || []);
+      const gen = courses.filter(c => c.generated);
+      if (gen.length) document.getElementById("mgmt-note").style.display = "";
+      if (!courses.length) {
+        list.innerHTML = '<div class="callout info"><div class="co-title">还没有生成课程</div><p>用 App 工具栏的 <b>📦 内容工厂</b> 生成:丢进一篇论文、一个 GitHub 仓库,或直接给一个课题(如「学 LLM,从训练到部署」)。</p></div>';
+        return;
+      }
+      list.innerHTML =
+        `<div class="course-card agent">
+          <div class="cc-head"><span class="cc-kind">主课程</span><span class="cc-badge ok">人工打造 · 持续更新</span></div>
+          <h3><a href="index.html">Agent 学院(10 章 + 导师)</a></h3>
+          <p class="cc-desc">从零开发智能体:Agent Loop → Prompt → RAG → Ontology → Harness → 上线 → 毕业项目 → 设计模式。配 10 个交互实验室与论文精读。</p>
+          <div class="cc-btns">
+            <a class="btn primary" href="academy://switch-pack/agent-dev">🎓 在导师中学习</a>
+            <a class="btn" href="index.html">📚 学习路径</a>
+          </div>
+        </div>` +
+        courses.map(card).join("");
+    })
+    .catch(() => {
+      list.innerHTML = '<div class="callout info"><div class="co-title">清单尚未生成</div><p>还没有 courses-manifest.json——用内容工厂生成第一门课后,这里会自动出现课程列表。</p></div>';
+    });
+
+  // 删除确认:先 confirm,再走 App 深链(由 App 弹系统级确认并执行删除)
+  document.getElementById("course-list").addEventListener("click", (e) => {
+    const a = e.target.closest("a[data-del]");
+    if (a && !confirm("确定删除课程「" + a.getAttribute("data-del") + "」?\n将同时删除教学包、知识库与草稿页,不可恢复。")) {
+      e.preventDefault();
+    }
+  });
+})();
+</script>
+
+<script src="assets/js/app.js?v=22"></script>
+</body>
+</html>

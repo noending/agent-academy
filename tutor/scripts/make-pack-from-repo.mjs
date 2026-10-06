@@ -14,6 +14,7 @@ import { join, dirname, resolve, basename, extname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { execFileSync } from "node:child_process";
 import { completeSimple, getModel } from "@mariozechner/pi-ai";
+import { updateManifest } from "./factory-common.mjs";
 
 const TUTOR = join(dirname(fileURLToPath(import.meta.url)), "..");
 const MODEL = getModel("deepseek", "deepseek-v4-flash");
@@ -231,6 +232,12 @@ const packJson = {
 writeFileSync(join(packDir, "pack.json"), JSON.stringify(packJson, null, 2));
 
 // REVIEW.md
+updateManifest({
+  kind: "repo", slug: SKILL, title: plan.title, description: plan.description,
+  pack: `packs/${SKILL}`, page: null,
+  chapters: plan.chapters.map((c) => ({ no: c.no, title: c.title, goal: c.goal, questions: c.questions || [] })),
+  starterQuestions: plan.starterQuestions || [], generated: false,
+});
 writeFileSync(join(packDir, "REVIEW.md"), `# 人审清单 · 教学包 ${SKILL}
 
 - 来源: ${REPO || DIR}

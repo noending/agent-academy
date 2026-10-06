@@ -12,6 +12,7 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { completeSimple, getModel } from "@mariozechner/pi-ai";
+import { updateManifest } from "./factory-common.mjs";
 
 const TUTOR = join(dirname(fileURLToPath(import.meta.url)), "..");
 const SITE = join(TUTOR, "..");
@@ -245,6 +246,12 @@ ${chapterHtml}
 const outPage = join(SITE, `full-${SKILL}.html`);
 writeFileSync(outPage, html);
 
+updateManifest({
+  kind: "topic", slug: SKILL, title: plan.title, description: plan.description,
+  pack: `packs/${SKILL}`, page: `full-${SKILL}.html`,
+  chapters: plan.chapters.map((c) => ({ no: c.no, title: c.title, goal: c.goal, questions: c.questions || [] })),
+  starterQuestions: plan.starterQuestions || [], generated: true,
+});
 writeFileSync(join(packDir, "REVIEW.md"), `# 人审清单 · 课题生成课程 ${SKILL}
 
 - 课题: ${TOPIC}

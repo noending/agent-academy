@@ -1,0 +1,201 @@
+{
+  "courses": [
+    {
+      "kind": "topic",
+      "slug": "llm-deploy",
+      "title": "LLM全链路实战",
+      "description": "由课题「LLM 从训练到实际部署」自动生成。适合AI工程师、算法研究员及技术管理者。系统掌握LLM从预训练、微调到部署上线的完整工程链路，涵盖数据、训练、优化、服务化与运维。",
+      "pack": "packs/llm-deploy",
+      "page": "full-llm-deploy.html",
+      "chapters": [
+        {
+          "no": 1,
+          "title": "LLM基础与生态",
+          "goal": "理解LLM核心概念、发展历程与主流模型架构",
+          "questions": [
+            "LLM和传统NLP模型的核心区别是什么？",
+            "为什么Decoder-only架构成为主流？",
+            "开源模型和闭源模型该如何选择？"
+          ]
+        },
+        {
+          "no": 2,
+          "title": "数据工程与预处理",
+          "goal": "掌握LLM训练数据的收集、清洗、去重与格式化方法",
+          "questions": [
+            "如何评估训练数据的质量？",
+            "数据去重有哪些常用算法？",
+            "指令微调数据需要多少条才够？"
+          ]
+        },
+        {
+          "no": 3,
+          "title": "预训练与分布式训练",
+          "goal": "理解预训练目标、分布式训练策略与优化技巧",
+          "questions": [
+            "预训练需要多少计算资源？",
+            "如何解决训练中的loss尖峰问题？",
+            "ZeRO优化器是如何工作的？"
+          ]
+        },
+        {
+          "no": 4,
+          "title": "微调与对齐技术",
+          "goal": "掌握全量微调、LoRA、RLHF等微调与对齐方法",
+          "questions": [
+            "LoRA和全量微调该如何选择？",
+            "RLHF和DPO哪个更实用？",
+            "微调时如何防止灾难性遗忘？"
+          ]
+        },
+        {
+          "no": 5,
+          "title": "模型评估与优化",
+          "goal": "学会设计评估方案，并进行量化、剪枝与蒸馏优化",
+          "questions": [
+            "如何设计针对业务场景的评估集？",
+            "量化会损失多少精度？",
+            "蒸馏小模型能替代大模型吗？"
+          ]
+        },
+        {
+          "no": 6,
+          "title": "推理优化与服务化",
+          "goal": "掌握推理加速技术，并部署高性能推理服务",
+          "questions": [
+            "vLLM和TensorRT-LLM如何选择？",
+            "如何提高推理吞吐量？",
+            "如何设计高可用的LLM API？"
+          ]
+        },
+        {
+          "no": 7,
+          "title": "实战：微调与部署LLM",
+          "goal": "完成一个LLM微调、量化并部署为API的完整项目",
+          "questions": [
+            "微调需要多少显存？",
+            "如何选择LoRA的秩和alpha？",
+            "部署后如何监控性能？"
+          ]
+        },
+        {
+          "no": 8,
+          "title": "生产环境运维与扩展",
+          "goal": "掌握LLM服务的监控、扩缩容、安全与成本优化",
+          "questions": [
+            "如何设置合理的扩缩容阈值？",
+            "如何防止Prompt注入攻击？",
+            "如何降低推理成本？"
+          ]
+        }
+      ],
+      "starterQuestions": [
+        "学习这门课程需要哪些前置知识？",
+        "没有GPU资源可以学习吗？",
+        "课程中的实战项目使用什么框架？",
+        "学完后能达到什么水平？"
+      ],
+      "generated": true,
+      "generatedAt": "2026-10-06T12:45:02.081Z"
+    },
+    {
+      "kind": "repo",
+      "slug": "llm-course",
+      "title": "从训练到部署：LLM 全栈实战课程",
+      "description": "由 mlabonne/llm-course 自动生成的教学包。本仓库是 mlabonne 的 LLM Course，涵盖 LLM 基础、预训练、微调、量化、评估、RAG、Agent 与部署，适合想系统掌握大模型全流程的开发者。",
+      "pack": "packs/llm-course",
+      "page": null,
+      "chapters": [
+        {
+          "no": 1,
+          "title": "LLM 基础：数学、Python 与神经网络",
+          "goal": "掌握线性代数、Python 与神经网络基础，为后续学习铺路",
+          "questions": [
+            "线性代数在 LLM 中具体用在哪些地方？",
+            "为什么学 LLM 需要先掌握 Python？",
+            "神经网络的基本结构（层、权重、偏置）是怎样的？"
+          ]
+        },
+        {
+          "no": 2,
+          "title": "NLP 与 Transformer 架构",
+          "goal": "理解文本预处理、词嵌入与 Transformer 架构演进",
+          "questions": [
+            "文本预处理中的分词和词嵌入有什么区别？",
+            "Transformer 从 encoder-decoder 到 decoder-only 的演进原因是什么？",
+            "为什么说理解 Transformer 架构对使用 LLM 很重要？"
+          ]
+        },
+        {
+          "no": 3,
+          "title": "预训练与后训练数据集",
+          "goal": "了解预训练流程及后训练数据集的构建与存储",
+          "questions": [
+            "预训练为什么需要海量数据？Llama 3.1 用了多少数据？",
+            "后训练数据集的结构（指令+答案）是怎样的？",
+            "对话结构的数据集如何存储和使用 chat template？"
+          ]
+        },
+        {
+          "no": 4,
+          "title": "监督微调（SFT）",
+          "goal": "掌握 SFT 原理及全量微调与参数高效微调技术",
+          "questions": [
+            "SFT 如何把基座模型变成有用的助手？",
+            "全量微调和参数高效微调（如 LoRA）有什么区别？",
+            "如何用 Unsloth 高效微调 Llama 3.1？"
+          ]
+        },
+        {
+          "no": 5,
+          "title": "偏好对齐与评估",
+          "goal": "理解偏好对齐方法（RLHF/DPO）及 LLM 评估体系",
+          "questions": [
+            "偏好对齐中的拒绝采样是如何工作的？",
+            "RLHF 和 DPO 的主要区别是什么？",
+            "如何用自动化基准（如 MMLU）评估 LLM？"
+          ]
+        },
+        {
+          "no": 6,
+          "title": "量化与模型合并",
+          "goal": "掌握量化技术（FP32/INT8等）及模型合并方法",
+          "questions": [
+            "FP32、FP16、INT8 等精度级别对模型有什么影响？",
+            "模型合并（model merging）为什么能提升性能？",
+            "如何用 mergekit 合并多个 LLM？"
+          ]
+        },
+        {
+          "no": 7,
+          "title": "LLM 应用开发：RAG 与 Agent",
+          "goal": "学会构建 RAG 管道、查询构造与 Agent 应用",
+          "questions": [
+            "RAG 中如何摄取文档并进行文本分割？",
+            "查询构造（query construction）在结构化数据中如何应用？",
+            "Agent 的思考-行动循环是如何运作的？"
+          ]
+        },
+        {
+          "no": 8,
+          "title": "LLM 部署与安全",
+          "goal": "掌握本地部署、推理优化及提示注入等安全防护",
+          "questions": [
+            "Flash Attention 如何把注意力复杂度从二次降为线性？",
+            "本地部署 LLM 有哪些隐私和性能优势？",
+            "什么是提示注入？如何防御 OWASP LLM Top 10 中的风险？"
+          ]
+        }
+      ],
+      "starterQuestions": [
+        "这门课程适合什么基础的人学习？需要先学哪些预备知识？",
+        "从零开始训练一个 LLM 需要经历哪些主要阶段？",
+        "微调 LLM 时，全量微调和 LoRA 等参数高效方法该如何选择？",
+        "如何把训练好的 LLM 部署成生产级应用并保证安全？"
+      ],
+      "generated": false,
+      "generatedAt": "2026-10-06T12:45:02.080Z"
+    }
+  ],
+  "updatedAt": "2026-10-06T12:45:02.081Z"
+}

@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="课题「精通llms术语」自动生成课程(机器初稿,未经人工审校)。">
+<title>课题课程 · LLM术语精通 | Agent 学院</title>
+<link rel="stylesheet" href="assets/css/style.css?v=21">
+</head>
+<body data-chapter="full">
+
+<header class="topbar">
+  <button class="icon-btn hamburger" id="hamburger" title="打开导航">☰</button>
+  <a class="brand" href="index.html"><span class="logo">学</span> Agent 学院 <small>从零开发智能体 · Ontology · Harness</small></a>
+  <span class="spacer"></span>
+  <span class="progress-pill" id="progress-pill">进度 0/10 章</span>
+  <button class="icon-btn" id="theme-btn">🌙</button>
+</header>
+
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <main class="content">
+    <div class="content-inner">
+
+      <header class="chapter-head">
+        <div class="kicker">课题生成课程 · 机器初稿 · 未审勿发布</div>
+        <h1>LLM术语精通<span style="color:var(--warn)">(机器初稿)</span></h1>
+        <p class="lead">
+          课题:「精通llms术语」 · 学习目标: 能快速读懂所有llm相关的术语，以及对llm模型的评测还有算力硬件的测评，都能充分理解
+          <br><b style="color:var(--warn)">本课程由内容工厂按课题自动生成,章节内容来自模型知识、无外部引用——发布前必须逐条核实事实。</b>
+          共 5 章;配套导师: <code>node tutor/src/tutor.mjs --pack packs/llm-termlogies</code>
+        </p>
+      </header>
+
+      <div class="callout warn">
+        <div class="co-title">人审须知(发布前必读)</div>
+        <p>① 逐章核实事实与代码可运行性(模型知识可能过时或有错);② 补充权威引用与延伸阅读;③ 删除全部「机器初稿/待审」字样;
+        ④ 通过后加入 index.html 学习路径与导航;⑤ 发布即代表确认内容质量由发布者负责。</p>
+      </div>
+
+ <h2>第1章 · LLM基础概念</h2>
+ <p><b>本章目标：</b>理解LLM基本定义、发展历程与核心能力</p>
+ <h3>LLM是什么？从规则到统计语言模型</h3>
+ <p>咱们先聊一个最根本的问题：<b>大语言模型（Large Language Model, LLM）到底是什么？</b> 你可以把它想象成一个超级“文字接龙”高手——给它一段话，它预测下一个最可能出现的词，然后把这个词接上去，再预测下一个，如此循环，就生成了一整段话。</p><p>但LLM不是一开始就这么聪明的。早期做自然语言处理，人们靠写规则：比如“如果句子以‘吗’结尾，就是疑问句”。这种方法又累又死板，稍微换个说法就失效。后来大家转向<b>统计语言模型</b>：从大量文本里统计词出现的概率。比如“今天天气很___”，统计发现“好”出现的概率最高，那就填“好”。</p><p>LLM就是统计语言模型的终极进化版：用海量文本训练一个巨大的神经网络，让它学会极其复杂的概率分布。所以记住：<b>LLM本质上是一个概率模型，它输出的是“下一个词的概率”，而不是查数据库得到的确定答案。</b></p><p>下面是一个极简的“文字接龙”示例，用Python模拟一下概率预测的思想：</p><pre><code class="language-python">import random
+
+# 假设我们统计了一个超小型的词频表
+# 给定前一个词，下一个词的概率分布
+bigram = {
+    '今天': {'天气': 0.6, '心情': 0.3, '晚上': 0.1},
+    '天气': {'很': 0.8, '不': 0.2},
+    '很': {'好': 0.7, '差': 0.3},
+    '好': {'。': 1.0}
+}
+
+def generate(start_word, length=5):
+    word = start_word
+    result = [word]
+    for _ in range(length):
+        if word not in bigram:
+            break
+        next_words = list(bigram[word].keys())
+        probs = list(bigram[word].values())
+        word = random.choices(next_words, weights=probs)[0]
+        result.append(word)
+    return ''.join(result)
+
+print(generate('今天'))  # 可能输出：今天天气很好。
+</code></pre><p>这个例子虽然简单，但它体现了LLM的核心思想：<b>根据概率生成下一个词</b>。真正的LLM只是把这个“词频表”换成了千亿参数的神经网络，能处理更长的上下文和更复杂的语言规律。</p>
+ <h3>发展简史：从n-gram到Transformer到GPT</h3>
+ <p>LLM不是一夜之间冒出来的，它经历了几个关键阶段：</p><ul><li><b>n-gram时代（1990s-2000s）</b>：用前n-1个词预测第n个词。比如2-gram（bigram）只看前一个词。简单但记不住长距离依赖，数据稀疏问题严重。</li><li><b>神经网络语言模型（2003-2017）</b>：用词向量（Word2Vec）和RNN/LSTM来建模语言。能捕捉更长的上下文，但训练慢，难以并行。</li><li><b>Transformer革命（2017）</b>：Google发表《Attention is All You Need》，提出<b>Transformer</b>架构，核心是<b>自注意力（Self-Attention）</b>机制。它让模型能同时看到所有词，并计算词与词之间的关联权重，训练可以大规模并行，为LLM铺平了道路。</li><li><b>GPT系列与预训练范式（2018-至今）</b>：OpenAI的GPT系列采用<b>预训练（Pre-training）</b>+微调的模式。先在海量无标注文本上预训练，让模型学会语言通识，再针对具体任务微调。GPT-3（1750亿参数）展示了惊人的少样本学习能力，ChatGPT则通过人类反馈强化学习（RLHF）变得对话友好。</li></ul><p>一句话总结：<b>n-gram是统计，RNN是序列，Transformer是并行注意力，GPT是大规模预训练。</b></p><p>下面用PyTorch伪代码展示一个极简的自注意力计算，帮你直观理解Transformer的核心：</p><pre><code class="language-python">import torch
+import torch.nn.functional as F
+
+# 假设输入序列有3个词，每个词用4维向量表示
+x = torch.randn(3, 4)  # (序列长度, 维度)
+
+# 自注意力：计算Query, Key, Value
+W_q = torch.nn.Linear(4, 4)
+W_k = torch.nn.Linear(4, 4)
+W_v = torch.nn.Linear(4, 4)
+Q = W_q(x)
+K = W_k(x)
+V = W_v(x)
+
+# 计算注意力分数：Q和K的点积，缩放
+attn_scores = torch.matmul(Q, K.T) / (4 ** 0.5)
+attn_weights = F.softmax(attn_scores, dim=-1)
+
+# 加权求和得到输出
+output = torch.matmul(attn_weights, V)
+print(output)
+</code></pre><p>这段代码就是Transformer中自注意力的核心：<b>每个词都根据与其他词的相关性，加权聚合信息。</b> 正是这种机制让LLM能理解上下文。</p>
+ <h3>关键能力：生成、理解、推理与涌现</h3>
+ <p>LLM之所以让人兴奋，是因为它展现出多种能力：</p><ul><li><b>生成</b>：写文章、编代码、翻译、创作诗歌。本质是概率采样，但结果常常流畅自然。</li><li><b>理解</b>：能回答阅读理解问题、总结长文、情感分析。它通过注意力机制捕捉语义关联。</li><li><b>推理</b>：能进行简单的逻辑推理、数学解题、常识推理。但注意，<b>推理能力并不稳定</b>，复杂问题容易出错。</li><li><b>涌现（Emergence）</b>：当模型规模（参数、数据、算力）增大到一定程度，突然出现小模型没有的能力，比如多步推理、代码生成、上下文学习。这被称为“涌现能力”，是LLM研究的热点。</li></ul><p>这些能力都建立在同一个基础上：<b>对下一个词的概率预测</b>。模型在预训练中学会了语言的统计规律，从而“涌现”出看似智能的行为。</p><p>下面是一个用Hugging Face Transformers调用GPT-2生成文本的最小示例，让你亲手体验一下：</p><pre><code class="language-python">from transformers import pipeline
+
+# 加载GPT-2模型（首次运行会自动下载）
+generator = pipeline('text-generation', model='gpt2')
+
+# 输入提示，生成后续文本
+prompt = "Large language models are"
+output = generator(prompt, max_length=30, num_return_sequences=1)
+print(output[0]['generated_text'])
+</code></pre><p>运行后你会看到模型续写的句子。虽然GPT-2能力有限，但已经能体现生成能力。换成更大的模型（如GPT-3、LLaMA），效果会显著提升。</p>
+ <h3>常见误区：LLM不是知识库，而是概率模型</h3>
+ <p>初学者最容易犯的错误，就是把LLM当成一个“知识库”或“搜索引擎”。<b>LLM不是数据库，它没有存储事实的表格，也没有检索机制。</b> 它只是根据训练数据学到的概率分布，预测下一个词。因此：</p><ul><li><b>它可能“一本正经地胡说八道”</b>：生成看似合理但完全错误的内容，这叫“幻觉”（Hallucination）。</li><li><b>它的知识有截止日期</b>：训练数据之后发生的事情，它不知道。</li><li><b>它不会主动核实事实</b>：它只关心“哪个词概率高”，不关心“哪个词是真的”。</li></ul><p>所以，<b>LLM是一个强大的语言生成器，但不是可靠的知识源。</b> 要获取准确信息，需要结合外部检索（如RAG）或人工核实。</p><p>另一个误区是认为LLM“理解”了语言。其实它只是在高维空间里做概率计算，并没有人类意义上的理解。但正是这种概率计算，让它能完成很多实用任务。</p>
+ <h3>常见误区</h3>
+ <ul>
+ <li>LLM是一个知识库，可以像查字典一样查询事实。实际上它是概率模型，可能生成错误信息（幻觉）。</li>
+ <li>LLM真正理解了语言的含义。实际上它只是基于统计规律预测下一个词，没有人类意义上的理解。</li>
+ <li>模型越大，推理能力一定越强。实际上涌现能力并非线性增长，且大模型也可能在简单任务上犯错。</li>
+ </ul>
+ <h3>自测</h3>
+ <details class="quiz"><summary>LLM的核心思想是什么？它和传统规则方法有何不同？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>LLM的核心思想是基于概率预测下一个词，通过海量数据训练神经网络学习语言分布。传统规则方法依赖人工编写规则，而LLM从数据中自动学习统计规律，更灵活且能处理复杂语言。</p></div></details>
+ <details class="quiz"><summary>Transformer中的自注意力机制解决了什么问题？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>自注意力机制让模型在处理每个词时，能同时关注序列中所有其他词，并计算它们之间的相关性权重。这解决了RNN等模型难以捕捉长距离依赖和无法并行计算的问题，使大规模预训练成为可能。</p></div></details>
+ <h3>动手练习（带参考方案）</h3>
+ <details class="fold"><summary>动手练习 · 使用Hugging Face Transformers库，加载一个预训练语言模型（如GPT-2），输…</summary><div class="fold-body"><p><b>任务：</b>使用Hugging Face Transformers库，加载一个预训练语言模型（如GPT-2），输入一段提示文本，生成后续内容。观察生成结果，并尝试调整max_length和num_return_sequences参数，看看输出有什么变化。</p><p><b>参考方案：</b></p>参考代码如下：
+
+```python
+from transformers import pipeline
+
+# 加载GPT-2模型
+generator = pipeline('text-generation', model='gpt2')
+
+# 输入提示
+prompt = "Artificial intelligence is"
+
+# 生成文本，设置最大长度和返回序列数
+outputs = generator(prompt, max_length=50, num_return_sequences=3)
+
+# 打印结果
+for i, out in enumerate(outputs):
+    print(f"生成结果 {i+1}: {out['generated_text']}\n")
+```
+
+运行后，你会看到模型基于提示续写的三段不同文本。调整max_length可以控制生成长度，num_return_sequences可以控制生成几个候选。注意，GPT-2可能生成不连贯或重复的内容，这是正常现象。</div></details>
+
+ <h2>第2章 · 核心架构与训练</h2>
+ <p><b>本章目标：</b>掌握LLM架构组件与训练流程关键术语</p>
+ <h3>Transformer架构：编码器、解码器与注意力机制</h3>
+ <p>Transformer 是当前所有主流大语言模型（LLM）的基石。它彻底抛弃了循环神经网络（RNN）的序列依赖，完全依赖<b>注意力机制</b>来捕捉长距离依赖，从而实现了高度并行化训练。</p><p>Transformer 最初是一个“编码器-解码器”架构，用于机器翻译。但后来大家发现，根据任务不同，可以只用其中一部分：</p><ul><li><b>编码器 (Encoder)</b>：擅长理解输入。它通过自注意力让每个词看到整个句子，生成富含上下文的表示。代表模型：BERT。适合分类、情感分析等理解任务。</li><li><b>解码器 (Decoder)</b>：擅长生成输出。它使用<b>掩码自注意力</b>，确保每个位置只能看到它之前的词，从而能自回归地逐词生成。代表模型：GPT 系列、LLaMA。适合文本生成、对话等任务。</li><li><b>编码器-解码器</b>：同时使用两者，编码器理解输入，解码器生成输出。代表模型：T5、BART。适合翻译、摘要等序列到序列任务。</li></ul><p>注意力机制的核心是：对于每个词，计算它与所有词的关联权重，然后加权求和得到新的表示。公式为 Attention(Q, K, V) = softmax(QK^T / sqrt(d_k)) V。其中 Q、K、V 分别代表查询、键、值。多头注意力则是并行多个这样的计算，让模型从不同子空间捕捉信息。</p><p>下面是一个极简的 Transformer 解码器层的前向传播示例，帮助你理解数据流动：</p><pre><code class="language-python">import torch
+import torch.nn as nn
+
+class SimpleDecoderLayer(nn.Module):
+    def __init__(self, d_model=512, nhead=8):
+        super().__init__()
+        self.self_attn = nn.MultiheadAttention(d_model, nhead, batch_first=True)
+        self.linear1 = nn.Linear(d_model, d_model*4)
+        self.linear2 = nn.Linear(d_model*4, d_model)
+        self.norm1 = nn.LayerNorm(d_model)
+        self.norm2 = nn.LayerNorm(d_model)
+        self.dropout = nn.Dropout(0.1)
+
+    def forward(self, x, mask=None):
+        # 自注意力 + 残差连接
+        attn_out, _ = self.self_attn(x, x, x, attn_mask=mask)
+        x = self.norm1(x + self.dropout(attn_out))
+        # 前馈网络 + 残差连接
+        ff_out = self.linear2(self.dropout(torch.relu(self.linear1(x))))
+        x = self.norm2(x + self.dropout(ff_out))
+        return x
+
+# 模拟输入：batch=2, seq_len=10, d_model=512
+x = torch.randn(2, 10, 512)
+# 因果掩码：上三角为 -inf，防止看到未来
+mask = torch.triu(torch.ones(10, 10), diagonal=1).bool()
+mask = mask.masked_fill(mask, float('-inf'))
+layer = SimpleDecoderLayer()
+out = layer(x, mask)
+print(out.shape)  # torch.Size([2, 10, 512])</code></pre><p><b>关键结论：</b>编码器用于理解，解码器用于生成；注意力机制是 Transformer 的核心，让模型能动态关注相关部分。</p>
+ <h3>训练三阶段：预训练、微调、对齐</h3>
+ <p>大模型的训练不是一蹴而就的，通常分为三个阶段，每个阶段目标不同：</p><ol><li><b>预训练 (Pre-training)</b>：在海量无标注文本上训练，目标是学习语言的一般规律和世界知识。通常使用自监督学习，比如预测下一个词（GPT）或掩码语言建模（BERT）。这个阶段计算量最大，成本极高，但产出的模型是“通才”。</li><li><b>微调 (Fine-tuning)</b>：在预训练模型基础上，用特定任务的有标注数据继续训练，使模型适应下游任务。例如，用医疗问答数据微调，让模型成为医疗助手。微调可以全参数微调，也可以只微调部分参数（如 LoRA）。</li><li><b>对齐 (Alignment)</b>：让模型的行为符合人类价值观和意图。预训练模型可能生成有害、偏见或不有用的内容。对齐阶段通过人类反馈来调整模型，典型技术是 RLHF（基于人类反馈的强化学习）。对齐后的模型更安全、更有帮助。</li></ol><p>下面是一个使用 Hugging Face 库进行简单微调的代码框架（以文本分类为例）：</p><pre><code class="language-python">from transformers import AutoTokenizer, AutoModelForSequenceClassification, Trainer, TrainingArguments
+from datasets import load_dataset
+
+# 加载预训练模型和分词器
+model_name = "bert-base-uncased"
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=2)
+
+# 加载数据集（示例：IMDB 情感分类）
+dataset = load_dataset("imdb")
+def tokenize(examples):
+    return tokenizer(examples["text"], padding="max_length", truncation=True, max_length=128)
+tokenized_datasets = dataset.map(tokenize, batched=True)
+
+# 设置训练参数
+training_args = TrainingArguments(
+    output_dir="./results",
+    num_train_epochs=1,
+    per_device_train_batch_size=8,
+    evaluation_strategy="epoch",
+)
+
+# 开始微调
+trainer = Trainer(
+    model=model,
+    args=training_args,
+    train_dataset=tokenized_datasets["train"].shuffle().select(range(1000)),
+    eval_dataset=tokenized_datasets["test"].shuffle().select(range(200)),
+)
+trainer.train()</code></pre><p><b>关键结论：</b>预训练赋予模型通用能力，微调使其专精，对齐使其安全有用。三者缺一不可。</p>
+ <h3>关键训练技术：RLHF、指令微调、LoRA</h3>
+ <p>除了基础的三阶段，还有一些关键技术术语你需要掌握：</p><ul><li><b>指令微调 (Instruction Tuning)</b>：一种特殊的微调，使用“指令-回答”格式的数据训练模型，让模型学会遵循人类指令。例如，“把这句话翻译成英文” -&gt; “Translate this sentence into English”。指令微调是让模型变得“听话”的关键步骤。</li><li><b>RLHF (Reinforcement Learning from Human Feedback)</b>：基于人类反馈的强化学习。步骤：1) 收集人类对模型输出的偏好排序；2) 训练一个奖励模型来模拟人类偏好；3) 用强化学习（如 PPO）微调语言模型，使其输出获得更高奖励。RLHF 是 ChatGPT 成功的关键之一。</li><li><b>LoRA (Low-Rank Adaptation)</b>：一种参数高效微调技术。它冻结预训练模型权重，只在每个 Transformer 层中注入可训练的低秩矩阵。这样微调参数量减少几个数量级，大大降低显存和计算需求，同时保持性能。适合快速适配新任务。</li></ul><p>下面是一个使用 PEFT 库实现 LoRA 微调的示例：</p><pre><code class="language-python">from transformers import AutoModelForCausalLM, AutoTokenizer
+from peft import LoraConfig, get_peft_model
+
+model_name = "gpt2"
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForCausalLM.from_pretrained(model_name)
+
+# 配置 LoRA
+lora_config = LoraConfig(
+    r=8,  # 低秩矩阵的秩
+    lora_alpha=32,
+    target_modules=["c_attn"],  # 针对 GPT-2 的注意力层
+    lora_dropout=0.1,
+    bias="none",
+)
+
+# 包装模型
+peft_model = get_peft_model(model, lora_config)
+peft_model.print_trainable_parameters()  # 可训练参数仅占原模型的极小部分
+
+# 之后可以像正常模型一样训练，但只更新 LoRA 参数</code></pre><p><b>关键结论：</b>指令微调让模型听懂指令，RLHF 让模型符合人类偏好，LoRA 让微调变得轻量高效。</p>
+ <h3>模型规模：参数量、层数、隐藏维度与上下文长度</h3>
+ <p>描述一个 LLM 的规模，通常看以下几个指标：</p><ul><li><b>参数量 (Parameters)</b>：模型中可训练权重的总数，通常以百万(M)、十亿(B)为单位。例如 GPT-3 有 175B 参数。参数量越大，模型容量越大，但计算和存储成本也越高。</li><li><b>层数 (Layers)</b>：Transformer 块的堆叠数量。层数越深，模型能捕捉的抽象特征越复杂。例如 GPT-3 有 96 层。</li><li><b>隐藏维度 (Hidden Dimension)</b>：每个 token 表示的向量长度，也叫 d_model。它决定了模型内部表示的宽度。例如 GPT-3 的隐藏维度是 12288。</li><li><b>上下文长度 (Context Length)</b>：模型一次能处理的最大 token 数。例如 GPT-3 是 2048，GPT-4 是 8192 或更高。上下文长度决定了模型能记住多长的对话或文档。</li></ul><p>这些指标共同决定了模型的容量、训练成本和推理速度。通常，参数量 ≈ 层数 × 隐藏维度² × 常数。但具体架构（如注意力头数、前馈网络维度）也会影响。</p><p>下面是一个计算模型参数量的简化示例（仅考虑 Transformer 解码器层的主要部分）：</p><pre><code class="language-python">def estimate_params(n_layers, d_model, n_heads, d_ff, vocab_size):
+    # 每个解码器层的参数量
+    # 自注意力：QKV 线性层 + 输出线性层
+    attn_params = 4 * d_model * d_model
+    # 前馈网络：两个线性层
+    ff_params = 2 * d_model * d_ff
+    # 层归一化
+    norm_params = 2 * d_model
+    layer_params = attn_params + ff_params + norm_params
+    # 总参数量 = 层数 * 每层参数 + 词嵌入 + 位置嵌入（简化）
+    total = n_layers * layer_params + vocab_size * d_model
+    return total
+
+# 以 GPT-2 small 为例：12层，768维，12头，3072前馈，50257词表
+params = estimate_params(12, 768, 12, 3072, 50257)
+print(f"Estimated parameters: {params/1e6:.1f}M")  # 约 124M，接近实际</code></pre><p><b>关键结论：</b>参数量、层数、隐藏维度和上下文长度是衡量模型规模的核心指标，它们共同影响模型的能力和成本。</p>
+ <h3>常见误区</h3>
+ <ul>
+ <li>编码器和解码器是必须成对使用的，所有 Transformer 模型都同时包含两者。实际上，BERT 只用了编码器，GPT 只用了解码器，它们都是 Transformer 的变体。</li>
+ <li>微调必须更新模型的所有参数。实际上，像 LoRA 这样的参数高效微调方法只更新一小部分参数，也能达到接近全参数微调的效果。</li>
+ <li>RLHF 就是让模型直接学习人类标注的答案。实际上，RLHF 是先训练一个奖励模型来模拟人类偏好，再用强化学习优化语言模型，而不是直接监督学习。</li>
+ </ul>
+ <h3>自测</h3>
+ <details class="quiz"><summary>请简要说明编码器和解码器在注意力机制上的主要区别。</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>编码器使用双向自注意力，每个位置可以看到整个输入序列；解码器使用掩码自注意力（因果注意力），每个位置只能看到它之前的 token，以确保生成时不会看到未来信息。</p></div></details>
+ <details class="quiz"><summary>什么是 LoRA？它解决了什么问题？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>LoRA（低秩适应）是一种参数高效微调技术。它冻结预训练模型权重，在 Transformer 层中注入可训练的低秩矩阵，从而大幅减少微调所需的参数量和显存，使大模型微调更轻量、更快速。</p></div></details>
+ <h3>动手练习（带参考方案）</h3>
+ <details class="fold"><summary>动手练习 · 使用 Hugging Face 的 transformers 库加载一个预训练模型（如 distil…</summary><div class="fold-body"><p><b>任务：</b>使用 Hugging Face 的 transformers 库加载一个预训练模型（如 distilbert-base-uncased），并编写代码计算该模型的参数量、层数、隐藏维度和最大上下文长度。然后，尝试使用 PEFT 库为该模型添加 LoRA 适配器，并打印可训练参数的比例。</p><p><b>参考方案：</b></p>import torch
+from transformers import AutoModel, AutoConfig
+from peft import LoraConfig, get_peft_model
+
+model_name = "distilbert-base-uncased"
+config = AutoConfig.from_pretrained(model_name)
+model = AutoModel.from_pretrained(model_name)
+
+# 打印模型规模信息
+print(f"参数量: {sum(p.numel() for p in model.parameters()):,}")
+print(f"层数: {config.num_hidden_layers}")
+print(f"隐藏维度: {config.hidden_size}")
+print(f"最大上下文长度: {config.max_position_embeddings}")
+
+# 添加 LoRA
+lora_config = LoraConfig(
+    r=8,
+    lora_alpha=32,
+    target_modules=["q_lin", "v_lin"],  # DistilBERT 的注意力层名称
+    lora_dropout=0.1,
+    bias="none",
+)
+peft_model = get_peft_model(model, lora_config)
+peft_model.print_trainable_parameters()
+# 输出示例：trainable params: 739,584 || all params: 66,955,008 || trainable%: 1.10</div></details>
+
+ <h2>第3章 · 推理与优化</h2>
+ <p><b>本章目标：</b>理解LLM推理过程与优化技术术语</p>
+ <h3>推理流程：从输入到输出的三步走</h3>
+ <p>当你对ChatGPT说“你好”，它背后发生的事就叫<b>推理（Inference）</b>——模型根据输入生成输出的过程。推理可以拆成三个步骤：</p><ul><li><b>输入编码</b>：把文字变成数字。比如“你好”被分词器切成token，再映射成词向量（embedding），加上位置信息，变成模型能处理的数字矩阵。</li><li><b>前向传播</b>：数据穿过Transformer的每一层，经过自注意力、前馈网络等计算，最终输出一个巨大的向量，表示词表里每个词的概率。</li><li><b>输出解码</b>：根据概率选择下一个token，然后把新token拼回输入，重复前向传播，直到生成结束符或达到长度限制。这个过程叫自回归生成。</li></ul><p>下面是一个极简的推理示例，用Hugging Face的transformers库加载一个小模型，看看它是怎么生成文本的。</p><pre><code class="language-python">from transformers import AutoModelForCausalLM, AutoTokenizer
+
+model_name = "gpt2"  # 一个很小的模型，方便快速运行
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForCausalLM.from_pretrained(model_name)
+
+input_text = "Hello, I am"
+inputs = tokenizer(input_text, return_tensors="pt")
+
+# 生成：默认使用贪心解码
+outputs = model.generate(**inputs, max_new_tokens=20)
+print(tokenizer.decode(outputs[0], skip_special_tokens=True))
+# 输出示例: Hello, I am a student at the University of California, Berkeley.
+</code></pre><p>注意：<b>推理是逐token生成的</b>，每生成一个token都要跑一次完整的前向传播（除非用了KV缓存优化，后面会讲）。所以生成100个token，就要跑100次模型，这也是为什么推理速度对LLM应用至关重要。</p>
+ <h3>解码策略：贪心、束搜索、采样与温度</h3>
+ <p>模型每一步输出的是词表上的概率分布，怎么从这个分布里选词，就是<b>解码策略</b>。常见的有：</p><ul><li><b>贪心解码（Greedy Search）</b>：每次都选概率最高的词。简单快速，但容易生成重复、无聊的文本。</li><li><b>束搜索（Beam Search）</b>：同时保留k个最优候选序列，最后选整体概率最高的。适合翻译等任务，但计算量大，且容易生成通用回答。</li><li><b>采样（Sampling）</b>：按概率随机选词，增加多样性。但可能选到低概率的怪词。</li><li><b>温度（Temperature）</b>：调整概率分布的平滑程度。温度&amp;gt;1使分布更平，增加随机性；温度&amp;lt;1使分布更尖，更确定。通常配合采样使用。</li></ul><p>此外还有Top-k采样（只从概率最高的k个词中选）和Top-p采样（从累积概率达到p的最小词集合中选），它们能避免采样到太离谱的词。</p><p>下面代码演示了不同解码策略的效果：</p><pre><code class="language-python">from transformers import AutoModelForCausalLM, AutoTokenizer
+
+model_name = "gpt2"
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForCausalLM.from_pretrained(model_name)
+
+input_text = "The future of AI is"
+inputs = tokenizer(input_text, return_tensors="pt")
+
+# 贪心解码
+greedy_output = model.generate(**inputs, max_new_tokens=20)
+print("Greedy:", tokenizer.decode(greedy_output[0], skip_special_tokens=True))
+
+# 采样 + 温度
+sample_output = model.generate(**inputs, do_sample=True, temperature=0.7, max_new_tokens=20)
+print("Sample:", tokenizer.decode(sample_output[0], skip_special_tokens=True))
+
+# 束搜索
+beam_output = model.generate(**inputs, num_beams=5, max_new_tokens=20)
+print("Beam:", tokenizer.decode(beam_output[0], skip_special_tokens=True))
+</code></pre><p><b>选择哪种策略取决于任务</b>：需要准确答案（如代码生成）用低温或贪心；需要创意（如写故事）用高温采样。</p>
+ <h3>优化技术：量化、剪枝、蒸馏与KV缓存</h3>
+ <p>LLM推理又慢又贵，所以有一堆优化技术。理解这些术语，你就能看懂技术文档里的性能提升手段。</p><ul><li><b>量化（Quantization）</b>：把模型权重从高精度（如FP32）转换成低精度（如INT8、INT4），减少内存占用和计算量。比如FP16转INT8，模型大小减半，速度提升，精度损失很小。</li><li><b>剪枝（Pruning）</b>：去掉模型中不重要的权重或神经元，让模型更稀疏。结构化剪枝可以直接减少计算量。</li><li><b>知识蒸馏（Knowledge Distillation）</b>：用大模型（教师）指导小模型（学生）训练，让小模型获得接近大模型的能力。比如DistilBERT就是BERT的蒸馏版。</li><li><b>KV缓存（KV Cache）</b>：自回归生成时，每次前向传播都会计算所有token的Key和Value矩阵。但前面token的KV是不变的，缓存它们可以避免重复计算，极大加速生成。这是推理加速的标配。</li></ul><p>下面是一个使用KV缓存的示例（Hugging Face默认开启）：</p><pre><code class="language-python">from transformers import AutoModelForCausalLM, AutoTokenizer
+
+model_name = "gpt2"
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForCausalLM.from_pretrained(model_name)
+
+input_text = "Once upon a time"
+inputs = tokenizer(input_text, return_tensors="pt")
+
+# 默认使用KV缓存，生成更快
+outputs = model.generate(**inputs, max_new_tokens=50, use_cache=True)
+print(tokenizer.decode(outputs[0], skip_special_tokens=True))
+</code></pre><p><b>KV缓存是推理加速的关键</b>，但会占用显存。对于长序列，缓存可能比模型本身还大，所以有了MQA、GQA等优化注意力机制。</p>
+ <h3>推理框架：vLLM、TensorRT-LLM、ONNX Runtime</h3>
+ <p>自己写推理代码适合学习，但生产环境需要高性能框架。以下是三个主流选择：</p><ul><li><b>vLLM</b>：专为LLM推理设计，核心是PagedAttention，高效管理KV缓存，支持连续批处理，吞吐量极高。适合云端部署。</li><li><b>TensorRT-LLM</b>：NVIDIA出品，针对自家GPU深度优化，支持量化、内核融合等，延迟极低。适合对性能要求苛刻的场景。</li><li><b>ONNX Runtime</b>：微软的跨平台推理引擎，支持多种硬件，通用性强。适合边缘设备或需要跨平台部署的场景。</li></ul><p>这些框架都帮你处理了批处理、内存管理、算子优化等脏活累活。作为开发者，你只需要调用API。例如用vLLM启动一个服务：</p><pre><code class="language-python"># 安装: pip install vllm
+from vllm import LLM, SamplingParams
+
+# 加载模型
+llm = LLM(model="gpt2")
+
+# 设置采样参数
+sampling_params = SamplingParams(temperature=0.8, top_p=0.95, max_tokens=50)
+
+# 生成
+outputs = llm.generate(["Hello, my name is"], sampling_params)
+for output in outputs:
+    print(output.outputs[0].text)
+</code></pre><p><b>选择框架时考虑</b>：硬件（NVIDIA GPU选TensorRT-LLM，其他选vLLM或ONNX）、吞吐量需求、易用性。对于大多数场景，vLLM是平衡性能和易用性的好选择。</p>
+ <h3>常见误区</h3>
+ <ul>
+ <li>推理（Inference）和训练（Training）是一回事——实际上训练是学习权重，推理是使用权重生成结果，两者计算模式和资源需求完全不同。</li>
+ <li>温度越高，模型越聪明——温度只是调节随机性，高温增加多样性但可能降低准确性，低温更确定但可能重复。</li>
+ <li>量化一定会显著降低模型效果——现代量化技术（如GPTQ、AWQ）在4-bit下也能保持大部分性能，具体取决于方法和校准数据。</li>
+ </ul>
+ <h3>自测</h3>
+ <details class="quiz"><summary>什么是KV缓存？它为什么能加速推理？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>KV缓存是自回归生成中缓存已计算的Key和Value矩阵的技术。因为生成每个新token时，前面token的KV不变，缓存后无需重复计算，从而减少计算量，加速推理。</p></div></details>
+ <details class="quiz"><summary>贪心解码和采样解码的主要区别是什么？各自适用什么场景？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>贪心解码每步选概率最高的词，输出确定但可能重复；采样解码按概率随机选词，输出多样但可能不连贯。贪心适合需要准确答案的任务（如代码生成），采样适合创意任务（如写故事）。</p></div></details>
+ <h3>动手练习（带参考方案）</h3>
+ <details class="fold"><summary>动手练习 · 使用Hugging Face transformers库，加载gpt2模型，分别用贪心解码、束搜索（…</summary><div class="fold-body"><p><b>任务：</b>使用Hugging Face transformers库，加载gpt2模型，分别用贪心解码、束搜索（num_beams=5）和采样（temperature=0.7, top_p=0.9）生成同一提示词的续写，比较输出差异。提示词自定，生成长度20个token。</p><p><b>参考方案：</b></p>from transformers import AutoModelForCausalLM, AutoTokenizer
+
+model_name = "gpt2"
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForCausalLM.from_pretrained(model_name)
+
+prompt = "The best way to learn AI is"
+inputs = tokenizer(prompt, return_tensors="pt")
+
+# 贪心
+greedy = model.generate(**inputs, max_new_tokens=20)
+print("Greedy:", tokenizer.decode(greedy[0], skip_special_tokens=True))
+
+# 束搜索
+beam = model.generate(**inputs, num_beams=5, max_new_tokens=20)
+print("Beam:", tokenizer.decode(beam[0], skip_special_tokens=True))
+
+# 采样
+sample = model.generate(**inputs, do_sample=True, temperature=0.7, top_p=0.9, max_new_tokens=20)
+print("Sample:", tokenizer.decode(sample[0], skip_special_tokens=True))
+
+# 观察：贪心输出最确定，束搜索更流畅但可能保守，采样更多样。</div></details>
+
+ <h2>第4章 · 模型评测实战</h2>
+ <p><b>本章目标：</b>能设计并执行LLM评测方案，解读评测指标</p>
+ <h3>评测维度：从准确性到效率，全面衡量模型能力</h3>
+ <p>当我们说一个LLM“好”或“不好”时，其实是在多个维度上做判断。就像评价一个学生不能只看数学成绩，评价LLM也要从多个角度出发。本章我们先梳理四个核心评测维度：<b>准确性、流畅性、安全性、效率</b>。</p><ul><li><b>准确性</b>：模型回答是否正确、符合事实。例如问“中国的首都是哪里”，模型答“北京”就是准确的。常用指标有准确率（Accuracy）、F1分数等。</li><li><b>流畅性</b>：生成的文本是否通顺、自然、符合语法。比如“我吃饭了”流畅，而“我饭吃了”就不太自然。常用指标有困惑度（Perplexity，简称PPL）和BLEU分数。</li><li><b>安全性</b>：模型是否会产生有害、偏见、违法或泄露隐私的内容。例如拒绝回答“如何制作炸弹”就是安全的表现。</li><li><b>效率</b>：模型推理速度、显存占用、吞吐量等。例如每秒生成多少token（tokens/s），这对产品落地至关重要。</li></ul><p>这四个维度往往需要权衡。比如一个模型准确性很高，但推理速度很慢，可能不适合实时对话场景。<b>评测就是帮我们在这些维度上量化模型表现，从而做出选型或优化决策。</b></p><p>下面是一个计算困惑度的最小示例。困惑度越低，说明模型对文本越“不困惑”，即预测下一个词的能力越强，流畅性通常越好。</p><pre><code class="language-python">import torch
+import torch.nn.functional as F
+
+# 假设词表大小为10，模型对下一个词的预测logits
+torch.manual_seed(0)
+logits = torch.randn(1, 10)  # 未归一化的预测分数
+target = torch.tensor([3])   # 真实的下一个词索引
+
+# 计算交叉熵损失
+loss = F.cross_entropy(logits, target)
+# 困惑度 = exp(损失)
+perplexity = torch.exp(loss)
+print(f"损失: {loss.item():.4f}")
+print(f"困惑度: {perplexity.item():.4f}")</code></pre><p>运行这段代码，你会得到一个困惑度数值。在实际评测中，我们会在整个测试集上计算平均困惑度。</p>
+ <h3>常用基准：MMLU、GLUE、HELM、BIG-bench 都是什么？</h3>
+ <p>基准测试（Benchmark）是一套标准化的题目和评分规则，用来公平比较不同模型。就像高考用同一套试卷衡量学生，基准测试让模型在同一起跑线上竞争。下面介绍四个最常听到的基准：</p><ul><li><b>MMLU</b>（Massive Multitask Language Understanding）：涵盖57个学科（数学、历史、法律、医学等）的多选题，考察模型的通用知识。例如“光合作用发生在细胞的哪个部位？”MMLU分数越高，说明模型知识面越广。</li><li><b>GLUE</b>（General Language Understanding Evaluation）：由多个自然语言理解任务组成，如情感分析、句子相似度等。后来升级为SuperGLUE，难度更高。GLUE主要评估模型对语言的理解能力。</li><li><b>HELM</b>（Holistic Evaluation of Language Models）：不只关注准确性，还从公平性、偏见、毒性、效率等全方位评估模型。HELM更像一个“体检套餐”，而不是单一考试。</li><li><b>BIG-bench</b>（Beyond the Imitation Game Benchmark）：包含200多个任务，从逻辑推理到常识问答，甚至有些任务人类都很难。BIG-bench旨在挑战模型的极限。</li></ul><p>这些基准各有侧重，<b>实际评测时通常组合使用</b>。比如用MMLU看知识，用GLUE看理解，用HELM看安全，用BIG-bench看推理。下面是一个模拟计算BLEU分数的例子，BLEU常用于机器翻译等生成任务的流畅性评估。</p><pre><code class="language-python">from nltk.translate.bleu_score import sentence_bleu
+
+# 参考译文（标准答案）和模型生成的译文
+reference = [['the', 'cat', 'is', 'on', 'the', 'mat']]
+candidate = ['the', 'cat', 'is', 'on', 'the', 'mat']
+
+# 计算BLEU分数
+score = sentence_bleu(reference, candidate)
+print(f"BLEU分数: {score:.4f}")  # 完全匹配时为1.0</code></pre><p>注意：BLEU分数范围是0到1，越接近1表示生成文本与参考文本越相似。但它只衡量表面词汇重叠，不判断语义是否正确。</p>
+ <h3>评测方法：自动评估、人工评估与对抗测试</h3>
+ <p>有了维度和基准，具体怎么评？主要有三种方法：</p><ul><li><b>自动评估</b>：用程序自动计算指标，如准确率、BLEU、困惑度。优点是快、便宜、可复现；缺点是可能无法捕捉语义、幽默、创造力等。适合大规模筛选。</li><li><b>人工评估</b>：请人类标注员对模型输出打分，比如流畅性1-5分、相关性1-5分。优点是能评价主观质量；缺点是贵、慢、可能有标注者偏差。适合最终验收。</li><li><b>对抗测试</b>：故意设计刁钻、有害或边缘的输入来攻击模型，看它是否出错。例如问“如何偷窃而不被发现”，观察模型是否拒绝。对抗测试是安全评估的重要手段。</li></ul><p><b>实际项目中，通常先用自动评估快速迭代，再用人工评估和对抗测试做最终把关。</b>比如开发一个客服机器人，自动评估看回答准确率，人工评估看语气是否友好，对抗测试看会不会被诱导骂人。</p><p>下面是一个简单的人工评估打分表模拟，用代码计算平均分。</p><pre><code class="language-python"># 模拟3位标注员对模型回答的流畅性打分（1-5分）
+scores = [4, 5, 3]
+average_score = sum(scores) / len(scores)
+print(f"平均流畅性得分: {average_score:.2f}")
+
+# 对抗测试示例：检查模型是否拒绝有害请求
+def is_safe_response(response):
+    unsafe_keywords = ['制作炸弹', '偷窃', '攻击']
+    return not any(keyword in response for keyword in unsafe_keywords)
+
+response = "对不起，我不能提供这类信息。"
+print(f"回答是否安全: {is_safe_response(response)}")</code></pre>
+ <h3>实战：使用OpenCompass评测开源模型</h3>
+ <p>OpenCompass 是一个开源的大模型评测平台，支持MMLU、C-Eval、GSM8K等数十个数据集，可以一键评测HuggingFace上的开源模型。下面我们以评测一个小模型为例，展示完整流程。</p><p>首先安装OpenCompass（建议在Python 3.8+环境）：</p><pre><code class="language-bash">pip install opencompass</code></pre><p>然后准备配置文件。OpenCompass使用Python配置文件定义模型和数据集。创建一个<code>eval_config.py</code>：</p><pre><code class="language-python">from opencompass.models import HuggingFaceCausalLM
+from opencompass.datasets import MMLUDataset
+from opencompass.openicl.icl_inferencer import GenInferencer
+
+# 1. 定义模型
+models = [
+    dict(
+        type=HuggingFaceCausalLM,
+        abbr='qwen-1.8b',  # 模型缩写
+        path='Qwen/Qwen-1_8B',  # HuggingFace模型路径
+        tokenizer_path='Qwen/Qwen-1_8B',
+        max_out_len=100,
+        batch_size=8,
+    )
+]
+
+# 2. 定义数据集（这里以MMLU为例）
+datasets = [
+    dict(
+        type=MMLUDataset,
+        abbr='mmlu',
+        path='./data/mmlu/',  # 数据集路径，需提前下载
+        reader_cfg=dict(input_columns=['input'], output_column='target'),
+        infer_cfg=dict(
+            prompt_template=dict(
+                type='PromptTemplate',
+                template=dict(round=[
+                    dict(role='HUMAN', prompt='{input}'),
+                ]),
+            ),
+            inferencer=dict(type=GenInferencer),
+        ),
+        eval_cfg=dict(
+            evaluator=dict(type='AccEvaluator'),
+        ),
+    )
+]</code></pre><p>最后运行评测：</p><pre><code class="language-bash">python run.py eval_config.py --work-dir ./outputs</code></pre><p>运行结束后，在<code>./outputs</code>目录下会生成评测报告，包含准确率等指标。你可以打开<code>summary</code>文件夹查看CSV或HTML格式的结果。</p><p><b>OpenCompass的优势在于标准化和可复现</b>，你只需要换模型路径和数据集名称，就能快速对比不同模型。对于产品经理，可以借此了解模型在关键任务上的表现；对于开发者，可以基于结果做微调或提示词优化。</p>
+ <h3>常见误区</h3>
+ <ul>
+ <li>困惑度越低，模型生成质量一定越好。实际上困惑度只反映模型对下一个词的预测概率，低困惑度可能只是模型在训练数据上过拟合，并不代表生成内容更有用或更安全。</li>
+ <li>BLEU分数高就代表翻译或生成质量好。BLEU只计算n-gram重叠，不考虑语义和语法，有时重复参考文本中的词就能得高分，但实际读起来可能不通顺。</li>
+ <li>基准测试分数高就说明模型在实际业务中表现好。基准测试通常有固定格式和领域，而真实场景更复杂，可能存在数据泄露、过拟合基准等问题，必须结合人工评估和对抗测试。</li>
+ </ul>
+ <h3>自测</h3>
+ <details class="quiz"><summary>请解释MMLU和HELM两个基准的主要区别。</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>MMLU主要评估模型在57个学科的多选题上的知识准确性，是一个单一维度的知识测试；而HELM是一个全方位评估框架，除了准确性，还评估公平性、偏见、毒性、效率等多个维度，更像一个综合体检。</p></div></details>
+ <details class="quiz"><summary>在LLM评测中，自动评估和人工评估各有什么优缺点？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>自动评估的优点是快速、便宜、可复现，适合大规模筛选；缺点是难以评估语义、创造力等主观质量。人工评估的优点是能评价主观质量、更贴近人类感受；缺点是成本高、速度慢、可能存在标注者偏差。实际中常结合使用。</p></div></details>
+ <h3>动手练习（带参考方案）</h3>
+ <details class="fold"><summary>动手练习 · 使用OpenCompass评测一个小型开源模型（如Qwen-1.8B）在MMLU数据集上的表现，并解…</summary><div class="fold-body"><p><b>任务：</b>使用OpenCompass评测一个小型开源模型（如Qwen-1.8B）在MMLU数据集上的表现，并解读评测报告中的准确率指标。如果无法下载模型，可以模拟一份评测报告并分析。</p><p><b>参考方案：</b></p>参考方案：
+1. 安装OpenCompass：pip install opencompass
+2. 下载MMLU数据集到./data/mmlu/（可从OpenCompass官方仓库获取）
+3. 创建配置文件eval_config.py，内容如本章第四节示例，模型路径改为'Qwen/Qwen-1_8B'。
+4. 运行：python run.py eval_config.py --work-dir ./outputs
+5. 查看./outputs/summary/下的CSV文件，找到mmlu的准确率（Accuracy）。
+6. 解读：如果准确率约为0.45，说明模型在57个学科的平均正确率是45%，高于随机猜测（25%），但距离人类水平（约90%）还有差距。可以进一步查看各学科细分分数，找出弱项。
+
+如果无法运行，可模拟报告：假设准确率为0.45，分析其含义，并对比GPT-3.5的约0.70，说明模型规模对知识准确性的影响。</div></details>
+
+ <h2>第5章 · 算力硬件测评</h2>
+ <p><b>本章目标：</b>掌握GPU等硬件选型与性能测评方法</p>
+ <h3>硬件核心指标：算力、显存、带宽、功耗</h3>
+ <p>选GPU就像选车，不能只看马力（算力），还要看油箱大小（显存）、输油管粗细（带宽）和油耗（功耗）。这四个指标共同决定了你能跑多大的模型、跑多快。</p><ul><li><b>算力（FLOPS）</b>：每秒浮点运算次数，衡量计算速度。常见单位有TFLOPS（万亿次）、PFLOPS（千万亿次）。注意区分FP32、FP16、INT8等精度，<b>低精度算力通常更高</b>，而LLM推理常用FP16或INT8。</li><li><b>显存（VRAM）</b>：GPU自带的内存，单位GB。模型参数、中间激活值、KV Cache都要放在显存里。<b>显存不够，模型根本加载不了</b>，会直接报OOM（Out of Memory）。</li><li><b>显存带宽（Memory Bandwidth）</b>：单位GB/s，决定数据从显存搬到计算核心的速度。对于大模型推理，<b>带宽往往是瓶颈</b>，因为每生成一个token都要把整个模型权重读一遍。</li><li><b>功耗（TDP）</b>：热设计功耗，单位W。功耗越高，对电源和散热要求越高，电费也越贵。数据中心还要考虑PUE（能源使用效率）。</li></ul><p>举个例子：NVIDIA A100有19.5 TFLOPS FP32算力、40GB/80GB显存、1555GB/s带宽、400W功耗；而H100提升到约67 TFLOPS FP32、80GB显存、3.35TB/s带宽、700W功耗。选型时要根据模型大小和吞吐需求权衡。</p>
+ <h3>主流AI芯片：NVIDIA GPU、TPU、昇腾、寒武纪</h3>
+ <p>目前AI芯片市场百花齐放，但生态和适用场景差异很大。</p><ul><li><b>NVIDIA GPU</b>：绝对主流，从消费级RTX 4090到数据中心级A100/H100。优势是CUDA生态成熟，几乎所有框架都优先支持。缺点是被制裁导致高端卡获取困难，价格昂贵。</li><li><b>Google TPU</b>：专为TensorFlow/JAX设计的ASIC，通过Google Cloud使用。优势是规模化训练成本低，但生态封闭，不适合通用计算。</li><li><b>华为昇腾（Ascend）</b>：国产代表，昇腾910用于训练，310用于推理。配套CANN软件栈和MindSpore框架，在国产化替代中应用广泛。</li><li><b>寒武纪（Cambricon）</b>：另一家国产AI芯片公司，思元系列覆盖云端和边缘。生态相对较小，但也在逐步完善。</li></ul><p><b>选型建议</b>：如果追求生态和开发效率，优先NVIDIA；如果受限于供应链或需要国产化，考虑昇腾；如果已经在Google Cloud上，TPU是不错的选择。对于初学者，建议从NVIDIA GPU入手，因为学习资料最多。</p>
+ <h3>测评工具：MLPerf、CUDA基准、实际模型推理测试</h3>
+ <p>光看纸面参数不够，实际性能受软件优化、散热、驱动等影响。常用测评方法有三类：</p><ul><li><b>MLPerf</b>：行业公认的AI基准测试，涵盖训练和推理。它定义了标准任务（如ResNet-50、BERT、GPT-3），各家厂商提交成绩，可比性强。但MLPerf跑一次成本高，适合企业采购参考。</li><li><b>CUDA基准</b>：如<code>bandwidthTest</code>测显存带宽，<code>deviceQuery</code>看设备信息，<code>nvprof</code>或<code>nsight</code>做性能分析。适合快速验证硬件是否正常。</li><li><b>实际模型推理测试</b>：最贴近业务，用你的模型和数据集测吞吐量（tokens/s）和延迟（ms/token）。推荐用<code>transformers</code>+<code>torch</code>写脚本，或使用<code>vLLM</code>、<code>TensorRT-LLM</code>等推理引擎。</li></ul><p>下面是一个最小可运行的GPU推理测速脚本，使用Hugging Face的模型：</p><pre><code class="language-python">import torch
+from transformers import AutoModelForCausalLM, AutoTokenizer
+import time
+
+model_name = "gpt2"  # 可换成更大模型
+ tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForCausalLM.from_pretrained(model_name).to("cuda")
+model.eval()
+
+input_text = "The future of AI is"
+inputs = tokenizer(input_text, return_tensors="pt").to("cuda")
+
+# 预热
+with torch.no_grad():
+    for _ in range(3):
+        _ = model.generate(**inputs, max_new_tokens=10)
+
+# 测速
+start = time.time()
+with torch.no_grad():
+    outputs = model.generate(**inputs, max_new_tokens=50)
+end = time.time()
+
+generated_tokens = outputs.shape[1] - inputs.input_ids.shape[1]
+print(f"生成 {generated_tokens} 个token，耗时 {end-start:.2f} 秒")
+print(f"吞吐量: {generated_tokens/(end-start):.2f} tokens/s")
+</code></pre><p>运行前确保已安装<code>torch</code>和<code>transformers</code>，并且有可用的CUDA环境。这个脚本会输出生成速度和吞吐量，你可以调整<code>max_new_tokens</code>和模型大小来对比不同硬件。</p>
+ <h3>实战：使用MLPerf或自定义脚本测评GPU</h3>
+ <p>如果你手头有GPU，可以按以下步骤做一次简单测评：</p><ol><li><b>环境检查</b>：运行<code>nvidia-smi</code>查看GPU型号、显存、功耗。运行<code>nvcc --version</code>查看CUDA版本。</li><li><b>带宽测试</b>：编译并运行CUDA样例中的<code>bandwidthTest</code>，得到实际显存带宽。</li><li><b>推理测试</b>：用上面的脚本，分别测试小模型（如gpt2）和大模型（如facebook/opt-1.3b），记录吞吐量和延迟。</li><li><b>对比分析</b>：将结果与官方参数对比，看是否达到预期。如果差距大，检查散热、驱动、是否使用了Tensor Core等。</li></ol><p>对于企业级测评，可以申请MLPerf推理基准的代码，在本地运行。MLPerf推理有多个场景（SingleStream、MultiStream、Server、Offline），分别对应不同业务需求。例如Server场景模拟在线服务，关注延迟和吞吐的平衡。</p><p><b>注意</b>：测评时要控制变量，比如固定batch size、输入长度、精度（FP16/INT8），否则结果不可比。另外，多次测量取平均值，避免冷启动影响。</p>
+ <h3>常见误区</h3>
+ <ul>
+ <li>显存越大越好，忽略带宽和算力。实际上，如果带宽不足，大显存也无法快速喂数据，导致GPU利用率低。</li>
+ <li>FLOPS越高，模型推理越快。但实际速度还受显存带宽、软件优化、batch size等影响，FLOPS只是理论峰值。</li>
+ <li>国产芯片完全不能用。昇腾等国产芯片在特定场景下已有不错表现，且生态正在完善，选型时应根据实际需求和政策综合考虑。</li>
+ </ul>
+ <h3>自测</h3>
+ <details class="quiz"><summary>为什么说对于大模型推理，显存带宽往往比算力更重要？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>因为大模型推理是内存密集型任务，每生成一个token都需要将整个模型权重从显存读取到计算单元。如果带宽不足，计算单元会经常等待数据，导致算力无法充分发挥。因此，带宽决定了数据搬运速度，直接影响推理吞吐量。</p></div></details>
+ <details class="quiz"><summary>MLPerf基准测试主要用来衡量什么？它有哪些常见场景？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>MLPerf用来衡量AI硬件和软件在训练和推理任务上的性能。推理常见场景包括SingleStream（单流低延迟）、MultiStream（多流）、Server（在线服务）和Offline（离线批处理），分别对应不同业务需求。</p></div></details>
+ <h3>动手练习（带参考方案）</h3>
+ <details class="fold"><summary>动手练习 · 使用Hugging Face的transformers库，在本地GPU上测试gpt2模型和faceb…</summary><div class="fold-body"><p><b>任务：</b>使用Hugging Face的transformers库，在本地GPU上测试gpt2模型和facebook/opt-1.3b模型的推理速度，记录生成50个token的耗时和吞吐量（tokens/s），并对比两个模型的结果。</p><p><b>参考方案：</b></p>参考代码如下：
+
+```python
+import torch
+from transformers import AutoModelForCausalLM, AutoTokenizer
+import time
+
+def benchmark(model_name, max_new_tokens=50):
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    model = AutoModelForCausalLM.from_pretrained(model_name).to("cuda")
+    model.eval()
+    input_text = "The future of AI is"
+    inputs = tokenizer(input_text, return_tensors="pt").to("cuda")
+    # 预热
+    with torch.no_grad():
+        for _ in range(3):
+            _ = model.generate(**inputs, max_new_tokens=10)
+    # 测速
+    start = time.time()
+    with torch.no_grad():
+        outputs = model.generate(**inputs, max_new_tokens=max_new_tokens)
+    end = time.time()
+    generated_tokens = outputs.shape[1] - inputs.input_ids.shape[1]
+    throughput = generated_tokens / (end - start)
+    print(f"{model_name}: 生成 {generated_tokens} tokens, 耗时 {end-start:.2f}s, 吞吐量 {throughput:.2f} tokens/s")
+    return throughput
+
+if __name__ == "__main__":
+    benchmark("gpt2")
+    benchmark("facebook/opt-1.3b")
+```
+
+运行前确保已安装torch和transformers，并且CUDA可用。预期gpt2的吞吐量会明显高于opt-1.3b，因为模型更小。你可以进一步调整max_new_tokens或batch size来观察变化。</div></details>
+
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/app.js?v=22"></script>
+</body>
+</html>
