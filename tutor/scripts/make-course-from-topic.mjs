@@ -15,6 +15,8 @@ import { completeSimple, getModel } from "@mariozechner/pi-ai";
 
 const TUTOR = join(dirname(fileURLToPath(import.meta.url)), "..");
 const SITE = join(TUTOR, "..");
+// 动态取站点当前缓存版本(避免生成页与全站版本漂移)
+const SITE_VER = (readFileSync(join(SITE, "index.html"), "utf8").match(/app\.js\?v=(\d+)/) || [])[1] || "22";
 const MODEL = getModel("deepseek", "deepseek-v4-flash");
 const KEY = process.env.DEEPSEEK_API_KEY;
 
@@ -75,8 +77,8 @@ async function pool(items, worker, n = 4) {
 console.log(`→ Phase A · 规划课程大纲: ${TOPIC}`);
 const PLAN_SYS = `你是顶级课程设计师。为学习课题设计一门 ${N_CH} 章的系统课程(从基础概念到实际落地,由浅入深)。
 输出严格 JSON:
-{"title":"课程名(中文,10字内)","description":"课程简介(80字内:适合谁/学到什么)","chapters":[{"no":1,"title":"章标题(中文)","goal":"学完能做什么(30字内)","outline":["要点1","要点2","要点3","要点4"],"keyTerms":["关键术语(中英对照)"]}],"starterQuestions":["学员最可能问的4个问题"]}
-规则: 章节由浅入深,最后 1-2 章必须是动手实战/部署落地;每章 outline 4 条;只输出 JSON。`;
+{"title":"课程名(中文,10字内)","description":"课程简介(80字内:适合谁/学到什么)","chapters":[{"no":1,"title":"章标题(中文)","goal":"学完能做什么(30字内)","outline":["要点1","要点2","要点3","要点4"],"keyTerms":["关键术语(中英对照)"],"questions":["学员学本章时最可能问的3个问题(中文)"]}],"starterQuestions":["学员最可能问的4个问题"]}
+规则: 章节由浅入深,最后 1-2 章必须是动手实战/部署落地;每章 outline 4 条、questions 恰好 3 个;只输出 JSON。`;
 const planRaw = await llm(PLAN_SYS, `课题: ${TOPIC}\n学习目标: ${GOAL}\n章节数: ${N_CH}`, 5000);
 const plan = parseJSON(planRaw);
 console.log(`  《${plan.title}》 ${plan.chapters.length} 章`);
@@ -236,7 +238,7 @@ ${chapterHtml}
   </main>
 </div>
 
-<script src="assets/js/app.js?v=21"></script>
+<script src="assets/js/app.js?v=${SITE_VER}"></script>
 </body>
 </html>
 `;

@@ -150,9 +150,10 @@ console.log(`  → ${chunks.length} 个知识块`);
 console.log("→ LLM 规划课程大纲…");
 const PLANNER_SYS = `你是课程规划器。根据仓库内容(文件清单 + 知识块索引)和学习目标,把它规划成一门可被导师讲授的课程。
 输出严格 JSON:
-{"title":"课程名(中文)","repoSummary":"这个仓库是什么、适合谁、学到什么(80字内)","chapters":[{"no":1,"title":"章标题(中文)","goal":"这一章学完学员能做到什么(30字内)","chunkIds":["引用真实块id","…"]}],"starterQuestions":["学员最可能问的4个问题(中文)"]}
+{"title":"课程名(中文)","repoSummary":"这个仓库是什么、适合谁、学到什么(80字内)","chapters":[{"no":1,"title":"章标题(中文)","goal":"这一章学完学员能做到什么(30字内)","chunkIds":["引用真实块id","…"],"questions":["基于本章内容,学员最可能问的3个问题(中文)"]}],"starterQuestions":["学员最可能问的4个问题(中文)"]}
 规则:
 - 章节 5~10 章,由浅入深覆盖仓库核心内容;每章 chunkIds 必须引用给定的真实块 id(可跨文件),不许编造;
+- 每章 questions 恰好 3 个,必须基于该章引用的块内容,学员视角、具体可答;
 - 学习目标: ${GOAL || "(未指定,按仓库内容设计完整学习路径)"};
 - starterQuestions 4 个,覆盖入门/核心/进阶。只输出 JSON。`;
 const chunkIndex = chunks.map((c) => `${c.id} [${c.file}] ${c.title}: ${c.text.slice(0, 110).replace(/\n/g, " ")}`).join("\n");

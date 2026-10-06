@@ -17,6 +17,14 @@ struct PageContext: Equatable {
     let title: String
 }
 
+/// 教学包元数据(课程菜单 + 预置问题来源)
+struct PackMeta {
+    let name: String
+    let title: String
+    let starter: [String]        // pack.json starterQuestions
+    let chapterQuestions: [String] // curriculum 各章 questions 拼平
+}
+
 // MARK: - 每个课程页面的预置问题(键 = 文件名)
 
 let PRESET_QUESTIONS: [String: [String]] = [
@@ -122,7 +130,8 @@ final class TutorModel: ObservableObject {
     @Published private(set) var currentPage: PageContext?
     @Published private(set) var packName = "agent-dev"
     @Published private(set) var packTitle = "Agent 学院 · 开发导师"
-    @Published private(set) var packs: [(name: String, title: String)] = []
+    @Published private(set) var packs: [PackMeta] = []
+    @Published private(set) var currentPack: PackMeta?
 
     private var pageDirty = false // 页面变化后还没上报过
 
@@ -135,16 +144,22 @@ final class TutorModel: ObservableObject {
     private func loadPacks(root: URL) {
         let dir = root.appendingPathComponent("packs")
         guard let entries = try? FileManager.default.contentsOfDirectory(atPath: dir.path) else { return }
-        var list: [(String, String)] = []
+        var list: [PackMeta] = []
         for e in entries.sorted() {
             let pj = dir.appendingPathComponent(e).appendingPathComponent("pack.json")
             guard let data = try? Data(contentsOf: pj),
                   let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
                   let name = obj["name"] as? String else { continue }
             let title = (obj["title"] as? String) ?? name
-            list.append((name, title))
+            let starter = (obj["starterQuestions"] as? [String]) ?? []
+            var chapterQs: [String] = []
+            if let chapters = obj["curriculum"] as? [[String: Any]] {
+                for ch in chapters { if let qs = ch["questions"] as? [String] { chapterQs += qs } }
+            }
+            list.append(PackMeta(name: name, title: title, starter: starter, chapterQuestions: chapterQs))
         }
         packs = list
+        currentPack = packs.first(where: { $0.name == packName })
     }
 
     /// 学生翻到新页面时由 WebView 回调;标题可能晚到,以 file 为主键、title 取最新
@@ -156,8 +171,15 @@ final class TutorModel: ObservableObject {
         }
     }
 
+    /// 预置问题分层:生成课用课程自带问题(规划器按章生成)+ 页面问题兜底;agent-dev 用页面映射
     func presets() -> [String] {
-        PRESET_QUESTIONS[currentPage?.file ?? ""] ?? DEFAULT_QUESTIONS
+        let pageQs = PRESET_QUESTIONS[currentPage?.file ?? ""]
+        if let meta = currentPack, !(meta.starter.isEmpty && meta.chapterQuestions.isEmpty) {
+            let merged = (meta.starter + meta.chapterQuestions + (pageQs ?? []))
+                .filter { !$0.isEmpty }
+            return Array(merged.prefix(6))
+        }
+        return pageQs ?? DEFAULT_QUESTIONS
     }
 
     private var process: Process?
@@ -332,7 +354,10 @@ final class TutorModel: ObservableObject {
         statusText = nil
         failureReason = nil
         pageDirty = false
-        if let found = packs.first(where: { $0.name == name }) { packTitle = found.title }
+        if let found = packs.first(where: { $0.name == name }) {
+            packTitle = found.title
+            currentPack = found
+        }
         packName = name
         ensureStarted()
     }

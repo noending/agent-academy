@@ -14,11 +14,11 @@
     "id": "deepseek-flash"
   },
   "thinkingLevel": "off",
-  "description": "由 mlabonne/llm-course 自动生成的教学包。本仓库是 mlabonne/llm-course 的课程大纲，涵盖 LLM 基础、训练、微调、量化、RAG、Agent 与部署，适合想系统掌握 LLM 全流程的开发者。",
+  "description": "由 mlabonne/llm-course 自动生成的教学包。本仓库是 mlabonne 的 LLM Course，涵盖 LLM 基础、预训练、微调、量化、评估、RAG、Agent 与部署，适合想系统掌握大模型全流程的开发者。",
   "curriculum": [
     {
       "no": 1,
-      "title": "LLM 基础与数学准备",
+      "title": "LLM 基础：数学、Python 与神经网络",
       "goal": "掌握线性代数、Python 与神经网络基础，为后续学习铺路",
       "chunkIds": [
         "llm-course-c009",
@@ -28,24 +28,34 @@
         "llm-course-c013",
         "llm-course-c014",
         "llm-course-c015"
+      ],
+      "questions": [
+        "线性代数在 LLM 中具体用在哪些地方？",
+        "为什么学 LLM 需要先掌握 Python？",
+        "神经网络的基本结构（层、权重、偏置）是怎样的？"
       ]
     },
     {
       "no": 2,
       "title": "NLP 与 Transformer 架构",
-      "goal": "理解文本预处理、词嵌入及 Transformer 核心架构",
+      "goal": "理解文本预处理、词嵌入与 Transformer 架构演进",
       "chunkIds": [
         "llm-course-c016",
         "llm-course-c017",
         "llm-course-c018",
         "llm-course-c019",
         "llm-course-c020"
+      ],
+      "questions": [
+        "文本预处理中的分词和词嵌入有什么区别？",
+        "Transformer 从 encoder-decoder 到 decoder-only 的演进原因是什么？",
+        "为什么说理解 Transformer 架构对使用 LLM 很重要？"
       ]
     },
     {
       "no": 3,
-      "title": "预训练与数据准备",
-      "goal": "了解预训练流程、数据准备及后训练数据集结构",
+      "title": "预训练与后训练数据集",
+      "goal": "了解预训练流程及后训练数据集的构建与存储",
       "chunkIds": [
         "llm-course-c021",
         "llm-course-c022",
@@ -53,47 +63,67 @@
         "llm-course-c024",
         "llm-course-c025",
         "llm-course-c026"
+      ],
+      "questions": [
+        "预训练为什么需要海量数据？Llama 3.1 用了多少数据？",
+        "后训练数据集的结构（指令+答案）是怎样的？",
+        "对话结构的数据集如何存储和使用 chat template？"
       ]
     },
     {
       "no": 4,
-      "title": "监督微调与偏好对齐",
-      "goal": "掌握 SFT 与偏好对齐技术，将基座模型变为助手",
+      "title": "监督微调（SFT）",
+      "goal": "掌握 SFT 原理及全量微调与参数高效微调技术",
       "chunkIds": [
         "llm-course-c027",
         "llm-course-c028",
-        "llm-course-c029",
-        "llm-course-c030",
-        "llm-course-c031",
-        "llm-course-c032"
+        "llm-course-c029"
+      ],
+      "questions": [
+        "SFT 如何把基座模型变成有用的助手？",
+        "全量微调和参数高效微调（如 LoRA）有什么区别？",
+        "如何用 Unsloth 高效微调 Llama 3.1？"
       ]
     },
     {
       "no": 5,
-      "title": "模型评估与量化",
-      "goal": "学会评估 LLM 性能并应用量化技术压缩模型",
+      "title": "偏好对齐与评估",
+      "goal": "理解偏好对齐方法（RLHF/DPO）及 LLM 评估体系",
       "chunkIds": [
+        "llm-course-c030",
+        "llm-course-c031",
+        "llm-course-c032",
         "llm-course-c033",
         "llm-course-c034",
-        "llm-course-c035",
-        "llm-course-c036",
-        "llm-course-c037"
+        "llm-course-c035"
+      ],
+      "questions": [
+        "偏好对齐中的拒绝采样是如何工作的？",
+        "RLHF 和 DPO 的主要区别是什么？",
+        "如何用自动化基准（如 MMLU）评估 LLM？"
       ]
     },
     {
       "no": 6,
-      "title": "新趋势与模型合并",
-      "goal": "了解模型合并等新兴技术，拓展 LLM 应用思路",
+      "title": "量化与模型合并",
+      "goal": "掌握量化技术（FP32/INT8等）及模型合并方法",
       "chunkIds": [
+        "llm-course-c036",
+        "llm-course-c037",
         "llm-course-c038",
         "llm-course-c039",
         "llm-course-c040"
+      ],
+      "questions": [
+        "FP32、FP16、INT8 等精度级别对模型有什么影响？",
+        "模型合并（model merging）为什么能提升性能？",
+        "如何用 mergekit 合并多个 LLM？"
       ]
     },
     {
       "no": 7,
-      "title": "LLM 应用开发与 RAG",
-      "goal": "构建基于 LLM 的应用，掌握 RAG 与查询构造",
+      "title": "LLM 应用开发：RAG 与 Agent",
+      "goal": "学会构建 RAG 管道、查询构造与 Agent 应用",
       "chunkIds": [
         "llm-course-c041",
         "llm-course-c042",
@@ -103,38 +133,40 @@
         "llm-course-c046",
         "llm-course-c047",
         "llm-course-c048",
-        "llm-course-c049"
+        "llm-course-c049",
+        "llm-course-c050",
+        "llm-course-c051"
+      ],
+      "questions": [
+        "RAG 中如何摄取文档并进行文本分割？",
+        "查询构造（query construction）在结构化数据中如何应用？",
+        "Agent 的思考-行动循环是如何运作的？"
       ]
     },
     {
       "no": 8,
-      "title": "Agent 与 LLM 部署",
-      "goal": "理解 Agent 原理并掌握 LLM 部署与优化技术",
+      "title": "LLM 部署与安全",
+      "goal": "掌握本地部署、推理优化及提示注入等安全防护",
       "chunkIds": [
-        "llm-course-c050",
-        "llm-course-c051",
         "llm-course-c052",
         "llm-course-c053",
         "llm-course-c054",
         "llm-course-c055",
-        "llm-course-c056"
-      ]
-    },
-    {
-      "no": 9,
-      "title": "LLM 安全与提示工程",
-      "goal": "认识提示注入等安全风险，掌握防护策略",
-      "chunkIds": [
+        "llm-course-c056",
         "llm-course-c057",
-        "llm-course-c058",
-        "llm-course-c059"
+        "llm-course-c058"
+      ],
+      "questions": [
+        "Flash Attention 如何把注意力复杂度从二次降为线性？",
+        "本地部署 LLM 有哪些隐私和性能优势？",
+        "什么是提示注入？如何防御 OWASP LLM Top 10 中的风险？"
       ]
     }
   ],
   "starterQuestions": [
-    "学习这门课程需要哪些前置知识？",
-    "如何选择适合自己的微调方法（全量微调 vs LoRA）？",
-    "RAG 和 Agent 在实际项目中如何结合使用？",
-    "部署 LLM 时如何平衡性能、成本和隐私？"
+    "这门课程适合什么基础的人学习？需要先学哪些预备知识？",
+    "从零开始训练一个 LLM 需要经历哪些主要阶段？",
+    "微调 LLM 时，全量微调和 LoRA 等参数高效方法该如何选择？",
+    "如何把训练好的 LLM 部署成生产级应用并保证安全？"
   ]
 }

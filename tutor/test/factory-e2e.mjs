@@ -57,6 +57,8 @@ console.log("\n── M2 仓库 → 教学包(真实 API)──");
     check("M2: sources 声明式", Array.isArray(pack.sources) && pack.sources.length > 0);
     check("M2: 知识库非空", existsSync(join(TUTOR, "kb/e2e-repo-kb.json")));
     check("M2: 起步问题 ≥4", (pack.starterQuestions || []).length >= 4);
+    check("M2: 每章预置问题 ≥2", (pack.curriculum || []).every((c) => (c.questions || []).length >= 2),
+      pack.curriculum?.[0]?.questions?.[0]);
   } else {
     check("M2: 教学包生成", false);
   }
@@ -117,6 +119,7 @@ console.log("\n── M3 课题 → 整门课(真实 API)──");
   if (existsSync(pj)) {
     const pack = JSON.parse(readFileSync(pj, "utf8"));
     check("M3: 4 章生成", (pack.curriculum || []).length === 4);
+    check("M3: 每章预置问题 ≥2", (pack.curriculum || []).every((c) => (c.questions || []).length >= 2));
     check("M3: generated 标记(pack)", pack.generated === true);
     const kb = JSON.parse(readFileSync(join(TUTOR, "kb/e2e-topic-kb.json"), "utf8"));
     check("M3: 知识库块带 generated 标记", kb.chunks.length > 0 && kb.chunks.every((c) => c.generated));

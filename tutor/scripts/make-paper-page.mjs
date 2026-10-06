@@ -14,6 +14,8 @@ import { completeSimple, getModel } from "@mariozechner/pi-ai";
 
 const TUTOR = join(dirname(fileURLToPath(import.meta.url)), "..");
 const SITE = join(TUTOR, "..");
+// 动态取站点当前缓存版本(避免生成页与全站版本漂移)
+const SITE_VER = (readFileSync(join(SITE, "index.html"), "utf8").match(/app\.js\?v=(\d+)/) || [])[1] || "22";
 const MODEL = getModel("deepseek", "deepseek-v4-flash");
 const KEY = process.env.DEEPSEEK_API_KEY;
 const CONCURRENCY = 6;
@@ -217,7 +219,7 @@ ${keyHtml}
   </main>
 </div>
 
-<script src="assets/js/app.js?v=21"></script>
+<script src="assets/js/app.js?v=${SITE_VER}"></script>
 </body>
 </html>
 `;

@@ -1,12 +1,12 @@
 {
   "name": "llm-deploy",
-  "title": "LLM训练到部署实战",
+  "title": "LLM全链路实战",
   "kb": "kb/llm-deploy-kb.json",
   "sources": [
     {
       "file": "kb/llm-deploy-kb.json",
       "source": "llm-deploy",
-      "label": "LLM训练到部署实战"
+      "label": "LLM全链路实战"
     }
   ],
   "model": {
@@ -14,150 +14,190 @@
     "id": "deepseek-flash"
   },
   "thinkingLevel": "off",
-  "description": "由课题「LLM 从训练到实际部署」自动生成。适合AI工程师、算法工程师和开发者，系统学习LLM从预训练、微调到部署上线的完整工程链路，掌握关键技术并动手实践。",
+  "description": "由课题「LLM 从训练到实际部署」自动生成。适合AI工程师、算法研究员及技术管理者。系统掌握LLM从预训练、微调到部署上线的完整工程链路，涵盖数据、训练、优化、服务化与运维。",
   "curriculum": [
     {
       "no": 1,
-      "title": "LLM基础与Transformer",
-      "goal": "理解LLM核心概念与Transformer架构",
+      "title": "LLM基础与生态",
+      "goal": "理解LLM核心概念、发展历程与主流模型架构",
       "outline": [
-        "语言模型发展历程与LLM定义",
-        "Transformer架构详解：自注意力与位置编码",
-        "预训练任务：自回归与掩码语言建模",
-        "LLM的能力与局限性概述"
+        "LLM定义与核心能力：生成、理解、推理",
+        "发展历程：从Transformer到GPT、LLaMA、DeepSeek",
+        "主流开源与闭源模型对比：GPT、Claude、LLaMA、Qwen",
+        "典型应用场景：对话、编程、RAG、Agent"
       ],
       "keyTerms": [
-        "LLM (Large Language Model)",
-        "Transformer",
-        "Self-Attention",
-        "Pretraining"
+        "大语言模型 (Large Language Model)",
+        "Transformer架构 (Transformer Architecture)",
+        "自注意力机制 (Self-Attention)",
+        "预训练 (Pre-training)"
+      ],
+      "questions": [
+        "LLM和传统NLP模型的核心区别是什么？",
+        "为什么Decoder-only架构成为主流？",
+        "开源模型和闭源模型该如何选择？"
       ]
     },
     {
       "no": 2,
-      "title": "预训练数据与流程",
-      "goal": "掌握预训练数据准备与训练流程",
+      "title": "数据工程与预处理",
+      "goal": "掌握LLM训练数据的收集、清洗、去重与格式化方法",
       "outline": [
-        "预训练数据来源与采集方法",
-        "数据清洗、去重与质量过滤",
-        "分词器训练与词表构建",
-        "分布式训练框架与并行策略"
+        "数据来源：网页、书籍、代码、对话",
+        "数据清洗：去噪、去重、质量过滤",
+        "数据格式化：指令微调与对话模板",
+        "数据配比与课程学习策略"
       ],
       "keyTerms": [
-        "Corpus",
-        "Tokenization",
-        "Data Cleaning",
-        "Distributed Training"
+        "数据清洗 (Data Cleaning)",
+        "去重 (Deduplication)",
+        "指令微调数据 (Instruction Tuning Data)",
+        "数据配比 (Data Mixture)"
+      ],
+      "questions": [
+        "如何评估训练数据的质量？",
+        "数据去重有哪些常用算法？",
+        "指令微调数据需要多少条才够？"
       ]
     },
     {
       "no": 3,
-      "title": "微调技术与实践",
-      "goal": "学会对预训练模型进行微调",
+      "title": "预训练与分布式训练",
+      "goal": "理解预训练目标、分布式训练策略与优化技巧",
       "outline": [
-        "全参数微调与参数高效微调对比",
-        "LoRA、Adapter等PEFT方法详解",
-        "指令微调与对齐技术",
-        "微调数据集构建与评估"
+        "预训练目标：自回归语言建模",
+        "分布式训练：数据并行、模型并行、流水线并行",
+        "混合精度训练与梯度累积",
+        "训练稳定性：学习率调度、梯度裁剪"
       ],
       "keyTerms": [
-        "Fine-tuning",
-        "PEFT",
-        "LoRA",
-        "Instruction Tuning"
+        "自回归语言建模 (Autoregressive Language Modeling)",
+        "数据并行 (Data Parallelism)",
+        "模型并行 (Model Parallelism)",
+        "混合精度训练 (Mixed Precision Training)"
+      ],
+      "questions": [
+        "预训练需要多少计算资源？",
+        "如何解决训练中的loss尖峰问题？",
+        "ZeRO优化器是如何工作的？"
       ]
     },
     {
       "no": 4,
-      "title": "模型评估与优化",
-      "goal": "掌握LLM评估指标与优化方法",
+      "title": "微调与对齐技术",
+      "goal": "掌握全量微调、LoRA、RLHF等微调与对齐方法",
       "outline": [
-        "自动评估指标：困惑度、BLEU、ROUGE",
-        "人工评估与基准测试",
-        "模型压缩与量化技术",
-        "推理加速与缓存机制"
+        "全量微调与参数高效微调（LoRA、QLoRA）",
+        "指令微调与对话模板设计",
+        "RLHF与DPO对齐技术",
+        "微调数据构建与评估"
       ],
       "keyTerms": [
-        "Perplexity",
-        "Quantization",
-        "Pruning",
-        "Inference Optimization"
+        "参数高效微调 (Parameter-Efficient Fine-Tuning)",
+        "低秩适应 (LoRA)",
+        "基于人类反馈的强化学习 (RLHF)",
+        "直接偏好优化 (DPO)"
+      ],
+      "questions": [
+        "LoRA和全量微调该如何选择？",
+        "RLHF和DPO哪个更实用？",
+        "微调时如何防止灾难性遗忘？"
       ]
     },
     {
       "no": 5,
-      "title": "部署架构与API设计",
-      "goal": "设计LLM服务架构与API接口",
+      "title": "模型评估与优化",
+      "goal": "学会设计评估方案，并进行量化、剪枝与蒸馏优化",
       "outline": [
-        "模型服务化框架选型",
-        "RESTful API与gRPC接口设计",
-        "请求批处理与动态填充",
-        "负载均衡与自动扩缩容"
+        "评估指标：困惑度、准确率、人工评估",
+        "基准测试：MMLU、GSM8K、HumanEval",
+        "模型量化：GPTQ、AWQ、GGUF",
+        "剪枝与知识蒸馏"
       ],
       "keyTerms": [
-        "Model Serving",
-        "API Gateway",
-        "Batching",
-        "Auto-scaling"
+        "困惑度 (Perplexity)",
+        "量化 (Quantization)",
+        "知识蒸馏 (Knowledge Distillation)",
+        "基准测试 (Benchmark)"
+      ],
+      "questions": [
+        "如何设计针对业务场景的评估集？",
+        "量化会损失多少精度？",
+        "蒸馏小模型能替代大模型吗？"
       ]
     },
     {
       "no": 6,
-      "title": "生产环境与监控",
-      "goal": "实现LLM生产环境部署与监控",
+      "title": "推理优化与服务化",
+      "goal": "掌握推理加速技术，并部署高性能推理服务",
       "outline": [
-        "容器化与Kubernetes部署",
-        "日志、指标与追踪系统",
-        "模型版本管理与回滚",
-        "安全与合规考量"
+        "推理优化：KV缓存、连续批处理、PagedAttention",
+        "推理引擎：vLLM、TensorRT-LLM、TGI",
+        "服务化框架：FastAPI、Triton Inference Server",
+        "API设计与并发处理"
       ],
       "keyTerms": [
-        "Docker",
-        "Kubernetes",
-        "Monitoring",
-        "CI/CD"
+        "KV缓存 (KV Cache)",
+        "连续批处理 (Continuous Batching)",
+        "PagedAttention",
+        "推理引擎 (Inference Engine)"
+      ],
+      "questions": [
+        "vLLM和TensorRT-LLM如何选择？",
+        "如何提高推理吞吐量？",
+        "如何设计高可用的LLM API？"
       ]
     },
     {
       "no": 7,
       "title": "实战：微调与部署LLM",
-      "goal": "动手微调并部署一个LLM服务",
+      "goal": "完成一个LLM微调、量化并部署为API的完整项目",
       "outline": [
-        "选择基座模型与数据集",
-        "使用LoRA进行指令微调",
-        "模型量化与ONNX导出",
-        "使用FastAPI部署推理服务"
+        "项目规划：选择基座模型与数据集",
+        "使用LoRA微调模型",
+        "模型量化与导出",
+        "使用vLLM部署并测试API"
       ],
       "keyTerms": [
-        "Hugging Face",
-        "LoRA",
-        "ONNX",
-        "FastAPI"
+        "基座模型 (Base Model)",
+        "LoRA微调 (LoRA Fine-tuning)",
+        "模型导出 (Model Export)",
+        "API部署 (API Deployment)"
+      ],
+      "questions": [
+        "微调需要多少显存？",
+        "如何选择LoRA的秩和alpha？",
+        "部署后如何监控性能？"
       ]
     },
     {
       "no": 8,
-      "title": "实战：构建LLM应用",
-      "goal": "构建端到端LLM应用并上线",
+      "title": "生产环境运维与扩展",
+      "goal": "掌握LLM服务的监控、扩缩容、安全与成本优化",
       "outline": [
-        "设计应用场景与交互流程",
-        "集成向量数据库与检索增强",
-        "前端界面与API联调",
-        "云平台部署与性能测试"
+        "监控与日志：Prometheus、Grafana",
+        "自动扩缩容与负载均衡",
+        "安全与合规：内容过滤、隐私保护",
+        "成本优化与缓存策略"
       ],
       "keyTerms": [
-        "RAG",
-        "Vector Database",
-        "Streamlit",
-        "Cloud Deployment"
+        "监控 (Monitoring)",
+        "自动扩缩容 (Auto Scaling)",
+        "内容过滤 (Content Filtering)",
+        "成本优化 (Cost Optimization)"
+      ],
+      "questions": [
+        "如何设置合理的扩缩容阈值？",
+        "如何防止Prompt注入攻击？",
+        "如何降低推理成本？"
       ]
     }
   ],
   "starterQuestions": [
-    "预训练和微调的主要区别是什么？",
-    "如何选择适合的微调方法？",
-    "部署LLM时如何优化推理速度？",
-    "生产环境中如何监控LLM的性能？"
+    "学习这门课程需要哪些前置知识？",
+    "没有GPU资源可以学习吗？",
+    "课程中的实战项目使用什么框架？",
+    "学完后能达到什么水平？"
   ],
   "generated": true
 }
