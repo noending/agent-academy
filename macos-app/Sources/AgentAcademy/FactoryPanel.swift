@@ -117,6 +117,33 @@ final class FactoryModel: ObservableObject {
         }
     }
 
+    private var resolvedSlugValue = ""
+
+    /// 同名课程(教学包或草稿页)是否已存在
+    func slugExists(_ s: String) -> Bool {
+        guard let root = tutorEngineRoot() else { return false }
+        let site = root.deletingLastPathComponent()
+        return FileManager.default.fileExists(atPath: root.appendingPathComponent("packs/\(s)").path)
+            || FileManager.default.fileExists(atPath: site.appendingPathComponent("full-\(s).html").path)
+    }
+
+    /// 第一个可用的 slug(现有名 → -2 → -3 …)
+    func nextAvailableSlug() -> String {
+        var s = currentSlug
+        var n = 2
+        while slugExists(s) { s = "\(currentSlug)-\(n)"; n += 1 }
+        return s
+    }
+
+    /// 决定本次运行的最终 slug:填了改进意见 → 原地重生成;否则冲突时自动加后缀
+    private func resolveSlug() {
+        if kind == .topic && !feedbackText.isEmpty {
+            resolvedSlugValue = currentSlug
+            return
+        }
+        resolvedSlugValue = nextAvailableSlug()
+    }
+
     /// 表单完整性:实时校验(按钮可用性与内联提示共用)
     func formState() -> (ok: Bool, hint: String?) {
         switch kind {
@@ -134,6 +161,14 @@ final class FactoryModel: ObservableObject {
             if !FactoryModel.validSlug(topicSlug) { return (false, "slug 只能是小写字母/数字/连字符") }
             return (true, nil)
         }
+        // slug 冲突提示(不阻断:自动加后缀或原地重生成)
+        if FactoryModel.validSlug(currentSlug) && slugExists(currentSlug) {
+            if kind == .topic && !feedbackText.isEmpty {
+                return (true, "同名课程已存在:将按改进意见原地重新生成")
+            }
+            return (true, "同名课程已存在:开始后将自动改用新 slug(\(nextAvailableSlug()))")
+        }
+        return (true, nil)
     }
 
     /// 人审清单路径(完成态按钮用)
@@ -145,19 +180,20 @@ final class FactoryModel: ObservableObject {
     }
 
     private func buildArgs() -> [String]? {
+        resolveSlug()
         switch kind {
         case .paper:
             guard formState().ok else { return nil }
-            return ["scripts/make-paper-page.mjs", "--pdf", pdfPath, "--slug", paperSlug,
+            return ["scripts/make-paper-page.mjs", "--pdf", pdfPath, "--slug", resolvedSlugValue,
                     "--title-en", paperTitle]
         case .repo:
             guard formState().ok else { return nil }
-            var a = ["scripts/make-pack-from-repo.mjs", "--repo", repoInput, "--skill", repoSlug]
+            var a = ["scripts/make-pack-from-repo.mjs", "--repo", repoInput, "--skill", resolvedSlugValue]
             if !repoGoal.isEmpty { a += ["--goal", repoGoal] }
             return a
         case .topic:
             guard formState().ok else { return nil }
-            var a = ["scripts/make-course-from-topic.mjs", "--topic", topicText, "--skill", topicSlug,
+            var a = ["scripts/make-course-from-topic.mjs", "--topic", topicText, "--skill", resolvedSlugValue,
                      "--chapters", String(topicChapters)]
             if !topicGoal.isEmpty { a += ["--goal", topicGoal] }
             if !feedbackText.isEmpty { a += ["--feedback", feedbackText] }
@@ -232,7 +268,7 @@ final class FactoryModel: ObservableObject {
                     self?.doneMessage = "已取消。部分产物可能不完整,建议删除后重新生成。"
                 } else if ok {
                     switch self?.kind {
-                    case .paper, .topic: self?.generatedPage = "full-\(self?.currentSlug ?? "").html"
+                    case .paper, .topic: self?.generatedPage = "full-\(self?.resolvedSlugValue ?? "").html"
                     default: self?.generatedPage = nil
                     }
                     self?.doneMessage = "生成完成,耗时 \(self?.elapsedSeconds ?? 0) 秒。请按 REVIEW.md 人审清单核对后再发布。"
