@@ -52,10 +52,25 @@ func tutorEngineRoot() -> URL? {
 @MainActor
 final class FactoryModel: ObservableObject {
     enum Kind: String, CaseIterable, Identifiable {
-        case paper = "论文 → 翻译+解读"
-        case repo = "仓库 → 教学包"
-        case topic = "课题 → 整门课"
+        case paper = "论文"
+        case repo = "仓库"
+        case topic = "课题"
         var id: String { rawValue }
+
+        var icon: String {
+            switch self {
+            case .paper: return "doc.richtext"
+            case .repo: return "shippingbox"
+            case .topic: return "lightbulb"
+            }
+        }
+        var subtitle: String {
+            switch self {
+            case .paper: return "PDF → 翻译 + 解读"
+            case .repo: return "GitHub 仓库 → 教学包"
+            case .topic: return "一句话 → 整门课"
+            }
+        }
     }
 
     @Published var kind: Kind = .paper
@@ -79,28 +94,69 @@ final class FactoryModel: ObservableObject {
     @Published var logLines: [String] = []
     @Published var doneMessage: String?
     @Published var failureReason: String?
+    @Published var elapsedSeconds = 0
     /// 运行结束时生成的草稿页文件名(如 full-xxx.html),供主窗口打开
     var generatedPage: String?
+    /// 成功完成后回调(App 用于刷新课程菜单)
+    var onPacksChanged: (() -> Void)?
+    var wasCancelled = false
 
     private var process: Process?
+    private var timer: Timer?
+    private var startDate = Date()
 
     static func validSlug(_ s: String) -> Bool {
         !s.isEmpty && s.range(of: #"^[a-z0-9][a-z0-9-]*$"#, options: .regularExpression) != nil
     }
 
+    var currentSlug: String {
+        switch kind {
+        case .paper: return paperSlug
+        case .repo: return repoSlug
+        case .topic: return topicSlug
+        }
+    }
+
+    /// 表单完整性:实时校验(按钮可用性与内联提示共用)
+    func formState() -> (ok: Bool, hint: String?) {
+        switch kind {
+        case .paper:
+            if pdfPath.isEmpty { return (false, "先选择论文 PDF") }
+            if paperTitle.isEmpty { return (false, "填写论文英文标题") }
+            if !FactoryModel.validSlug(paperSlug) { return (false, "slug 只能是小写字母/数字/连字符") }
+            return (true, nil)
+        case .repo:
+            if !repoInput.contains("/") { return (false, "仓库格式:owner/name") }
+            if !FactoryModel.validSlug(repoSlug) { return (false, "slug 只能是小写字母/数字/连字符") }
+            return (true, nil)
+        case .topic:
+            if topicText.isEmpty { return (false, "先填写课题") }
+            if !FactoryModel.validSlug(topicSlug) { return (false, "slug 只能是小写字母/数字/连字符") }
+            return (true, nil)
+        }
+    }
+
+    /// 人审清单路径(完成态按钮用)
+    var reviewPath: String? {
+        switch kind {
+        case .paper: return "drafts/\(paperSlug)/REVIEW.md"
+        case .repo, .topic: return "packs/\(currentSlug)/REVIEW.md"
+        }
+    }
+
     private func buildArgs() -> [String]? {
         switch kind {
         case .paper:
-            guard FactoryModel.validSlug(paperSlug), !pdfPath.isEmpty, !paperTitle.isEmpty else { return nil }
+            guard formState().ok else { return nil }
             return ["scripts/make-paper-page.mjs", "--pdf", pdfPath, "--slug", paperSlug,
                     "--title-en", paperTitle]
         case .repo:
-            guard FactoryModel.validSlug(repoSlug), repoInput.contains("/") else { return nil }
+            guard formState().ok else { return nil }
             var a = ["scripts/make-pack-from-repo.mjs", "--repo", repoInput, "--skill", repoSlug]
             if !repoGoal.isEmpty { a += ["--goal", repoGoal] }
             return a
         case .topic:
-            guard FactoryModel.validSlug(topicSlug), !topicText.isEmpty else { return nil }
+            guard formState().ok else { return nil }
             var a = ["scripts/make-course-from-topic.mjs", "--topic", topicText, "--skill", topicSlug,
                      "--chapters", String(topicChapters)]
             if !topicGoal.isEmpty { a += ["--goal", topicGoal] }
@@ -116,18 +172,23 @@ final class FactoryModel: ObservableObject {
         }
         guard let node = findNodePath() else { failureReason = "找不到 Node.js"; return }
         guard let key = findDeepSeekKey() else { failureReason = "未找到 DEEPSEEK_API_KEY(~/.zshenv/.zprofile/.zshrc)"; return }
-        guard FactoryModel.validSlug(currentSlug) else { failureReason = "slug 只能是小写字母/数字/连字符"; return }
-        guard let scriptArgs = buildArgs() else { failureReason = "请完整填写当前标签的参数"; return }
-
-        let script = root.appendingPathComponent(scriptArgs[0])
-        guard FileManager.default.fileExists(atPath: script.path) else {
-            failureReason = "管线脚本不存在: \(scriptArgs[0])"; return
-        }
+        guard let scriptArgs = buildArgs() else { return }
 
         running = true
+        wasCancelled = false
         doneMessage = nil
         failureReason = nil
+        generatedPage = nil
         logLines = ["$ node \(scriptArgs.joined(separator: " "))"]
+        startDate = Date()
+        elapsedSeconds = 0
+        timer?.invalidate()
+        timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+            Task { @MainActor in
+                guard let self, self.running else { return }
+                self.elapsedSeconds = Int(Date().timeIntervalSince(self.startDate))
+            }
+        }
 
         let p = Process()
         p.executableURL = URL(fileURLWithPath: node)
@@ -164,14 +225,18 @@ final class FactoryModel: ObservableObject {
             DispatchQueue.main.async {
                 guard self?.process === terminated else { return }
                 self?.process = nil
+                self?.timer?.invalidate()
                 self?.running = false
-                let ok = terminated.terminationStatus == 0
-                if ok {
+                let ok = terminated.terminationStatus == 0 && !(self?.wasCancelled ?? false)
+                if self?.wasCancelled == true {
+                    self?.doneMessage = "已取消。部分产物可能不完整,建议删除后重新生成。"
+                } else if ok {
                     switch self?.kind {
                     case .paper, .topic: self?.generatedPage = "full-\(self?.currentSlug ?? "").html"
                     default: self?.generatedPage = nil
                     }
-                    self?.doneMessage = "生成完成。请按 REVIEW.md 人审清单核对后再发布。"
+                    self?.doneMessage = "生成完成,耗时 \(self?.elapsedSeconds ?? 0) 秒。请按 REVIEW.md 人审清单核对后再发布。"
+                    if self?.kind == .repo || self?.kind == .topic { self?.onPacksChanged?() }
                 } else {
                     self?.doneMessage = nil
                     self?.failureReason = "管线退出码 \(terminated.terminationStatus),详见日志"
@@ -181,17 +246,17 @@ final class FactoryModel: ObservableObject {
 
         do { try p.run() } catch {
             running = false
+            timer?.invalidate()
             failureReason = "启动失败: \(error.localizedDescription)"; return
         }
         process = p
     }
 
-    var currentSlug: String {
-        switch kind {
-        case .paper: return paperSlug
-        case .repo: return repoSlug
-        case .topic: return topicSlug
-        }
+    /// 取消运行中的管线
+    func cancel() {
+        guard running, let p = process else { return }
+        wasCancelled = true
+        p.terminate()
     }
 
     /// 课程管理页「按意见重新生成」深链:预填课题参数,面板打开即自动运行
@@ -226,7 +291,7 @@ struct FactorySheet: View {
     @ObservedObject var model: FactoryModel
     @Environment(\.dismiss) private var dismiss
     var onDone: (() -> Void)?            // 关闭/刷新(课程列表)
-    var onOpenDraft: ((String) -> Void)? // 在主窗口打开草稿页
+    var onOpenDraft: ((String) -> Void)? // 在主窗口打开草稿页/人审清单
 
     var body: some View {
         VStack(spacing: 0) {
@@ -237,34 +302,18 @@ struct FactorySheet: View {
                 Button { onDone?() } label: { Image(systemName: "xmark.circle.fill") }
                     .buttonStyle(.borderless).help("关闭")
             }.padding(12)
-            Divider()
-            Picker("管线", selection: $model.kind) {
-                ForEach(FactoryModel.Kind.allCases) { k in Text(k.rawValue).tag(k) }
+            preflightBar.padding(.horizontal, 12).padding(.bottom, 10)
+            modeCards.padding(.horizontal, 12)
+            Divider().padding(.vertical, 10)
+            ScrollView {
+                form.padding(.horizontal, 12)
             }
-            .pickerStyle(.segmented).padding(12)
-            Divider()
-            form.padding(12)
             Divider()
             logArea
             Divider()
-            HStack {
-                Button(model.running ? "运行中…" : "开始生成", action: start)
-                    .buttonStyle(.borderedProminent)
-                    .disabled(model.running)
-                if model.running { ProgressView().controlSize(.small) }
-                Spacer()
-                if model.running || model.doneMessage != nil,
-                   FactoryModel.validSlug(model.currentSlug) {
-                    let page = "full-\(model.currentSlug).html"
-                    if model.generatedPage == page {
-                        Button("在主窗口打开草稿页") { onOpenDraft?(page); onDone?() }
-                            .buttonStyle(.bordered)
-                    }
-                }
-            }
-            .padding(12)
+            actionBar.padding(12)
         }
-        .frame(width: 480, height: 560)
+        .frame(width: 560, height: 680)
         .onAppear {
             if model.pendingAutoStart {
                 model.pendingAutoStart = false
@@ -273,62 +322,192 @@ struct FactorySheet: View {
         }
     }
 
+    // 前置条件自检条
+    private var preflightBar: some View {
+        HStack(spacing: 14) {
+            preflightItem("引擎", tutorEngineRoot() != nil)
+            preflightItem("Node", findNodePath() != nil)
+            preflightItem("API Key", findDeepSeekKey() != nil)
+            Spacer()
+            Text("产物均为草稿 · 发布走人审").font(.caption2).foregroundStyle(.tertiary)
+        }
+    }
+
+    private func preflightItem(_ name: String, _ ok: Bool) -> some View {
+        HStack(spacing: 3) {
+            Image(systemName: ok ? "checkmark.circle.fill" : "xmark.circle.fill")
+                .foregroundStyle(ok ? Color.green : Color.red)
+            Text(name).font(.caption)
+        }
+    }
+
+    // 模式选择:三张大卡片
+    private var modeCards: some View {
+        HStack(spacing: 8) {
+            ForEach(FactoryModel.Kind.allCases) { k in
+                let selected = model.kind == k
+                Button {
+                    guard !model.running else { return }
+                    model.kind = k
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: k.icon).font(.title3)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(k.rawValue).font(.system(size: 13.5, weight: .semibold))
+                            Text(k.subtitle).font(.system(size: 11)).foregroundStyle(.secondary)
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(10)
+                    .background(RoundedRectangle(cornerRadius: 10).fill(
+                        selected ? Color.accentColor.opacity(0.12) : Color(nsColor: .controlBackgroundColor)))
+                    .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(
+                        selected ? Color.accentColor : Color(nsColor: .separatorColor), lineWidth: selected ? 1.5 : 1))
+                }
+                .buttonStyle(.plain)
+                .disabled(model.running)
+            }
+        }
+    }
+
     @ViewBuilder
     private var form: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        let state = model.formState()
+        VStack(alignment: .leading, spacing: 12) {
             switch model.kind {
             case .paper:
+                fieldLabel("论文 PDF")
                 HStack {
-                    Button("选择论文 PDF…") { model.pickPDF() }
+                    Button("选择 PDF…") { model.pickPDF() }
+                        .disabled(model.running)
                     Text(model.pdfPath.isEmpty ? "未选择" : (model.pdfPath as NSString).lastPathComponent)
                         .lineLimit(1).foregroundStyle(.secondary)
                 }
-                LabeledTextField("标题(英文)", $model.paperTitle, "ReAct: Synergizing…")
-                LabeledTextField("slug(小写-)", $model.paperSlug, "react-draft")
-                Text("生成 full-<slug>.html 草稿页 + REVIEW.md 人审清单;不会自动发布。")
-                    .font(.caption).foregroundStyle(.secondary)
+                fieldLabel("论文标题(英文)")
+                LabeledTextField("ReAct: Synergizing…", $model.paperTitle)
+                    .disabled(model.running)
+                slugField($model.paperSlug)
+                    .disabled(model.running)
             case .repo:
-                LabeledTextField("仓库(owner/name)", $model.repoInput, "mlabonne/llm-course")
-                LabeledTextField("slug(小写-)", $model.repoSlug, "llm-course")
-                LabeledTextField("学习目标(可选)", $model.repoGoal, "从训练到部署学透 LLM")
-                Text("生成教学包 + 专属知识库 + 课程大纲;完成后课程菜单自动出现。")
-                    .font(.caption).foregroundStyle(.secondary)
+                fieldLabel("GitHub 仓库")
+                LabeledTextField("owner/name", $model.repoInput, "mlabonne/llm-course")
+                    .disabled(model.running)
+                fieldLabel("课程 slug")
+                slugField($model.repoSlug)
+                    .disabled(model.running)
+                fieldLabel("学习目标(可选)")
+                LabeledTextField("从训练到部署学透 LLM", $model.repoGoal)
+                    .disabled(model.running)
             case .topic:
-                LabeledTextField("课题", $model.topicText, "LLM 从训练到实际部署")
-                LabeledTextField("slug(小写-)", $model.topicSlug, "llm-deploy")
-                HStack {
-                    Text("章数").font(.callout)
-                    Stepper("\(model.topicChapters)", value: $model.topicChapters, in: 4...10)
+                fieldLabel("课题")
+                LabeledTextField("LLM 从训练到实际部署", $model.topicText)
+                    .disabled(model.running)
+                fieldLabel("课程 slug")
+                slugField($model.topicSlug)
+                    .disabled(model.running)
+                HStack(spacing: 16) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        fieldLabel("章数")
+                        Stepper("\(model.topicChapters) 章", value: $model.topicChapters, in: 4...10)
+                            .disabled(model.running)
+                    }
+                    VStack(alignment: .leading, spacing: 4) {
+                        fieldLabel("学习目标(可选)")
+                        LabeledTextField("从基础到落地", $model.topicGoal)
+                            .disabled(model.running)
+                    }
                 }
-                LabeledTextField("学习目标(可选)", $model.topicGoal, "从基础到落地")
-                LabeledTextField("改进意见", $model.feedbackText, "如:第 3 章加一个量化对比示例…")
-                Text("⚠️ 章节内容由模型知识生成、无外部引用——REVIEW.md 要求逐条核实后才可发布。")
+                if !model.feedbackText.isEmpty || model.pendingAutoStart {
+                    VStack(alignment: .leading, spacing: 4) {
+                        fieldLabel("改进意见(本次将落实)")
+                        Text(model.feedbackText.isEmpty ? "(运行中)" : model.feedbackText)
+                            .font(.caption).foregroundStyle(.orange).lineLimit(2)
+                    }
+                }
+                Text("⚠️ 课题类内容由模型知识生成、无外部引用——REVIEW.md 要求逐条核实后才可发布。")
                     .font(.caption).foregroundStyle(.orange)
+            }
+            if let hint = state.hint, !model.running {
+                Text("· \(hint)").font(.caption).foregroundStyle(.secondary)
             }
             if let f = model.failureReason {
                 Label(f, systemImage: "exclamationmark.triangle").foregroundStyle(.orange).font(.callout)
             }
-            if let d = model.doneMessage {
-                Label(d, systemImage: "checkmark.circle").foregroundStyle(.green).font(.callout)
-            }
+        }
+    }
+
+    private func fieldLabel(_ s: String) -> some View {
+        Text(s).font(.caption).foregroundStyle(.secondary)
+    }
+
+    /// slug 输入框 + 实时校验标记
+    private func slugField(_ text: Binding<String>) -> some View {
+        let ok = FactoryModel.validSlug(text.wrappedValue)
+        return HStack {
+            TextField("小写字母/数字/连字符,如 llm-course", text: text)
+                .textFieldStyle(.roundedBorder)
+            Image(systemName: text.wrappedValue.isEmpty ? "circle.dashed" : (ok ? "checkmark.circle.fill" : "xmark.circle.fill"))
+                .foregroundStyle(text.wrappedValue.isEmpty ? Color.secondary : (ok ? Color.green : Color.red))
         }
     }
 
     private var logArea: some View {
         ScrollViewReader { proxy in
             ScrollView {
-                Text(model.logLines.suffix(300).joined(separator: "\n"))
+                Text(model.logLines.suffix(400).joined(separator: "\n"))
                     .font(.system(size: 11, design: .monospaced))
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(8)
                     .textSelection(.enabled)
             }
             .background(Color(nsColor: .underPageBackgroundColor))
-            .frame(height: 150)
+            .frame(height: model.running ? 210 : 150)
+            .animation(.easeOut(duration: 0.2), value: model.running)
             .onChange(of: model.logLines.count) { _ in
                 proxy.scrollTo("bottom-anchor", anchor: .bottom)
             }
             .overlay(alignment: .bottom) { Color.clear.frame(height: 0).id("bottom-anchor") }
+        }
+    }
+
+    private var actionBar: some View {
+        VStack(spacing: 10) {
+            if model.running {
+                HStack {
+                    ProgressView().controlSize(.small)
+                    Text("生成中 · 已用时 \(model.elapsedSeconds)s")
+                        .font(.callout).foregroundStyle(.secondary)
+                    Spacer()
+                    Button("取消", action: { model.cancel() })
+                        .buttonStyle(.bordered)
+                }
+            } else if model.doneMessage != nil {
+                HStack {
+                    Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
+                    Text(model.doneMessage ?? "").font(.callout).lineLimit(2)
+                    Spacer()
+                }
+                HStack {
+                    Spacer()
+                    if let page = model.generatedPage {
+                        Button("📖 打开草稿页") { onOpenDraft?(page) }
+                            .buttonStyle(.borderedProminent)
+                    }
+                    if let review = model.reviewPath {
+                        Button("📋 人审清单") { onOpenDraft?(review) }
+                            .buttonStyle(.bordered)
+                    }
+                    Button("完成") { onDone?() }
+                        .buttonStyle(.bordered)
+                }
+            } else {
+                HStack {
+                    Spacer()
+                    Button("开始生成") { model.start() }
+                        .buttonStyle(.borderedProminent)
+                        .disabled(!model.formState().ok)
+                }
+            }
         }
     }
 
@@ -347,9 +526,8 @@ struct LabeledTextField: View {
     }
 
     var body: some View {
-        HStack {
-            Text(label).font(.callout).frame(width: 96, alignment: .leading)
-            TextField(placeholder, text: $text).textFieldStyle(.roundedBorder)
-        }
+        TextField(placeholder, text: $text)
+            .textFieldStyle(.roundedBorder)
+            .font(.system(size: 13.5))
     }
 }
