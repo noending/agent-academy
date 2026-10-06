@@ -44,6 +44,7 @@ for (const f of pages) {
   const refs = [...html.matchAll(/\b(href|src)="([^"]+)"/g)].map((m) => m[2]);
   for (const ref of refs) {
     if (/^(https?:|mailto:|data:|javascript:)/.test(ref)) continue;
+    if (ref.includes("${")) continue; // JS 模板字面量里的运行时链接,静态检查无法解析
     if (/^academy:/.test(ref)) {
       // 内部深链:academy://site/<file> 校验文件;其余为 App 命令(switch-pack 等)跳过
       const sitePart = ref.match(/^academy:\/\/site\/([^#?]*)/);
