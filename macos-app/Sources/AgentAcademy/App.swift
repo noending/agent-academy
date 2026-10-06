@@ -12,10 +12,11 @@ private let homePath = "/index.html"
 // MARK: - 站点文件服务(academy://site/<path> → App 包内 Resources/site/)
 
 final class SiteSchemeHandler: NSObject, WKURLSchemeHandler {
-    private let siteRoot: URL
+    /// 按序探测的站点根:源码树优先(运行时生成的草稿页立即可见),包内 site 兜底
+    private let roots: [URL]
 
-    init(siteRoot: URL) {
-        self.siteRoot = siteRoot
+    init(roots: [URL]) {
+        self.roots = roots
     }
 
     private func fileURL(for url: URL) -> URL? {
@@ -23,7 +24,12 @@ final class SiteSchemeHandler: NSObject, WKURLSchemeHandler {
         var comps = url.pathComponents.filter { $0 != "/" }
         if comps.isEmpty { comps = ["index.html"] }
         guard !comps.contains("..") else { return nil }
-        return siteRoot.appendingPathComponent(comps.joined(separator: "/"))
+        let rel = comps.joined(separator: "/")
+        for root in roots {
+            let f = root.appendingPathComponent(rel)
+            if FileManager.default.fileExists(atPath: f.path) { return f }
+        }
+        return nil
     }
 
     private func mime(for file: URL) -> String {
@@ -85,17 +91,29 @@ final class SiteSchemeHandler: NSObject, WKURLSchemeHandler {
 
 final class WebViewCoordinator: NSObject, WKNavigationDelegate {
     let webView: WKWebView
-    private let siteRoot: URL
+    /// 站点根(按序):源码树优先,包内兜底——与 scheme handler 同一探测顺序
+    private let siteRoots: [URL]
     private let defaults = UserDefaults.standard
     private var frameAutosaveDone = false
     /// 学生正在读的页面变化时回调(file, 已截短的页面标题)——导师面板用它做页面相关预置问题
     var onPageChange: ((String, String) -> Void)?
 
     override init() {
-        siteRoot = Bundle.main.resourceURL!.appendingPathComponent("site")
+        var roots: [URL] = []
+        for up in [3, 2] { // dist/Agent 学院.app → agent-academy 上溯 3 层;App 放 macos-app/ 下为 2 层
+            var url = Bundle.main.bundleURL
+            for _ in 0..<up { url = url.deletingLastPathComponent() }
+            if FileManager.default.fileExists(atPath: url.appendingPathComponent("index.html").path) {
+                roots.append(url)
+            }
+        }
+        if let bundled = Bundle.main.resourceURL?.appendingPathComponent("site") {
+            roots.append(bundled)
+        }
+        siteRoots = roots
         let cfg = WKWebViewConfiguration()
         cfg.websiteDataStore = .default() // 持久化:学习进度(localStorage)跨启动保留
-        cfg.setURLSchemeHandler(SiteSchemeHandler(siteRoot: siteRoot), forURLScheme: scheme)
+        cfg.setURLSchemeHandler(SiteSchemeHandler(roots: siteRoots), forURLScheme: scheme)
         webView = WKWebView(frame: .zero, configuration: cfg)
         super.init()
         webView.navigationDelegate = self
@@ -107,14 +125,22 @@ final class WebViewCoordinator: NSObject, WKNavigationDelegate {
         webView.load(URLRequest(url: restoreURL()))
     }
 
+    /// 相对路径 → 实际文件 URL(按站点根顺序探测);不存在返回 nil
+    private func siteFileURL(_ rel: String) -> URL? {
+        let rel = rel.hasPrefix("/") ? String(rel.dropFirst()) : rel
+        for root in siteRoots {
+            let f = root.appendingPathComponent(rel)
+            if FileManager.default.fileExists(atPath: f.path) { return f }
+        }
+        return nil
+    }
+
     // 上次读到的页面;站点更新后文件不存在则回学习路径
     private func restoreURL() -> URL {
-        if let last = defaults.string(forKey: "lastPage"), !last.isEmpty {
-            let file = siteRoot.appendingPathComponent(last)
-            if FileManager.default.fileExists(atPath: file.path),
-               let url = URL(string: "\(scheme)://site\(last.hasPrefix("/") ? "" : "/")\(last)") {
-                return url
-            }
+        if let last = defaults.string(forKey: "lastPage"), !last.isEmpty,
+           siteFileURL(last) != nil,
+           let url = URL(string: "\(scheme)://site/\(last)") {
+            return url
         }
         return URL(string: "\(scheme)://site\(homePath)")!
     }

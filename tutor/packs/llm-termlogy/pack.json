@@ -1,0 +1,144 @@
+{
+  "name": "llm-termlogy",
+  "title": "LLM术语精通课",
+  "kb": "kb/llm-termlogy-kb.json",
+  "sources": [
+    {
+      "file": "kb/llm-termlogy-kb.json",
+      "source": "llm-termlogy",
+      "label": "LLM术语精通课"
+    }
+  ],
+  "model": {
+    "provider": "deepseek",
+    "id": "deepseek-flash"
+  },
+  "thinkingLevel": "off",
+  "description": "由课题「LLM术语学习到精通」自动生成。适合AI初学者或需读懂LLM术语与评测的从业者。从基础概念到实战部署，掌握术语、模型评测与硬件评测，能独立分析技术文档。",
+  "curriculum": [
+    {
+      "no": 1,
+      "title": "LLM基础概念",
+      "goal": "理解LLM基本定义、发展历程与核心能力",
+      "outline": [
+        "什么是语言模型：从统计语言模型到神经网络语言模型",
+        "LLM的定义与特点：大规模参数、预训练与微调",
+        "LLM的发展里程碑：GPT、BERT、T5等代表性模型",
+        "LLM的核心能力：生成、理解、推理与上下文学习"
+      ],
+      "keyTerms": [
+        "语言模型 (Language Model)",
+        "大语言模型 (Large Language Model, LLM)",
+        "预训练 (Pre-training)",
+        "微调 (Fine-tuning)",
+        "上下文学习 (In-context Learning)"
+      ],
+      "questions": [
+        "LLM和传统语言模型的主要区别是什么？",
+        "预训练和微调分别有什么作用？",
+        "上下文学习是如何工作的？"
+      ]
+    },
+    {
+      "no": 2,
+      "title": "核心术语解析",
+      "goal": "掌握LLM常见术语如Transformer、注意力机制等",
+      "outline": [
+        "Transformer架构：自注意力、多头注意力、位置编码",
+        "Token与Tokenization：子词切分、BPE、WordPiece",
+        "嵌入与向量表示：词嵌入、位置嵌入、上下文嵌入",
+        "训练与推理术语：批处理、学习率、温度、Top-p采样"
+      ],
+      "keyTerms": [
+        "Transformer",
+        "自注意力 (Self-Attention)",
+        "Token",
+        "词嵌入 (Word Embedding)",
+        "温度 (Temperature)",
+        "Top-p采样 (Nucleus Sampling)"
+      ],
+      "questions": [
+        "Transformer为什么比RNN更适合LLM？",
+        "Tokenization如何影响模型性能？",
+        "温度参数如何控制生成多样性？"
+      ]
+    },
+    {
+      "no": 3,
+      "title": "模型评测方法",
+      "goal": "学会阅读和解读LLM模型评测报告与基准",
+      "outline": [
+        "常见评测基准：GLUE、SuperGLUE、MMLU、HELM",
+        "评测指标：准确率、困惑度、BLEU、ROUGE、F1",
+        "评测方法：零样本、少样本、微调评测",
+        "评测报告解读：如何比较不同模型的性能"
+      ],
+      "keyTerms": [
+        "基准测试 (Benchmark)",
+        "困惑度 (Perplexity)",
+        "BLEU",
+        "ROUGE",
+        "零样本 (Zero-shot)",
+        "少样本 (Few-shot)"
+      ],
+      "questions": [
+        "困惑度越低代表模型越好吗？",
+        "如何选择适合任务的评测基准？",
+        "零样本和少样本评测有什么区别？"
+      ]
+    },
+    {
+      "no": 4,
+      "title": "硬件评测实战",
+      "goal": "能看懂GPU等硬件评测指标并选型",
+      "outline": [
+        "关键硬件指标：算力、显存、带宽、功耗",
+        "常见评测工具：MLPerf、DLBench、自定义基准",
+        "硬件与模型匹配：如何根据模型大小选择GPU",
+        "成本与性能权衡：云GPU vs 本地GPU"
+      ],
+      "keyTerms": [
+        "算力 (FLOPS)",
+        "显存 (VRAM)",
+        "内存带宽 (Memory Bandwidth)",
+        "MLPerf",
+        "推理延迟 (Inference Latency)"
+      ],
+      "questions": [
+        "如何根据模型参数量估算所需显存？",
+        "MLPerf评测结果如何解读？",
+        "云GPU和本地GPU哪个更划算？"
+      ]
+    },
+    {
+      "no": 5,
+      "title": "部署与优化实战",
+      "goal": "动手部署LLM并优化推理性能",
+      "outline": [
+        "部署环境搭建：CUDA、PyTorch、Transformers库",
+        "模型量化与剪枝：减少显存占用与加速推理",
+        "推理优化：批处理、KV缓存、Flash Attention",
+        "实战：使用Hugging Face部署一个LLM并评测"
+      ],
+      "keyTerms": [
+        "量化 (Quantization)",
+        "剪枝 (Pruning)",
+        "KV缓存 (KV Cache)",
+        "Flash Attention",
+        "推理服务 (Inference Serving)"
+      ],
+      "questions": [
+        "量化会损失多少模型精度？",
+        "如何优化长文本推理速度？",
+        "部署LLM需要哪些软件依赖？"
+      ]
+    }
+  ],
+  "starterQuestions": [
+    "学习LLM术语需要哪些前置知识？",
+    "如何快速读懂一篇LLM论文中的术语？",
+    "模型评测和硬件评测有什么区别和联系？",
+    "没有GPU可以学习LLM部署吗？"
+  ],
+  "generated": true
+}
