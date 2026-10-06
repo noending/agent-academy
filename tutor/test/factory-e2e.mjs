@@ -7,7 +7,7 @@
 // M3: 课题 → 整门课(断言 4 章/教学包/草稿页)
 // 全部用 e2e-* 命名,结束后清理。
 import { spawn, spawnSync, execFileSync } from "node:child_process";
-import { readFileSync, existsSync, rmSync } from "node:fs";
+import { readFileSync, existsSync, rmSync, readdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -123,11 +123,16 @@ console.log("\n── M3 课题 → 整门课(真实 API)──");
     check("M3: generated 标记(pack)", pack.generated === true);
     const kb = JSON.parse(readFileSync(join(TUTOR, "kb/e2e-topic-kb.json"), "utf8"));
     check("M3: 知识库块带 generated 标记", kb.chunks.length > 0 && kb.chunks.every((c) => c.generated));
-    const page = join(SITE, "full-e2e-topic.html");
-    check("M3: 站点草稿页生成", existsSync(page));
-    if (existsSync(page)) {
-      const html = readFileSync(page, "utf8");
-      check("M3: 草稿页含章标题与自测", html.includes("<h2>") && html.includes('class="quiz"'));
+    const home = join(SITE, "full-e2e-topic.html");
+    check("M3: 课程首页生成", existsSync(home));
+    const mf = join(SITE, "courses-manifest.json");
+    const mEntry = existsSync(mf) ? (JSON.parse(readFileSync(mf, "utf8")).courses || []).find((c) => c.slug === "e2e-topic") : null;
+    check("M3: manifest 登记分章 file", !!mEntry && (mEntry.chapters || []).every((c) => !!c.file));
+    check("M3: 分章页面生成(每章一页)", !!mEntry && (mEntry.chapters || []).every((c) => existsSync(join(SITE, c.file || "x"))), mEntry && (mEntry.chapters || []).map((c) => c.file).join(","));
+    if (existsSync(home)) {
+      const html = readFileSync(home, "utf8");
+      check("M3: 首页含课程目录与工具条", html.includes("course-card") && html.includes("draft-toolbar"));
+      check("M3: 首页携带生成课程元数据", html.includes("data-gen-course"));
     }
   } else {
     check("M3: 教学包生成", false);
@@ -143,6 +148,9 @@ for (const p of [
   join(TUTOR, "packs/e2e-topic"), join(TUTOR, "kb/e2e-topic-kb.json"),
   join(TUTOR, "kb/tmp-paper-extract.json"),
 ]) rmSync(p, { force: true, recursive: true });
+for (const f of readdirSync(SITE)) {
+  if (/^e2e-topic-ch\d+\.html$/.test(f)) rmSync(join(SITE, f), { force: true });
+}
 console.log("✓ e2e 产物已清理");
 
 const siteCheck = spawnSync("node", [join(SITE, "scripts", "check-site.mjs")], { encoding: "utf8", cwd: SITE });

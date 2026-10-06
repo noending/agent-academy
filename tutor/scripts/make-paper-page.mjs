@@ -15,8 +15,10 @@ import { updateManifest } from "./factory-common.mjs";
 
 const TUTOR = join(dirname(fileURLToPath(import.meta.url)), "..");
 const SITE = join(TUTOR, "..");
-// 动态取站点当前缓存版本(避免生成页与全站版本漂移)
-const SITE_VER = (readFileSync(join(SITE, "index.html"), "utf8").match(/app\.js\?v=(\d+)/) || [])[1] || "22";
+// 动态取站点当前缓存版本(app 与 style 各自独立,避免生成页与全站版本漂移)
+const idxHtml = readFileSync(join(SITE, "index.html"), "utf8");
+const SITE_VER = (idxHtml.match(/app\.js\?v=(\d+)/) || [])[1] || "23";
+const SITE_CSS_VER = (idxHtml.match(/style\.css\?v=(\d+)/) || [])[1] || "22";
 const MODEL = getModel("deepseek", "deepseek-v4-flash");
 const KEY = process.env.DEEPSEEK_API_KEY;
 const CONCURRENCY = 6;

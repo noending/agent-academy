@@ -9,15 +9,17 @@
 // ⚠️ 诚实边界:章节内容由模型知识生成、无外部引用——REVIEW.md 要求逐条核实事实。
 //    若有权威素材(PDF/仓库),请用 M1/M2 管线代替,或等 --sources 接地能力。
 import { readFileSync, writeFileSync, existsSync, mkdirSync, rmSync } from "node:fs";
-import { join, dirname } from "node:path";
+import { join, dirname, basename } from "node:path";
 import { fileURLToPath } from "node:url";
 import { completeSimple, getModel } from "@mariozechner/pi-ai";
 import { updateManifest } from "./factory-common.mjs";
 
 const TUTOR = join(dirname(fileURLToPath(import.meta.url)), "..");
 const SITE = join(TUTOR, "..");
-// 动态取站点当前缓存版本(避免生成页与全站版本漂移)
-const SITE_VER = (readFileSync(join(SITE, "index.html"), "utf8").match(/app\.js\?v=(\d+)/) || [])[1] || "22";
+// 动态取站点当前缓存版本(app 与 style 各自独立,避免生成页与全站版本漂移)
+const idxHtml = readFileSync(join(SITE, "index.html"), "utf8");
+const SITE_VER = (idxHtml.match(/app\.js\?v=(\d+)/) || [])[1] || "23";
+const SITE_CSS_VER = (idxHtml.match(/style\.css\?v=(\d+)/) || [])[1] || "22";
 const MODEL = getModel("deepseek", "deepseek-v4-flash");
 const KEY = process.env.DEEPSEEK_API_KEY;
 
@@ -43,6 +45,8 @@ if (existsSync(join(TUTOR, "packs", SKILL))) {
 }
 
 const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+// 放行 <b> 强调:先转义再恢复(用于 quiz 答案等富文本)
+const escAllow = (s) => esc(s).replace(/&lt;b&gt;/g, "<b>").replace(/&lt;\/b&gt;/g, "</b>");
 // 放行有限标签的 HTML 净化器(LLM 输出的章节内容只允许结构与强调标签)
 const ALLOWED = ["b", "strong", "i", "em", "code", "pre", "ul", "ol", "li", "table", "thead", "tbody", "tr", "th", "td", "br", "p", "h4", "blockquote"];
 function sanitizeHTML(s) {
@@ -177,49 +181,54 @@ writeFileSync(join(packDir, "pack.json"), JSON.stringify({
 }, null, 2));
 
 // 站点草稿页
-const chapterHtml = okChapters.map(({ ch, res }) => {
-  const sections = res.sections.map((s) => ` <h3>${esc(s.h3)}</h3>\n ${sanitizeHTML(s.html)}`).join("\n");
-  const misc = res.misconceptions.map((m) => ` <li>${escAllow(m)}</li>`).join("\n");
-  const quiz = res.quiz.map((q) => ` <details class="quiz"><summary>${esc(q.q)}</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>${escAllow(q.a)}</p></div></details>`).join("\n");
-  const ex = ` <details class="fold"><summary>动手练习 · ${esc(res.exercise.task.slice(0, 50))}…</summary><div class="fold-body"><p><b>任务：</b>${escAllow(res.exercise.task)}</p><p><b>参考方案：</b></p>${sanitizeHTML(res.exercise.solution)}</div></details>`;
-  return `\n <h2>第${ch.no}章 · ${esc(ch.title)}</h2>
- <p><b>本章目标：</b>${esc(ch.goal)}</p>
-${sections}
+// 分章分页:每章一个页面 + 课程首页(与 Agent 学院主课程同构)
+const genMeta = {
+  skill: SKILL, title: plan.title, topic: TOPIC,
+  chapters: okChapters.map(({ ch }) => ({
+    no: ch.no, title: ch.title, goal: ch.goal,
+    file: `${SKILL}-ch${String(ch.no).padStart(2, "0")}.html`,
+  })),
+};
+const genMetaAttr = JSON.stringify(genMeta).replace(/'/g, "&#39;").replace(/"/g, "&quot;");
+
+const chapterPageBody = ({ ch, res }) => {
+  const secs = res.sections || [];
+  const misc = res.misconceptions || [];
+  const quiz = res.quiz || [];
+  const ex = res.exercise || { task: "(缺失)", solution: "(缺失)" };
+  return `
+      <header class="chapter-head">
+        <div class="kicker">CHAPTER ${String(ch.no).padStart(2, "0")} · 机器初稿 · 待人审</div>
+        <h1>${esc(ch.title)}</h1>
+        <p class="lead"><b>本章目标：</b>${esc(ch.goal)}</p>
+      </header>
+${secs.map((s) => ` <h3>${esc(s.h3)}</h3>\n ${sanitizeHTML(s.html)}`).join("\n")}
  <h3>常见误区</h3>
  <ul>
-${misc}
+${misc.map((m) => `  <li>${escAllow(m)}</li>`).join("\n")}
  </ul>
  <h3>自测</h3>
-${quiz}
+${quiz.map((q) => ` <details class="quiz"><summary>${esc(q.q)}</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>${escAllow(q.a)}</p></div></details>`).join("\n")}
  <h3>动手练习（带参考方案）</h3>
-${ex}`;
-}).join("\n");
+ <details class="fold"><summary>练习 · ${esc(String(ex.task).slice(0, 60))}…</summary><div class="fold-body"><p><b>任务：</b>${escAllow(ex.task)}</p><p><b>参考方案：</b></p>${sanitizeHTML(ex.solution)}</div></details>`;
+};
 
-function escAllow(s) { return escAllowHTML(s); }
-function escAllowHTML(s) {
-  let t = esc(s);
-  for (const tag of ["b", "i", "code"]) {
-    t = t.replaceAll(`&lt;${tag}&gt;`, `<${tag}>`).replaceAll(`&lt;/${tag}&gt;`, `</${tag}>`);
-  }
-  return t;
-}
-
-const html = `<!DOCTYPE html>
+const pageShell = (chapterNo, bodyHtml) => `<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="课题「${esc(TOPIC)}」自动生成课程(机器初稿,未经人工审校)。">
-<title>课题课程 · ${esc(plan.title)} | Agent 学院</title>
-<link rel="stylesheet" href="assets/css/style.css?v=21">
+<meta name="description" content="${esc(plan.title)} ${chapterNo ? "第" + chapterNo + "章" : "课程首页"}(机器初稿,未经人工审校)。">
+<title>${chapterNo ? "第" + chapterNo + "章 · " : ""}${esc(plan.title)} | Agent 学院</title>
+<link rel="stylesheet" href="assets/css/style.css?v=${SITE_CSS_VER}">
 </head>
-<body data-chapter="full">
+<body data-gen-course='${genMetaAttr}' data-chapter="gen-${SKILL}-ch${chapterNo || "home"}">
 
 <header class="topbar">
   <button class="icon-btn hamburger" id="hamburger" title="打开导航">☰</button>
   <a class="brand" href="index.html"><span class="logo">学</span> Agent 学院 <small>从零开发智能体 · Ontology · Harness</small></a>
   <span class="spacer"></span>
-  <span class="progress-pill" id="progress-pill">进度 0/10 章</span>
+  <span class="progress-pill" id="progress-pill">进度 0/${okChapters.length} 章</span>
   <button class="icon-btn" id="theme-btn">🌙</button>
 </header>
 
@@ -228,16 +237,44 @@ const html = `<!DOCTYPE html>
 
   <main class="content">
     <div class="content-inner">
+${bodyHtml}
+    </div>
+  </main>
+</div>
 
+<script src="assets/js/app.js?v=${SITE_VER}"></script>
+</body>
+</html>
+`;
+
+// 课程首页:大纲 + 草稿工具条(改进/审核/删除)
+const homeChapters = okChapters.map(({ ch }) => {
+  const file = `${SKILL}-ch${String(ch.no).padStart(2, "0")}.html`;
+  const qs = (ch.questions || []).map((q) => `<span>${esc(q)}</span>`).join("");
+  return `<div class="course-card">
+        <h3><a href="${file}">第${ch.no}章 · ${esc(ch.title)}</a></h3>
+        <p class="cc-desc">${esc(ch.goal)}</p>
+        ${qs ? `<div class="ch-qs">${qs}</div>` : ""}
+        <div class="cc-btns"><a class="btn primary" href="${file}">📖 进入本章</a></div>
+      </div>`;
+}).join("\n");
+
+const homeBody = `
       <header class="chapter-head">
         <div class="kicker">课题生成课程 · 机器初稿 · 未审勿发布</div>
         <h1>${esc(plan.title)}<span style="color:var(--warn)">(机器初稿)</span></h1>
         <p class="lead">
           课题:「${esc(TOPIC)}」 · 学习目标: ${esc(GOAL)}
-          <br><b style="color:var(--warn)">本课程由内容工厂按课题自动生成,章节内容来自模型知识、无外部引用——发布前必须逐条核实事实。</b>
+          <br><b style="color:var(--warn)">本课程由内容工厂按课题自动生成,尚未人工审校。</b>
           共 ${okChapters.length} 章;配套导师: <code>node tutor/src/tutor.mjs --pack packs/${SKILL}</code>
         </p>
+        <div class="paper-nav"><a href="courses.html">← 课程管理</a></div>
       </header>
+
+      <div class="callout info">
+        <div class="co-title">课程目录(共 ${okChapters.length} 章)</div>
+      </div>
+${homeChapters}
 
       <div class="draft-only">
       <style>
@@ -278,32 +315,36 @@ const html = `<!DOCTYPE html>
           go("improve-course", { feedback: fb, topic: topic, chapters: chapters });
         });
         bar.querySelector(".dt-approve").addEventListener("click", () => {
-          if (!confirm("审核通过并发布?将自动移除初稿标记与工具条。")) return;
+          if (!confirm("审核通过并发布?将自动移除初稿标记与工具条(全部章节)。")) return;
           go("publish-course", {});
         });
         bar.querySelector(".dt-delete").addEventListener("click", () => {
-          if (!confirm("删除草稿?教学包、知识库与本页将一并删除,不可恢复。")) return;
+          if (!confirm("删除草稿?教学包、知识库与全部分章页面将一并删除,不可恢复。")) return;
           go("delete-course", {});
         });
       })();
-      </script>
-${chapterHtml}
+      </script>`;
 
-    </div>
-  </main>
-</div>
+// 课程首页
+const homeFile = join(SITE, `full-${SKILL}.html`);
+writeFileSync(homeFile, pageShell(null, homeBody));
+console.log(`✓ 课程首页: full-${SKILL}.html`);
 
-<script src="assets/js/app.js?v=${SITE_VER}"></script>
-</body>
-</html>
-`;
-const outPage = join(SITE, `full-${SKILL}.html`);
-writeFileSync(outPage, html);
+// 各章页面
+for (const { ch, res } of okChapters) {
+  if (!res) { console.log(`  ⚠ 跳过无内容章节: 第${ch.no}章`); continue; }
+  const file = join(SITE, `${SKILL}-ch${String(ch.no).padStart(2, "0")}.html`);
+  writeFileSync(file, pageShell(ch.no, chapterPageBody({ ch, res })));
+  console.log(`  ✓ 第${ch.no}章 → ${basename(file)}`);
+}
 
 updateManifest({
   kind: "topic", slug: SKILL, title: plan.title, description: plan.description,
   pack: `packs/${SKILL}`, page: `full-${SKILL}.html`, topic: TOPIC,
-  chapters: plan.chapters.map((c) => ({ no: c.no, title: c.title, goal: c.goal, questions: c.questions || [] })),
+  chapters: genMeta.chapters.map((c) => ({
+    no: c.no, title: c.title, goal: c.goal, file: c.file,
+    questions: (plan.chapters.find((pc) => pc.no === c.no) || {}).questions || [],
+  })),
   starterQuestions: plan.starterQuestions || [], generated: true,
 });
 writeFileSync(join(packDir, "REVIEW.md"), `# 人审清单 · 课题生成课程 ${SKILL}

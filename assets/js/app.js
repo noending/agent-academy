@@ -72,9 +72,45 @@ function initTheme() {
 }
 
 /* ---------- 侧边栏与顶栏 ---------- */
+/* ---------- 生成课程运行时(内容工厂产物,分章分页) ---------- */
+function escHTML(s) { return String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+function genCourseInfo() {
+  const raw = document.body.getAttribute("data-gen-course");
+  if (!raw) return null;
+  try { return JSON.parse(raw.replace(/&#39;/g, "'").replace(/&quot;/g, '"')); } catch { return null; }
+}
+function genChapterKey(skill, no) { return `gen-${skill}-ch${no}`; }
+function updateProgressPill(gen) {
+  const pill = document.getElementById("progress-pill");
+  if (!pill) return;
+  if (gen) {
+    const done = gen.chapters.filter((c) => Progress.isDone(genChapterKey(gen.skill, c.no))).length;
+    pill.innerHTML = `进度 <b>${done}/${gen.chapters.length}</b> 章 · ${escHTML(gen.title)}`;
+  } else {
+    pill.innerHTML = `进度 <b>${Progress.count()}/${CHAPTER_IDS.length}</b> 章`;
+  }
+}
+function renderGenSidebar(aside, gen) {
+  const cur = document.body.getAttribute("data-chapter") || "";
+  const done = (no) => Progress.isDone(genChapterKey(gen.skill, no));
+  const count = gen.chapters.filter((c) => done(c.no)).length;
+  const homeActive = cur === `gen-${gen.skill}-home` ? " active" : "";
+  let html = `<div class="side-group">课程 · ${escHTML(gen.title)}</div><nav class="side-nav">`;
+  html += `<a href="full-${escHTML(gen.skill)}.html" class="${homeActive.trim()}"><span class="no">首</span><span>课程首页</span></a>`;
+  for (const c of gen.chapters) {
+    const active = cur === `gen-${gen.skill}-ch${c.no}` ? " active" : "";
+    const mark = done(c.no) ? `<span class="done-mark">✓</span>` : "";
+    html += `<a href="${escHTML(c.file)}" class="${active.trim()}"><span class="no">${String(c.no).padStart(2, "0")}</span><span>${escHTML(c.title)}</span>${mark}</a>`;
+  }
+  html += `</nav><div class="side-meta">本课程进度:<b style="color:var(--accent)">${count} / ${gen.chapters.length} 章</b><br><a href="courses.html" style="color:var(--text-2)">← 课程管理</a></div>`;
+  aside.innerHTML = html;
+}
+
 function renderSidebar() {
   const aside = document.getElementById("sidebar");
   if (!aside) return;
+  const gen = genCourseInfo();
+  if (gen) { renderGenSidebar(aside, gen); updateProgressPill(gen); return; }
   const cur = document.body.getAttribute("data-chapter") || "index";
   let html = "";
   let lastGroup = null;
@@ -327,7 +363,38 @@ function initToc() {
 }
 
 /* ---------- 章节页脚：完成按钮 + 翻页 ---------- */
+function initGenChapterFooter(gen) {
+  const content = document.querySelector(".content .content-inner") || document.querySelector(".content");
+  if (!content || content.querySelector(".chapter-footer")) return;
+  const cur = document.body.getAttribute("data-chapter") || "";
+  const idx = gen.chapters.findIndex((c) => `gen-${gen.skill}-ch${c.no}` === cur);
+  const homeKey = `gen-${gen.skill}-home`;
+  if (idx < 0) return; // 课程首页不挂页脚
+  const prev = gen.chapters[idx - 1], next = gen.chapters[idx + 1];
+  const ch = gen.chapters[idx];
+  const key = genChapterKey(gen.skill, ch.no);
+  const footer = document.createElement("div");
+  footer.className = "chapter-footer";
+  footer.innerHTML = `
+    <button class="btn btn-done" id="mark-done">
+      ${Progress.isDone(key) ? "✓ 已标记学完（点击取消）" : "☐ 标记本章已学完"}
+    </button>
+    <div class="pager">
+      ${idx > 0 && prev ? `<a href="${escHTML(prev.file)}"><span class="dir">← 上一章</span><span class="pg-title">${escHTML(prev.title)}</span></a>` : "<span style='flex:1'></span>"}
+      ${next ? `<a href="${escHTML(next.file)}" class="next"><span class="dir">下一章 →</span><span class="pg-title">${escHTML(next.title)}</span></a>` : "<span style='flex:1'></span>"}
+    </div>`;
+  content.appendChild(footer);
+  footer.querySelector("#mark-done").addEventListener("click", () => {
+    const nowDone = Progress.toggle(key);
+    footer.querySelector("#mark-done").textContent = nowDone ? "✓ 已标记学完（点击取消）" : "☐ 标记本章已学完";
+    renderGenSidebar(document.getElementById("sidebar"), gen);
+    updateProgressPill(gen);
+  });
+}
+
 function initChapterFooter() {
+  const gen = genCourseInfo();
+  if (gen) { initGenChapterFooter(gen); return; }
   const cur = document.body.getAttribute("data-chapter");
   if (!CHAPTER_IDS.includes(cur)) return;   // 仅正文章节有页脚；附录页不挂
   const content = document.querySelector(".content .content-inner") || document.querySelector(".content");
