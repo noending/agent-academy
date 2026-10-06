@@ -268,7 +268,7 @@ struct AgentAcademyApp: App {
                         showFactory = false
                         coordinator.openLocalPage(file)
                     })
-                .frame(width: 480, height: 560)
+                // 尺寸由 FactorySheet 内部 frame(560×680)决定,此处不再叠加
             }
             .onAppear {
                 // 站点翻页 → 导师面板:上报当前页面,预置问题与教学上下文随之切换
