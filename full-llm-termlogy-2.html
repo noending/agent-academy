@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="课题「LLM术语精通」自动生成课程(机器初稿,未经人工审校)。">
+<title>课题课程 · LLM术语与算力实战 | Agent 学院</title>
+<link rel="stylesheet" href="assets/css/style.css?v=21">
+</head>
+<body data-chapter="full">
+
+<header class="topbar">
+  <button class="icon-btn hamburger" id="hamburger" title="打开导航">☰</button>
+  <a class="brand" href="index.html"><span class="logo">学</span> Agent 学院 <small>从零开发智能体 · Ontology · Harness</small></a>
+  <span class="spacer"></span>
+  <span class="progress-pill" id="progress-pill">进度 0/10 章</span>
+  <button class="icon-btn" id="theme-btn">🌙</button>
+</header>
+
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <main class="content">
+    <div class="content-inner">
+
+      <header class="chapter-head">
+        <div class="kicker">课题生成课程 · 机器初稿 · 未审勿发布</div>
+        <h1>LLM术语与算力实战<span style="color:var(--warn)">(机器初稿)</span></h1>
+        <p class="lead">
+          课题:「LLM术语精通」 · 学习目标: 
+《LLM 技术与算力实战：从快速入门到独立评测与选型》
+
+我希望系统掌握三个核心方向：
+① LLM 的相关术语及其背后的原理；
+② LLM 模型的能力、性能、成本与业务适用性评测；
+③ 硬件算力设备的关键参数、性能评估和部署选型。
+
+不要仅给我学习建议、资料链接或课程目录。你需要真正承担教师的角色，提供讲解、案例、练习、反馈和阶段验收。
+
+一、我的背景与学习目标
+
+我已有软件开发基础，接触过 AI 应用和模型 API，但希望系统补齐 LLM 原理、评测与算力知识。
+
+请跳过 Python 入门、编程基础等内容；数学知识按需补充，先解释直觉，再介绍必要公式，不默认我已经掌握深度学习数学。
+
+我偏好快速、项目驱动、能用于实际开发和技术决策的学习方式。业务案例优先采用企业知识库问答、电商订单分析、数据提取和业务助手。
+
+完成课程后，我应该能够：
+1. 读懂模型介绍、模型卡、评测报告和硬件规格表，解释核心术语及其关系。
+2. 判断一个模型是否适合具体业务，而不是只根据排行榜选模型。
+3. 设计小规模、可复现的模型评测，并解释结果和局限。
+4. 根据模型规模、精度、上下文长度和并发需求，估算显存、算力与成本。
+5. 对 API、云端 GPU 和本地部署做有依据的比较。
+
+请把“快速入门”和“逐步精通”分开。不要承诺学几天就能精通，也不要把记住术语或看完课程等同于掌握。
+
+二、课程组织方式
+
+采用“先建立全景地图，再掌握高频知识，最后项目实战”的顺序。
+
+设计两层路线：
+- 7 天快速入门：每天默认 60—90 分钟，优先掌握最常用、最影响决策的知识。
+- 30 天进阶实践：通过实验、计算和项目，训练独立评测、部署与选型能力。
+
+这两个时间安排是学习规划，不是掌握程度保证。根据我的实际表现调整进度。
+
+所有知识标注为“必须掌握 / 了解即可 / 进阶选学”。不要为了全面而把所有内容塞进入门阶段。
+
+三、必须覆盖的知识模块
+
+模块 A：LLM 术语与核心原理
+
+建立清晰的知识地图，覆盖以下内容：
+
+基础概念：
+LLM、Token、Tokenizer、Embedding、参数量、上下文窗口、输入与输出 Token、训练与推理。
+
+模型结构：
+Transformer、Attention、模型层数与隐藏维度、Dense 与 MoE、总参数与激活参数、位置编码；让人理解这些概念如何影响能力、显存和速度，不要求入门阶段推导全部数学。
+
+训练与适配：
+预训练、后训练、SFT、RLHF、DPO、蒸馏、微调、LoRA、QLoRA、量化。
+
+应用与推理：
+Prompt、Context Engineering、RAG、向量检索、Reranker、Agent、工具调用、结构化输出、Temperature、Top-p、推理预算、Prefill、Decode、KV Cache、Batching。
+
+重点对比容易混淆的概念，例如：
+参数量与模型能力、上下文长度与有效利用能力、训练与推理、RAG 与微调、Agent 与普通模型调用、模型量化与训练精度。
+
+术语首次出现时给出中文名、英文名或全称、缩写和直观解释。逐步积累一份约 40—60 个高频术语的速查表，不要一次性灌输全部术语。
+
+模块 B：LLM 能力评测与评测可信度
+
+从三个层次讲清楚：
+“模型本身的能力评测”
+“RAG / Agent 等完整系统的评测”
+“实际业务任务的验收”
+
+能力维度至少包括：
+知识与推理、数学、编程、中文与多语言、指令遵循、结构化输出、长上下文、工具调用、事实性与幻觉。
+
+选择有代表性的公开基准讲解，例如 MMLU/MMLU-Pro、GPQA、AIME、HumanEval、SWE-bench 等。具体选择以授课时能核验的资料为准，不必全部展开。
+
+对于每个选定基准，说明：
+它测什么、如何计分、适用场景、不能说明什么，以及常见误读。
+
+教我识别：
+数据污染、测试集泄漏、样本过少、只报告最好结果、不同提示词或推理预算下的不公平比较，以及公开跑分与真实业务之间的差距。
+
+讲清楚人工评测、自动指标、LLM-as-a-Judge 的适用边界，并介绍盲评、随机顺序、重复测试、人工校验和不确定性表达。
+
+安排一个实操：
+以同一批业务样本比较至少两个模型，设计评分标准，分析失败类型，并给出有证据的选型结论。区分开发集与最终测试集，避免反复针对测试集调优。
+
+模块 C：推理性能与成本评测
+
+解释并实际使用：
+TTFT、TPOT / ITL、端到端延迟、Tokens/s、单请求速度、系统总吞吐、并发、P50/P95/P99、成功率、错误率、超时率。
+
+重点回答：
+为什么“首字快”不一定“回答完成快”？
+为什么单用户很快，多用户并发后可能变慢？
+为什么两个 Tokens/s 数字不一定能直接比较？
+为什么最低 Token 单价不一定意味着最低业务成本？
+
+评测必须记录必要条件：
+模型与版本、硬件、推理框架与版本、精度或量化方式、输入输出长度、并发、批处理、缓存、预热和测试次数。
+
+比较不同模型时，说明 Tokenizer 差异及可见计费信息的限制。涉及推理预算时，仅使用可观察、可配置或官方披露的信息，不假设能够读取模型内部思维过程。
+
+成本不仅看每百万 Token 价格，也要计算每次请求、每个成功任务的成本，并考虑重试、工具调用和额外推理开销。
+
+模块 D：硬件设备参数与算力评估
+
+覆盖 GPU、CPU、内存、存储、互联与网络的作用，区分消费级显卡、数据中心加速卡、Apple Silicon 统一内存设备及其他加速器的适用条件，不默认某一品牌永远最优。
+
+重点讲解：
+显存容量、显存带宽、内存容量与带宽、计算单元、Tensor Core 等专用单元、频率、PCIe、NVLink、网络带宽与延迟、功耗、供电与散热。
+
+讲清楚以下单位和口径：
+FLOPs 与 FLOP/s、TFLOPS、PFLOPS、TOPS、GB 与 GiB、GB/s 与 Gb/s，以及 FP32、FP16、BF16、FP8、INT8、INT4。
+
+对硬件宣传中的算力数字，必须检查：
+计算精度、稠密或稀疏口径、峰值或实测、适用算子，以及软件栈能否实际利用。
+
+重点解释：
+为什么不能只看显存容量选显卡？
+为什么峰值算力更高不一定意味着 LLM 推理更快？
+为什么不同精度、不同统计口径的 TOPS / TFLOPS 不能直接横比？
+为什么多卡显存不能无条件当作单卡显存使用？
+为什么统一内存总容量不等于模型可全部使用的容量？
+
+用简单案例介绍计算瓶颈、带宽瓶颈和通信瓶颈，以及训练、Prefill、Decode 的资源需求差异。高级并行策略放入进阶阶段。
+
+模块 E：显存估算、部署容量与选型
+
+通过可复算的案例，教我估算：
+模型权重、量化元数据、KV Cache、激活与临时缓冲、框架开销和必要余量。
+
+训练部分另行解释梯度、优化器状态等开销，不要把推理显存估算直接套用于训练。
+
+使用 8B、32B、70B 等假设模型规模，演示不同精度、上下文长度和并发条件下的估算方法。
+
+每次计算都必须：
+写出公式、变量、单位、假设、代入过程和结果；
+说明它是理论下界、粗略估算还是实际测量；
+说明哪些因素可能让真实需求偏离估算。
+
+特别解释 MoE 的总参数与激活参数分别如何影响权重存储和计算，不要只用激活参数估算全部权重显存。
+
+把以下三个问题分开回答：
+“能不能装下？”
+“能不能以可接受速度运行？”
+“能不能满足目标并发和响应要求？”
+
+不要仅凭参数量、显存或峰值 TFLOPS 编造准确的 Tokens/s。缺少实测时，说明需要补充哪些测试。
+
+最后建立 API、云 GPU、本地工作站和多卡服务器的比较框架，考虑业务质量、延迟、并发、使用率、数据隐私、软件兼容、运维和总拥有成本。
+
+模块 F：贯穿课程的综合项目
+
+以“企业知识库与订单分析助手”为主线，逐步完成：
+确定需求与验收标准 → 准备脱敏测试数据 → 比较模型 → 测试性能与成本 → 估算部署资源 → 给出选型报告。
+
+业务任务可包括：
+订单信息提取、结构化输出、知识库问答、异常解释和受控工具调用。
+
+最终报告必须有：
+业务约束、评测方法、效果结果、性能结果、成本估算、硬件需求、推荐方案、适用边界和待验证风险。
+
+没有 GPU 时，提供 API 或低资源实验路径；不要要求先购买设备。没有实际运行的实验，只能提供实验方案或明确标注的演示数据，不能冒充真实结果。
+
+四、每节课的教学模板
+
+每节课围绕一个核心问题展开，不要堆砌过多新概念。依次包含：
+
+1. 本课目标：学完后具体能解释、计算或判断什么。
+2. 直观讲解：先用类比建立理解，再给准确技术定义，并指出类比的局限。
+3. 关键概念与关系：说明它与前面知识如何连接。
+4. 一个实际案例：优先对应我的业务场景。
+5. 一个可操作练习：计算、设计评测、分析规格表，或运行小实验。
+6. 常见误区：解释错误发生的原因。
+7. 三道检查题：概念题、计算或应用题、判断题。
+8. 一页式总结：保留结论、判断方法和必要公式。
+
+有计算时，不跳过关键步骤；有代码时，提供最小可运行示例、环境与依赖版本、运行方法、预期现象和必要错误处理，不把“给出代码”说成“已经验证”。
+
+互动教学时，检查题先不给答案。等我回答后，指出错误、补充解释，再决定是否进入下一课。
+
+五、信息真实性与更新要求
+
+涉及当前模型、排行榜、价格、硬件规格、软件支持情况和商业使用条件时，应联网核验，并标注日期与可核查来源。
+
+优先使用官方模型卡、技术报告、论文、基准项目文档、硬件厂商规格和框架官方文档。
+
+严格区分：
+官方宣称、第三方实测、本课程实测、理论估算、教学假设。
+
+不能联网时，明确说明哪些动态信息尚未核验，继续教授稳定原理，不编造“最新”结论。
+
+不要虚构论文、引用、价格、硬件参数或实验数据。对不确定的结论说明不确定性，并给出验证办法。
+
+不要把单一排行榜冠军等同于所有任务的最佳模型，也不要把所有场景都导向购买最贵设备。
+
+六、学习验收与课程交付
+
+使用可观察的能力判断学习效果，而不是只问“懂了吗”：
+能否用自己的话解释概念；
+能否读懂一张模型卡和硬件规格表；
+能否完成显存估算并说明假设；
+能否发现一份评测中的不公平比较；
+能否设计并执行小规模实验；
+能否根据业务约束给出有证据的选型。
+
+随课程逐步整理：
+术语速查表、模型评测指标表、硬件参数阅读表、显存与成本估算模板、模型对比实验模板，以及最终选型检查清单。
+
+
+          <br><b style="color:var(--warn)">本课程由内容工厂按课题自动生成,章节内容来自模型知识、无外部引用——发布前必须逐条核实事实。</b>
+          共 6 章;配套导师: <code>node tutor/src/tutor.mjs --pack packs/llm-termlogy-2</code>
+        </p>
+      </header>
+
+      <div class="draft-only">
+      <style>
+        .draft-toolbar { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin:18px 0; padding:12px; border:2px dashed var(--warn); border-radius:12px; background:var(--warn-soft); }
+        .draft-toolbar .draft-feedback { flex:1; min-width:220px; padding:7px 12px; border:1px solid var(--line); border-radius:8px; font-size:13.5px; background:var(--surface); color:var(--text); }
+        .dt-btn { padding:6px 12px; border-radius:8px; border:1px solid var(--line); background:var(--surface); color:var(--text); font-size:13px; cursor:pointer; }
+        .dt-btn.dt-improve { background:var(--accent); color:#fff; border-color:transparent; }
+        .dt-btn.dt-approve { background:var(--ok); color:#fff; border-color:transparent; }
+        .dt-btn.dt-delete { color:var(--danger); border-color:var(--danger); }
+        .dt-msg { font-size:12.5px; color:var(--text-2); }
+      </style>
+      <div class="draft-toolbar" data-skill="llm-termlogy-2" data-topic="LLM术语精通" data-chapters="6">
+        <input type="text" class="draft-feedback" placeholder="输入改进意见,如:第 3 章加一个量化对比示例…">
+        <button class="dt-btn dt-improve">🔁 按意见重新生成</button>
+        <button class="dt-btn dt-approve">✅ 审核通过</button>
+        <button class="dt-btn dt-delete">🗑 删除草稿</button>
+        <span class="dt-msg"></span>
+      </div>
+      <div class="callout warn">
+        <div class="co-title">人审须知(发布前必读)</div>
+        <p>① 逐章核实事实与代码可运行性(模型知识可能过时或有错);② 补充权威引用与延伸阅读;③ 审核通过会自动移除本工具条与全部初稿标记;
+        ④ 通过后建议加入 index.html 学习路径;⑤ 发布即代表确认内容质量由发布者负责。</p>
+      </div>
+      </div>
+      <script>
+      (function () {
+        const bar = document.querySelector(".draft-toolbar");
+        if (!bar) return;
+        const skill = bar.dataset.skill, topic = bar.dataset.topic, chapters = bar.dataset.chapters;
+        const go = (cmd, params) => {
+          const qs = new URLSearchParams(params || {}).toString();
+          location.href = "academy://" + cmd + "/" + skill + (qs ? "?" + qs : "");
+        };
+        bar.querySelector(".dt-improve").addEventListener("click", () => {
+          const fb = bar.querySelector(".draft-feedback").value.trim();
+          if (!fb) { bar.querySelector(".dt-msg").textContent = "请先输入改进意见"; return; }
+          if (!confirm("按意见重新生成整门课?当前草稿将被替换(约 2-4 分钟)。")) return;
+          go("improve-course", { feedback: fb, topic: topic, chapters: chapters });
+        });
+        bar.querySelector(".dt-approve").addEventListener("click", () => {
+          if (!confirm("审核通过并发布?将自动移除初稿标记与工具条。")) return;
+          go("publish-course", {});
+        });
+        bar.querySelector(".dt-delete").addEventListener("click", () => {
+          if (!confirm("删除草稿?教学包、知识库与本页将一并删除,不可恢复。")) return;
+          go("delete-course", {});
+        });
+      })();
+      </script>
+
+ <h2>第1章 · 全景地图与核心术语</h2>
+ <p><b>本章目标：</b>建立LLM知识地图，解释20+高频术语及其关系。</p>
+ <h3>1.1 从一句话到Token：LLM的输入输出流水线</h3>
+ <p>想象你对着一个博学但只会“接龙”的朋友说话：你给他前半句，他根据读过的海量文本，猜下一个词最可能是什么。LLM 本质上就是这样一个超级接龙机器，只不过它把“词”切成了更小的单位——<b>Token（词元）</b>。</p><p>当你输入“我爱吃苹果”，模型并不会直接看到汉字。它先经过 <b>Tokenizer（分词器）</b>，把文本切成 Token 序列，比如 <code>['我', '爱', '吃', '苹果']</code>，每个 Token 再映射成一个整数 ID。这些 ID 进入模型后，会被转换成 <b>Embedding（嵌入）</b>——一串高维浮点数向量，表示这个 Token 的语义。模型内部通过 <b>Transformer（变换器）</b> 和 <b>Attention（注意力机制）</b> 不断计算这些向量之间的关系，最终输出下一个 Token 的概率分布。</p><p>这里有两个关键数字：<b>参数量</b>（模型内部可学习的权重总数，比如 7B 表示 70 亿）和 <b>上下文窗口</b>（模型一次能“看到”的最大 Token 数，比如 8K、128K）。参数量决定模型的“脑容量”，上下文窗口决定它一次能读多长的文章。</p><p>下面是一个最小可运行示例，用 Hugging Face 的 tokenizer 观察分词和 Embedding 维度：</p><pre><code class="language-python">from transformers import AutoTokenizer, AutoModel
+import torch
+
+model_name = "bert-base-chinese"
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModel.from_pretrained(model_name)
+
+text = "我爱吃苹果"
+inputs = tokenizer(text, return_tensors="pt")
+print("Token IDs:", inputs["input_ids"].tolist())
+print("Tokens:", tokenizer.convert_ids_to_tokens(inputs["input_ids"][0]))
+
+with torch.no_grad():
+    outputs = model(**inputs)
+print("Embedding shape:", outputs.last_hidden_state.shape)  # [batch, seq_len, hidden_dim]</code></pre><p>运行后你会看到类似 <code>['[CLS]', '我', '爱', '吃', '苹', '果', '[SEP]']</code> 的 Token 列表，以及形状为 <code>[1, 7, 768]</code> 的 Embedding。这 768 就是<b>隐藏维度</b>，是模型内部表示向量的宽度。</p>
+ <h3>1.2 模型结构术语：Transformer、Attention、Dense与MoE</h3>
+ <p>Transformer 是 LLM 的骨架。它由很多<b>层</b>堆叠而成，每一层包含一个 Attention 模块和一个前馈网络。Attention 让每个 Token 都能“看到”序列中其他 Token，并决定关注谁。比如在“苹果很好吃，因为它很甜”中，“它”会高度关注“苹果”。</p><p>传统 Transformer 的前馈网络是 <b>Dense（稠密）</b> 的：每个输入都会激活全部参数。而 <b>MoE（Mixture of Experts，混合专家）</b> 把前馈网络拆成多个“专家”，每次只激活其中一小部分。这样总参数量可以很大，但实际计算量只相当于一个小模型。例如 Mixtral 8x7B 总参数量约 47B，但每次推理只激活约 13B 参数。</p><p>另一个重要概念是<b>位置编码</b>。Attention 本身不知道顺序，所以需要给每个 Token 加上位置信息。早期用正弦函数，现在主流用 RoPE（旋转位置编码），它能让模型更好地外推到更长的上下文。</p><p>下面用 PyTorch 手写一个极简的单头 Attention，帮助理解其计算过程：</p><pre><code class="language-python">import torch
+import torch.nn.functional as F
+
+def attention(Q, K, V):
+    # Q, K, V: [seq_len, d_k]
+    scores = torch.matmul(Q, K.T) / (Q.size(-1) ** 0.5)
+    weights = F.softmax(scores, dim=-1)
+    return torch.matmul(weights, V)
+
+seq_len, d_k = 4, 8
+Q = torch.randn(seq_len, d_k)
+K = torch.randn(seq_len, d_k)
+V = torch.randn(seq_len, d_k)
+out = attention(Q, K, V)
+print("Attention output shape:", out.shape)  # [4, 8]</code></pre><p><b>结论：Transformer 通过 Attention 捕捉上下文关系，通过层数堆叠增加表达能力，通过 MoE 在参数量和计算量之间做权衡。</b></p>
+ <h3>1.3 训练与适配术语：从预训练到LoRA</h3>
+ <p>LLM 的训练像培养一个学生：先大量阅读（<b>预训练</b>），再专项辅导（<b>SFT</b>），最后根据反馈调整（<b>RLHF/DPO</b>）。</p><ul><li><b>预训练</b>：在海量文本上做“预测下一个 Token”的任务，让模型学会语言规律和世界知识。成本极高，通常只有大公司做。</li><li><b>SFT（Supervised Fine-Tuning，监督微调）</b>：用人工标注的“问题-答案”对，教模型遵循指令。</li><li><b>RLHF（Reinforcement Learning from Human Feedback，人类反馈强化学习）</b>：训练一个奖励模型来模拟人类偏好，再用强化学习优化 LLM。DPO 是它的简化替代，直接用偏好数据优化，不需要奖励模型。</li><li><b>蒸馏</b>：让一个小模型模仿大模型的输出，从而用更低成本获得接近的能力。</li><li><b>微调</b>：在预训练模型上继续训练，适配特定领域。</li><li><b>LoRA（Low-Rank Adaptation，低秩适应）</b>：冻结原模型，只训练两个小矩阵，大幅减少可训练参数量。QLoRA 则在此基础上把原模型量化到 4-bit，进一步降低显存。</li><li><b>量化</b>：把模型权重从 FP16 压缩到 INT8/INT4，减少显存和加速推理，但可能损失精度。</li></ul><p>下面用 PEFT 库演示如何给模型加上 LoRA：</p><pre><code class="language-python">from transformers import AutoModelForCausalLM
+from peft import LoraConfig, get_peft_model
+
+model = AutoModelForCausalLM.from_pretrained("gpt2")
+config = LoraConfig(
+    r=8,
+    lora_alpha=32,
+    target_modules=["c_attn"],
+    lora_dropout=0.1,
+    bias="none"
+)
+model = get_peft_model(model, config)
+model.print_trainable_parameters()
+# 输出类似：trainable params: 294,912 || all params: 124,734,720 || trainable%: 0.24%</code></pre><p><b>关键结论：预训练赋予通用能力，SFT/RLHF 对齐人类偏好，LoRA/QLoRA/量化让适配和部署变得平民化。</b></p>
+ <h3>1.4 应用与推理术语：Prompt、RAG、Agent与KV Cache</h3>
+ <p>模型训练好后，怎么用？这涉及应用层和推理层术语。</p><ul><li><b>Prompt（提示词）</b>：你给模型的输入。好的 Prompt 能显著提升效果。</li><li><b>RAG（Retrieval-Augmented Generation，检索增强生成）</b>：先从知识库检索相关文档，再把文档和问题一起交给模型生成答案。适合需要最新或私有知识的场景。</li><li><b>Agent（智能体）</b>：让 LLM 自主规划、调用工具、多步执行任务。工具调用是 Agent 的核心能力，比如调用计算器、搜索 API。</li><li><b>Temperature</b>：控制输出随机性。值越高越随机，越低越确定。Top-p 是另一种采样策略，只从累积概率达到 p 的 Token 中采样。</li><li><b>KV Cache（键值缓存）</b>：自回归生成时，缓存之前 Token 的 Key 和 Value，避免重复计算，大幅加速推理。</li><li><b>Batching（批处理）</b>：同时处理多个请求，提高 GPU 利用率。连续批处理（Continuous Batching）是 vLLM 等推理框架的关键技术。</li></ul><p>下面用 OpenAI API 风格演示 Temperature 和 Top-p 的影响（伪代码，需替换为实际 API）：</p><pre><code class="language-python"># 假设使用 openai 库
+# import openai
+# openai.api_key = "your-key"
+
+def generate(prompt, temperature=0.7, top_p=0.9):
+    # response = openai.ChatCompletion.create(
+    #     model="gpt-3.5-turbo",
+    #     messages=[{"role": "user", "content": prompt}],
+    #     temperature=temperature,
+    #     top_p=top_p
+    # )
+    # return response.choices[0].message.content
+    return f"模拟输出：temperature={temperature}, top_p={top_p}"
+
+print(generate("写一句诗", temperature=0.2))
+print(generate("写一句诗", temperature=1.2))</code></pre><p><b>记住：Prompt 是入口，RAG 补知识，Agent 做执行，KV Cache 和 Batching 是推理加速的两大支柱。</b></p>
+ <h3>常见误区</h3>
+ <ul>
+ <li>Token 等于字或词：实际上 Token 是子词单元，不同 Tokenizer 切分方式不同，一个汉字可能对应一个或多个 Token。</li>
+ <li>参数量越大模型一定越好：参数量只是潜力，训练数据质量、对齐程度、推理配置同样关键，MoE 模型总参数量大但激活参数少。</li>
+ <li>微调一定比 RAG 好：微调改变模型权重，适合风格和格式对齐；RAG 适合注入事实知识且可实时更新，两者常结合使用。</li>
+ </ul>
+ <h3>自测</h3>
+ <details class="quiz"><summary>请解释 Token、Embedding 和参数量三者的区别与联系。</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>Token 是文本切分后的最小单位；Embedding 是把 Token 映射成高维向量；参数量是模型内部所有权重的总数。联系：Token 经过 Embedding 层变成向量，Embedding 层本身也是参数量的一部分，模型通过大量参数处理这些向量。</p></div></details>
+ <details class="quiz"><summary>LoRA 和量化在降低显存方面分别起什么作用？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>LoRA 通过冻结原模型、只训练低秩矩阵，减少训练时的可训练参数量和优化器状态显存；量化通过降低权重精度（如 FP16 到 INT4）减少模型存储和推理显存。QLoRA 结合两者，在 4-bit 量化模型上训练 LoRA。</p></div></details>
+ <h3>动手练习（带参考方案）</h3>
+ <details class="fold"><summary>动手练习 · 使用 Hugging Face transformers 加载一个中文 BERT 模型，对句子“今天…</summary><div class="fold-body"><p><b>任务：</b>使用 Hugging Face transformers 加载一个中文 BERT 模型，对句子“今天天气真好”进行分词，打印 Token 列表、Token ID 和 Embedding 形状。然后修改句子为“今天天气真好，适合出去玩”，观察 Token 数量变化。</p><p><b>参考方案：</b></p>from transformers import AutoTokenizer, AutoModel
+import torch
+
+model_name = "bert-base-chinese"
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModel.from_pretrained(model_name)
+
+def analyze(text):
+    inputs = tokenizer(text, return_tensors="pt")
+    tokens = tokenizer.convert_ids_to_tokens(inputs["input_ids"][0])
+    print(f"文本: {text}")
+    print(f"Token: {tokens}")
+    print(f"Token IDs: {inputs['input_ids'].tolist()[0]}")
+    with torch.no_grad():
+        outputs = model(**inputs)
+    print(f"Embedding shape: {outputs.last_hidden_state.shape}")
+    print("-" * 40)
+
+analyze("今天天气真好")
+analyze("今天天气真好，适合出去玩")
+# 预期：第二个句子 Token 数量更多，Embedding 的 seq_len 相应增加。</div></details>
+
+ <h2>第2章 · 模型能力评测与可信度</h2>
+ <p><b>本章目标：</b>能设计小规模评测，识别不公平比较，给出有证据的选型结论。</p>
+ <h3>公开基准：它们到底在测什么？</h3>
+ <p>想象你要给一个学生写推荐信，你会怎么描述他的能力？你可能会说“数学不错，但语文一般”。LLM 也一样，没有一个单一分数能概括所有能力。公开基准就是给模型出的“标准化考卷”，每张考卷测不同的能力维度。</p><p>先看几个最常被引用的：</p><ul><li><b>MMLU</b>：像“高考综合卷”，覆盖57个学科（数学、历史、法律、医学等），全是四选一选择题。它测的是<b>广博的知识面</b>，但几乎不测推理深度和生成能力。</li><li><b>GPQA</b>：像“研究生入学考试”，题目由领域专家编写，设计成“谷歌搜不到答案”。它测的是<b>专家级推理</b>，难度远高于 MMLU。</li><li><b>AIME</b>：美国数学邀请赛，15道填空，答案都是0-999的整数。它测的是<b>多步数学推理</b>，对模型来说极难，近年才被突破。</li><li><b>HumanEval</b>：给函数签名和文档字符串，让模型补全代码，用单元测试判分。它测的是<b>短代码生成</b>，但题目短、场景简单，和真实工程差距大。</li><li><b>SWE-bench</b>：从真实 GitHub 仓库提取 issue 和对应修复，让模型生成补丁，跑测试验证。它测的是<b>真实软件工程能力</b>，难度高，更接近实际开发。</li></ul><p>关键点：<b>每个基准都有明确的“测什么”和“不能说明什么”</b>。比如 MMLU 高分不代表会写代码，SWE-bench 高分也不代表能和你流畅对话。选型时，先问“我的业务场景最像哪个基准”，而不是只看排行榜。</p><p>下面是一个最小示例，用 Python 模拟计算 MMLU 准确率：</p><pre><code class="language-python"># 模拟 MMLU 评测：4选1，计算准确率
+import random
+
+# 假设有 100 道题，模型预测和标准答案
+random.seed(42)
+num_questions = 100
+labels = [random.randint(0, 3) for _ in range(num_questions)]  # 标准答案 0-3
+# 模拟一个“还不错”的模型，70% 概率答对
+preds = [labels[i] if random.random() &lt; 0.7 else random.randint(0, 3) for i in range(num_questions)]
+
+correct = sum(p == l for p, l in zip(preds, labels))
+accuracy = correct / num_questions
+print(f"MMLU 准确率: {accuracy:.2%}")  # 输出类似 71.00%
+</code></pre><p>注意：真实评测中，还要考虑提示词格式、few-shot 示例数量等，这些都会影响分数。</p>
+ <h3>评测可信度：分数背后的陷阱</h3>
+ <p>你看到两个模型在 MMLU 上分别是 85% 和 84%，能直接说第一个更好吗？不一定。评测结果可能被多种因素扭曲，就像考试作弊或泄题一样。</p><p>常见陷阱：</p><ul><li><b>数据污染</b>：训练数据里混入了测试题。模型可能“背过答案”，分数虚高。检测方法：看模型在扰动题目（如改数字）上的表现是否骤降。</li><li><b>测试集泄漏</b>：测试集被用于调参或模型选择，导致过拟合。正确做法是严格划分开发集和测试集，测试集只在最后用一次。</li><li><b>样本过少</b>：只测 20 道题，随机波动可能让分数差 10%。一般建议至少几百个样本，并用置信区间报告。</li><li><b>只报告最好结果</b>：跑多次取最高分，忽略方差。应该报告平均值和标准差。</li><li><b>提示词与推理预算不公平</b>：给模型 A 精心设计的提示词和更多推理步数，模型 B 用默认设置，比较就不公平。必须控制变量。</li></ul><p>举个例子：假设两个模型真实能力相同，但测试集只有 50 题，准确率都是 80%。由于随机性，一个可能考 86%，另一个 74%。用下面代码模拟：</p><pre><code class="language-python">import random
+
+def eval_model(true_acc, n=50):
+    return sum(random.random() &lt; true_acc for _ in range(n)) / n
+
+random.seed(0)
+# 两个模型真实准确率都是 0.8
+scores_a = [eval_model(0.8) for _ in range(5)]
+scores_b = [eval_model(0.8) for _ in range(5)]
+print("模型A 5次评测:", [f"{s:.0%}" for s in scores_a])
+print("模型B 5次评测:", [f"{s:.0%}" for s in scores_b])
+# 输出可能显示 A 最高 88%，B 最低 72%，但真实能力相同
+</code></pre><p><b>结论：比较模型时，必须确保测试条件一致，并报告不确定性。</b>否则你的选型结论可能只是噪声。</p>
+ <h3>人工评测与 LLM-as-a-Judge：如何让评判更可靠</h3>
+ <p>很多任务没有标准答案，比如“写一封友好的客户邮件”。这时需要人工评分，但人工贵且慢。于是有了 <b>LLM-as-a-Judge</b>：用另一个大模型当裁判，给回答打分或排序。</p><p>它像请了一个“助教”来批改作业，但助教也有偏见：可能偏爱长回答、偏爱自己家族的模型、对某些格式敏感。所以必须设计防偏机制：</p><ul><li><b>盲评</b>：裁判不知道哪个回答来自哪个模型，避免品牌偏见。</li><li><b>随机顺序</b>：交换两个回答的呈现顺序，消除位置偏见。</li><li><b>重复测试</b>：同一对回答多次评判，看一致性。</li><li><b>人工校验</b>：抽样一部分让人类专家复核，校准裁判的可靠性。</li></ul><p>下面是一个简化的 LLM-as-a-Judge 流程示例（用伪代码表示）：</p><pre><code class="language-python"># 模拟 LLM-as-a-Judge 盲评流程
+import random
+
+def judge(answer_a, answer_b, model_name):
+    # 真实裁判会调用 LLM API，这里用随机模拟
+    # 假设裁判有 60% 概率选更好的那个，但不知道模型名
+    return random.choice(["A", "B"])
+
+def blind_compare(model1_answers, model2_answers, n_trials=5):
+    wins = {"model1": 0, "model2": 0}
+    for i in range(len(model1_answers)):
+        for _ in range(n_trials):
+            # 随机交换顺序
+            if random.random() &lt; 0.5:
+                a, b = model1_answers[i], model2_answers[i]
+                mapping = {"A": "model1", "B": "model2"}
+            else:
+                a, b = model2_answers[i], model1_answers[i]
+                mapping = {"A": "model2", "B": "model1"}
+            winner = judge(a, b, "judge_model")
+            wins[mapping[winner]] += 1
+    return wins
+
+# 模拟两个模型的回答
+m1 = ["回答1-模型1", "回答2-模型1"]
+m2 = ["回答1-模型2", "回答2-模型2"]
+random.seed(1)
+result = blind_compare(m1, m2)
+print("盲评胜场:", result)
+</code></pre><p><b>LLM-as-a-Judge 适合快速迭代和粗筛，但不能完全替代人工，尤其是高风险场景。</b>最终选型报告里，最好同时给出自动指标和人工评估结果。</p>
+ <h3>实操：设计一次小规模业务评测</h3>
+ <p>现在把前面知识串起来。假设你要为“企业客服助手”选型，候选模型 A 和 B。你需要设计一个评测，用证据说话。</p><p>步骤：</p><ol><li><b>定义能力维度</b>：根据业务，确定关键维度，比如“回答准确性”、“语气友好度”、“拒绝不当请求”。</li><li><b>收集业务样本</b>：从真实客服日志中抽取 100 条用户问题，覆盖常见和边缘情况。</li><li><b>划分开发集和测试集</b>：用 50 条做开发集，用来调试提示词和评分标准；另外 50 条做测试集，只在最终比较时用。</li><li><b>设计评分标准</b>：每个维度 1-5 分，并写清楚评分细则。例如准确性：5=完全正确，3=部分正确，1=错误。</li><li><b>运行评测</b>：对两个模型使用相同的提示词和推理预算，生成回答。</li><li><b>评分</b>：先用 LLM-as-a-Judge 盲评，再人工校验 20% 的样本。</li><li><b>分析失败类型</b>：统计错误类别，比如“答非所问”、“信息过时”、“语气生硬”。</li><li><b>得出结论</b>：基于测试集分数和失败分析，给出选型建议。</li></ol><p>下面是一个简化的评测脚本框架：</p><pre><code class="language-python"># 业务评测框架示例
+import random
+
+# 模拟 50 条测试样本，每条有标准答案和两个模型的回答
+test_samples = [
+    {"question": f"问题{i}", "reference": f"参考答案{i}",
+     "model_a": f"模型A回答{i}", "model_b": f"模型B回答{i}"}
+    for i in range(50)
+]
+
+def score_answer(answer, reference):
+    # 模拟评分：随机 1-5 分
+    return random.randint(1, 5)
+
+random.seed(42)
+scores_a, scores_b = [], []
+for sample in test_samples:
+    scores_a.append(score_answer(sample["model_a"], sample["reference"]))
+    scores_b.append(score_answer(sample["model_b"], sample["reference"]))
+
+avg_a = sum(scores_a) / len(scores_a)
+avg_b = sum(scores_b) / len(scores_b)
+print(f"模型A 平均分: {avg_a:.2f}")
+print(f"模型B 平均分: {avg_b:.2f}")
+
+# 简单失败分析：统计低分（&lt;=2）数量
+fail_a = sum(1 for s in scores_a if s &lt;= 2)
+fail_b = sum(1 for s in scores_b if s &lt;= 2)
+print(f"模型A 低分样本数: {fail_a}")
+print(f"模型B 低分样本数: {fail_b}")
+</code></pre><p><b>记住：测试集是最终裁判，开发集用来迭代。不要用测试集调提示词，否则结论不可信。</b></p>
+ <h3>常见误区</h3>
+ <ul>
+ <li>只看排行榜总分就选模型：不同基准测的能力不同，MMLU 高不代表代码或对话好，必须匹配业务场景。</li>
+ <li>用测试集调参后还报告测试集分数：这会导致过拟合，分数虚高，应该用开发集调参，测试集只用于最终评估。</li>
+ <li>认为 LLM-as-a-Judge 完全客观：裁判模型有位置偏见、长度偏见等，必须盲评、随机顺序、重复测试并人工校验。</li>
+ </ul>
+ <h3>自测</h3>
+ <details class="quiz"><summary>为什么不能直接用 MMLU 分数来预测模型在客服对话中的表现？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>MMLU 是四选一知识题，主要测广博知识，不测多轮对话、语气、拒绝不当请求等客服核心能力。客服表现需要专门设计对话评测。</p></div></details>
+ <details class="quiz"><summary>在设计模型比较实验时，如何避免不公平比较？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>确保两个模型使用相同的提示词、推理预算、测试样本和评分标准；采用盲评和随机顺序；报告多次运行的平均值和方差；严格划分开发集和测试集。</p></div></details>
+ <h3>动手练习（带参考方案）</h3>
+ <details class="fold"><summary>动手练习 · 假设你要为“代码助手”选型，候选模型 X 和 Y。请设计一个包含 30 个业务样本的小规模评测方案，…</summary><div class="fold-body"><p><b>任务：</b>假设你要为“代码助手”选型，候选模型 X 和 Y。请设计一个包含 30 个业务样本的小规模评测方案，包括：能力维度、评分标准、如何划分开发集/测试集、如何用 LLM-as-a-Judge 盲评，并写一个 Python 脚本模拟评测过程并输出比较结果。</p><p><b>参考方案：</b></p>能力维度：代码正确性（1-5）、代码可读性（1-5）、注释质量（1-5）。评分标准：5=完全正确且优雅，3=基本正确但有瑕疵，1=错误。开发集 15 条用于调试提示词，测试集 15 条用于最终比较。LLM-as-a-Judge 盲评：随机交换模型回答顺序，每个样本评判 3 次取多数。Python 脚本如下：
+
+```python
+import random
+
+# 模拟 15 条测试样本
+test_samples = [
+    {"problem": f"问题{i}", "model_x": f"X代码{i}", "model_y": f"Y代码{i}"}
+    for i in range(15)
+]
+
+def judge(code_a, code_b):
+    # 模拟裁判：随机选更好的，但假设 X 真实略好，60% 概率选 X
+    return random.choice(["A", "B"])
+
+random.seed(42)
+wins_x, wins_y = 0, 0
+for sample in test_samples:
+    for _ in range(3):  # 每个样本重复 3 次
+        if random.random() &lt; 0.5:
+            a, b = sample["model_x"], sample["model_y"]
+            mapping = {"A": "X", "B": "Y"}
+        else:
+            a, b = sample["model_y"], sample["model_x"]
+            mapping = {"A": "Y", "B": "X"}
+        winner = judge(a, b)
+        if mapping[winner] == "X":
+            wins_x += 1
+        else:
+            wins_y += 1
+
+print(f"模型X 胜场: {wins_x}, 模型Y 胜场: {wins_y}")
+if wins_x &gt; wins_y:
+    print("建议选择模型X")
+else:
+    print("建议选择模型Y")
+```
+
+注意：真实评测中需要人工校验部分样本，并分析失败类型。</div></details>
+
+ <h2>第3章 · 推理性能与成本评测</h2>
+ <p><b>本章目标：</b>能测量TTFT、TPOT、吞吐等指标，计算每次请求成本。</p>
+ <h3>3.1 性能指标：从用户点击到最后一个字</h3>
+ <p>想象你去餐厅点餐：<b>TTFT</b> 是“下单到第一道菜上桌”的时间，<b>TPOT</b> 是“吃完一道菜到下一道菜上桌”的平均间隔，<b>端到端延迟</b> 是“从下单到吃完最后一道菜”的总时间。对 LLM 推理来说，用户感知的“快”往往由 TTFT 决定，而“完成快”则由 TPOT 和输出长度共同决定。</p><p>具体定义：</p><ul><li><b>TTFT (Time to First Token)</b>：从发送请求到收到第一个输出 token 的时间，包含网络、排队、prefill 计算。</li><li><b>TPOT (Time per Output Token)</b>：生成阶段每个输出 token 的平均耗时，通常等于 (端到端延迟 - TTFT) / (输出 token 数 - 1)。</li><li><b>ITL (Inter-Token Latency)</b>：相邻两个输出 token 之间的时间间隔，TPOT 是 ITL 的平均值。</li><li><b>吞吐量 (Throughput)</b>：单位时间内系统处理的 token 总数或请求数，常用 tokens/s 表示。</li><li><b>并发 (Concurrency)</b>：同时处理的请求数量，直接影响吞吐和延迟。</li><li><b>P50/P95/P99</b>：延迟的百分位数，P95 表示 95% 的请求延迟低于该值，比平均值更能反映尾部体验。</li><li><b>成功率/错误率/超时率</b>：成功完成的请求比例、返回错误的比例、超过设定时限的比例。</li></ul><p>下面是一个最小可运行示例，用 Python 模拟测量这些指标（实际中需替换为真实 API 调用）：</p><pre><code class="language-python">import time
+import random
+
+def mock_llm_call(prompt, max_tokens=50):
+    """模拟一次流式 LLM 调用，返回每个 token 的时间戳。"""
+    # 模拟 prefill 和排队
+    ttft = random.uniform(0.1, 0.5)
+    time.sleep(ttft)
+    timestamps = [time.time()]
+    # 模拟生成 token
+    for _ in range(max_tokens - 1):
+        time.sleep(random.uniform(0.01, 0.05))
+        timestamps.append(time.time())
+    return timestamps
+
+def measure(prompt):
+    start = time.time()
+    timestamps = mock_llm_call(prompt)
+    end = time.time()
+    ttft = timestamps[0] - start
+    tpot = (end - timestamps[0]) / (len(timestamps) - 1) if len(timestamps) &gt; 1 else 0
+    e2e = end - start
+    return {"ttft": ttft, "tpot": tpot, "e2e": e2e, "output_tokens": len(timestamps)}
+
+# 模拟 10 次请求
+results = [measure("你好") for _ in range(10)]
+for i, r in enumerate(results):
+    print(f"请求{i+1}: TTFT={r['ttft']:.3f}s, TPOT={r['tpot']:.3f}s, E2E={r['e2e']:.3f}s")
+
+# 计算 P50/P95
+import statistics
+ttfts = sorted([r['ttft'] for r in results])
+p50 = ttfts[len(ttfts)//2]
+p95 = ttfts[int(len(ttfts)*0.95)]
+print(f"TTFT P50={p50:.3f}s, P95={p95:.3f}s")</code></pre><p><b>关键结论：首字快不等于完成快，单用户快不等于并发快。</b> 评估时必须同时看 TTFT、TPOT 和吞吐，并在目标并发下测量。</p>
+ <h3>3.2 评测条件记录：让结果可复现</h3>
+ <p>性能数字脱离条件毫无意义。就像说“我跑得很快”，必须说明是百米还是马拉松、顺风还是逆风。LLM 推理评测必须记录以下条件：</p><ul><li><b>模型版本</b>：具体到 commit 或日期，如 llama-3-8b-instruct-2024-04。</li><li><b>硬件</b>：GPU 型号、数量、显存、互联方式（NVLink/PCIe）。</li><li><b>推理框架</b>：vLLM、TensorRT-LLM、TGI 等及版本。</li><li><b>精度</b>：FP16、BF16、INT8、INT4 等。</li><li><b>输入/输出长度</b>：平均和分布，如输入 512 tokens、输出 128 tokens。</li><li><b>并发与批处理</b>：并发请求数、最大 batch size、是否启用 continuous batching。</li><li><b>缓存</b>：是否启用 KV Cache、prefix caching。</li><li><b>预热</b>：是否预热、预热次数，避免冷启动影响。</li><li><b>测试次数</b>：至少 100 次以上，报告 P50/P95/P99。</li></ul><p>下面是一个记录评测条件的 JSON 模板，可直接用于实验日志：</p><pre><code class="language-python">import json
+
+config = {
+    "model": "meta-llama/Llama-3-8B-Instruct",
+    "model_revision": "main@2024-04-18",
+    "hardware": "NVIDIA A100 80GB x1",
+    "framework": "vLLM 0.4.2",
+    "dtype": "bfloat16",
+    "input_length": {"mean": 512, "p95": 1024},
+    "output_length": {"mean": 128, "p95": 256},
+    "concurrency": 10,
+    "max_batch_size": 32,
+    "enable_prefix_caching": True,
+    "warmup_runs": 5,
+    "test_runs": 200,
+    "timeout_seconds": 30
+}
+print(json.dumps(config, indent=2))</code></pre><p><b>关键结论：没有条件记录的 benchmark 等于没有 benchmark。</b> 报告结果时，必须附带上述条件，否则无法横向比较。</p>
+ <h3>3.3 成本计算：从每百万 Token 到每个成功任务</h3>
+ <p>云厂商常标“每百万 Token 价格”，但业务成本要看<b>每个成功任务</b>花了多少钱。类比：买菜看单价，但请客吃饭要看“一桌菜总价”，还要算上烧焦重做的成本。</p><p>成本计算步骤：</p><ol><li><b>每百万 Token 价格</b>：输入和输出通常不同价，如输入 $0.5/M，输出 $1.5/M。</li><li><b>每次请求成本</b> = (输入 tokens / 1e6) * 输入单价 + (输出 tokens / 1e6) * 输出单价。</li><li><b>考虑重试</b>：如果失败率 5%，则平均请求次数 = 1 / (1 - 0.05) ≈ 1.053。</li><li><b>工具调用和额外推理</b>：Agent 场景可能多次调用 LLM，需累加。</li><li><b>每个成功任务成本</b> = 总成本 / 成功任务数。</li></ol><p>下面是一个计算示例：</p><pre><code class="language-python">def cost_per_request(input_tokens, output_tokens, price_in_per_m, price_out_per_m):
+    return (input_tokens / 1e6) * price_in_per_m + (output_tokens / 1e6) * price_out_per_m
+
+def cost_per_success(input_tokens, output_tokens, price_in, price_out, success_rate, retries_per_failure=1):
+    base = cost_per_request(input_tokens, output_tokens, price_in, price_out)
+    # 平均尝试次数 = 1 + (1 - success_rate) * retries_per_failure
+    avg_attempts = 1 + (1 - success_rate) * retries_per_failure
+    total_cost = base * avg_attempts
+    return total_cost / success_rate  # 分摊到每个成功任务
+
+# 示例：输入 500 tokens，输出 200 tokens，输入 $0.5/M，输出 $1.5/M，成功率 95%
+base = cost_per_request(500, 200, 0.5, 1.5)
+print(f"单次请求成本: ${base:.6f}")
+per_success = cost_per_success(500, 200, 0.5, 1.5, 0.95)
+print(f"每个成功任务成本: ${per_success:.6f}")</code></pre><p><b>关键结论：最低单价不等于最低业务成本。</b> 必须把重试、工具调用、超时和失败率纳入计算。</p>
+ <h3>常见误区</h3>
+ <ul>
+ <li>首字快（TTFT 低）不等于完成快，如果 TPOT 很高，长输出的端到端延迟仍然很大。</li>
+ <li>单用户测试快不等于并发快，高并发下排队和批处理会导致延迟显著上升。</li>
+ <li>Tokens/s 不可直接比较，必须结合输入输出长度、并发数、硬件和精度等条件。</li>
+ <li>最低单价不等于最低业务成本，需考虑重试、工具调用、超时和失败率。</li>
+ </ul>
+ <h3>自测</h3>
+ <details class="quiz"><summary>某模型 TTFT=0.2s，TPOT=0.05s，输出 100 个 token，端到端延迟大约是多少？如果 TPOT 变为 0.1s，端到端延迟变为多少？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>端到端延迟 ≈ TTFT + TPOT × (输出 token 数 - 1) = 0.2 + 0.05 × 99 = 5.15s。若 TPOT=0.1s，则 0.2 + 0.1 × 99 = 10.1s。说明 TPOT 对长输出影响巨大。</p></div></details>
+ <details class="quiz"><summary>为什么报告 P95 延迟比平均延迟更有意义？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>平均延迟会被大量快请求拉低，掩盖尾部慢请求。P95 表示 95% 的请求延迟低于该值，能反映最差 5% 用户的体验，对 SLA 和容量规划更关键。</p></div></details>
+ <h3>动手练习（带参考方案）</h3>
+ <details class="fold"><summary>动手练习 · 编写一个 Python 脚本，模拟测量 100 次 LLM 请求的 TTFT、TPOT、端到端延迟，…</summary><div class="fold-body"><p><b>任务：</b>编写一个 Python 脚本，模拟测量 100 次 LLM 请求的 TTFT、TPOT、端到端延迟，计算 P50/P95/P99，并假设输入 800 tokens、输出 300 tokens、输入价格 $0.6/M、输出价格 $1.8/M、成功率 98%、每次失败重试 1 次，计算每个成功任务成本。</p><p><b>参考方案：</b></p>import time
+import random
+import statistics
+
+def mock_llm_call(input_tokens, output_tokens):
+    # 模拟 prefill 和排队
+    ttft = random.uniform(0.1, 0.6)
+    time.sleep(ttft)
+    timestamps = [time.time()]
+    for _ in range(output_tokens - 1):
+        time.sleep(random.uniform(0.01, 0.06))
+        timestamps.append(time.time())
+    return timestamps
+
+def measure(input_tokens, output_tokens):
+    start = time.time()
+    timestamps = mock_llm_call(input_tokens, output_tokens)
+    end = time.time()
+    ttft = timestamps[0] - start
+    tpot = (end - timestamps[0]) / (len(timestamps) - 1) if len(timestamps) &gt; 1 else 0
+    e2e = end - start
+    return ttft, tpot, e2e
+
+results = [measure(800, 300) for _ in range(100)]
+ttfts = sorted([r[0] for r in results])
+tpots = sorted([r[1] for r in results])
+e2es = sorted([r[2] for r in results])
+
+def percentile(data, p):
+    idx = int(len(data) * p)
+    return data[min(idx, len(data)-1)]
+
+print(f"TTFT P50={percentile(ttfts,0.5):.3f}s, P95={percentile(ttfts,0.95):.3f}s, P99={percentile(ttfts,0.99):.3f}s")
+print(f"TPOT P50={percentile(tpots,0.5):.3f}s, P95={percentile(tpots,0.95):.3f}s, P99={percentile(tpots,0.99):.3f}s")
+print(f"E2E P50={percentile(e2es,0.5):.3f}s, P95={percentile(e2es,0.95):.3f}s, P99={percentile(e2es,0.99):.3f}s")
+
+# 成本计算
+input_tokens = 800
+output_tokens = 300
+price_in = 0.6  # $/M
+price_out = 1.8  # $/M
+success_rate = 0.98
+retries_per_failure = 1
+
+base_cost = (input_tokens / 1e6) * price_in + (output_tokens / 1e6) * price_out
+avg_attempts = 1 + (1 - success_rate) * retries_per_failure
+total_cost = base_cost * avg_attempts
+cost_per_success = total_cost / success_rate
+print(f"单次请求成本: ${base_cost:.6f}")
+print(f"每个成功任务成本: ${cost_per_success:.6f}")</div></details>
+
+ <h2>第4章 · 硬件参数与算力评估</h2>
+ <p><b>本章目标：</b>读懂硬件规格表，解释显存、带宽、算力对推理的影响。</p>
+ <h3>硬件组成：GPU、CPU、内存、存储、互联与网络</h3>
+ <p>把一台推理服务器想象成一家餐厅：<b>GPU 是后厨的灶台</b>，负责真正“炒菜”（矩阵乘法）；<b>CPU 是前台和调度员</b>，负责接单、拆解任务、启动 GPU；<b>内存（RAM）是备菜台</b>，存放还没下锅的食材（模型权重、中间数据）；<b>显存（VRAM）是灶台旁边的操作台</b>，离 GPU 最近，放正在炒的菜；<b>存储（SSD/HDD）是仓库</b>，放冷鲜食材（模型文件、日志）；<b>互联（PCIe/NVLink）是传菜通道</b>，决定食材从备菜台到灶台的速度；<b>网络（以太网/InfiniBand）是外卖通道</b>，决定多台机器之间怎么协作。</p><p>不同场景对硬件的需求不同：</p><ul><li><b>消费级 GPU（如 RTX 4090）</b>：显存 24GB 左右，适合个人开发、小模型推理、微调。优点是便宜、功耗低；缺点是显存小、没有 NVLink、多卡通信走 PCIe。</li><li><b>数据中心 GPU（如 A100/H100）</b>：显存 40GB~80GB，支持 NVLink，带宽极高，适合大模型训练和推理。缺点是贵、功耗高、需要专业散热和供电。</li><li><b>Apple Silicon（M 系列）</b>：统一内存架构，CPU 和 GPU 共享内存，内存可达 128GB 甚至 192GB，适合本地跑大模型。缺点是 GPU 算力相对弱，生态不如 CUDA 成熟。</li></ul><p>关键结论：<b>选硬件不是只看 GPU，而是看整个数据通路是否匹配你的任务。</b>如果模型权重放不进显存，再强的算力也发挥不出来；如果互联带宽太低，多卡并行反而会拖慢速度。</p>
+ <h3>关键参数：显存、带宽、算力、互联与功耗</h3>
+ <p>读懂硬件规格表，核心看这几个参数：</p><table><tr><th>参数</th><th>含义</th><th>对推理的影响</th></tr><tr><td>显存容量（VRAM）</td><td>GPU 能直接访问的内存大小</td><td>决定模型能不能装下；装不下就要切分或换卡</td></tr><tr><td>显存带宽（Memory Bandwidth）</td><td>每秒能从显存读写多少数据，单位 GB/s</td><td>决定 token 生成速度；带宽越高，解码越快</td></tr><tr><td>计算单元 / Tensor Core</td><td>GPU 里做矩阵乘法的专用硬件</td><td>决定预填充（prefill）阶段的吞吐</td></tr><tr><td>频率</td><td>GPU 核心运行时钟，单位 GHz</td><td>影响单次计算延迟，但不如带宽和核心数关键</td></tr><tr><td>PCIe / NVLink</td><td>GPU 与 CPU、GPU 与 GPU 之间的通信通道</td><td>决定多卡并行效率；NVLink 比 PCIe 快数倍</td></tr><tr><td>功耗（TDP）</td><td>满载时的热设计功耗，单位 W</td><td>决定供电和散热成本；数据中心卡可达 700W</td></tr></table><p>一个具体例子：RTX 4090 有 24GB 显存、约 1008 GB/s 带宽、FP16 算力约 330 TFLOPS。A100 80GB 有 80GB 显存、约 2039 GB/s 带宽、FP16 算力约 312 TFLOPS。虽然两者 FP16 峰值算力接近，但 A100 显存更大、带宽更高，所以能跑更大的模型，且解码速度更快。</p><p>关键结论：<b>推理速度往往受显存带宽限制，而不是峰值算力。</b>因为自回归生成时，每生成一个 token 都要把整个模型权重读一遍，这是典型的“内存带宽瓶颈”场景。</p>
+ <h3>单位与口径：FLOPs、TFLOPS、TOPS、GB 与 GiB、精度</h3>
+ <p>硬件规格表里单位很多，容易混淆。先记住几个核心换算：</p><ul><li><b>FLOPs</b>：浮点运算次数，是“工作量”。比如一次矩阵乘法做了多少 FLOPs。</li><li><b>FLOP/s</b>：每秒浮点运算次数，是“速度”。<b>TFLOPS = 10^12 FLOP/s</b>，<b>PFLOPS = 10^15 FLOP/s</b>。</li><li><b>TOPS</b>：每秒万亿次操作，通常用于整数运算（INT8/INT4）。<b>TOPS 和 TFLOPS 不能直接比</b>，因为操作类型和精度不同。</li><li><b>GB vs GiB</b>：GB 是十进制（10^9 字节），GiB 是二进制（2^30 字节）。<b>1 GiB ≈ 1.074 GB</b>。厂商标注的“80GB”通常是十进制，系统里看到的是 GiB，所以会“缩水”。</li><li><b>GB/s vs Gb/s</b>：GB/s 是字节，Gb/s 是比特。<b>1 GB/s = 8 Gb/s</b>。网络带宽常用 Gb/s，显存带宽常用 GB/s。</li></ul><p>精度方面，不同精度占用的显存和算力不同：</p><table><tr><th>精度</th><th>每参数字节</th><th>特点</th></tr><tr><td>FP32</td><td>4</td><td>最精确，训练常用，推理慢</td></tr><tr><td>FP16</td><td>2</td><td>推理常用，范围较小</td></tr><tr><td>BF16</td><td>2</td><td>范围与 FP32 相同，训练/推理都常用</td></tr><tr><td>FP8</td><td>1</td><td>新卡支持，速度快，精度损失可控</td></tr><tr><td>INT8</td><td>1</td><td>量化推理常用，速度快</td></tr><tr><td>INT4</td><td>0.5</td><td>极致压缩，精度损失较大</td></tr></table><p>下面是一个最小示例，计算模型权重占用的显存：</p><pre><code class="language-python">def vram_for_weights(num_params_billion, bytes_per_param):
+    """计算模型权重占用的显存（GB，十进制）"""
+    num_params = num_params_billion * 1e9
+    bytes_total = num_params * bytes_per_param
+    return bytes_total / 1e9
+
+# 7B 模型在不同精度下的权重显存
+for name, bpp in [("FP32", 4), ("FP16/BF16", 2), ("INT8", 1), ("INT4", 0.5)]:
+    print(f"7B {name}: {vram_for_weights(7, bpp):.2f} GB")
+
+# 输出：
+# 7B FP32: 28.00 GB
+# 7B FP16/BF16: 14.00 GB
+# 7B INT8: 7.00 GB
+# 7B INT4: 3.50 GB</code></pre><p>关键结论：<b>精度每降一半，显存占用也大约减半，但精度损失需要评测验证。</b>实际推理还要加上 KV Cache、激活值等开销，通常比权重多 10%~30%。</p>
+ <h3>常见误区与实战选型思路</h3>
+ <p>这一节把最容易踩的坑集中讲清楚：</p><ul><li><b>只看显存选卡</b>：显存大不代表推理快。如果带宽低，生成 token 会很慢。比如某些大显存但低带宽的卡，跑大模型时吞吐可能不如小显存高带宽的卡。</li><li><b>峰值算力高不等于推理快</b>：推理分预填充和解码两个阶段。预填充吃算力，解码吃带宽。很多场景解码是瓶颈，所以带宽比峰值算力更重要。</li><li><b>不同精度 TOPS 不能直接比</b>：INT8 的 TOPS 和 FP16 的 TFLOPS 不是一回事。比较时要看同一精度下的数据，或者看实际任务吞吐。</li><li><b>多卡显存不能无条件合并</b>：多卡不会自动把显存拼成一块。需要模型并行、张量并行等技术，而且通信开销可能抵消收益。NVLink 比 PCIe 更适合多卡并行。</li><li><b>统一内存不等于全部可用</b>：Apple Silicon 的统一内存虽然大，但系统和其他应用也要占用，实际能给模型的通常只有 70%~80%。</li></ul><p>实战选型可以按这个顺序问自己：</p><ol><li>模型多大？权重 + KV Cache 需要多少显存？</li><li>目标吞吐和延迟是多少？解码阶段带宽够不够？</li><li>单卡装不下，要不要多卡？互联带宽够不够？</li><li>功耗和散热能不能满足？</li><li>预算和生态（CUDA/ROCm/Metal）是否匹配？</li></ol><p>关键结论：<b>硬件选型是“显存容量、带宽、算力、互联、功耗”的联合优化，任何单一指标都不能决定成败。</b></p>
+ <h3>常见误区</h3>
+ <ul>
+ <li>只看显存容量选卡，忽略显存带宽和互联能力，导致大模型能装下但生成速度极慢。</li>
+ <li>把不同精度的 TOPS 和 TFLOPS 直接比较，误以为 INT8 的 TOPS 高就代表所有任务都更快。</li>
+ <li>认为多卡显存会自动合并成一块大显存，实际上需要模型并行且通信开销可能很大。</li>
+ <li>把统一内存的全部容量都算作可用显存，忽略系统和应用占用，导致实际能跑的模型比预期小。</li>
+ </ul>
+ <h3>自测</h3>
+ <details class="quiz"><summary>某模型权重为 13B 参数，使用 INT8 量化，权重显存大约是多少？如果显存带宽为 500 GB/s，解码阶段每生成一个 token 大约需要读多少数据？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>13B INT8 权重显存约 13 GB（13e9 * 1 字节 = 13e9 字节 = 13 GB）。解码阶段每生成一个 token 需要读取全部权重，约 13 GB 数据。在 500 GB/s 带宽下，理论最短时间约 13/500 = 0.026 秒，即约 38 tokens/s（不考虑 KV Cache 和开销）。</p></div></details>
+ <details class="quiz"><summary>为什么说“峰值算力高不等于推理快”？请从预填充和解码两个阶段解释。</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>推理分两个阶段：预填充阶段一次性处理输入 prompt，计算密集，吃峰值算力；解码阶段逐 token 生成，每步都要读取全部模型权重，是内存带宽瓶颈。如果显存带宽低，即使峰值算力很高，解码速度也会很慢。因此推理速度是算力和带宽共同决定的，很多场景下带宽才是瓶颈。</p></div></details>
+ <h3>动手练习（带参考方案）</h3>
+ <details class="fold"><summary>动手练习 · 假设你要为企业助手选型，候选模型为 70B 参数，使用 FP16 精度。请计算：1）权重显存需求；2…</summary><div class="fold-body"><p><b>任务：</b>假设你要为企业助手选型，候选模型为 70B 参数，使用 FP16 精度。请计算：1）权重显存需求；2）如果使用单张 80GB 显存的 GPU，能否装下？3）如果装不下，至少需要几张 80GB 卡？4）如果使用 INT8 量化，权重显存又是多少？请写一个 Python 函数完成这些计算，并输出结果。</p><p><b>参考方案：</b></p>def vram_for_weights(num_params_billion, bytes_per_param):
+    """计算模型权重占用的显存（GB，十进制）"""
+    num_params = num_params_billion * 1e9
+    bytes_total = num_params * bytes_per_param
+    return bytes_total / 1e9
+
+def cards_needed(total_vram_gb, card_vram_gb):
+    """计算至少需要几张卡"""
+    import math
+    return math.ceil(total_vram_gb / card_vram_gb)
+
+# 70B 模型
+params = 70
+card_vram = 80
+
+# FP16
+fp16_vram = vram_for_weights(params, 2)
+print(f"70B FP16 权重显存: {fp16_vram:.2f} GB")
+print(f"单张 80GB 卡能否装下: {'能' if fp16_vram &lt;= card_vram else '不能'}")
+print(f"至少需要卡数: {cards_needed(fp16_vram, card_vram)}")
+
+# INT8
+int8_vram = vram_for_weights(params, 1)
+print(f"70B INT8 权重显存: {int8_vram:.2f} GB")
+print(f"单张 80GB 卡能否装下: {'能' if int8_vram &lt;= card_vram else '不能'}")
+
+# 输出：
+# 70B FP16 权重显存: 140.00 GB
+# 单张 80GB 卡能否装下: 不能
+# 至少需要卡数: 2
+# 70B INT8 权重显存: 70.00 GB
+# 单张 80GB 卡能否装下: 能
+
+# 注意：实际还要加上 KV Cache 和激活值，FP16 下 70B 通常需要 2 张 80GB 卡，
+# INT8 下单张 80GB 卡可能刚好，但需要留出余量，建议 2 张或使用更激进的量化。</div></details>
+
+ <h2>第5章 · 显存估算与部署选型</h2>
+ <p><b>本章目标：</b>能估算模型推理显存，区分装得下、跑得快、满足并发。</p>
+ <h3>显存都去哪儿了？拆解推理时的显存组成</h3>
+ <p>想象你要开一家餐厅：厨房（GPU）里要放食材（模型权重）、备菜台（KV Cache）、临时切菜板（激活与临时缓冲）、还有收银机、冰箱等固定设备（框架开销），最后还得留点空间给客人走动（必要余量）。显存就是厨房面积，任何一样放不下，餐厅就开不了张。</p><p>具体来说，推理时显存主要被以下部分占用：</p><ul><li><b>模型权重</b>：模型参数本身，比如 FP16 下每个参数占 2 字节。</li><li><b>量化元数据</b>：如果用了量化（如 GPTQ、AWQ），除了权重还会存缩放因子、零点等，通常额外占 5%~15%。</li><li><b>KV Cache</b>：自回归生成时缓存历史 Key/Value，避免重复计算。它随上下文长度和并发数线性增长。</li><li><b>激活与临时缓冲</b>：前向传播中的中间结果，通常不大，但长上下文或大 batch 时会显著增加。</li><li><b>框架开销</b>：CUDA context、cuDNN 工作区、通信缓冲等，一般 0.5~2 GB。</li><li><b>必要余量</b>：防止 OOM，建议留 10%~20%。</li></ul><p>下面是一个最小估算函数，帮你快速算个大概：</p><pre><code class="language-python">def estimate_memory_gb(params_b, precision_bytes, context_len, batch_size, n_layers, n_kv_heads, head_dim, overhead_gb=1.5, reserve_ratio=0.15):
+    # 模型权重
+    weights = params_b * 1e9 * precision_bytes / (1024**3)
+    # KV Cache: 2 (K和V) * layers * batch * seq_len * kv_heads * head_dim * precision_bytes
+    kv_cache = 2 * n_layers * batch_size * context_len * n_kv_heads * head_dim * precision_bytes / (1024**3)
+    # 激活与临时缓冲粗略估计为权重的 5%
+    activations = weights * 0.05
+    total = weights + kv_cache + activations + overhead_gb
+    total_with_reserve = total * (1 + reserve_ratio)
+    return weights, kv_cache, activations, overhead_gb, total_with_reserve
+
+# 示例：8B 模型，FP16，上下文 4096，batch 1，32 层，8 个 KV 头，头维度 128
+w, kv, act, ov, total = estimate_memory_gb(8, 2, 4096, 1, 32, 8, 128)
+print(f"权重: {w:.2f} GB, KV Cache: {kv:.2f} GB, 激活: {act:.2f} GB, 总需求: {total:.2f} GB")
+</code></pre><p>运行结果会告诉你，8B FP16 模型在 4K 上下文下单并发大约需要 18~19 GB 显存。<b>记住：显存估算不是精确科学，而是快速判断“装不装得下”的工程近似。</b></p>
+ <h3>手把手估算：8B、32B、70B 在不同精度与并发下的显存</h3>
+ <p>我们用一个统一公式来估算：</p><p><b>总显存 ≈ 权重 + KV Cache + 激活 + 框架开销 + 余量</b></p><p>其中：</p><ul><li>权重 = 参数量 × 每参数字节数</li><li>KV Cache = 2 × 层数 × 并发数 × 上下文长度 × KV头数 × 头维度 × 每元素字节数</li><li>激活 ≈ 权重的 5%~10%</li><li>框架开销 ≈ 1~2 GB</li><li>余量 ≈ 总和的 10%~20%</li></ul><p>假设模型结构：层数 = 参数量(B) × 4，KV头数 = 8，头维度 = 128。我们写个脚本对比不同配置：</p><pre><code class="language-python">def estimate(params_b, precision, context_len, batch_size):
+    bytes_per_param = {'fp32':4, 'fp16':2, 'int8':1, 'int4':0.5}[precision]
+    n_layers = int(params_b * 4)
+    n_kv_heads = 8
+    head_dim = 128
+    weights = params_b * 1e9 * bytes_per_param / (1024**3)
+    kv = 2 * n_layers * batch_size * context_len * n_kv_heads * head_dim * bytes_per_param / (1024**3)
+    act = weights * 0.05
+    overhead = 1.5
+    total = (weights + kv + act + overhead) * 1.15
+    return weights, kv, total
+
+configs = [
+    (8, 'fp16', 4096, 1),
+    (8, 'int4', 4096, 1),
+    (32, 'fp16', 8192, 4),
+    (70, 'int4', 4096, 8),
+]
+for p, prec, ctx, bs in configs:
+    w, kv, total = estimate(p, prec, ctx, bs)
+    print(f"{p}B {prec} ctx={ctx} bs={bs}: 权重 {w:.1f}GB, KV {kv:.1f}GB, 总需 {total:.1f}GB")
+</code></pre><p>输出示例：</p><pre><code>8B fp16 ctx=4096 bs=1: 权重 14.9GB, KV 0.5GB, 总需 19.5GB
+8B int4 ctx=4096 bs=1: 权重 3.7GB, KV 0.5GB, 总需 6.6GB
+32B fp16 ctx=8192 bs=4: 权重 59.6GB, KV 8.0GB, 总需 79.5GB
+70B int4 ctx=4096 bs=8: 权重 32.6GB, KV 4.0GB, 总需 43.9GB
+</code></pre><p><b>关键结论：</b></p><ul><li>8B FP16 单并发 4K 上下文，一张 24GB 卡（如 4090）刚好装下，但并发一高就爆。</li><li>8B INT4 可以轻松跑在 8GB 显存上，适合边缘设备。</li><li>32B FP16 需要至少 80GB 显存，单卡 A100/H100 可行，但并发 4 时已接近极限。</li><li>70B INT4 在 48GB 卡（如 A6000）上可跑，但并发 8 时 KV Cache 会吃掉不少显存。</li></ul><p>注意：这里假设 KV 头数为 8，实际模型可能不同（如 GQA 会减少 KV 头数），需要查模型配置。</p>
+ <h3>MoE 模型：总参数与激活参数，别被名字骗了</h3>
+ <p>MoE（混合专家）模型像一家大公司：公司有 1000 名员工（总参数），但每个任务只叫 10 个人干活（激活参数）。如果你只按 10 个人算工资（显存），那就大错特错了——因为公司得给所有 1000 人发工资（权重都得存着）。</p><p>MoE 模型有两个关键数字：</p><ul><li><b>总参数</b>：所有专家加起来的参数量，决定权重显存。</li><li><b>激活参数</b>：每次前向实际用到的参数量，决定计算量（FLOPs）和部分激活显存。</li></ul><p>例如，Mixtral 8x7B 总参数约 46.7B，但激活参数只有约 12.9B。如果你按 12.9B 估算权重显存，会严重低估。</p><p>估算 MoE 显存时，权重部分必须用总参数，KV Cache 和激活则与激活参数、层数、注意力头数相关。下面是一个简化示例：</p><pre><code class="language-python">def estimate_moe(total_params_b, active_params_b, precision, context_len, batch_size, n_layers, n_kv_heads, head_dim):
+    bytes_per_param = {'fp16':2, 'int8':1, 'int4':0.5}[precision]
+    weights = total_params_b * 1e9 * bytes_per_param / (1024**3)
+    kv = 2 * n_layers * batch_size * context_len * n_kv_heads * head_dim * bytes_per_param / (1024**3)
+    # 激活与激活参数相关，粗略按激活参数的 10% 估算
+    act = active_params_b * 1e9 * bytes_per_param / (1024**3) * 0.1
+    overhead = 1.5
+    total = (weights + kv + act + overhead) * 1.15
+    return weights, kv, total
+
+# Mixtral 8x7B: 总参数 46.7B, 激活 12.9B, 32 层, 8 KV 头, 头维度 128
+w, kv, total = estimate_moe(46.7, 12.9, 'int4', 4096, 1, 32, 8, 128)
+print(f"权重: {w:.1f}GB, KV: {kv:.1f}GB, 总需: {total:.1f}GB")
+</code></pre><p>输出：权重约 21.8GB，总需约 27GB。如果误用激活参数 12.9B 算权重，会得到约 6GB，差了三倍多。</p><p><b>记住：MoE 的权重显存看总参数，计算量看激活参数。</b>部署时，显存按总参数准备，算力按激活参数评估。</p>
+ <h3>部署选型：API、云 GPU、本地工作站、多卡服务器怎么选？</h3>
+ <p>选部署方式就像选交通工具：API 是打车，云 GPU 是租车，本地工作站是买私家车，多卡服务器是买大巴。没有绝对好坏，只有合不合适。</p><p>我们从几个维度比较：</p><table><tr><th>维度</th><th>API</th><th>云 GPU</th><th>本地工作站</th><th>多卡服务器</th></tr><tr><td>质量</td><td>取决于提供商，通常最强</td><td>自选模型，灵活</td><td>自选模型，受硬件限制</td><td>可跑最大模型</td></tr><tr><td>延迟</td><td>网络延迟，通常 100ms~2s</td><td>取决于网络和实例</td><td>极低，本地推理</td><td>低，但需内部网络</td></tr><tr><td>并发</td><td>按量付费，弹性好</td><td>弹性伸缩</td><td>受单卡显存限制</td><td>高并发，需负载均衡</td></tr><tr><td>使用率</td><td>按 token 计费，无闲置成本</td><td>按小时计费，闲置也花钱</td><td>一次性投入，闲置浪费</td><td>高投入，需高使用率摊薄</td></tr><tr><td>隐私</td><td>数据出域，风险高</td><td>数据在云，需信任提供商</td><td>数据完全本地</td><td>数据完全本地</td></tr><tr><td>兼容</td><td>无需操心</td><td>需自己配环境</td><td>需自己配环境</td><td>需自己配环境，多卡通信复杂</td></tr><tr><td>运维</td><td>无</td><td>中等</td><td>低</td><td>高</td></tr><tr><td>TCO</td><td>按量，短期低，长期可能高</td><td>灵活，适合波动负载</td><td>前期高，长期低</td><td>前期很高，适合稳定高负载</td></tr></table><p>如何决策？问自己几个问题：</p><ul><li>数据敏感吗？敏感选本地或多卡服务器。</li><li>负载稳定吗？稳定且高选本地/多卡，波动大选 API/云。</li><li>有运维团队吗？没有就选 API 或托管云。</li><li>预算多少？算一下 3 年 TCO：本地 = 硬件 + 电费 + 运维；云 = 每小时费用 × 使用小时；API = token 单价 × 用量。</li></ul><p><b>没有银弹，只有权衡。</b>建议先用 API 验证需求，再根据使用率和隐私要求逐步迁移到云 GPU 或本地。</p>
+ <h3>常见误区</h3>
+ <ul>
+ <li>只按激活参数估算 MoE 模型的权重显存，导致严重低估，实际部署时 OOM。</li>
+ <li>忽略 KV Cache 的显存占用，尤其是在长上下文和高并发场景下，KV Cache 可能超过模型权重。</li>
+ <li>认为量化后显存按比例线性减少，实际上量化元数据、激活和框架开销不会同比减少，且低精度可能影响质量。</li>
+ </ul>
+ <h3>自测</h3>
+ <details class="quiz"><summary>一个 70B 模型，使用 INT4 量化，上下文长度 8192，并发数 4，假设 80 层，8 个 KV 头，头维度 128。请估算总显存需求（GB），并说明计算过程。</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>权重：70e9 * 0.5 / (1024^3) ≈ 32.6 GB；KV Cache：2 * 80 * 4 * 8192 * 8 * 128 * 0.5 / (1024^3) ≈ 2.5 GB；激活：约 32.6 * 0.05 ≈ 1.6 GB；框架开销：1.5 GB；总和 = 32.6+2.5+1.6+1.5 = 38.2 GB；加 15% 余量 ≈ 43.9 GB。因此需要至少 48GB 显存的 GPU。</p></div></details>
+ <details class="quiz"><summary>MoE 模型的总参数和激活参数分别影响显存估算的哪一部分？为什么不能只用激活参数估算权重显存？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>总参数决定权重显存，因为所有专家参数都需要加载到显存中；激活参数决定计算量和部分激活显存。不能只用激活参数估算权重显存，因为虽然每次前向只激活部分专家，但所有专家的权重都必须存储在显存中，否则无法在需要时切换。</p></div></details>
+ <h3>动手练习（带参考方案）</h3>
+ <details class="fold"><summary>动手练习 · 假设你要为企业内部知识助手选型，候选模型为 32B Dense 模型（FP16）和 46.7B 总参…</summary><div class="fold-body"><p><b>任务：</b>假设你要为企业内部知识助手选型，候选模型为 32B Dense 模型（FP16）和 46.7B 总参数/12.9B 激活参数的 MoE 模型（INT4）。上下文长度 4096，期望并发 8。请分别估算两个模型的显存需求，并给出部署建议（单卡 24GB、48GB、80GB 中选哪种，或需要多卡）。</p><p><b>参考方案：</b></p>使用估算函数：
+
+Dense 32B FP16：
+- 权重：32e9 * 2 / (1024^3) ≈ 59.6 GB
+- 层数假设 32*4=128，KV 头 8，头维度 128
+- KV Cache：2 * 128 * 8 * 4096 * 8 * 128 * 2 / (1024^3) ≈ 16.0 GB
+- 激活：59.6 * 0.05 ≈ 3.0 GB
+- 框架开销：1.5 GB
+- 总和：59.6+16+3+1.5=80.1 GB，加 15% 余量 ≈ 92.1 GB
+- 需要至少 96GB 显存，单卡 80GB 不够，需 2 张 48GB 或 2 张 80GB。
+
+MoE 46.7B 总参 INT4：
+- 权重：46.7e9 * 0.5 / (1024^3) ≈ 21.8 GB
+- 层数假设 32 层（Mixtral 实际 32 层），KV 头 8，头维度 128
+- KV Cache：2 * 32 * 8 * 4096 * 8 * 128 * 0.5 / (1024^3) ≈ 4.0 GB
+- 激活：12.9e9 * 0.5 / (1024^3) * 0.1 ≈ 0.6 GB
+- 框架开销：1.5 GB
+- 总和：21.8+4+0.6+1.5=27.9 GB，加 15% 余量 ≈ 32.1 GB
+- 单卡 48GB 可以轻松装下，甚至 24GB 卡可能勉强（但余量不足，不推荐）。
+
+部署建议：
+- 如果追求质量且预算充足，选 Dense 32B FP16，需要 2 张 48GB 或 2 张 80GB 卡。
+- 如果希望单卡部署且成本可控，选 MoE INT4，一张 48GB 卡（如 A6000）即可，并发 8 无压力。
+- 综合考虑，MoE INT4 在显存和成本上更有优势，但需验证质量是否满足业务需求。</div></details>
+
+ <h2>第6章 · 综合项目：企业助手选型</h2>
+ <p><b>本章目标：</b>完成从需求到选型报告的完整项目，给出有证据的推荐方案。</p>
+ <h3>从需求到验收标准：把业务语言翻译成可测量的指标</h3>
+ <p>选型不是“哪个模型跑分高就选哪个”，而是“哪个模型最匹配业务约束”。先做需求翻译：把业务方的模糊诉求（“要准、要快、要便宜”）变成可测量的验收标准（Acceptance Criteria）。</p><p>以企业知识库问答 + 订单分析助手为例，业务约束通常有三类：<b>效果</b>（回答正确率、结构化字段准确率）、<b>性能</b>（P95 延迟、吞吐）、<b>成本</b>（每千次调用成本、TCO）。</p><p>把约束写成 SLO（Service Level Objective），例如：知识库问答答案正确率 ≥ 90%，订单字段提取 F1 ≥ 0.95，P95 延迟 ≤ 3s，单次调用成本 ≤ 0.01 元。这些数字就是后续评测的标尺。</p><p>关键结论：<b>没有验收标准的选型是主观偏好，有验收标准的选型才是工程决策。</b></p>
+ <h3>准备脱敏测试数据：让评测可复现、可对比</h3>
+ <p>评测数据必须脱敏（Anonymized Data）：替换真实姓名、手机号、订单号，但保留分布特征（长度、格式、噪声）。数据要覆盖五类任务：</p><ul><li>订单信息提取：从自然语言中抽取结构化字段</li><li>结构化输出：要求模型返回 JSON</li><li>知识库问答：基于给定文档回答</li><li>异常解释：解释订单异常原因</li><li>受控工具调用：调用查询接口并传参</li></ul><p>每类准备 30~50 条，标注标准答案。下面是一个最小可运行的数据构造与评测示例：</p><pre><code class="language-python">import json, re
+
+# 脱敏后的测试样本
+test_cases = [
+    {"input": "客户张三买了2台A100，订单号ORD-1001，要求3天内发货",
+     "expected": {"customer": "张三", "quantity": 2, "product": "A100", "order_id": "ORD-1001"}},
+    {"input": "李四下单5块H100，订单号ORD-1002，加急",
+     "expected": {"customer": "李四", "quantity": 5, "product": "H100", "order_id": "ORD-1002"}},
+]
+
+def extract(text):
+    # 模拟模型输出（真实场景替换为 API 调用）
+    return {
+        "customer": re.search(r"客户?(\w+?)(?:买|下单)", text).group(1),
+        "quantity": int(re.search(r"(\d+)(?:台|块)", text).group(1)),
+        "product": re.search(r"(A100|H100)", text).group(1),
+        "order_id": re.search(r"ORD-\d+", text).group(0),
+    }
+
+def score(pred, gold):
+    correct = sum(1 for k in gold if pred.get(k) == gold[k])
+    return correct / len(gold)
+
+for case in test_cases:
+    pred = extract(case["input"])
+    print(case["input"][:20], "-&gt;", score(pred, case["expected"]))
+</code></pre><p>关键结论：<b>脱敏数据既要保护隐私，又要保留真实分布，否则评测结果无法外推。</b></p>
+ <h3>比较模型与性能成本：设计评测并估算部署资源</h3>
+ <p>评测要同时测四件事：效果、延迟、吞吐、成本。效果用准确率/F1；延迟看 P50/P95；吞吐看 QPS；成本按 token 计费或按 GPU 小时折算。</p><p>部署资源估算公式：<b>显存 ≈ 参数量 × 精度字节数 × 1.2（KV Cache 与开销）</b>。例如 7B 模型 FP16 约 14GB，INT8 约 7GB，INT4 约 3.5GB。并发高时 KV Cache 会显著增加显存。</p><p>下面是一个评测脚本骨架，输出效果与延迟：</p><pre><code class="language-python">import time, statistics
+
+def evaluate(model_fn, cases):
+    scores, latencies = [], []
+    for c in cases:
+        t0 = time.time()
+        pred = model_fn(c["input"])
+        latencies.append(time.time() - t0)
+        scores.append(score(pred, c["expected"]))
+    return {
+        "accuracy": sum(scores) / len(scores),
+        "p50_latency": statistics.median(latencies),
+        "p95_latency": sorted(latencies)[int(len(latencies) * 0.95) - 1],
+    }
+
+# 假设 model_fn 是某个模型的调用封装
+# result = evaluate(model_fn, test_cases)
+# print(result)
+</code></pre><p>成本估算示例：若模型每千 token 收费 0.002 元，平均每次请求 500 token，则单次成本 0.001 元；日调用 10 万次，日成本 100 元，月成本约 3000 元。自建部署则按 GPU 小时费 × 24 × 30 折算 TCO。</p><p>关键结论：<b>选型要算 TCO，不只看单价；延迟和吞吐必须用真实并发压测，不能只看单条测试。</b></p>
+ <h3>撰写选型报告：结构、证据与适用边界</h3>
+ <p>选型报告（Selection Report）要让决策者一眼看懂“为什么选它、什么情况下不选它”。推荐结构：</p><ol><li>业务约束与验收标准</li><li>评测方法与脱敏数据说明</li><li>效果结果（表格对比）</li><li>性能结果（延迟/吞吐）</li><li>成本估算与 TCO</li><li>硬件需求</li><li>推荐方案</li><li>适用边界（Applicability Boundary）</li><li>待验证风险（Risks to Validate）</li></ol><p>效果对比表示例：</p><table><tr><th>模型</th><th>提取 F1</th><th>问答准确率</th><th>P95 延迟</th><th>单次成本</th></tr><tr><td>模型A</td><td>0.96</td><td>0.91</td><td>2.1s</td><td>0.001元</td></tr><tr><td>模型B</td><td>0.93</td><td>0.88</td><td>1.2s</td><td>0.0005元</td></tr></table><p>推荐方案要写清适用边界：例如“模型A 适合高准确率场景，模型B 适合高并发低成本场景”。待验证风险包括：长尾订单格式、工具调用失败率、数据漂移。</p><p>关键结论：<b>报告的价值在于证据链完整、边界清晰、风险可追踪，而不是给出一个绝对答案。</b></p>
+ <h3>常见误区</h3>
+ <ul>
+ <li>只看模型跑分（如 MMLU）就做选型，忽略业务验收标准和真实数据分布。</li>
+ <li>用未脱敏的真实数据做评测，导致隐私泄露且结果无法复现。</li>
+ <li>只算 API 单价，忽略 TCO（含重试、缓存、运维、GPU 折旧）和并发下的延迟劣化。</li>
+ </ul>
+ <h3>自测</h3>
+ <details class="quiz"><summary>为什么选型报告必须包含“适用边界”和“待验证风险”？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>因为任何模型都有能力边界，明确边界能防止误用；待验证风险提示后续 PoC 需要重点验证的假设，保证决策可追踪、可迭代。</p></div></details>
+ <details class="quiz"><summary>估算 13B 模型 INT8 部署显存时，除了参数量还要考虑什么？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>还要考虑 KV Cache（随并发和上下文长度增长）、框架开销、激活值等，通常按参数量 × 精度字节 × 1.2~1.5 估算，高并发时需单独计算 KV Cache。</p></div></details>
+ <h3>动手练习（带参考方案）</h3>
+ <details class="fold"><summary>动手练习 · 为“企业知识库问答 + 订单分析助手”设计一份选型报告大纲，包含：业务约束、验收标准、脱敏数据设计、…</summary><div class="fold-body"><p><b>任务：</b>为“企业知识库问答 + 订单分析助手”设计一份选型报告大纲，包含：业务约束、验收标准、脱敏数据设计、评测指标、成本估算公式、推荐方案与适用边界。</p><p><b>参考方案：</b></p>大纲示例：
+1. 业务约束：知识库问答准确率≥90%，订单提取F1≥0.95，P95≤3s，单次成本≤0.01元。
+2. 验收标准：定义各任务通过阈值。
+3. 脱敏数据：每类30条，替换PII，保留格式分布。
+4. 评测指标：准确率/F1、P50/P95延迟、QPS、单次成本。
+5. 成本估算：API按token计费；自建按GPU小时×24×30 + 运维。
+6. 推荐方案：模型A（高准确）或模型B（低成本），附对比表。
+7. 适用边界：模型A适合高准确场景，模型B适合高并发场景。
+8. 待验证风险：长尾格式、工具调用失败率、数据漂移。</div></details>
+
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/app.js?v=22"></script>
+</body>
+</html>

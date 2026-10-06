@@ -123,6 +123,7 @@ final class WebViewCoordinator: NSObject, WKNavigationDelegate {
         webView = WKWebView(frame: .zero, configuration: cfg)
         super.init()
         webView.navigationDelegate = self
+        webView.uiDelegate = self // 页面 confirm()/alert() 需要原生委托,否则静默返回 false
         webView.allowsBackForwardNavigationGestures = true
         let savedZoom = defaults.double(forKey: "pageZoom")
         webView.pageZoom = savedZoom > 0 ? CGFloat(savedZoom) : 1.0
@@ -205,7 +206,7 @@ final class WebViewCoordinator: NSObject, WKNavigationDelegate {
         decisionHandler(.allow)
     }
 
-    override func observeValue(forKeyPath keyPath: String?, of object: Any?,
+override func observeValue(forKeyPath keyPath: String?, of object: Any?,
                                change: [NSKeyValueChangeKey: Any]?, context: UnsafeMutableRawPointer?) {
         DispatchQueue.main.async { [self] in
             if keyPath == "title", let title = webView.title, !title.isEmpty {
@@ -227,6 +228,32 @@ final class WebViewCoordinator: NSObject, WKNavigationDelegate {
         guard let file = url.path.components(separatedBy: "/").last, !file.isEmpty else { return }
         let title = (webView.title ?? "").components(separatedBy: " | ").first ?? ""
         onPageChange?(file, title)
+    }
+}
+
+// MARK: - WKUIDelegate:让页面里的 confirm()/alert() 弹原生对话框
+// (不实现则 confirm() 静默返回 false——草稿页「审核通过/删除」按钮会完全失效)
+
+extension WebViewCoordinator: WKUIDelegate {
+    func webView(_ webView: WKWebView, runJavaScriptConfirmPanelWithMessage message: String,
+                 initiatedByFrame frame: WKFrameInfo,
+                 completionHandler: @escaping (Bool) -> Void) {
+        let alert = NSAlert()
+        alert.messageText = message
+        alert.addButton(withTitle: "确定")
+        alert.addButton(withTitle: "取消")
+        alert.alertStyle = .warning
+        completionHandler(alert.runModal() == .alertFirstButtonReturn)
+    }
+
+    func webView(_ webView: WKWebView, runJavaScriptAlertPanelWithMessage message: String,
+                 initiatedByFrame frame: WKFrameInfo,
+                 completionHandler: @escaping () -> Void) {
+        let alert = NSAlert()
+        alert.messageText = message
+        alert.addButton(withTitle: "好")
+        alert.runModal()
+        completionHandler()
     }
 }
 

@@ -1,0 +1,200 @@
+{
+  "name": "llm-termlogy-2",
+  "title": "LLM术语与算力实战",
+  "kb": "kb/llm-termlogy-2-kb.json",
+  "sources": [
+    {
+      "file": "kb/llm-termlogy-2-kb.json",
+      "source": "llm-termlogy-2",
+      "label": "LLM术语与算力实战"
+    }
+  ],
+  "model": {
+    "provider": "deepseek",
+    "id": "deepseek-flash"
+  },
+  "thinkingLevel": "off",
+  "description": "由课题「LLM术语精通」自动生成。面向有开发基础的学员，系统掌握LLM术语、评测与算力选型。通过6章学习，能读懂模型卡、设计评测、估算显存成本，并完成企业助手选型报告。",
+  "curriculum": [
+    {
+      "no": 1,
+      "title": "全景地图与核心术语",
+      "goal": "建立LLM知识地图，解释20+高频术语及其关系。",
+      "outline": [
+        "LLM基础概念：Token、Tokenizer、Embedding、参数量、上下文窗口、训练与推理",
+        "模型结构术语：Transformer、Attention、层数、隐藏维度、Dense与MoE、位置编码",
+        "训练与适配术语：预训练、SFT、RLHF、DPO、蒸馏、微调、LoRA、QLoRA、量化",
+        "应用与推理术语：Prompt、RAG、Agent、工具调用、Temperature、Top-p、KV Cache、Batching"
+      ],
+      "keyTerms": [
+        "LLM (Large Language Model)",
+        "Token (词元)",
+        "Tokenizer (分词器)",
+        "Embedding (嵌入)",
+        "Transformer (变换器)",
+        "Attention (注意力机制)",
+        "MoE (Mixture of Experts, 混合专家)",
+        "SFT (Supervised Fine-Tuning, 监督微调)",
+        "RLHF (Reinforcement Learning from Human Feedback, 人类反馈强化学习)",
+        "LoRA (Low-Rank Adaptation, 低秩适应)",
+        "量化 (Quantization)",
+        "RAG (Retrieval-Augmented Generation, 检索增强生成)",
+        "Agent (智能体)",
+        "KV Cache (键值缓存)",
+        "Batching (批处理)"
+      ],
+      "questions": [
+        "Token和单词有什么区别？为什么中文的Token数通常比英文多？",
+        "MoE模型的总参数和激活参数分别影响什么？为什么不能只用激活参数估算显存？",
+        "RAG和微调都能让模型适应新知识，它们分别适合什么场景？"
+      ]
+    },
+    {
+      "no": 2,
+      "title": "模型能力评测与可信度",
+      "goal": "能设计小规模评测，识别不公平比较，给出有证据的选型结论。",
+      "outline": [
+        "能力维度与公开基准：MMLU、GPQA、AIME、HumanEval、SWE-bench等测什么、如何计分、不能说明什么",
+        "评测可信度：数据污染、测试集泄漏、样本过少、只报告最好结果、提示词与推理预算的不公平比较",
+        "人工评测与自动指标：LLM-as-a-Judge的适用边界，盲评、随机顺序、重复测试、人工校验",
+        "实操：同一批业务样本比较两个模型，设计评分标准，分析失败类型，区分开发集与测试集"
+      ],
+      "keyTerms": [
+        "MMLU (Massive Multitask Language Understanding)",
+        "GPQA (Graduate-Level Google-Proof Q&A)",
+        "AIME (American Invitational Mathematics Examination)",
+        "HumanEval (人类评估代码基准)",
+        "SWE-bench (软件工程基准)",
+        "数据污染 (Data Contamination)",
+        "LLM-as-a-Judge (大模型作为评判者)",
+        "盲评 (Blind Evaluation)",
+        "开发集 (Development Set)",
+        "测试集 (Test Set)"
+      ],
+      "questions": [
+        "MMLU分数高是否意味着模型在我的业务任务上表现好？为什么？",
+        "如何判断一个评测报告是否存在不公平比较？",
+        "LLM-as-a-Judge在什么情况下不可靠？如何降低风险？"
+      ]
+    },
+    {
+      "no": 3,
+      "title": "推理性能与成本评测",
+      "goal": "能测量TTFT、TPOT、吞吐等指标，计算每次请求成本。",
+      "outline": [
+        "性能指标：TTFT、TPOT/ITL、端到端延迟、Tokens/s、并发、P50/P95/P99、成功率、错误率、超时率",
+        "常见误区：首字快不等于完成快，单用户快不等于并发快，Tokens/s不可直接比较，最低单价不等于最低业务成本",
+        "评测条件记录：模型版本、硬件、推理框架、精度、输入输出长度、并发、批处理、缓存、预热、测试次数",
+        "成本计算：每百万Token价格、每次请求成本、每个成功任务成本，考虑重试、工具调用和额外推理开销"
+      ],
+      "keyTerms": [
+        "TTFT (Time to First Token, 首字延迟)",
+        "TPOT (Time per Output Token, 每输出词元时间)",
+        "ITL (Inter-Token Latency, 词元间延迟)",
+        "吞吐量 (Throughput)",
+        "并发 (Concurrency)",
+        "P50/P95/P99 (百分位延迟)",
+        "成功率 (Success Rate)",
+        "错误率 (Error Rate)",
+        "超时率 (Timeout Rate)",
+        "预热 (Warm-up)"
+      ],
+      "questions": [
+        "为什么两个模型都标称100 Tokens/s，实际体验可能差很多？",
+        "如何计算一个RAG问答系统的每次成功任务成本？",
+        "P95延迟比平均延迟更能说明什么问题？"
+      ]
+    },
+    {
+      "no": 4,
+      "title": "硬件参数与算力评估",
+      "goal": "读懂硬件规格表，解释显存、带宽、算力对推理的影响。",
+      "outline": [
+        "硬件组成：GPU、CPU、内存、存储、互联与网络的作用，消费级、数据中心、Apple Silicon的适用条件",
+        "关键参数：显存容量与带宽、内存容量与带宽、计算单元、Tensor Core、频率、PCIe、NVLink、功耗、供电与散热",
+        "单位与口径：FLOPs与FLOP/s、TFLOPS、PFLOPS、TOPS、GB与GiB、GB/s与Gb/s、FP32/FP16/BF16/FP8/INT8/INT4",
+        "常见误区：只看显存选卡、峰值算力高不等于推理快、不同精度TOPS不能直接比、多卡显存不能无条件合并、统一内存不等于全部可用"
+      ],
+      "keyTerms": [
+        "GPU (Graphics Processing Unit, 图形处理器)",
+        "显存 (VRAM)",
+        "显存带宽 (Memory Bandwidth)",
+        "Tensor Core (张量核心)",
+        "PCIe (Peripheral Component Interconnect Express)",
+        "NVLink (英伟达高速互联)",
+        "FLOPs (Floating Point Operations, 浮点运算次数)",
+        "TFLOPS (Tera Floating Point Operations per Second, 每秒万亿次浮点运算)",
+        "TOPS (Tera Operations per Second, 每秒万亿次操作)",
+        "FP16/BF16/FP8/INT8/INT4 (不同数值精度)"
+      ],
+      "questions": [
+        "为什么显存容量相同，推理速度可能差几倍？",
+        "TFLOPS和TOPS有什么区别？为什么不能直接比较？",
+        "多卡部署时，显存是简单相加吗？为什么？"
+      ]
+    },
+    {
+      "no": 5,
+      "title": "显存估算与部署选型",
+      "goal": "能估算模型推理显存，区分装得下、跑得快、满足并发。",
+      "outline": [
+        "显存组成：模型权重、量化元数据、KV Cache、激活与临时缓冲、框架开销、必要余量",
+        "估算案例：8B、32B、70B模型在不同精度、上下文长度、并发下的显存计算，写出公式、变量、单位、假设、代入过程",
+        "MoE特殊处理：总参数与激活参数分别影响权重存储和计算，不能只用激活参数估算全部权重显存",
+        "部署选型框架：API、云GPU、本地工作站、多卡服务器的比较，考虑质量、延迟、并发、使用率、隐私、兼容、运维、总拥有成本"
+      ],
+      "keyTerms": [
+        "模型权重 (Model Weights)",
+        "KV Cache (键值缓存)",
+        "激活 (Activations)",
+        "临时缓冲 (Temporary Buffers)",
+        "框架开销 (Framework Overhead)",
+        "量化元数据 (Quantization Metadata)",
+        "总拥有成本 (Total Cost of Ownership, TCO)",
+        "数据隐私 (Data Privacy)",
+        "软件兼容 (Software Compatibility)",
+        "运维 (Operations)"
+      ],
+      "questions": [
+        "如何估算一个70B模型在INT4精度、8K上下文、并发10时的显存需求？",
+        "为什么说‘装得下’不等于‘跑得快’？还需要考虑什么？",
+        "API和本地部署各适合什么业务场景？"
+      ]
+    },
+    {
+      "no": 6,
+      "title": "综合项目：企业助手选型",
+      "goal": "完成从需求到选型报告的完整项目，给出有证据的推荐方案。",
+      "outline": [
+        "确定需求与验收标准：企业知识库问答与订单分析助手的业务约束、成功指标",
+        "准备脱敏测试数据：订单信息提取、结构化输出、知识库问答、异常解释、受控工具调用",
+        "比较模型与性能成本：设计评测，测量效果、延迟、吞吐、成本，估算部署资源",
+        "撰写选型报告：业务约束、评测方法、效果结果、性能结果、成本估算、硬件需求、推荐方案、适用边界、待验证风险"
+      ],
+      "keyTerms": [
+        "验收标准 (Acceptance Criteria)",
+        "脱敏数据 (Anonymized Data)",
+        "结构化输出 (Structured Output)",
+        "工具调用 (Tool Calling)",
+        "选型报告 (Selection Report)",
+        "适用边界 (Applicability Boundary)",
+        "待验证风险 (Risks to Validate)",
+        "总拥有成本 (Total Cost of Ownership, TCO)",
+        "服务水平目标 (Service Level Objective, SLO)",
+        "概念验证 (Proof of Concept, PoC)"
+      ],
+      "questions": [
+        "如何为知识库问答助手设计一个可复现的评测方案？",
+        "如果预算有限，如何在不购买GPU的情况下完成选型验证？",
+        "选型报告中必须包含哪些内容才能让技术决策者信服？"
+      ]
+    }
+  ],
+  "starterQuestions": [
+    "我没有深度学习数学基础，能学会LLM术语和算力估算吗？",
+    "7天快速入门和30天进阶实践分别应该重点学什么？",
+    "如何判断一个模型是否适合我的业务，而不是只看排行榜？",
+    "没有GPU，如何完成课程中的实验和项目？"
+  ],
+  "generated": true
+}
