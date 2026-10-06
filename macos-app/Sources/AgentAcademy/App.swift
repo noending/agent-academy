@@ -55,8 +55,9 @@ final class SiteSchemeHandler: NSObject, WKURLSchemeHandler {
 
     private func respond404(_ task: WKURLSchemeTask) {
         let body = Data("404 Not Found".utf8)
-        let resp = URLResponse(url: task.request.url!, mimeType: "text/plain",
-                               expectedContentLength: body.count, textEncodingName: "utf-8")
+        let resp = HTTPURLResponse(url: task.request.url!, statusCode: 404, httpVersion: "HTTP/1.1",
+                                   headerFields: ["Access-Control-Allow-Origin": "*",
+                                                  "Content-Type": "text/plain; charset=utf-8"])!
         task.didReceive(resp)
         task.didReceive(body)
         task.didFinish()
@@ -74,8 +75,11 @@ final class SiteSchemeHandler: NSObject, WKURLSchemeHandler {
             let type = mime(for: file)
             let isText = type.hasPrefix("text") || type.hasPrefix("font") ||
                 type.contains("javascript") || type.contains("json") || type.contains("svg")
-            let resp = URLResponse(url: url, mimeType: type, expectedContentLength: data.count,
-                                   textEncodingName: isText ? "utf-8" : nil)
+            // HTTPURLResponse + CORS 头:自定义 scheme 的 fetch(XHR)需要 CORS 头,否则页面内 fetch 清单会被拦
+            let resp = HTTPURLResponse(url: url, statusCode: 200, httpVersion: "HTTP/1.1",
+                                       headerFields: ["Access-Control-Allow-Origin": "*",
+                                                      "Content-Type": isText ? type + "; charset=utf-8" : type,
+                                                      "Content-Length": String(data.count)])!
             task.didReceive(resp)
             task.didReceive(data)
             task.didFinish()
@@ -97,8 +101,8 @@ final class WebViewCoordinator: NSObject, WKNavigationDelegate {
     private var frameAutosaveDone = false
     /// 学生正在读的页面变化时回调(file, 已截短的页面标题)——导师面板用它做页面相关预置问题
     var onPageChange: ((String, String) -> Void)?
-    /// 站点页面发出的内部命令深链(host, 参数)——如 switch-pack / delete-course
-    var onCommand: ((String, String) -> Void)?
+    /// 站点页面发出的内部命令深链(host, 参数, 原始 URL)——switch-pack / delete-course / improve-course
+    var onCommand: ((String, String, URL?) -> Void)?
 
     override init() {
         var roots: [URL] = []
@@ -188,13 +192,14 @@ final class WebViewCoordinator: NSObject, WKNavigationDelegate {
             decisionHandler(.cancel)
             return
         }
-        // 站点页面的内部命令深链: academy://switch-pack/<skill> / academy://delete-course/<skill>
-        if navigationAction.navigationType == .linkActivated,
-           let url = navigationAction.request.url, url.scheme == scheme,
+        // 站点页面的内部命令深链: academy://switch-pack/<skill> / academy://delete-course/<skill> /
+        // academy://improve-course/<skill>?feedback=…&topic=…&chapters=…
+        // (不限 navigationType:location.href 程序化跳转也可能是 .other;scheme+host 判定足够)
+        if let url = navigationAction.request.url, url.scheme == scheme,
            let host = url.host, host != "site" {
             let arg = url.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
             decisionHandler(.cancel)
-            DispatchQueue.main.async { self.onCommand?(host, arg) }
+            DispatchQueue.main.async { self.onCommand?(host, arg, url) }
             return
         }
         decisionHandler(.allow)
@@ -242,6 +247,7 @@ struct AgentAcademyApp: App {
     @State private var showTutor = false
     @State private var showFactory = false
     @StateObject private var tutor = TutorModel()
+    @StateObject private var factory = FactoryModel()
     @FocusState private var findFieldFocused: Bool
 
     var body: some Scene {
@@ -256,7 +262,7 @@ struct AgentAcademyApp: App {
             }
             .frame(minWidth: 1000, minHeight: 660)
             .sheet(isPresented: $showFactory) {
-                FactorySheet(
+                FactorySheet(model: factory,
                     onDone: { showFactory = false; tutor.reloadPacks() },
                     onOpenDraft: { file in
                         showFactory = false
@@ -269,8 +275,8 @@ struct AgentAcademyApp: App {
                 coordinator.onPageChange = { [weak tutor] file, title in
                     tutor?.updatePage(file: file, title: title)
                 }
-                // 课程管理页深链: 切换课程 / 删除课程
-                coordinator.onCommand = { [weak tutor] cmd, arg in
+                // 课程管理页/草稿页深链: 切换课程 / 删除课程 / 按意见重新生成
+                coordinator.onCommand = { [weak tutor] cmd, arg, url in
                     guard let tutor else { return }
                     switch cmd {
                     case "switch-pack":
@@ -295,6 +301,16 @@ struct AgentAcademyApp: App {
                             tutor.reloadPacks()
                             coordinator.webView.reload()
                         }
+                    case "improve-course":
+                        // 草稿页「按意见重新生成」:打开内容工厂(课题标签)预填并自动运行
+                        let comps = url.flatMap { URLComponents(url: $0, resolvingAgainstBaseURL: false) }
+                        let q = Dictionary(uniqueKeysWithValues: (comps?.queryItems ?? []).map { ($0.name, $0.value ?? "") })
+                        showTutor = false
+                        factory.prepareTopicImprove(skill: arg,
+                                                    topic: q["topic"] ?? arg,
+                                                    chapters: Int(q["chapters"] ?? "8") ?? 8,
+                                                    feedback: q["feedback"] ?? "")
+                        showFactory = true
                     default:
                         break
                     }

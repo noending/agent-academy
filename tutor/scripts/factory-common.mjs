@@ -17,8 +17,13 @@ export function readManifest() {
 
 export function updateManifest(entry) {
   const m = readManifest();
-  m.courses = (m.courses || []).filter((c) => c.slug !== entry.slug);
-  m.courses.unshift({ ...entry, generatedAt: new Date().toISOString() });
+  const idx = (m.courses || []).findIndex((c) => c.slug === entry.slug);
+  if (idx >= 0) {
+    // 合并语义:支持部分更新(如 publish 只传 approved/published)
+    m.courses[idx] = { ...m.courses[idx], ...entry, generatedAt: new Date().toISOString() };
+  } else {
+    m.courses.unshift({ ...entry, generatedAt: new Date().toISOString() });
+  }
   m.updatedAt = new Date().toISOString();
   writeFileSync(MANIFEST, JSON.stringify(m, null, 2));
   return m;

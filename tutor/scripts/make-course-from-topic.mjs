@@ -8,7 +8,7 @@
 //   full-<skill>.html               站点草稿页(不挂导航,待人审)
 // ⚠️ 诚实边界:章节内容由模型知识生成、无外部引用——REVIEW.md 要求逐条核实事实。
 //    若有权威素材(PDF/仓库),请用 M1/M2 管线代替,或等 --sources 接地能力。
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync, mkdirSync, rmSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { completeSimple, getModel } from "@mariozechner/pi-ai";
@@ -25,15 +25,22 @@ const args = process.argv.slice(2);
 const argOf = (k) => { const i = args.indexOf(k); return i >= 0 ? args[i + 1] : null; };
 const TOPIC = argOf("--topic");
 const SKILL = argOf("--skill");
-const N_CH = Math.min(10, Math.max(4, parseInt(argOf("--chapters") || "8", 10)));
 const GOAL = argOf("--goal") || `系统掌握「${TOPIC}」,从基础概念到实际落地`;
+const FEEDBACK = argOf("--feedback") || "";
+const N_CH = Math.min(10, Math.max(4, parseInt(argOf("--chapters") || "8", 10)));
 
 if (!TOPIC || !SKILL || !/^[a-z0-9-]+$/.test(SKILL)) {
   console.error("✗ 用法: --topic \"课题\" --skill <slug> [--chapters 8] [--goal \"...\"]");
   process.exit(1);
 }
 if (!KEY) { console.error("✗ 缺少 DEEPSEEK_API_KEY"); process.exit(1); }
-if (existsSync(join(TUTOR, "packs", SKILL))) { console.error(`✗ packs/${SKILL} 已存在`); process.exit(1); }
+if (existsSync(join(TUTOR, "packs", SKILL))) {
+  if (!FEEDBACK) { console.error(`✗ packs/${SKILL} 已存在(换 slug,或加 --feedback 表示按意见重新生成)`); process.exit(1); }
+  console.log("→ 检测到旧版本,按改进意见重新生成…");
+  rmSync(join(TUTOR, "packs", SKILL), { recursive: true, force: true });
+  rmSync(join(TUTOR, "kb", `${SKILL}-kb.json`), { force: true });
+  rmSync(join(SITE, `full-${SKILL}.html`), { force: true });
+}
 
 const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 // 放行有限标签的 HTML 净化器(LLM 输出的章节内容只允许结构与强调标签)
@@ -79,6 +86,8 @@ console.log(`→ Phase A · 规划课程大纲: ${TOPIC}`);
 const PLAN_SYS = `你是顶级课程设计师。为学习课题设计一门 ${N_CH} 章的系统课程(从基础概念到实际落地,由浅入深)。
 输出严格 JSON:
 {"title":"课程名(中文,10字内)","description":"课程简介(80字内:适合谁/学到什么)","chapters":[{"no":1,"title":"章标题(中文)","goal":"学完能做什么(30字内)","outline":["要点1","要点2","要点3","要点4"],"keyTerms":["关键术语(中英对照)"],"questions":["学员学本章时最可能问的3个问题(中文)"]}],"starterQuestions":["学员最可能问的4个问题"]}
+质量基准(对标本平台旗舰课程《Agent 学院》): 每章必须有可运行的最小示例、明确的常见误区、可自测的练习;讲解口语化但技术准确;由浅入深不跳步。
+${FEEDBACK ? `用户对上一版的改进意见(必须逐条落实到本次生成):\n${FEEDBACK}` : ""}
 规则: 章节由浅入深,最后 1-2 章必须是动手实战/部署落地;每章 outline 4 条、questions 恰好 3 个;只输出 JSON。`;
 const planRaw = await llm(PLAN_SYS, `课题: ${TOPIC}\n学习目标: ${GOAL}\n章节数: ${N_CH}`, 5000);
 const plan = parseJSON(planRaw);
@@ -88,6 +97,8 @@ console.log(`  《${plan.title}》 ${plan.chapters.length} 章`);
 console.log("→ Phase B · 逐章生成内容…");
 const CH_SYS = `你是这门课的讲师,为指定章节生成完整教学内容。输出严格 JSON:
 {"sections":[{"h3":"小节标题","html":"小节正文(HTML: 只允许 p/b/strong/i/em/ul/ol/li/code/pre/table/tr/td/th/blockquote;代码一律 <pre><code class=\\"language-python\\">…</code></pre>)"}],"misconceptions":["常见误区1","…"],"quiz":[{"q":"自测题","a":"参考答案"}],"exercise":{"task":"动手练习任务","solution":"参考方案(可用代码)"}}
+质量基准(对标旗舰课程): 讲解=先直觉类比再技术细节;每个抽象概念配一个具体例子;关键结论用 <b>;代码短小可独立运行。
+${FEEDBACK ? `用户改进意见(本章相关部分必须落实): ${FEEDBACK}` : ""}
 规则:
 - 2~4 个小节;讲解口语化但准确,关键结论用 <b>;每章至少 1 个可运行的最小示例代码;
 - misconception 2~3 条;quiz 2 题;exercise 1 个带完整参考方案;
@@ -228,11 +239,54 @@ const html = `<!DOCTYPE html>
         </p>
       </header>
 
+      <div class="draft-only">
+      <style>
+        .draft-toolbar { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin:18px 0; padding:12px; border:2px dashed var(--warn); border-radius:12px; background:var(--warn-soft); }
+        .draft-toolbar .draft-feedback { flex:1; min-width:220px; padding:7px 12px; border:1px solid var(--line); border-radius:8px; font-size:13.5px; background:var(--surface); color:var(--text); }
+        .dt-btn { padding:6px 12px; border-radius:8px; border:1px solid var(--line); background:var(--surface); color:var(--text); font-size:13px; cursor:pointer; }
+        .dt-btn.dt-improve { background:var(--accent); color:#fff; border-color:transparent; }
+        .dt-btn.dt-approve { background:var(--ok); color:#fff; border-color:transparent; }
+        .dt-btn.dt-delete { color:var(--danger); border-color:var(--danger); }
+        .dt-msg { font-size:12.5px; color:var(--text-2); }
+      </style>
+      <div class="draft-toolbar" data-skill="${SKILL}" data-topic="${esc(TOPIC)}" data-chapters="${okChapters.length}">
+        <input type="text" class="draft-feedback" placeholder="输入改进意见,如:第 3 章加一个量化对比示例…">
+        <button class="dt-btn dt-improve">🔁 按意见重新生成</button>
+        <button class="dt-btn dt-approve">✅ 审核通过</button>
+        <button class="dt-btn dt-delete">🗑 删除草稿</button>
+        <span class="dt-msg"></span>
+      </div>
       <div class="callout warn">
         <div class="co-title">人审须知(发布前必读)</div>
-        <p>① 逐章核实事实与代码可运行性(模型知识可能过时或有错);② 补充权威引用与延伸阅读;③ 删除全部「机器初稿/待审」字样;
-        ④ 通过后加入 index.html 学习路径与导航;⑤ 发布即代表确认内容质量由发布者负责。</p>
+        <p>① 逐章核实事实与代码可运行性(模型知识可能过时或有错);② 补充权威引用与延伸阅读;③ 审核通过会自动移除本工具条与全部初稿标记;
+        ④ 通过后建议加入 index.html 学习路径;⑤ 发布即代表确认内容质量由发布者负责。</p>
       </div>
+      </div>
+      <script>
+      (function () {
+        const bar = document.querySelector(".draft-toolbar");
+        if (!bar) return;
+        const skill = bar.dataset.skill, topic = bar.dataset.topic, chapters = bar.dataset.chapters;
+        const go = (cmd, params) => {
+          const qs = new URLSearchParams(params || {}).toString();
+          location.href = "academy://" + cmd + "/" + skill + (qs ? "?" + qs : "");
+        };
+        bar.querySelector(".dt-improve").addEventListener("click", () => {
+          const fb = bar.querySelector(".draft-feedback").value.trim();
+          if (!fb) { bar.querySelector(".dt-msg").textContent = "请先输入改进意见"; return; }
+          if (!confirm("按意见重新生成整门课?当前草稿将被替换(约 2-4 分钟)。")) return;
+          go("improve-course", { feedback: fb, topic: topic, chapters: chapters });
+        });
+        bar.querySelector(".dt-approve").addEventListener("click", () => {
+          if (!confirm("审核通过并发布?将自动移除初稿标记与工具条。")) return;
+          go("publish-course", {});
+        });
+        bar.querySelector(".dt-delete").addEventListener("click", () => {
+          if (!confirm("删除草稿?教学包、知识库与本页将一并删除,不可恢复。")) return;
+          go("delete-course", {});
+        });
+      })();
+      </script>
 ${chapterHtml}
 
     </div>
@@ -248,7 +302,7 @@ writeFileSync(outPage, html);
 
 updateManifest({
   kind: "topic", slug: SKILL, title: plan.title, description: plan.description,
-  pack: `packs/${SKILL}`, page: `full-${SKILL}.html`,
+  pack: `packs/${SKILL}`, page: `full-${SKILL}.html`, topic: TOPIC,
   chapters: plan.chapters.map((c) => ({ no: c.no, title: c.title, goal: c.goal, questions: c.questions || [] })),
   starterQuestions: plan.starterQuestions || [], generated: true,
 });

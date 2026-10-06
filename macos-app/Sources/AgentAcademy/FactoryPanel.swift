@@ -72,6 +72,8 @@ final class FactoryModel: ObservableObject {
     @Published var topicSlug = ""
     @Published var topicChapters = 8
     @Published var topicGoal = ""
+    @Published var feedbackText = ""   // 按意见重新生成
+    var pendingAutoStart = false       // 深链改进:面板打开即运行
     // 运行状态
     @Published var running = false
     @Published var logLines: [String] = []
@@ -102,6 +104,7 @@ final class FactoryModel: ObservableObject {
             var a = ["scripts/make-course-from-topic.mjs", "--topic", topicText, "--skill", topicSlug,
                      "--chapters", String(topicChapters)]
             if !topicGoal.isEmpty { a += ["--goal", topicGoal] }
+            if !feedbackText.isEmpty { a += ["--feedback", feedbackText] }
             return a
         }
     }
@@ -191,6 +194,19 @@ final class FactoryModel: ObservableObject {
         }
     }
 
+    /// 课程管理页「按意见重新生成」深链:预填课题参数,面板打开即自动运行
+    func prepareTopicImprove(skill: String, topic: String, chapters: Int, feedback: String) {
+        kind = .topic
+        topicText = topic
+        topicSlug = skill
+        topicChapters = chapters
+        feedbackText = feedback
+        pendingAutoStart = true
+        failureReason = nil
+        doneMessage = nil
+        logLines = []
+    }
+
     func pickPDF() {
         let panel = NSOpenPanel()
         panel.canChooseFiles = true
@@ -207,7 +223,7 @@ final class FactoryModel: ObservableObject {
 // MARK: - 工厂面板 UI
 
 struct FactorySheet: View {
-    @StateObject private var model = FactoryModel()
+    @ObservedObject var model: FactoryModel
     @Environment(\.dismiss) private var dismiss
     var onDone: (() -> Void)?            // 关闭/刷新(课程列表)
     var onOpenDraft: ((String) -> Void)? // 在主窗口打开草稿页
@@ -249,6 +265,12 @@ struct FactorySheet: View {
             .padding(12)
         }
         .frame(width: 480, height: 560)
+        .onAppear {
+            if model.pendingAutoStart {
+                model.pendingAutoStart = false
+                model.start()
+            }
+        }
     }
 
     @ViewBuilder
@@ -279,6 +301,7 @@ struct FactorySheet: View {
                     Stepper("\(model.topicChapters)", value: $model.topicChapters, in: 4...10)
                 }
                 LabeledTextField("学习目标(可选)", $model.topicGoal, "从基础到落地")
+                LabeledTextField("改进意见", $model.feedbackText, "如:第 3 章加一个量化对比示例…")
                 Text("⚠️ 章节内容由模型知识生成、无外部引用——REVIEW.md 要求逐条核实后才可发布。")
                     .font(.caption).foregroundStyle(.orange)
             }
