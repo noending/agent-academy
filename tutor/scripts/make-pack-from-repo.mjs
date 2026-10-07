@@ -25,13 +25,26 @@ const CHUNK_CHARS = 1200;
 
 const args = process.argv.slice(2);
 const argOf = (k) => { const i = args.indexOf(k); return i >= 0 ? args[i + 1] : null; };
-const REPO = argOf("--repo");       // owner/name(GitHub)
+const REPO = argOf("--repo");       // owner/name 或完整 GitHub 链接
 const DIR = argOf("--dir");         // 或本地目录
 const SKILL = argOf("--skill");
 const GOAL = argOf("--goal") || "";
 
 if (!SKILL || !/^[a-z0-9-]+$/.test(SKILL)) { console.error("✗ --skill 必须是小写字母/数字/连字符"); process.exit(1); }
-if (!REPO && !DIR) { console.error("✗ 需要 --repo owner/name 或 --dir 本地路径"); process.exit(1); }
+
+// 仓库输入解析: 支持 owner/name 与各种 GitHub 链接(…/tree/<branch>、.git 后缀、SSH)
+function parseRepoInput(input) {
+  const s = String(input).trim().replace(/\.git$/, "");
+  let m = s.match(/(?:github\.com[/:]|git@github\.com:)([\w.-]+)\/([\w.-]+?)(?:\/tree\/([\w.-]+))?$/);
+  if (m) return { owner: m[1], name: m[2], branch: m[3] || null };
+  m = s.match(/^([\w.-]+)[\\/]?([\w.-]+)$/);
+  if (m && !s.includes("/") && !s.includes("\\")) return null;
+  m = s.match(/^([\w.-]+)\/([\w.-]+)$/);
+  if (m) return { owner: m[1], name: m[2], branch: null };
+  return null;
+}
+const repoInfo = REPO ? parseRepoInput(REPO) : null;
+if (REPO && !repoInfo) { console.error("✗ 无法解析仓库:支持 owner/name 或 GitHub 链接(…/tree/<branch>)"); process.exit(1); }
 if (!KEY) { console.error("✗ 缺少 DEEPSEEK_API_KEY"); process.exit(1); }
 if (existsSync(join(TUTOR, "packs", SKILL))) { console.error(`✗ packs/${SKILL} 已存在,换一个 --skill`); process.exit(1); }
 
@@ -67,22 +80,20 @@ if (DIR) {
   repoLabel = basename(srcDir);
   if (!existsSync(srcDir)) { console.error("✗ --dir 不存在"); process.exit(1); }
 } else {
-  const [owner, name] = REPO.split("/");
-  if (!owner || !name) { console.error("✗ --repo 格式应为 owner/name"); process.exit(1); }
-  repoLabel = name;
-  let branch = "main";
+  repoLabel = repoInfo.name;
+  let branch = repoInfo.branch;
   try {
-    const meta = execFileSync("curl", ["-sL", "--max-time", "30", `https://api.github.com/repos/${owner}/${name}`], { encoding: "utf8" });
-    branch = JSON.parse(meta).default_branch || "main";
+    const meta = execFileSync("curl", ["-sL", "--max-time", "30", `https://api.github.com/repos/${repoInfo.owner}/${repoInfo.name}`], { encoding: "utf8" });
+    branch = JSON.parse(meta).default_branch || branch || "main";
   } catch { console.log("  (取默认分支失败,按 main 尝试)"); }
   const tmp = mkdtempSync("/tmp/pack-ingest-");
   const zip = join(tmp, "repo.zip");
-  execFileSync("curl", ["-sL", "--max-time", "300", "-o", zip, `https://codeload.github.com/${owner}/${name}/zip/refs/heads/${branch}`]);
+  execFileSync("curl", ["-sL", "--max-time", "300", "-o", zip, `https://codeload.github.com/${repoInfo.owner}/${repoInfo.name}/zip/refs/heads/${branch}`]);
   srcDir = join(tmp, "repo");
   execFileSync("unzip", ["-q", zip, "-d", tmp]);
-  const entries = readdirSync(tmp).filter((d) => d.startsWith(name + "-"));
+  const entries = readdirSync(tmp).filter((d) => d.startsWith(repoInfo.name + "-"));
   srcDir = join(tmp, entries[0]);
-  console.log(`  已下载 ${owner}/${name}@${branch}`);
+  console.log(`  已下载 ${repoInfo.owner}/${repoInfo.name}@${branch}`);
 }
 
 // 收集候选文件:markdown + notebook(docs 优先),跳过依赖/构建目录

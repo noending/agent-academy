@@ -79,7 +79,18 @@ final class FactoryModel: ObservableObject {
     @Published var paperSlug = ""
     @Published var paperTitle = ""
     // 仓库
-    @Published var repoInput = ""
+    @Published var repoInput = "" {
+        didSet {
+            guard kind == .repo, repoInput != oldValue else { return }
+            if let n = FactoryModel.repoName(from: repoInput) {
+                let suggested = n.lowercased()
+                if repoSlug.isEmpty || repoSlug == lastAutoRepoSlug {
+                    repoSlug = suggested
+                    lastAutoRepoSlug = suggested
+                }
+            }
+        }
+    }
     @Published var repoSlug = ""
     @Published var repoGoal = ""
     // 课题
@@ -88,7 +99,10 @@ final class FactoryModel: ObservableObject {
     @Published var topicChapters = 8
     @Published var topicGoal = ""
     @Published var feedbackText = ""   // 按意见重新生成
+    @Published var repoSlugAuto = false // slug 是否为自动建议(仓库输入变化时可覆盖)
     var pendingAutoStart = false       // 深链改进:面板打开即运行
+    var lastAutoRepoSlug = ""          // 仓库输入自动建议的 slug(可被用户覆盖)
+    private var lastFailLine: String?  // 管线打印的 ✗ 错误行,退出时浮出
     // 运行状态
     @Published var running = false
     @Published var logLines: [String] = []
@@ -107,6 +121,18 @@ final class FactoryModel: ObservableObject {
 
     static func validSlug(_ s: String) -> Bool {
         !s.isEmpty && s.range(of: #"^[a-z0-9][a-z0-9-]*$"#, options: .regularExpression) != nil
+    }
+
+    static func repoName(from input: String) -> String? {
+        var s = input.trimmingCharacters(in: .whitespaces)
+        if s.hasSuffix(".git") { s = String(s.dropLast(4)) }
+        if s.contains("github.com") {
+            let parts = s.split(whereSeparator: { $0 == "/" || $0 == ":" }).map(String.init)
+            guard let i = parts.firstIndex(of: "github.com"), parts.count >= i + 3 else { return nil }
+            return parts[i + 2]
+        }
+        let comps = s.split(whereSeparator: { $0 == "/" })
+        return comps.count == 2 ? String(comps[1]) : nil
     }
 
     /// 课程管理页深链 → 管线类型
@@ -256,7 +282,12 @@ final class FactoryModel: ObservableObject {
                 let line = buf.data.subdata(in: buf.data.startIndex..<nl)
                 buf.data.removeSubrange(buf.data.startIndex...nl)
                 if let s = String(data: line, encoding: .utf8) {
-                    DispatchQueue.main.async { self.logLines.append(s) }
+                    DispatchQueue.main.async {
+                        self.logLines.append(s)
+                        if s.contains("✗") || s.contains("Error") || s.contains("失败") {
+                            self.lastFailLine = s.replacingOccurrences(of: "[stderr] ", with: "")
+                        }
+                    }
                 }
             }
         }
@@ -264,7 +295,13 @@ final class FactoryModel: ObservableObject {
             let d = h.availableData
             guard !d.isEmpty else { h.readabilityHandler = nil; return }
             if let s = String(data: d, encoding: .utf8) {
-                DispatchQueue.main.async { self.logLines.append("[stderr] " + s.trimmingCharacters(in: .whitespacesAndNewlines)) }
+                let line = s.trimmingCharacters(in: .whitespacesAndNewlines)
+                DispatchQueue.main.async {
+                    self.logLines.append("[stderr] " + line)
+                    if line.contains("✗") || line.contains("Error") || line.contains("失败") {
+                        self.lastFailLine = line
+                    }
+                }
             }
         }
         p.terminationHandler = { [weak self] terminated in
@@ -285,7 +322,7 @@ final class FactoryModel: ObservableObject {
                     if self?.kind == .repo || self?.kind == .topic { self?.onPacksChanged?() }
                 } else {
                     self?.doneMessage = nil
-                    self?.failureReason = "管线退出码 \(terminated.terminationStatus),详见日志"
+                    self?.failureReason = self?.lastFailLine ?? "管线退出码 \(terminated.terminationStatus),详见日志"
                 }
             }
         }
