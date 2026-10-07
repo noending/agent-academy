@@ -85,10 +85,14 @@ const badChapters = bodyChapters.filter((c) => c.startsWith("ch") && !declared.h
 if (badChapters.length) fail(`data-chapter 未注册: ${badChapters.join(",")}`);
 else ok("data-chapter 全部已注册");
 
-const pills = new Set(pages.map((f) => (read(f).match(/进度 0\/(\d+) 章/) || [])[1]).filter(Boolean));
-if (pills.size > 1) fail(`进度口径不一致: ${[...pills].join("/")} 章`);
-else if (pills.size === 1 && [...pills][0] !== String(chapterCount)) fail(`进度兜底文案 ${[...pills][0]} 章 ≠ 章节数 ${chapterCount}`);
-else ok(`进度兜底文案 = ${chapterCount} 章`);
+const GEN_RE = /<body[^>]*data-gen-course='/;
+const mainPills = new Set(
+  pages.filter((f) => !GEN_RE.test(read(f)))
+    .map((f) => (read(f).match(/进度 0\/(\d+) 章/) || [])[1]).filter(Boolean)
+);
+if (mainPills.size > 1) fail(`进度口径不一致: ${[...mainPills].join("/")} 章`);
+else if (mainPills.size === 1 && [...mainPills][0] !== String(chapterCount)) fail(`进度兜底文案 ${[...mainPills][0]} 章 ≠ 章节数 ${chapterCount}`);
+else ok(`进度兜底文案 = ${chapterCount} 章(生成课程页按课程口径跳过)`);
 
 const idx = read("index.html");
 const idxCards = (idx.match(/class="tl-item" data-no="\d+"/g) || []).length;
