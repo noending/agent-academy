@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="LLM训练到部署 第7章。">
+<title>第7章 · LLM训练到部署 | Agent 学院</title>
+<link rel="stylesheet" href="assets/css/style.css?v=22">
+</head>
+<body data-gen-course='{&quot;skill&quot;:&quot;llm&quot;,&quot;title&quot;:&quot;LLM训练到部署&quot;,&quot;topic&quot;:&quot;由课题「LLM从训练到部署」自动生成。本课程适合对LLM感兴趣的开发者与运维人员，从零开始掌握大语言模型训练、微调、优化与部署全流程，最终能独立完成生产级部署。&quot;,&quot;chapters&quot;:[{&quot;no&quot;:1,&quot;title&quot;:&quot;LLM基础概念&quot;,&quot;goal&quot;:&quot;理解LLM核心概念与工作原理&quot;,&quot;file&quot;:&quot;llm-ch01.html&quot;},{&quot;no&quot;:2,&quot;title&quot;:&quot;数据准备与预处理&quot;,&quot;goal&quot;:&quot;掌握构建高质量训练数据集的方法&quot;,&quot;file&quot;:&quot;llm-ch02.html&quot;},{&quot;no&quot;:3,&quot;title&quot;:&quot;模型训练基础&quot;,&quot;goal&quot;:&quot;能够配置并启动LLM训练任务&quot;,&quot;file&quot;:&quot;llm-ch03.html&quot;},{&quot;no&quot;:4,&quot;title&quot;:&quot;微调与对齐&quot;,&quot;goal&quot;:&quot;使用微调技术适配下游任务&quot;,&quot;file&quot;:&quot;llm-ch04.html&quot;},{&quot;no&quot;:5,&quot;title&quot;:&quot;模型优化与压缩&quot;,&quot;goal&quot;:&quot;优化模型推理速度与资源占用&quot;,&quot;file&quot;:&quot;llm-ch05.html&quot;},{&quot;no&quot;:6,&quot;title&quot;:&quot;部署架构与API&quot;,&quot;goal&quot;:&quot;设计并实现LLM服务API&quot;,&quot;file&quot;:&quot;llm-ch06.html&quot;},{&quot;no&quot;:7,&quot;title&quot;:&quot;实战：训练小型LLM&quot;,&quot;goal&quot;:&quot;完成一个小型LLM的训练与微调&quot;,&quot;file&quot;:&quot;llm-ch07.html&quot;},{&quot;no&quot;:8,&quot;title&quot;:&quot;实战：生产环境部署&quot;,&quot;goal&quot;:&quot;将训练好的LLM部署到生产环境&quot;,&quot;file&quot;:&quot;llm-ch08.html&quot;}]}' data-chapter="gen-llm-ch7">
+
+<header class="topbar">
+  <button class="icon-btn hamburger" id="hamburger" title="打开导航">☰</button>
+  <a class="brand" href="index.html"><span class="logo">学</span> Agent 学院 <small>从零开发智能体 · Ontology · Harness</small></a>
+  <span class="spacer"></span>
+  <span class="progress-pill" id="progress-pill">进度 0/8 章</span>
+  <button class="icon-btn" id="theme-btn">🌙</button>
+</header>
+
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <main class="content">
+    <div class="content-inner">
+
+      <header class="chapter-head">
+        <div class="kicker">CHAPTER 07 · 生成课程</div>
+        <h1>实战：训练小型LLM</h1>
+      </header>
+
+      <p class="lead"><b>本章目标：</b>完成一个小型LLM的训练与微调</p>
+ <h3>项目规划与数据准备</h3>
+ <p>训练一个小型LLM，第一步不是写代码，而是想清楚<b>要它做什么</b>。比如，我们想训练一个能生成简单英文句子的模型，或者一个能回答简单问题的助手。明确目标后，再规划模型大小、数据来源和训练时间。</p><p>数据是模型的粮食。对于小型LLM，我们可以使用公开的小型文本数据集，比如莎士比亚作品、新闻文章或代码片段。数据需要经过清洗、分词，并转换为模型可以处理的格式。</p><p>下面是一个最小示例：下载一个小型文本数据集，进行简单的预处理，并构建一个字符级的分词器。</p><pre><code class="language-python">import torch
+from torch.utils.data import Dataset, DataLoader
+
+# 假设我们有一个文本文件 'input.txt'
+with open('input.txt', 'r', encoding='utf-8') as f:
+    text = f.read()
+
+# 构建字符级词汇表
+chars = sorted(list(set(text)))
+vocab_size = len(chars)
+stoi = {ch: i for i, ch in enumerate(chars)}
+itos = {i: ch for i, ch in enumerate(chars)}
+
+# 编码函数
+def encode(s):
+    return [stoi[c] for c in s]
+
+def decode(l):
+    return ''.join([itos[i] for i in l])
+
+# 将文本转换为张量
+data = torch.tensor(encode(text), dtype=torch.long)
+
+# 划分训练集和验证集
+n = int(0.9 * len(data))
+train_data = data[:n]
+val_data = data[n:]
+
+# 定义数据集类
+class TextDataset(Dataset):
+    def __init__(self, data, block_size):
+        self.data = data
+        self.block_size = block_size
+    def __len__(self):
+        return len(self.data) - self.block_size
+    def __getitem__(self, idx):
+        x = self.data[idx:idx+self.block_size]
+        y = self.data[idx+1:idx+self.block_size+1]
+        return x, y
+
+block_size = 128
+train_dataset = TextDataset(train_data, block_size)
+val_dataset = TextDataset(val_data, block_size)
+train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
+val_loader = DataLoader(val_dataset, batch_size=32, shuffle=False)
+
+print(f'词汇表大小: {vocab_size}, 训练样本数: {len(train_dataset)}')</code></pre><p>这段代码展示了数据准备的核心步骤：读取文本、构建词汇表、编码、划分数据集，并创建PyTorch数据加载器。<b>数据质量直接决定模型效果</b>，所以务必确保文本干净、格式统一。</p>
+ <h3>训练配置与启动</h3>
+ <p>有了数据，接下来要定义模型结构和训练配置。对于小型LLM，我们可以使用一个简单的Transformer解码器，比如GPT的简化版。关键配置包括：层数、注意力头数、嵌入维度、学习率、批次大小等。</p><p>下面是一个极简的GPT模型定义和训练循环。我们使用PyTorch实现，并假设你已经安装了torch。</p><pre><code class="language-python">import torch.nn as nn
+import torch.nn.functional as F
+
+class Head(nn.Module):
+    def __init__(self, head_size, n_embd, block_size, dropout=0.1):
+        super().__init__()
+        self.key = nn.Linear(n_embd, head_size, bias=False)
+        self.query = nn.Linear(n_embd, head_size, bias=False)
+        self.value = nn.Linear(n_embd, head_size, bias=False)
+        self.register_buffer('tril', torch.tril(torch.ones(block_size, block_size)))
+        self.dropout = nn.Dropout(dropout)
+    def forward(self, x):
+        B, T, C = x.shape
+        k = self.key(x)
+        q = self.query(x)
+        wei = q @ k.transpose(-2, -1) * (C ** -0.5)
+        wei = wei.masked_fill(self.tril[:T, :T] == 0, float('-inf'))
+        wei = F.softmax(wei, dim=-1)
+        wei = self.dropout(wei)
+        v = self.value(x)
+        out = wei @ v
+        return out
+
+class MultiHeadAttention(nn.Module):
+    def __init__(self, num_heads, head_size, n_embd, block_size, dropout=0.1):
+        super().__init__()
+        self.heads = nn.ModuleList([Head(head_size, n_embd, block_size, dropout) for _ in range(num_heads)])
+        self.proj = nn.Linear(n_embd, n_embd)
+        self.dropout = nn.Dropout(dropout)
+    def forward(self, x):
+        out = torch.cat([h(x) for h in self.heads], dim=-1)
+        out = self.dropout(self.proj(out))
+        return out
+
+class FeedForward(nn.Module):
+    def __init__(self, n_embd, dropout=0.1):
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.Linear(n_embd, 4 * n_embd),
+            nn.ReLU(),
+            nn.Linear(4 * n_embd, n_embd),
+            nn.Dropout(dropout),
+        )
+    def forward(self, x):
+        return self.net(x)
+
+class Block(nn.Module):
+    def __init__(self, n_embd, n_head, block_size, dropout=0.1):
+        super().__init__()
+        head_size = n_embd // n_head
+        self.sa = MultiHeadAttention(n_head, head_size, n_embd, block_size, dropout)
+        self.ffwd = FeedForward(n_embd, dropout)
+        self.ln1 = nn.LayerNorm(n_embd)
+        self.ln2 = nn.LayerNorm(n_embd)
+    def forward(self, x):
+        x = x + self.sa(self.ln1(x))
+        x = x + self.ffwd(self.ln2(x))
+        return x
+
+class MiniGPT(nn.Module):
+    def __init__(self, vocab_size, n_embd=128, n_head=4, n_layer=4, block_size=128, dropout=0.1):
+        super().__init__()
+        self.token_embedding = nn.Embedding(vocab_size, n_embd)
+        self.position_embedding = nn.Embedding(block_size, n_embd)
+        self.blocks = nn.Sequential(*[Block(n_embd, n_head, block_size, dropout) for _ in range(n_layer)])
+        self.ln_f = nn.LayerNorm(n_embd)
+        self.lm_head = nn.Linear(n_embd, vocab_size)
+        self.block_size = block_size
+    def forward(self, idx, targets=None):
+        B, T = idx.shape
+        tok_emb = self.token_embedding(idx)
+        pos_emb = self.position_embedding(torch.arange(T, device=idx.device))
+        x = tok_emb + pos_emb
+        x = self.blocks(x)
+        x = self.ln_f(x)
+        logits = self.lm_head(x)
+        if targets is None:
+            loss = None
+        else:
+            B, T, C = logits.shape
+            logits = logits.view(B*T, C)
+            targets = targets.view(B*T)
+            loss = F.cross_entropy(logits, targets)
+        return logits, loss
+    def generate(self, idx, max_new_tokens):
+        for _ in range(max_new_tokens):
+            idx_cond = idx[:, -self.block_size:]
+            logits, _ = self(idx_cond)
+            logits = logits[:, -1, :]
+            probs = F.softmax(logits, dim=-1)
+            idx_next = torch.multinomial(probs, num_samples=1)
+            idx = torch.cat((idx, idx_next), dim=1)
+        return idx
+
+# 训练配置
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+model = MiniGPT(vocab_size=vocab_size, n_embd=128, n_head=4, n_layer=4, block_size=block_size).to(device)
+optimizer = torch.optim.AdamW(model.parameters(), lr=3e-4)
+
+# 训练循环
+epochs = 10
+for epoch in range(epochs):
+    model.train()
+    for x, y in train_loader:
+        x, y = x.to(device), y.to(device)
+        logits, loss = model(x, y)
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+    print(f'Epoch {epoch+1}, Loss: {loss.item():.4f}')
+
+# 保存模型
+torch.save(model.state_dict(), 'mini_gpt.pth')</code></pre><p>这段代码定义了一个4层、4头的MiniGPT，并在训练集上训练了10个epoch。<b>训练配置需要根据硬件调整</b>，如果显存不足，可以减小批次大小或模型维度。</p>
+ <h3>微调与评估</h3>
+ <p>训练完成后，模型可能已经能生成一些文本，但可能不符合我们的具体需求。这时可以进行微调，比如在特定领域数据上继续训练，或者使用指令微调让模型学会回答问题。</p><p>评估是检验模型效果的关键。对于语言模型，常用的评估指标是困惑度（Perplexity），它衡量模型对文本的预测能力。我们也可以在验证集上计算损失。</p><p>下面展示如何在验证集上评估模型，并计算困惑度。</p><pre><code class="language-python">import math
+
+model.eval()
+total_loss = 0
+with torch.no_grad():
+    for x, y in val_loader:
+        x, y = x.to(device), y.to(device)
+        logits, loss = model(x, y)
+        total_loss += loss.item()
+
+avg_loss = total_loss / len(val_loader)
+perplexity = math.exp(avg_loss)
+print(f'验证集损失: {avg_loss:.4f}, 困惑度: {perplexity:.2f}')
+
+# 生成示例
+context = torch.zeros((1, 1), dtype=torch.long, device=device)
+generated = model.generate(context, max_new_tokens=100)
+print(decode(generated[0].tolist()))</code></pre><p>困惑度越低，说明模型对数据的预测越准确。<b>通常困惑度在20以下表示模型表现不错</b>，但具体取决于任务和数据集。</p><p>如果效果不理想，可以尝试：增加数据量、调整模型大小、改变学习率、或进行更长时间的训练。</p>
+ <h3>模型导出与保存</h3>
+ <p>训练完成后，我们需要保存模型以便后续部署。PyTorch提供了多种保存方式：保存整个模型、保存状态字典、或导出为ONNX格式以便在其他框架中使用。</p><p>推荐保存状态字典（state_dict），因为它更灵活，加载时需要重新实例化模型结构。</p><pre><code class="language-python"># 保存模型状态字典
+torch.save(model.state_dict(), 'mini_gpt.pth')
+
+# 加载模型
+model_loaded = MiniGPT(vocab_size=vocab_size, n_embd=128, n_head=4, n_layer=4, block_size=block_size)
+model_loaded.load_state_dict(torch.load('mini_gpt.pth'))
+model_loaded.to(device)
+model_loaded.eval()
+
+# 导出为ONNX格式（可选）
+dummy_input = torch.randint(0, vocab_size, (1, block_size), device=device)
+torch.onnx.export(
+    model_loaded,
+    dummy_input,
+    'mini_gpt.onnx',
+    input_names=['input'],
+    output_names=['output'],
+    dynamic_axes={'input': {0: 'batch_size', 1: 'sequence'}, 'output': {0: 'batch_size', 1: 'sequence'}}
+)
+print('模型已保存为 mini_gpt.pth 和 mini_gpt.onnx')</code></pre><p>保存后，你可以将模型文件部署到服务器，或集成到应用程序中。<b>记得同时保存词汇表（stoi和itos）</b>，因为推理时需要它们来编码和解码文本。</p><p>至此，你已经完成了小型LLM的训练、微调、评估和导出全流程。接下来可以尝试更大的模型或更复杂的数据集。</p>
+ <h3>常见误区</h3>
+ <ul>
+ <li>训练LLM必须要有大量数据和强大算力，小型LLM无法产生有意义的结果。实际上，小型LLM可以在小数据集上训练，并用于特定任务，如文本生成或简单对话。</li>
+ <li>模型保存只需要保存权重文件，不需要保存模型结构或词汇表。实际上，加载模型时需要相同的模型结构，并且推理时需要词汇表来编码和解码文本。</li>
+ <li>困惑度越低模型越好，所以应该无限降低困惑度。实际上，过低的困惑度可能意味着过拟合，模型在验证集上表现好但在新数据上表现差。</li>
+ </ul>
+ <h3>自测</h3>
+ <details class="quiz"><summary>在训练小型LLM时，为什么需要划分训练集和验证集？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>训练集用于训练模型参数，验证集用于评估模型在未见过的数据上的表现，从而监控过拟合和调整超参数。</p></div></details>
+ <details class="quiz"><summary>保存模型时，为什么推荐保存状态字典（state_dict）而不是整个模型？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>保存状态字典更灵活，因为它只包含参数，不包含模型结构。加载时需要重新实例化模型结构，这样可以避免因代码变更导致的兼容性问题，并且文件更小。</p></div></details>
+ <h3>动手练习（带参考方案）</h3>
+ <details class="fold"><summary>动手练习 · 使用提供的MiniGPT代码，在莎士比亚文本数据集上训练一个字符级语言模型，并生成一段文本。要求：1…</summary><div class="fold-body"><p><b>任务：</b>使用提供的MiniGPT代码，在莎士比亚文本数据集上训练一个字符级语言模型，并生成一段文本。要求：1. 下载莎士比亚文本（可从https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt 获取）；2. 训练至少5个epoch；3. 计算验证集困惑度；4. 生成100个字符的文本并打印。</p><p><b>参考方案：</b></p>import torch
+import torch.nn as nn
+import torch.nn.functional as F
+from torch.utils.data import Dataset, DataLoader
+import math
+import urllib.request
+
+# 下载数据
+url = 'https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt'
+urllib.request.urlretrieve(url, 'shakespeare.txt')
+with open('shakespeare.txt', 'r', encoding='utf-8') as f:
+    text = f.read()
+
+# 构建词汇表
+chars = sorted(list(set(text)))
+vocab_size = len(chars)
+stoi = {ch: i for i, ch in enumerate(chars)}
+itos = {i: ch for i, ch in enumerate(chars)}
+encode = lambda s: [stoi[c] for c in s]
+decode = lambda l: ''.join([itos[i] for i in l])
+
+data = torch.tensor(encode(text), dtype=torch.long)
+n = int(0.9 * len(data))
+train_data = data[:n]
+val_data = data[n:]
+
+block_size = 128
+batch_size = 32
+
+class TextDataset(Dataset):
+    def __init__(self, data, block_size):
+        self.data = data
+        self.block_size = block_size
+    def __len__(self):
+        return len(self.data) - self.block_size
+    def __getitem__(self, idx):
+        x = self.data[idx:idx+self.block_size]
+        y = self.data[idx+1:idx+self.block_size+1]
+        return x, y
+
+train_dataset = TextDataset(train_data, block_size)
+val_dataset = TextDataset(val_data, block_size)
+train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
+
+# 定义模型（与教程相同，此处省略以节省空间，实际应包含完整定义）
+# 假设已定义 MiniGPT 类
+
+# 训练配置
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+model = MiniGPT(vocab_size=vocab_size, n_embd=128, n_head=4, n_layer=4, block_size=block_size).to(device)
+optimizer = torch.optim.AdamW(model.parameters(), lr=3e-4)
+
+# 训练
+epochs = 5
+for epoch in range(epochs):
+    model.train()
+    for x, y in train_loader:
+        x, y = x.to(device), y.to(device)
+        logits, loss = model(x, y)
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+    print(f'Epoch {epoch+1}, Loss: {loss.item():.4f}')
+
+# 评估
+model.eval()
+total_loss = 0
+with torch.no_grad():
+    for x, y in val_loader:
+        x, y = x.to(device), y.to(device)
+        logits, loss = model(x, y)
+        total_loss += loss.item()
+avg_loss = total_loss / len(val_loader)
+perplexity = math.exp(avg_loss)
+print(f'验证集困惑度: {perplexity:.2f}')
+
+# 生成
+context = torch.zeros((1, 1), dtype=torch.long, device=device)
+generated = model.generate(context, max_new_tokens=100)
+print(decode(generated[0].tolist()))</div></details>
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/app.js?v=23"></script>
+</body>
+</html>

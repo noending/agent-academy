@@ -328,6 +328,10 @@ struct AgentAcademyApp: App {
                             tutor.reloadPacks()
                             coordinator.webView.reload()
                         }
+                    case "factory":
+                        showTutor = false
+                        if let k = FactoryModel.kindFromLink(arg) { factory.kind = k }
+                        showFactory = true
                     case "improve-course":
                         // 草稿页「按意见重新生成」:打开内容工厂(课题标签)预填并自动运行
                         let comps = url.flatMap { URLComponents(url: $0, resolvingAgainstBaseURL: false) }

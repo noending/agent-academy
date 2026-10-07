@@ -199,7 +199,8 @@
             "Token和单词有什么区别？为什么中文的Token数通常比英文多？",
             "MoE模型的总参数和激活参数分别影响什么？为什么不能只用激活参数估算显存？",
             "RAG和微调都能让模型适应新知识，它们分别适合什么场景？"
-          ]
+          ],
+          "file": "llm-termlogy-2-ch01.html"
         },
         {
           "no": 2,
@@ -209,7 +210,8 @@
             "MMLU分数高是否意味着模型在我的业务任务上表现好？为什么？",
             "如何判断一个评测报告是否存在不公平比较？",
             "LLM-as-a-Judge在什么情况下不可靠？如何降低风险？"
-          ]
+          ],
+          "file": "llm-termlogy-2-ch02.html"
         },
         {
           "no": 3,
@@ -219,7 +221,8 @@
             "为什么两个模型都标称100 Tokens/s，实际体验可能差很多？",
             "如何计算一个RAG问答系统的每次成功任务成本？",
             "P95延迟比平均延迟更能说明什么问题？"
-          ]
+          ],
+          "file": "llm-termlogy-2-ch03.html"
         },
         {
           "no": 4,
@@ -229,7 +232,8 @@
             "为什么显存容量相同，推理速度可能差几倍？",
             "TFLOPS和TOPS有什么区别？为什么不能直接比较？",
             "多卡部署时，显存是简单相加吗？为什么？"
-          ]
+          ],
+          "file": "llm-termlogy-2-ch04.html"
         },
         {
           "no": 5,
@@ -239,7 +243,8 @@
             "如何估算一个70B模型在INT4精度、8K上下文、并发10时的显存需求？",
             "为什么说‘装得下’不等于‘跑得快’？还需要考虑什么？",
             "API和本地部署各适合什么业务场景？"
-          ]
+          ],
+          "file": "llm-termlogy-2-ch05.html"
         },
         {
           "no": 6,
@@ -249,7 +254,8 @@
             "如何为知识库问答助手设计一个可复现的评测方案？",
             "如果预算有限，如何在不购买GPU的情况下完成选型验证？",
             "选型报告中必须包含哪些内容才能让技术决策者信服？"
-          ]
+          ],
+          "file": "llm-termlogy-2-ch06.html"
         }
       ],
       "starterQuestions": [
@@ -277,7 +283,8 @@
             "LLM和传统NLP模型的核心区别是什么？",
             "为什么Decoder-only架构成为主流？",
             "开源模型和闭源模型该如何选择？"
-          ]
+          ],
+          "file": "llm-deploy-ch01.html"
         },
         {
           "no": 2,
@@ -287,7 +294,8 @@
             "如何评估训练数据的质量？",
             "数据去重有哪些常用算法？",
             "指令微调数据需要多少条才够？"
-          ]
+          ],
+          "file": "llm-deploy-ch02.html"
         },
         {
           "no": 3,
@@ -297,7 +305,8 @@
             "预训练需要多少计算资源？",
             "如何解决训练中的loss尖峰问题？",
             "ZeRO优化器是如何工作的？"
-          ]
+          ],
+          "file": "llm-deploy-ch03.html"
         },
         {
           "no": 4,
@@ -307,7 +316,8 @@
             "LoRA和全量微调该如何选择？",
             "RLHF和DPO哪个更实用？",
             "微调时如何防止灾难性遗忘？"
-          ]
+          ],
+          "file": "llm-deploy-ch04.html"
         },
         {
           "no": 5,
@@ -317,7 +327,8 @@
             "如何设计针对业务场景的评估集？",
             "量化会损失多少精度？",
             "蒸馏小模型能替代大模型吗？"
-          ]
+          ],
+          "file": "llm-deploy-ch05.html"
         },
         {
           "no": 6,
@@ -327,7 +338,8 @@
             "vLLM和TensorRT-LLM如何选择？",
             "如何提高推理吞吐量？",
             "如何设计高可用的LLM API？"
-          ]
+          ],
+          "file": "llm-deploy-ch06.html"
         },
         {
           "no": 7,
@@ -337,7 +349,8 @@
             "微调需要多少显存？",
             "如何选择LoRA的秩和alpha？",
             "部署后如何监控性能？"
-          ]
+          ],
+          "file": "llm-deploy-ch07.html"
         },
         {
           "no": 8,
@@ -347,7 +360,8 @@
             "如何设置合理的扩缩容阈值？",
             "如何防止Prompt注入攻击？",
             "如何降低推理成本？"
-          ]
+          ],
+          "file": "llm-deploy-ch08.html"
         }
       ],
       "starterQuestions": [
@@ -469,49 +483,57 @@
           "no": 1,
           "title": "LLM基础概念",
           "goal": "理解LLM核心概念与工作原理",
-          "questions": []
+          "questions": [],
+          "file": "llm-ch01.html"
         },
         {
           "no": 2,
           "title": "数据准备与预处理",
           "goal": "掌握构建高质量训练数据集的方法",
-          "questions": []
+          "questions": [],
+          "file": "llm-ch02.html"
         },
         {
           "no": 3,
           "title": "模型训练基础",
           "goal": "能够配置并启动LLM训练任务",
-          "questions": []
+          "questions": [],
+          "file": "llm-ch03.html"
         },
         {
           "no": 4,
           "title": "微调与对齐",
           "goal": "使用微调技术适配下游任务",
-          "questions": []
+          "questions": [],
+          "file": "llm-ch04.html"
         },
         {
           "no": 5,
           "title": "模型优化与压缩",
           "goal": "优化模型推理速度与资源占用",
-          "questions": []
+          "questions": [],
+          "file": "llm-ch05.html"
         },
         {
           "no": 6,
           "title": "部署架构与API",
           "goal": "设计并实现LLM服务API",
-          "questions": []
+          "questions": [],
+          "file": "llm-ch06.html"
         },
         {
           "no": 7,
           "title": "实战：训练小型LLM",
           "goal": "完成一个小型LLM的训练与微调",
-          "questions": []
+          "questions": [],
+          "file": "llm-ch07.html"
         },
         {
           "no": 8,
           "title": "实战：生产环境部署",
           "goal": "将训练好的LLM部署到生产环境",
-          "questions": []
+          "questions": [],
+          "file": "llm-ch08.html"
         }
       ],
       "starterQuestions": [
@@ -539,7 +561,8 @@
             "LLM和传统语言模型有什么区别？",
             "为什么Transformer成为LLM的主流架构？",
             "LLM真的能理解语言吗？"
-          ]
+          ],
+          "file": "llm-termlogies-ch01.html"
         },
         {
           "no": 2,
@@ -549,7 +572,8 @@
             "预训练和微调到底有什么区别？",
             "RLHF是如何让模型更符合人类偏好的？",
             "模型参数量越大效果越好吗？"
-          ]
+          ],
+          "file": "llm-termlogies-ch02.html"
         },
         {
           "no": 3,
@@ -559,7 +583,8 @@
             "温度参数如何影响生成结果？",
             "量化会损失多少模型精度？",
             "为什么KV缓存能加速推理？"
-          ]
+          ],
+          "file": "llm-termlogies-ch03.html"
         },
         {
           "no": 4,
@@ -569,7 +594,8 @@
             "如何选择适合的评测基准？",
             "自动评估和人工评估哪个更可靠？",
             "评测结果如何指导模型优化？"
-          ]
+          ],
+          "file": "llm-termlogies-ch04.html"
         },
         {
           "no": 5,
@@ -579,7 +605,8 @@
             "如何根据模型规模选择GPU？",
             "MLPerf测评结果如何解读？",
             "国产AI芯片与NVIDIA差距有多大？"
-          ]
+          ],
+          "file": "llm-termlogies-ch05.html"
         }
       ],
       "starterQuestions": [
@@ -607,7 +634,8 @@
             "LLM和传统语言模型的主要区别是什么？",
             "预训练和微调分别有什么作用？",
             "上下文学习是如何工作的？"
-          ]
+          ],
+          "file": "llm-termlogy-ch01.html"
         },
         {
           "no": 2,
@@ -617,7 +645,8 @@
             "Transformer为什么比RNN更适合LLM？",
             "Tokenization如何影响模型性能？",
             "温度参数如何控制生成多样性？"
-          ]
+          ],
+          "file": "llm-termlogy-ch02.html"
         },
         {
           "no": 3,
@@ -627,7 +656,8 @@
             "困惑度越低代表模型越好吗？",
             "如何选择适合任务的评测基准？",
             "零样本和少样本评测有什么区别？"
-          ]
+          ],
+          "file": "llm-termlogy-ch03.html"
         },
         {
           "no": 4,
@@ -637,7 +667,8 @@
             "如何根据模型参数量估算所需显存？",
             "MLPerf评测结果如何解读？",
             "云GPU和本地GPU哪个更划算？"
-          ]
+          ],
+          "file": "llm-termlogy-ch04.html"
         },
         {
           "no": 5,
@@ -647,7 +678,8 @@
             "量化会损失多少模型精度？",
             "如何优化长文本推理速度？",
             "部署LLM需要哪些软件依赖？"
-          ]
+          ],
+          "file": "llm-termlogy-ch05.html"
         }
       ],
       "starterQuestions": [

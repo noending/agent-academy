@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="LLM全链路实战 第2章。">
+<title>第2章 · LLM全链路实战 | Agent 学院</title>
+<link rel="stylesheet" href="assets/css/style.css?v=22">
+</head>
+<body data-gen-course='{&quot;skill&quot;:&quot;llm-deploy&quot;,&quot;title&quot;:&quot;LLM全链路实战&quot;,&quot;topic&quot;:&quot;由课题「LLM 从训练到实际部署」自动生成。适合AI工程师、算法研究员及技术管理者。系统掌握LLM从预训练、微调到部署上线的完整工程链路，涵盖数据、训练、优化、服务化与运维。&quot;,&quot;chapters&quot;:[{&quot;no&quot;:1,&quot;title&quot;:&quot;LLM基础与生态&quot;,&quot;goal&quot;:&quot;理解LLM核心概念、发展历程与主流模型架构&quot;,&quot;file&quot;:&quot;llm-deploy-ch01.html&quot;},{&quot;no&quot;:2,&quot;title&quot;:&quot;数据工程与预处理&quot;,&quot;goal&quot;:&quot;掌握LLM训练数据的收集、清洗、去重与格式化方法&quot;,&quot;file&quot;:&quot;llm-deploy-ch02.html&quot;},{&quot;no&quot;:3,&quot;title&quot;:&quot;预训练与分布式训练&quot;,&quot;goal&quot;:&quot;理解预训练目标、分布式训练策略与优化技巧&quot;,&quot;file&quot;:&quot;llm-deploy-ch03.html&quot;},{&quot;no&quot;:4,&quot;title&quot;:&quot;微调与对齐技术&quot;,&quot;goal&quot;:&quot;掌握全量微调、LoRA、RLHF等微调与对齐方法&quot;,&quot;file&quot;:&quot;llm-deploy-ch04.html&quot;},{&quot;no&quot;:5,&quot;title&quot;:&quot;模型评估与优化&quot;,&quot;goal&quot;:&quot;学会设计评估方案，并进行量化、剪枝与蒸馏优化&quot;,&quot;file&quot;:&quot;llm-deploy-ch05.html&quot;},{&quot;no&quot;:6,&quot;title&quot;:&quot;推理优化与服务化&quot;,&quot;goal&quot;:&quot;掌握推理加速技术，并部署高性能推理服务&quot;,&quot;file&quot;:&quot;llm-deploy-ch06.html&quot;},{&quot;no&quot;:7,&quot;title&quot;:&quot;实战：微调与部署LLM&quot;,&quot;goal&quot;:&quot;完成一个LLM微调、量化并部署为API的完整项目&quot;,&quot;file&quot;:&quot;llm-deploy-ch07.html&quot;},{&quot;no&quot;:8,&quot;title&quot;:&quot;生产环境运维与扩展&quot;,&quot;goal&quot;:&quot;掌握LLM服务的监控、扩缩容、安全与成本优化&quot;,&quot;file&quot;:&quot;llm-deploy-ch08.html&quot;}]}' data-chapter="gen-llm-deploy-ch2">
+
+<header class="topbar">
+  <button class="icon-btn hamburger" id="hamburger" title="打开导航">☰</button>
+  <a class="brand" href="index.html"><span class="logo">学</span> Agent 学院 <small>从零开发智能体 · Ontology · Harness</small></a>
+  <span class="spacer"></span>
+  <span class="progress-pill" id="progress-pill">进度 0/8 章</span>
+  <button class="icon-btn" id="theme-btn">🌙</button>
+</header>
+
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <main class="content">
+    <div class="content-inner">
+
+      <header class="chapter-head">
+        <div class="kicker">CHAPTER 02 · 生成课程</div>
+        <h1>数据工程与预处理</h1>
+      </header>
+
+      <p class="lead"><b>本章目标：</b>掌握LLM训练数据的收集、清洗、去重与格式化方法</p>
+ <h3>数据来源与采集：网页、书籍、代码、对话</h3>
+ <p>大家好，欢迎来到第2章。上一章我们聊了LLM的整体链路，这一章我们钻进最脏最累但也最重要的环节——数据工程。模型再牛，数据不行，出来的东西就是“垃圾进，垃圾出”。</p><p>先看数据从哪来。LLM训练数据主要有四大来源：</p><ul><li><b>网页</b>：Common Crawl是典型代表，体量巨大但噪声也巨大。需要做正文提取、语言过滤、质量打分。</li><li><b>书籍</b>：长文本、高质量、逻辑连贯，但版权和获取难度是问题。常用Books3、Project Gutenberg等。</li><li><b>代码</b>：GitHub、Stack Overflow等，对代码生成和推理能力至关重要。需要按许可证过滤、去重、解析AST。</li><li><b>对话</b>：论坛、客服记录、多轮对话数据，用于指令微调和对话能力。格式多样，需要统一成对话模板。</li></ul><p>采集时要注意：<b>数据来源的多样性直接决定模型能力的广度</b>。只喂网页，模型可能不会写代码；只喂代码，模型可能不会聊天。所以数据配比是后面要讲的重点。</p><p>下面是一个最小示例，演示如何从本地文件加载不同来源的数据并统一成字典格式：</p><pre><code class="language-python">import json
+from pathlib import Path
+
+def load_jsonl(path):
+    with open(path, 'r', encoding='utf-8') as f:
+        return [json.loads(line) for line in f]
+
+# 假设有三个文件：web.jsonl, books.jsonl, code.jsonl
+web_data = load_jsonl('web.jsonl')
+book_data = load_jsonl('books.jsonl')
+code_data = load_jsonl('code.jsonl')
+
+# 统一格式：每条数据包含 source, text, meta
+def normalize(item, source):
+    return {
+        'source': source,
+        'text': item.get('text', ''),
+        'meta': {k: v for k, v in item.items() if k != 'text'}
+    }
+
+all_data = []
+for item in web_data:
+    all_data.append(normalize(item, 'web'))
+for item in book_data:
+    all_data.append(normalize(item, 'book'))
+for item in code_data:
+    all_data.append(normalize(item, 'code'))
+
+print(f'Total samples: {len(all_data)}')
+print(all_data[0])
+</code></pre><p>这个例子很简单，但体现了数据工程的第一步：<b>统一数据格式，方便后续处理</b>。</p>
+ <h3>数据清洗：去噪、去重与质量过滤</h3>
+ <p>原始数据里全是“脏东西”：HTML标签、乱码、广告、重复段落、低质量内容。清洗的目标是<b>保留高质量、多样化的文本，去掉噪声和冗余</b>。</p><p><b>去噪</b>：常见操作包括去除HTML标签、特殊字符、多余空白、页眉页脚。可以用正则或专门的库如trafilatura提取正文。</p><p><b>去重</b>：重复数据会让模型记住特定样本，降低泛化。去重分三个层次：</p><ul><li>精确去重：完全相同的文本，用哈希即可。</li><li>近似去重：相似但不完全相同的文本，常用MinHash+LSH或SimHash。</li><li>子串去重：长文档中重复的段落，可以用后缀数组或n-gram重叠检测。</li></ul><p><b>质量过滤</b>：用规则或模型打分。规则包括：文本长度、平均词长、符号与词的比例、是否包含禁用词。模型方法如用fastText分类器判断是否像维基百科文本。</p><p>下面是一个综合示例，展示去噪、精确去重和简单质量过滤：</p><pre><code class="language-python">import re
+import hashlib
+from collections import defaultdict
+
+def clean_text(text):
+    # 去除HTML标签
+    text = re.sub(r'&lt;[^&gt;]+&gt;', '', text)
+    # 去除多余空白
+    text = re.sub(r'\s+', ' ', text).strip()
+    # 去除特殊控制字符
+    text = re.sub(r'[\x00-\x1f\x7f]', '', text)
+    return text
+
+def quality_filter(text, min_len=50, max_symbol_ratio=0.1):
+    if len(text) &lt; min_len:
+        return False
+    # 符号比例
+    symbol_count = sum(1 for c in text if not c.isalnum() and not c.isspace())
+    if symbol_count / len(text) &gt; max_symbol_ratio:
+        return False
+    return True
+
+def deduplicate(texts):
+    seen = set()
+    unique = []
+    for t in texts:
+        h = hashlib.md5(t.encode('utf-8')).hexdigest()
+        if h not in seen:
+            seen.add(h)
+            unique.append(t)
+    return unique
+
+# 模拟原始数据
+raw_texts = [
+    '<p>Hello   world!</p>',
+    'Hello world!',
+    'This is a much longer text that should pass the quality filter because it has enough characters and not too many symbols.',
+    'Short',
+    '!!!!!@@@@@#####$$$$$%%%%%^^^^^&amp;&amp;&amp;&amp;&amp;*****((((()))))',
+]
+
+cleaned = [clean_text(t) for t in raw_texts]
+filtered = [t for t in cleaned if quality_filter(t)]
+unique = deduplicate(filtered)
+
+print('Cleaned:', cleaned)
+print('Filtered:', filtered)
+print('Unique:', unique)
+</code></pre><p>注意：去重时，<b>精确去重只能去掉完全一样的文本，近似去重才能解决“换几个词”的重复</b>。工业级流水线通常用MinHash+LSH做大规模近似去重。</p>
+ <h3>数据格式化：指令微调与对话模板</h3>
+ <p>预训练数据是纯文本，但指令微调和对话模型需要结构化格式。这一步就是把数据整理成模型能理解的“模板”。</p><p><b>指令微调数据</b>通常包含三部分：instruction（指令）、input（可选输入）、output（期望输出）。例如：</p><pre><code class="language-json">{
+  "instruction": "将以下句子翻译成英文",
+  "input": "今天天气真好",
+  "output": "The weather is really nice today."
+}
+</code></pre><p><b>对话模板</b>则把多轮对话组织成角色标记的序列。常见格式有Alpaca、ShareGPT、ChatML等。以ChatML为例：</p><pre><code class="language-text">&amp;lt;|im_start|&amp;gt;system
+You are a helpful assistant.&amp;lt;|im_end|&amp;gt;
+&amp;lt;|im_start|&amp;gt;user
+你好&amp;lt;|im_end|&amp;gt;
+&amp;lt;|im_start|&amp;gt;assistant
+你好！有什么可以帮你的？&amp;lt;|im_end|&amp;gt;
+</code></pre><p>格式化时要注意：<b>训练和推理必须使用完全相同的模板</b>，否则模型会“精神分裂”。另外，要正确处理padding和attention mask，把padding token的loss忽略掉。</p><p>下面是一个把Alpaca格式转成ChatML格式的示例：</p><pre><code class="language-python">def alpaca_to_chatml(example):
+    instruction = example.get('instruction', '')
+    input_text = example.get('input', '')
+    output = example.get('output', '')
+    if input_text:
+        user_content = f"{instruction}\n\n{input_text}"
+    else:
+        user_content = instruction
+    chatml = (
+        "&lt;|im_start|&gt;system\nYou are a helpful assistant.&lt;|im_end|&gt;\n"
+        f"&lt;|im_start|&gt;user\n{user_content}&lt;|im_end|&gt;\n"
+        f"&lt;|im_start|&gt;assistant\n{output}&lt;|im_end|&gt;\n"
+    )
+    return {'text': chatml}
+
+example = {
+    'instruction': '将以下句子翻译成英文',
+    'input': '今天天气真好',
+    'output': 'The weather is really nice today.'
+}
+print(alpaca_to_chatml(example)['text'])
+</code></pre><p>实际训练时，我们通常只对assistant部分的token计算loss，system和user部分mask掉。这需要在tokenizer层面处理。</p>
+ <h3>数据配比与课程学习策略</h3>
+ <p>数据配比（Data Mixture）是指不同来源数据在训练集中的比例。它直接决定模型的能力偏向。比如：</p><ul><li>网页数据多 → 知识面广，但可能废话多。</li><li>代码数据多 → 代码能力强，但可能不会聊天。</li><li>书籍数据多 → 长文本理解好，但可能缺乏时效性。</li></ul><p>常见配比策略：<b>按经验设定初始比例，然后通过小规模实验调整</b>。例如Llama 2的预训练数据中，代码占比约5%，网页占比约80%以上。指令微调数据则更注重质量而非数量，通常几万到几百万条。</p><p><b>课程学习（Curriculum Learning）</b>是另一种策略：先喂简单数据，再喂难数据。比如先短文本后长文本，先通用后专业。但LLM预训练中课程学习的效果仍有争议，因为数据量太大，很难定义“简单”和“难”。更常见的做法是<b>动态数据配比</b>，在训练过程中调整不同来源的采样权重。</p><p>下面是一个按比例采样数据配比的示例：</p><pre><code class="language-python">import random
+from collections import defaultdict
+
+def sample_by_ratio(data, ratios, total_samples):
+    """
+    data: list of dict, each has 'source'
+    ratios: dict, source -&gt; ratio (sum to 1)
+    total_samples: int
+    """
+    by_source = defaultdict(list)
+    for item in data:
+        by_source[item['source']].append(item)
+    sampled = []
+    for source, ratio in ratios.items():
+        n = int(total_samples * ratio)
+        pool = by_source[source]
+        if len(pool) &lt; n:
+            print(f'Warning: {source} only has {len(pool)} samples, requested {n}')
+            n = len(pool)
+        sampled.extend(random.sample(pool, n))
+    random.shuffle(sampled)
+    return sampled
+
+# 模拟数据
+data = [{'source': 'web', 'text': f'web_{i}'} for i in range(1000)]
+data += [{'source': 'book', 'text': f'book_{i}'} for i in range(500)]
+data += [{'source': 'code', 'text': f'code_{i}'} for i in range(300)]
+
+ratios = {'web': 0.7, 'book': 0.2, 'code': 0.1}
+sampled = sample_by_ratio(data, ratios, 1000)
+print(f'Sampled {len(sampled)} items')
+from collections import Counter
+print(Counter(item['source'] for item in sampled))
+</code></pre><p>记住：<b>数据配比没有银弹，必须结合评测结果反复迭代</b>。建议先跑小规模消融实验，再放大到全量训练。</p>
+ <h3>常见误区</h3>
+ <ul>
+ <li>数据去重只需要精确去重，近似去重没必要。实际上，近似重复（如换几个词、调整语序）在网页数据中非常普遍，不做近似去重会导致模型重复记忆，降低泛化能力。</li>
+ <li>指令微调数据越多越好。实际上，指令微调更看重质量而非数量，低质量或重复的指令数据会损害模型性能，通常几万条高质量数据就能有不错的效果。</li>
+ <li>训练和推理可以使用不同的对话模板。这是错误的，模板不一致会导致模型输出格式混乱，必须严格保持一致。</li>
+ </ul>
+ <h3>自测</h3>
+ <details class="quiz"><summary>数据去重通常分为哪几个层次？各自适用什么场景？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>分为精确去重、近似去重和子串去重。精确去重用哈希去除完全相同的文本，适合快速过滤；近似去重用MinHash+LSH或SimHash去除相似文本，适合大规模网页数据；子串去重针对长文档中重复段落，用后缀数组或n-gram重叠检测，适合书籍等长文本。</p></div></details>
+ <details class="quiz"><summary>为什么数据配比很重要？调整配比时应该注意什么？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>数据配比决定模型的能力偏向，不同来源的数据影响模型在知识、代码、对话等方面的表现。调整配比时应注意：先设定初始比例，通过小规模实验和评测结果迭代调整；避免某一来源过多导致能力失衡；动态调整采样权重可能比固定配比更有效。</p></div></details>
+ <h3>动手练习（带参考方案）</h3>
+ <details class="fold"><summary>动手练习 · 给定一个包含网页、书籍、代码三种来源的JSONL文件（每行一个JSON对象，包含source和tex…</summary><div class="fold-body"><p><b>任务：</b>给定一个包含网页、书籍、代码三种来源的JSONL文件（每行一个JSON对象，包含source和text字段），编写一个Python脚本，完成以下任务：1）清洗文本（去除HTML标签、多余空白）；2）过滤掉长度小于50或符号比例超过10%的样本；3）对清洗后的文本进行精确去重；4）按照web:book:code = 6:3:1的比例采样1000条数据，并输出各来源的实际数量。</p><p><b>参考方案：</b></p>import json
+import re
+import hashlib
+import random
+from collections import defaultdict, Counter
+
+def clean_text(text):
+    text = re.sub(r'&lt;[^&gt;]+&gt;', '', text)
+    text = re.sub(r'\s+', ' ', text).strip()
+    text = re.sub(r'[\x00-\x1f\x7f]', '', text)
+    return text
+
+def quality_filter(text, min_len=50, max_symbol_ratio=0.1):
+    if len(text) &lt; min_len:
+        return False
+    symbol_count = sum(1 for c in text if not c.isalnum() and not c.isspace())
+    if symbol_count / len(text) &gt; max_symbol_ratio:
+        return False
+    return True
+
+def deduplicate(items):
+    seen = set()
+    unique = []
+    for item in items:
+        h = hashlib.md5(item['text'].encode('utf-8')).hexdigest()
+        if h not in seen:
+            seen.add(h)
+            unique.append(item)
+    return unique
+
+def sample_by_ratio(items, ratios, total):
+    by_source = defaultdict(list)
+    for item in items:
+        by_source[item['source']].append(item)
+    sampled = []
+    for source, ratio in ratios.items():
+        n = int(total * ratio)
+        pool = by_source[source]
+        if len(pool) &lt; n:
+            print(f'Warning: {source} only has {len(pool)} samples, requested {n}')
+            n = len(pool)
+        sampled.extend(random.sample(pool, n))
+    random.shuffle(sampled)
+    return sampled
+
+# 读取JSONL
+items = []
+with open('data.jsonl', 'r', encoding='utf-8') as f:
+    for line in f:
+        obj = json.loads(line)
+        items.append(obj)
+
+# 清洗
+for item in items:
+    item['text'] = clean_text(item['text'])
+
+# 过滤
+items = [item for item in items if quality_filter(item['text'])]
+
+# 去重
+items = deduplicate(items)
+
+# 采样
+ratios = {'web': 0.6, 'book': 0.3, 'code': 0.1}
+sampled = sample_by_ratio(items, ratios, 1000)
+
+print(f'Total sampled: {len(sampled)}')
+print(Counter(item['source'] for item in sampled))</div></details>
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/app.js?v=23"></script>
+</body>
+</html>

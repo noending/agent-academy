@@ -109,6 +109,16 @@ final class FactoryModel: ObservableObject {
         !s.isEmpty && s.range(of: #"^[a-z0-9][a-z0-9-]*$"#, options: .regularExpression) != nil
     }
 
+    /// 课程管理页深链 → 管线类型
+    static func kindFromLink(_ s: String) -> Kind? {
+        switch s {
+        case "paper": return .paper
+        case "repo": return .repo
+        case "topic": return .topic
+        default: return nil
+        }
+    }
+
     var currentSlug: String {
         switch kind {
         case .paper: return paperSlug

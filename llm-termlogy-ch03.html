@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="LLM术语精通课 第3章。">
+<title>第3章 · LLM术语精通课 | Agent 学院</title>
+<link rel="stylesheet" href="assets/css/style.css?v=22">
+</head>
+<body data-gen-course='{&quot;skill&quot;:&quot;llm-termlogy&quot;,&quot;title&quot;:&quot;LLM术语精通课&quot;,&quot;topic&quot;:&quot;由课题「LLM术语学习到精通」自动生成。适合AI初学者或需读懂LLM术语与评测的从业者。从基础概念到实战部署，掌握术语、模型评测与硬件评测，能独立分析技术文档。&quot;,&quot;chapters&quot;:[{&quot;no&quot;:1,&quot;title&quot;:&quot;LLM基础概念&quot;,&quot;goal&quot;:&quot;理解LLM基本定义、发展历程与核心能力&quot;,&quot;file&quot;:&quot;llm-termlogy-ch01.html&quot;},{&quot;no&quot;:2,&quot;title&quot;:&quot;核心术语解析&quot;,&quot;goal&quot;:&quot;掌握LLM常见术语如Transformer、注意力机制等&quot;,&quot;file&quot;:&quot;llm-termlogy-ch02.html&quot;},{&quot;no&quot;:3,&quot;title&quot;:&quot;模型评测方法&quot;,&quot;goal&quot;:&quot;学会阅读和解读LLM模型评测报告与基准&quot;,&quot;file&quot;:&quot;llm-termlogy-ch03.html&quot;},{&quot;no&quot;:4,&quot;title&quot;:&quot;硬件评测实战&quot;,&quot;goal&quot;:&quot;能看懂GPU等硬件评测指标并选型&quot;,&quot;file&quot;:&quot;llm-termlogy-ch04.html&quot;},{&quot;no&quot;:5,&quot;title&quot;:&quot;部署与优化实战&quot;,&quot;goal&quot;:&quot;动手部署LLM并优化推理性能&quot;,&quot;file&quot;:&quot;llm-termlogy-ch05.html&quot;}]}' data-chapter="gen-llm-termlogy-ch3">
+
+<header class="topbar">
+  <button class="icon-btn hamburger" id="hamburger" title="打开导航">☰</button>
+  <a class="brand" href="index.html"><span class="logo">学</span> Agent 学院 <small>从零开发智能体 · Ontology · Harness</small></a>
+  <span class="spacer"></span>
+  <span class="progress-pill" id="progress-pill">进度 0/5 章</span>
+  <button class="icon-btn" id="theme-btn">🌙</button>
+</header>
+
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <main class="content">
+    <div class="content-inner">
+
+      <header class="chapter-head">
+        <div class="kicker">CHAPTER 03 · 生成课程</div>
+        <h1>模型评测方法</h1>
+      </header>
+
+      <p class="lead"><b>本章目标：</b>学会阅读和解读LLM模型评测报告与基准</p>
+ <h3>常见评测基准：从GLUE到HELM</h3>
+ <p>要读懂模型评测报告，首先得认识那些反复出现的基准名字。它们就像考试卷，不同试卷考的能力不一样。</p><ul><li><b>GLUE</b>（General Language Understanding Evaluation）：2018年推出的自然语言理解“高考”，包含9个任务，如情感分析、句子相似度、自然语言推理。它让不同模型有了统一比较标准。</li><li><b>SuperGLUE</b>：GLUE的升级版，任务更难，人类基线更高，用来区分顶尖模型。</li><li><b>MMLU</b>（Massive Multitask Language Understanding）：57个学科的选择题，从数学到法律，测的是模型的知识广度和推理能力，是当前大模型常报的指标。</li><li><b>HELM</b>（Holistic Evaluation of Language Models）：不只测准确率，还测鲁棒性、公平性、效率等，强调全方位评估。</li></ul><p>读报告时，先看它用了哪些基准。<b>基准不同，分数不可直接比较</b>。比如MMLU 80分和GLUE 80分，含义完全不同。</p>
+ <h3>评测指标：准确率、困惑度、BLEU、ROUGE、F1</h3>
+ <p>指标是分数的计算方式，理解它们才能知道分数代表什么。</p><ul><li><b>准确率（Accuracy）</b>：分类任务中最直观，预测对的样本比例。但类别不平衡时会失真。</li><li><b>困惑度（Perplexity）</b>：语言模型常用，衡量模型对文本的“惊讶程度”。<b>越低越好</b>，表示模型越能预测下一个词。</li><li><b>BLEU</b>：机器翻译常用，比较生成文本和参考文本的n-gram重叠，<b>越高越好</b>，但只关注精确率。</li><li><b>ROUGE</b>：摘要任务常用，关注召回率，看参考文本中有多少被生成文本覆盖。</li><li><b>F1</b>：精确率和召回率的调和平均，适合不平衡分类。</li></ul><p>下面用Python快速算一下BLEU和困惑度，感受一下。</p><pre><code class="language-python">from nltk.translate.bleu_score import sentence_bleu
+import math
+
+# BLEU示例
+reference = [['the', 'cat', 'is', 'on', 'the', 'mat']]
+candidate = ['the', 'cat', 'is', 'on', 'the', 'mat']
+print('BLEU:', sentence_bleu(reference, candidate))  # 完全匹配，接近1
+
+# 困惑度示例：假设模型对4个词的概率
+probs = [0.8, 0.6, 0.9, 0.7]
+perplexity = math.exp(-sum(math.log(p) for p in probs) / len(probs))
+print('Perplexity:', perplexity)  # 越低越好</code></pre><p>注意：BLEU和ROUGE都是基于表面重叠，不理解语义，所以现在大模型评测更看重人工评估或更强指标。</p>
+ <h3>评测方法：零样本、少样本、微调评测</h3>
+ <p>同一个模型，用不同方式提问，分数可能差很多。评测方法决定了模型“开卷”程度。</p><ul><li><b>零样本（Zero-shot）</b>：不给任何示例，直接问。考验模型的泛化能力。</li><li><b>少样本（Few-shot）</b>：在问题前给几个示例，让模型模仿。通常能提升分数，但示例选择会影响结果。</li><li><b>微调评测（Fine-tuning）</b>：用任务数据训练后再测。分数最高，但不再是“通用能力”的体现。</li></ul><p>读报告时，一定要看它标注的是zero-shot还是few-shot。<b>不同设定下的分数不能直接比</b>。比如某模型MMLU 5-shot 85分，另一个0-shot 80分，不能简单说前者更强。</p><p>下面是一个模拟少样本提示的代码，展示如何构造示例。</p><pre><code class="language-python">def build_few_shot_prompt(question, examples):
+    prompt = ''
+    for ex in examples:
+        prompt += f"Q: {ex['q']}\nA: {ex['a']}\n"
+    prompt += f"Q: {question}\nA:"
+    return prompt
+
+examples = [
+    {'q': '2+2=?', 'a': '4'},
+    {'q': '3+5=?', 'a': '8'}
+]
+print(build_few_shot_prompt('7+1=?', examples))</code></pre>
+ <h3>评测报告解读：如何比较不同模型的性能</h3>
+ <p>拿到一份评测报告，不要只看总分。按下面步骤拆解：</p><ol><li><b>看基准和指标</b>：是MMLU还是GLUE？是准确率还是F1？</li><li><b>看评测设定</b>：zero-shot、few-shot还是微调？示例数量多少？</li><li><b>看数据版本</b>：同一基准可能有不同版本，比如MMLU有原始版和精简版。</li><li><b>看对比对象</b>：和谁比？是否同规模、同训练数据？</li><li><b>看细分任务</b>：总分高不代表每个子任务都好，可能偏科。</li></ol><p><b>结论：比较模型时，必须保证基准、指标、评测设定一致，否则分数没有可比性。</b>报告里常说的“SOTA”也要看具体条件。</p><p>例如，某报告说模型A在MMLU上达到90%，但没说是5-shot还是0-shot，也没说是否用了外部工具，这种分数就要谨慎看待。</p>
+ <h3>常见误区</h3>
+ <ul>
+ <li>困惑度越低越好，但不同词表大小的模型困惑度不可直接比较。</li>
+ <li>BLEU分数高不代表翻译质量一定好，它只衡量n-gram重叠，忽略语义和流畅度。</li>
+ <li>零样本分数低不代表模型差，可能只是不擅长该提示格式；少样本分数高也可能因为示例泄露了答案。</li>
+ </ul>
+ <h3>自测</h3>
+ <details class="quiz"><summary>MMLU和GLUE的主要区别是什么？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>MMLU是57个学科的选择题，侧重知识广度和推理；GLUE是9个自然语言理解任务，侧重句子级理解。两者基准不同，分数不可直接比较。</p></div></details>
+ <details class="quiz"><summary>为什么说不同评测设定下的分数不能直接比较？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>因为零样本、少样本、微调评测给模型的信息量不同。少样本通常比零样本分数高，微调更高，所以必须看报告标注的设定是否一致。</p></div></details>
+ <h3>动手练习（带参考方案）</h3>
+ <details class="fold"><summary>动手练习 · 假设你看到两份模型评测报告：模型A在MMLU 5-shot上准确率85%，模型B在MMLU 0-sh…</summary><div class="fold-body"><p><b>任务：</b>假设你看到两份模型评测报告：模型A在MMLU 5-shot上准确率85%，模型B在MMLU 0-shot上准确率80%。请分析能否直接说模型A更强？并给出你的比较建议。</p><p><b>参考方案：</b></p>不能直接说模型A更强，因为评测设定不同：A是5-shot，B是0-shot。少样本通常能提升分数，所以A的高分可能部分来自示例。建议：1) 查找模型B在5-shot下的分数，或模型A在0-shot下的分数，在相同设定下比较；2) 确认MMLU版本和测试集是否一致；3) 查看细分学科表现，避免偏科；4) 如果无法统一设定，应说明差异，不能简单下结论。</div></details>
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/app.js?v=23"></script>
+</body>
+</html>

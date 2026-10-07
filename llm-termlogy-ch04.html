@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="LLM术语精通课 第4章。">
+<title>第4章 · LLM术语精通课 | Agent 学院</title>
+<link rel="stylesheet" href="assets/css/style.css?v=22">
+</head>
+<body data-gen-course='{&quot;skill&quot;:&quot;llm-termlogy&quot;,&quot;title&quot;:&quot;LLM术语精通课&quot;,&quot;topic&quot;:&quot;由课题「LLM术语学习到精通」自动生成。适合AI初学者或需读懂LLM术语与评测的从业者。从基础概念到实战部署，掌握术语、模型评测与硬件评测，能独立分析技术文档。&quot;,&quot;chapters&quot;:[{&quot;no&quot;:1,&quot;title&quot;:&quot;LLM基础概念&quot;,&quot;goal&quot;:&quot;理解LLM基本定义、发展历程与核心能力&quot;,&quot;file&quot;:&quot;llm-termlogy-ch01.html&quot;},{&quot;no&quot;:2,&quot;title&quot;:&quot;核心术语解析&quot;,&quot;goal&quot;:&quot;掌握LLM常见术语如Transformer、注意力机制等&quot;,&quot;file&quot;:&quot;llm-termlogy-ch02.html&quot;},{&quot;no&quot;:3,&quot;title&quot;:&quot;模型评测方法&quot;,&quot;goal&quot;:&quot;学会阅读和解读LLM模型评测报告与基准&quot;,&quot;file&quot;:&quot;llm-termlogy-ch03.html&quot;},{&quot;no&quot;:4,&quot;title&quot;:&quot;硬件评测实战&quot;,&quot;goal&quot;:&quot;能看懂GPU等硬件评测指标并选型&quot;,&quot;file&quot;:&quot;llm-termlogy-ch04.html&quot;},{&quot;no&quot;:5,&quot;title&quot;:&quot;部署与优化实战&quot;,&quot;goal&quot;:&quot;动手部署LLM并优化推理性能&quot;,&quot;file&quot;:&quot;llm-termlogy-ch05.html&quot;}]}' data-chapter="gen-llm-termlogy-ch4">
+
+<header class="topbar">
+  <button class="icon-btn hamburger" id="hamburger" title="打开导航">☰</button>
+  <a class="brand" href="index.html"><span class="logo">学</span> Agent 学院 <small>从零开发智能体 · Ontology · Harness</small></a>
+  <span class="spacer"></span>
+  <span class="progress-pill" id="progress-pill">进度 0/5 章</span>
+  <button class="icon-btn" id="theme-btn">🌙</button>
+</header>
+
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <main class="content">
+    <div class="content-inner">
+
+      <header class="chapter-head">
+        <div class="kicker">CHAPTER 04 · 生成课程</div>
+        <h1>硬件评测实战</h1>
+      </header>
+
+      <p class="lead"><b>本章目标：</b>能看懂GPU等硬件评测指标并选型</p>
+ <h3>关键硬件指标：算力、显存、带宽、功耗</h3>
+ <p>选GPU就像选车，不能只看马力（算力），还要看油箱大小（显存）、输油管粗细（带宽）和油耗（功耗）。这一节我们把四个核心指标拆开讲清楚。</p><p><b>算力 (FLOPS)</b>：每秒浮点运算次数，衡量GPU做数学计算的速度。常见单位有TFLOPS（万亿次/秒）和PFLOPS（千万亿次/秒）。注意：<b>算力分精度</b>，比如FP32、FP16、BF16、INT8。LLM训练和推理常用FP16/BF16，所以看算力时要确认精度。例如NVIDIA A100的FP16算力约312 TFLOPS（带稀疏），而FP32只有19.5 TFLOPS，差距巨大。</p><p><b>显存 (VRAM)</b>：GPU自带的内存，用来放模型权重、激活值、优化器状态等。显存不够，模型根本跑不起来。粗略估算：推理时，FP16模型每1B参数约需2GB显存；训练时，因为要存优化器状态和梯度，每1B参数约需16-20GB。所以7B模型推理至少14GB显存，训练则要100GB以上。</p><p><b>内存带宽 (Memory Bandwidth)</b>：GPU从显存读写数据的速度，单位GB/s。LLM推理是<b>内存带宽瓶颈</b>型任务：每生成一个token，都要把整个模型权重从显存读一遍。所以推理速度 ≈ 内存带宽 / 模型大小。例如A100带宽约2000GB/s，7B模型FP16约14GB，理论速度约143 token/s。</p><p><b>功耗 (TDP)</b>：热设计功耗，单位瓦特。功耗决定散热和电费，也影响能否塞进机箱。数据中心GPU如H100功耗可达700W，消费级RTX 4090约450W。</p><p>下面用Python快速估算一个模型需要多少显存和理论推理速度：</p><pre><code class="language-python">def estimate_gpu_requirements(params_billion, precision_bytes=2, batch_size=1):
+    """
+    估算LLM推理的显存需求和理论速度
+    params_billion: 模型参数量（十亿）
+    precision_bytes: 每个参数的字节数，FP16=2, INT8=1, FP32=4
+    """
+    model_size_gb = params_billion * precision_bytes
+    # 激活值等额外开销，粗略按20%算
+    total_vram_gb = model_size_gb * 1.2
+    print(f"模型大小: {model_size_gb:.1f} GB")
+    print(f"建议显存: {total_vram_gb:.1f} GB")
+    
+    # 假设GPU内存带宽（GB/s），这里用A100的2000GB/s
+    bandwidth = 2000
+    tokens_per_sec = bandwidth / model_size_gb
+    print(f"理论推理速度: {tokens_per_sec:.1f} token/s")
+
+# 测试7B模型
+estimate_gpu_requirements(7, precision_bytes=2)
+# 输出：模型大小14.0GB，建议显存16.8GB，理论速度142.9 token/s
+</code></pre><p><b>记住这个公式：推理速度 ≈ 内存带宽 / 模型大小。</b>这就是为什么大模型推理慢——不是算力不够，是数据搬运太慢。</p>
+ <h3>常见评测工具：MLPerf、DLBench、自定义基准</h3>
+ <p>光看厂商给的峰值算力不靠谱，实际性能要看评测工具。这一节介绍三个层次的评测。</p><p><b>MLPerf</b>：由MLCommons组织维护的行业标准基准，相当于AI硬件界的“奥运会”。它分训练（Training）和推理（Inference）两套，覆盖图像分类、目标检测、语言模型（BERT、GPT-3）等任务。MLPerf的结果可横向对比不同厂商的GPU、TPU、CPU。看MLPerf报告时注意：<b>看场景（Scenario）</b>，比如Offline（离线批处理）、Server（在线服务）、SingleStream（单流低延迟），不同场景排名可能完全不同。</p><p><b>DLBench</b>：国内一些机构推出的深度学习基准，更贴近中文场景和国产硬件。它通常包含ResNet、BERT等模型的训练和推理测试。相比MLPerf，DLBench的测试项更少，但部署更简单。</p><p><b>自定义基准</b>：最实用的评测。因为你的模型、数据、框架和MLPerf不一定一样。自定义基准就是拿你自己的模型和真实数据，测延迟、吞吐、显存占用。关键指标：</p><ul><li><b>推理延迟 (Inference Latency)</b>：从输入到输出的时间，单位ms。对在线服务至关重要。</li><li><b>吞吐量 (Throughput)</b>：每秒处理的请求数或token数。对离线批处理重要。</li><li><b>首token延迟 (TTFT)</b>：生成第一个token的时间，影响用户感知。</li></ul><p>下面是一个自定义基准的简单示例，用PyTorch测推理延迟：</p><pre><code class="language-python">import torch
+import time
+
+# 假设有一个简单的模型
+def create_model():
+    return torch.nn.Sequential(
+        torch.nn.Linear(768, 3072),
+        torch.nn.ReLU(),
+        torch.nn.Linear(3072, 768)
+    )
+
+model = create_model().cuda().half()  # 用FP16
+input_tensor = torch.randn(1, 128, 768).cuda().half()
+
+# 预热
+for _ in range(10):
+    _ = model(input_tensor)
+torch.cuda.synchronize()
+
+# 测延迟
+latencies = []
+for _ in range(100):
+    start = time.perf_counter()
+    _ = model(input_tensor)
+    torch.cuda.synchronize()
+    latencies.append(time.perf_counter() - start)
+
+avg_latency = sum(latencies) / len(latencies) * 1000  # 转ms
+print(f"平均延迟: {avg_latency:.2f} ms")
+print(f"P99延迟: {sorted(latencies)[98]*1000:.2f} ms")
+</code></pre><p><b>评测时一定要预热（warm-up）</b>，因为GPU首次运行会有初始化开销。另外要测P99延迟，而不只是平均延迟，因为用户体验由最慢的请求决定。</p>
+ <h3>硬件与模型匹配：如何根据模型大小选择GPU</h3>
+ <p>知道了指标和评测工具，现在来解决实际问题：给定一个模型，该选什么GPU？我们分推理和训练两种情况。</p><p><b>推理场景</b>：主要看显存和带宽。步骤：</p><ol><li>算模型大小：参数量 × 精度字节数。例如7B模型FP16约14GB，INT8约7GB。</li><li>加额外开销：激活值、KV Cache等。KV Cache随序列长度和batch size增长，长上下文时可能比模型还大。粗略加20%-50%。</li><li>选显存足够的GPU：7B FP16建议16GB以上，如RTX 4090（24GB）、A10（24GB）。13B FP16建议32GB以上，如A100 40GB。70B FP16需要140GB，单卡放不下，需多卡或量化。</li><li>看带宽：带宽越高，推理越快。同价位选带宽大的。</li></ol><p><b>训练场景</b>：显存需求暴增，因为要存优化器状态、梯度、激活值。粗略公式：<b>训练显存 ≈ 参数量 × (2 + 2 + 4 + 4) 字节 = 参数量 × 12字节</b>（FP16混合精度：权重2、梯度2、优化器动量4、方差4）。再加上激活值，实际约16-20字节/参数。所以7B模型训练需要约112-140GB显存，至少2张A100 80GB。全量微调13B模型需要8张A100 80GB是常见配置。</p><p>下面用Python写一个选型助手：</p><pre><code class="language-python">def recommend_gpu(params_billion, mode='inference', precision='fp16'):
+    """
+    根据模型大小推荐GPU配置
+    mode: 'inference' 或 'training'
+    precision: 'fp16', 'int8', 'fp32'
+    """
+    bytes_per_param = {'fp16': 2, 'int8': 1, 'fp32': 4}[precision]
+    model_size = params_billion * bytes_per_param
+    
+    if mode == 'inference':
+        vram_needed = model_size * 1.3  # 加30%开销
+        print(f"推理模式：模型{model_size:.1f}GB，建议显存{vram_needed:.1f}GB")
+        if vram_needed &lt;= 24:
+            print("推荐：RTX 4090 / A10 (24GB)")
+        elif vram_needed &lt;= 48:
+            print("推荐：A6000 (48GB) / L40S (48GB)")
+        elif vram_needed &lt;= 80:
+            print("推荐：A100 80GB / H100 80GB")
+        else:
+            print(f"需要多卡：至少{int(vram_needed//80)+1}张80GB GPU")
+    else:
+        # 训练：约16字节/参数（混合精度+激活值）
+        vram_needed = params_billion * 16
+        print(f"训练模式：建议显存{vram_needed:.1f}GB")
+        num_gpus = int(vram_needed // 80) + 1
+        print(f"推荐：{num_gpus}张A100 80GB或H100 80GB")
+
+# 测试
+recommend_gpu(7, 'inference', 'fp16')
+recommend_gpu(7, 'training', 'fp16')
+recommend_gpu(70, 'inference', 'int8')
+</code></pre><p><b>关键结论：推理选显存够用且带宽高的；训练选显存大且支持多卡互联的（如NVLink）。</b>不要用消费级显卡做多卡训练，因为PCIe带宽和NVLink差距巨大。</p>
+ <h3>成本与性能权衡：云GPU vs 本地GPU</h3>
+ <p>最后我们来算账。云GPU和本地GPU各有优劣，选择取决于使用频率、预算和隐私要求。</p><p><b>云GPU</b>：按需付费，灵活。优点：无需前期投入，随时升级到最新硬件，适合短期项目、实验、突发流量。缺点：长期使用成本高，数据隐私风险，网络延迟。主流云GPU价格（2024年参考）：</p><table><tr><th>GPU型号</th><th>显存</th><th>按需价格（美元/小时）</th><th>适合场景</th></tr><tr><td>T4</td><td>16GB</td><td>0.35-0.5</td><td>轻量推理</td></tr><tr><td>A10G</td><td>24GB</td><td>1.0-1.5</td><td>中等推理</td></tr><tr><td>A100 40GB</td><td>40GB</td><td>2.5-4.0</td><td>训练/大模型推理</td></tr><tr><td>H100 80GB</td><td>80GB</td><td>8.0-12.0</td><td>大模型训练</td></tr></table><p><b>本地GPU</b>：一次性购买，长期使用成本低。优点：数据安全，无网络延迟，可深度定制。缺点：前期投入大，硬件贬值快，维护麻烦。参考价格：RTX 4090约1600美元，A100 80GB约15000美元，H100约30000美元。</p><p><b>盈亏平衡点计算</b>：假设云GPU每小时3美元，本地GPU购买价15000美元，电费和维护每月200美元。则回本时间 = 15000 / (3*24*30 - 200) ≈ 7.5个月。如果每天使用超过8小时，本地更划算；如果只是偶尔用，云更划算。</p><p>下面用Python算一下：</p><pre><code class="language-python">def cost_comparison(cloud_price_per_hour, local_gpu_price, local_power_cost_per_month, hours_per_day):
+    """
+    比较云GPU和本地GPU的月成本
+    """
+    cloud_monthly = cloud_price_per_hour * hours_per_day * 30
+    local_monthly = local_power_cost_per_month
+    # 本地GPU折旧，按3年直线折旧
+    depreciation = local_gpu_price / 36
+    local_total = local_monthly + depreciation
+    
+    print(f"每天使用{hours_per_day}小时：")
+    print(f"云GPU月成本: ${cloud_monthly:.2f}")
+    print(f"本地GPU月成本（含折旧）: ${local_total:.2f}")
+    if cloud_monthly &gt; local_total:
+        print("结论：本地更划算")
+    else:
+        print("结论：云更划算")
+
+# 测试不同使用时长
+for hours in [2, 8, 24]:
+    cost_comparison(3.0, 15000, 200, hours)
+    print()
+</code></pre><p><b>混合策略</b>：很多团队采用“本地推理+云训练”或“云突发+本地常驻”的混合模式。例如，用本地RTX 4090做日常推理，需要训练时租用云A100集群。这样兼顾成本和灵活性。</p><p><b>最终建议</b>：初学者先用云GPU（如Colab、AutoDL）练手；团队有稳定需求且预算充足时，考虑本地GPU；对数据隐私要求高的场景，必须本地部署。</p>
+ <h3>常见误区</h3>
+ <ul>
+ <li>算力（FLOPS）越高，LLM推理越快。实际上LLM推理是内存带宽瓶颈，带宽比算力更重要。</li>
+ <li>显存只要装下模型权重就够了。实际上KV Cache、激活值、框架开销都会占用显存，通常需要额外20%-50%的余量。</li>
+ <li>云GPU一定比本地GPU便宜。长期高负载使用时，本地GPU的折旧后成本可能更低，需要根据使用时长计算盈亏平衡点。</li>
+ </ul>
+ <h3>自测</h3>
+ <details class="quiz"><summary>一个13B参数的模型，使用FP16精度进行推理，至少需要多少显存？如果GPU内存带宽是1000GB/s，理论推理速度是多少token/s？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>模型大小 = 13B × 2字节 = 26GB。加上约30%开销，建议显存至少34GB。理论推理速度 = 带宽 / 模型大小 = 1000GB/s / 26GB ≈ 38.5 token/s。</p></div></details>
+ <details class="quiz"><summary>MLPerf推理基准中的Offline和Server场景有什么区别？分别适合评估什么类型的应用？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>Offline场景模拟离线批处理，所有数据一次性可用，追求最大吞吐量，适合评估批量推理任务。Server场景模拟在线服务，请求按泊松分布到达，有延迟约束，适合评估在线推理服务的延迟和吞吐平衡。</p></div></details>
+ <h3>动手练习（带参考方案）</h3>
+ <details class="fold"><summary>动手练习 · 假设你要为一个70B参数的模型选择推理硬件，使用INT8量化。请计算所需显存，并给出至少两种硬件方案…</summary><div class="fold-body"><p><b>任务：</b>假设你要为一个70B参数的模型选择推理硬件，使用INT8量化。请计算所需显存，并给出至少两种硬件方案（云或本地），然后编写一个Python脚本，比较两种方案在每天使用12小时情况下的月成本。云GPU价格参考：A100 80GB每小时3美元，H100 80GB每小时10美元。本地GPU价格参考：A100 80GB约15000美元，H100 80GB约30000美元，电费和维护每月300美元。</p><p><b>参考方案：</b></p>70B INT8模型大小 = 70GB，加30%开销约91GB，单张80GB GPU不够，需要2张80GB GPU或1张H100 80GB加内存交换（不推荐）。方案一：云2×A100 80GB，每小时6美元。方案二：本地2×A100 80GB，购买价30000美元，月电费维护300美元。
+
+Python脚本：
+```python
+def compare_cost(cloud_price_per_hour, local_gpu_price, local_monthly_cost, hours_per_day=12):
+    cloud_monthly = cloud_price_per_hour * hours_per_day * 30
+    depreciation = local_gpu_price / 36
+    local_total = local_monthly_cost + depreciation
+    print(f"云GPU月成本: ${cloud_monthly:.2f}")
+    print(f"本地GPU月成本（含折旧）: ${local_total:.2f}")
+    if cloud_monthly &gt; local_total:
+        print("本地更划算")
+    else:
+        print("云更划算")
+
+# 方案一：云2×A100
+compare_cost(6.0, 0, 0)
+# 方案二：本地2×A100
+compare_cost(0, 30000, 300)
+```
+输出：云月成本2160美元，本地月成本1133美元，本地更划算。</div></details>
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/app.js?v=23"></script>
+</body>
+</html>

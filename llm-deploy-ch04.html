@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="LLM全链路实战 第4章。">
+<title>第4章 · LLM全链路实战 | Agent 学院</title>
+<link rel="stylesheet" href="assets/css/style.css?v=22">
+</head>
+<body data-gen-course='{&quot;skill&quot;:&quot;llm-deploy&quot;,&quot;title&quot;:&quot;LLM全链路实战&quot;,&quot;topic&quot;:&quot;由课题「LLM 从训练到实际部署」自动生成。适合AI工程师、算法研究员及技术管理者。系统掌握LLM从预训练、微调到部署上线的完整工程链路，涵盖数据、训练、优化、服务化与运维。&quot;,&quot;chapters&quot;:[{&quot;no&quot;:1,&quot;title&quot;:&quot;LLM基础与生态&quot;,&quot;goal&quot;:&quot;理解LLM核心概念、发展历程与主流模型架构&quot;,&quot;file&quot;:&quot;llm-deploy-ch01.html&quot;},{&quot;no&quot;:2,&quot;title&quot;:&quot;数据工程与预处理&quot;,&quot;goal&quot;:&quot;掌握LLM训练数据的收集、清洗、去重与格式化方法&quot;,&quot;file&quot;:&quot;llm-deploy-ch02.html&quot;},{&quot;no&quot;:3,&quot;title&quot;:&quot;预训练与分布式训练&quot;,&quot;goal&quot;:&quot;理解预训练目标、分布式训练策略与优化技巧&quot;,&quot;file&quot;:&quot;llm-deploy-ch03.html&quot;},{&quot;no&quot;:4,&quot;title&quot;:&quot;微调与对齐技术&quot;,&quot;goal&quot;:&quot;掌握全量微调、LoRA、RLHF等微调与对齐方法&quot;,&quot;file&quot;:&quot;llm-deploy-ch04.html&quot;},{&quot;no&quot;:5,&quot;title&quot;:&quot;模型评估与优化&quot;,&quot;goal&quot;:&quot;学会设计评估方案，并进行量化、剪枝与蒸馏优化&quot;,&quot;file&quot;:&quot;llm-deploy-ch05.html&quot;},{&quot;no&quot;:6,&quot;title&quot;:&quot;推理优化与服务化&quot;,&quot;goal&quot;:&quot;掌握推理加速技术，并部署高性能推理服务&quot;,&quot;file&quot;:&quot;llm-deploy-ch06.html&quot;},{&quot;no&quot;:7,&quot;title&quot;:&quot;实战：微调与部署LLM&quot;,&quot;goal&quot;:&quot;完成一个LLM微调、量化并部署为API的完整项目&quot;,&quot;file&quot;:&quot;llm-deploy-ch07.html&quot;},{&quot;no&quot;:8,&quot;title&quot;:&quot;生产环境运维与扩展&quot;,&quot;goal&quot;:&quot;掌握LLM服务的监控、扩缩容、安全与成本优化&quot;,&quot;file&quot;:&quot;llm-deploy-ch08.html&quot;}]}' data-chapter="gen-llm-deploy-ch4">
+
+<header class="topbar">
+  <button class="icon-btn hamburger" id="hamburger" title="打开导航">☰</button>
+  <a class="brand" href="index.html"><span class="logo">学</span> Agent 学院 <small>从零开发智能体 · Ontology · Harness</small></a>
+  <span class="spacer"></span>
+  <span class="progress-pill" id="progress-pill">进度 0/8 章</span>
+  <button class="icon-btn" id="theme-btn">🌙</button>
+</header>
+
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <main class="content">
+    <div class="content-inner">
+
+      <header class="chapter-head">
+        <div class="kicker">CHAPTER 04 · 生成课程</div>
+        <h1>微调与对齐技术</h1>
+      </header>
+
+      <p class="lead"><b>本章目标：</b>掌握全量微调、LoRA、RLHF等微调与对齐方法</p>
+ <h3>全量微调 vs 参数高效微调：LoRA 与 QLoRA</h3>
+ <p>当我们拿到一个预训练好的大模型（比如 LLaMA、Qwen），想让它适应特定任务或领域，最直接的办法就是<b>全量微调</b>：用任务数据继续训练模型的所有参数。这就像把整栋房子重新装修一遍，效果可能最好，但代价极高——7B 模型全量微调通常需要多张 A100，显存动辄上百 GB，而且每个任务都要存一份完整权重，部署时切换成本巨大。</p><p>于是<b>参数高效微调（PEFT）</b>登场了。核心思想：冻结预训练模型的大部分参数，只训练一小部分新增或选定的参数。其中最有代表性的就是 <b>LoRA（Low-Rank Adaptation）</b>。</p><p>LoRA 的直觉来自一个观察：模型在适配新任务时，权重的<strong>变化量</strong> ΔW 往往是低秩的。与其直接更新原始权重 W，不如把 ΔW 分解成两个小矩阵的乘积：ΔW = B·A，其中 A 是 r×d 矩阵，B 是 d×r 矩阵，r（秩）远小于 d。训练时只更新 A 和 B，原始 W 冻结。这样可训练参数量能降到原来的 0.1%~1%，显存和存储都大幅下降。</p><p>前向传播变成：h = Wx + BAx。初始化时 A 用高斯随机，B 置零，保证训练开始时 LoRA 分支输出为 0，不破坏原模型行为。</p><p><b>QLoRA</b> 则更进一步：先把基座模型量化成 4-bit（NF4）加载，再在量化权重上挂 LoRA 适配器。这样 7B 模型可以在单张 24GB 甚至 16GB 显卡上微调，让个人开发者也能玩转大模型微调。</p><p>下面是一个用 Hugging Face <code>peft</code> 库给模型加 LoRA 的最小示例：</p><pre><code class="language-python">from transformers import AutoModelForCausalLM, AutoTokenizer
+from peft import LoraConfig, get_peft_model
+
+model_name = "Qwen/Qwen2.5-0.5B"
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForCausalLM.from_pretrained(model_name)
+
+# 配置 LoRA：只作用于注意力层的 q、v 投影
+lora_config = LoraConfig(
+    r=8,                      # 秩
+    lora_alpha=16,            # 缩放系数，通常设为 2*r
+    target_modules=["q_proj", "v_proj"],
+    lora_dropout=0.05,
+    bias="none",
+    task_type="CAUSAL_LM",
+)
+
+model = get_peft_model(model, lora_config)
+model.print_trainable_parameters()
+# 输出类似：trainable params: 540,672 || all params: 494,032,768 || trainable%: 0.1094
+</code></pre><p>可以看到，可训练参数只有约 0.1%。训练完成后，你可以只保存 LoRA 权重（几 MB），推理时再合并回基座模型，或者用 <code>merge_and_unload()</code> 永久合并。</p>
+ <h3>指令微调与对话模板设计</h3>
+ <p>预训练模型只会“续写”，不会“听话”。<b>指令微调（Instruction Tuning）</b>就是用“指令-回答”格式的数据继续训练，让模型学会遵循人类指令。这一步是 ChatGPT 类模型的关键。</p><p>但这里有个容易被忽视的工程细节：<b>对话模板（Chat Template）</b>。不同模型在训练时使用了不同的特殊 token 和格式来区分 system、user、assistant 角色。比如 Qwen 用 <code>&amp;lt;|im_start|&amp;gt;role\ncontent&amp;lt;|im_end|&amp;gt;</code>，Llama 3 用 <code>&amp;lt;|start_header_id|&amp;gt;</code> 系列。如果你微调时用的模板和推理时不一致，模型表现会断崖式下跌。</p><p>正确做法是：<b>始终使用 tokenizer 自带的 <code>apply_chat_template</code></b>，它封装了模型训练时的标准格式。下面演示如何构造一条训练样本：</p><pre><code class="language-python">from transformers import AutoTokenizer
+
+tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen2.5-0.5B")
+
+messages = [
+    {"role": "system", "content": "你是一个专业的AI助教。"},
+    {"role": "user", "content": "什么是LoRA？"},
+    {"role": "assistant", "content": "LoRA是一种低秩适应方法，通过训练两个小矩阵来近似权重更新。"},
+]
+
+# 生成完整对话文本（含特殊token）
+text = tokenizer.apply_chat_template(messages, tokenize=False)
+print(text)
+
+# 训练时通常只对 assistant 部分计算 loss
+# 做法：先对 prompt 部分设置 label 为 -100（忽略）
+input_ids = tokenizer.apply_chat_template(messages, tokenize=True, return_tensors="pt")
+</code></pre><p><b>关键结论：只对 assistant 回复部分计算损失</b>，prompt 部分的 label 设为 -100。否则模型会去学习“如何提问”，浪费容量还可能降低效果。Hugging Face 的 <code>trl</code> 库中 <code>SFTTrainer</code> 配合 <code>DataCollatorForCompletionOnlyLM</code> 可以自动完成这个掩码。</p><p>指令数据的质量比数量更重要。一条高质量、多样化的指令数据，胜过十条低质重复数据。常见来源包括：人工标注、强模型蒸馏（如用 GPT-4 生成）、开源数据集（Alpaca、ShareGPT）以及业务真实日志。</p>
+ <h3>RLHF 与 DPO：让模型对齐人类偏好</h3>
+ <p>指令微调让模型“会回答”，但回答是否<strong>有用、诚实、无害</strong>，还需要<b>对齐（Alignment）</b>。经典方案是 <b>RLHF（基于人类反馈的强化学习）</b>，分三步：</p><ol><li><b>监督微调（SFT）</b>：用高质量指令数据微调，得到基础策略模型。</li><li><b>训练奖励模型（RM）</b>：让人类对同一 prompt 的多个回答排序，训练一个模型去预测“人类有多喜欢这个回答”。</li><li><b>PPO 强化学习</b>：用奖励模型作为打分器，用 PPO 算法优化策略模型，同时加 KL 惩罚防止跑偏。</li></ol><p>RLHF 效果好，但工程复杂：要同时加载策略模型、参考模型、奖励模型、价值模型，显存爆炸，训练极不稳定。于是 <b>DPO（Direct Preference Optimization）</b> 出现了。</p><p>DPO 的巧妙之处在于：它从数学上证明了，RLHF 的最优策略可以解析地表示成偏好数据的函数，从而<b>把强化学习问题转化成一个简单的分类损失</b>。你只需要准备 (prompt, chosen, rejected) 三元组，直接像做监督学习一样训练即可，不需要奖励模型，也不需要 PPO。</p><p>DPO 损失的核心是：让模型对 chosen 回答的 log 概率相对 rejected 回答更高，同时用参考模型约束不要偏离太远。下面是一个用 <code>trl</code> 的 <code>DPOTrainer</code> 的最小示例：</p><pre><code class="language-python">from datasets import Dataset
+from transformers import AutoModelForCausalLM, AutoTokenizer
+from trl import DPOTrainer, DPOConfig
+
+model_name = "Qwen/Qwen2.5-0.5B"
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForCausalLM.from_pretrained(model_name)
+ref_model = AutoModelForCausalLM.from_pretrained(model_name)  # 参考模型，冻结
+
+# 偏好数据：每条包含 prompt、chosen、rejected
+data = {
+    "prompt": ["解释一下什么是过拟合。"],
+    "chosen": ["过拟合是指模型在训练集上表现很好，但在新数据上表现差，通常因为模型过于复杂记住了噪声。"],
+    "rejected": ["过拟合就是模型训练得太好了。"],
+}
+dataset = Dataset.from_dict(data)
+
+training_args = DPOConfig(
+    output_dir="./dpo_out",
+    per_device_train_batch_size=1,
+    num_train_epochs=1,
+    beta=0.1,          # KL 约束强度，越大越保守
+    learning_rate=5e-5,
+)
+
+trainer = DPOTrainer(
+    model=model,
+    ref_model=ref_model,
+    args=training_args,
+    train_dataset=dataset,
+    tokenizer=tokenizer,
+)
+trainer.train()
+</code></pre><p><b>选型建议</b>：资源充足、追求极致效果，用 RLHF/PPO；资源有限、想快速迭代，用 DPO 或其变体（IPO、KTO、ORPO）。实践中，DPO 已成为大多数团队的首选对齐方案。</p>
+ <h3>微调数据构建与评估</h3>
+ <p>微调的上限往往由数据决定。构建数据时，建议遵循以下原则：</p><ul><li><b>多样性</b>：覆盖任务类型、领域、难度、语言风格，避免模型只会一种腔调。</li><li><b>质量优先</b>：人工审核或强模型过滤，剔除事实错误、格式混乱、重复样本。</li><li><b>格式统一</b>：严格使用目标模型的对话模板，保证训练/推理一致。</li><li><b>规模适中</b>：指令微调通常 1k~100k 条即可见效，LoRA 场景下几千条高质量数据就能有不错表现。</li></ul><p>评估方面，不能只看训练 loss。建议分三层：</p><ol><li><b>自动指标</b>：困惑度（PPL）、ROUGE/BLEU（生成任务）、准确率（分类任务）。</li><li><b>模型评判</b>：用 GPT-4 等强模型对回答打分或做 pairwise 比较（LLM-as-a-Judge）。</li><li><b>人工评估</b>：抽样盲评，关注有用性、事实性、安全性。</li></ol><p>特别提醒：<b>一定要留出和训练集同分布的验证集</b>，并监控是否过拟合。LoRA 虽然参数少，但数据重复多、epoch 大时同样会过拟合。</p><p>下面是一个用 PPL 快速评估微调前后模型的示例：</p><pre><code class="language-python">import torch
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
+def compute_ppl(model, tokenizer, texts):
+    model.eval()
+    total_loss, total_tokens = 0.0, 0
+    with torch.no_grad():
+        for text in texts:
+            enc = tokenizer(text, return_tensors="pt")
+            out = model(**enc, labels=enc["input_ids"])
+            n = enc["input_ids"].size(1)
+            total_loss += out.loss.item() * n
+            total_tokens += n
+    return torch.exp(torch.tensor(total_loss / total_tokens)).item()
+
+model_name = "Qwen/Qwen2.5-0.5B"
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForCausalLM.from_pretrained(model_name)
+
+test_texts = ["什么是机器学习？", "解释一下梯度下降。"]
+print("PPL:", compute_ppl(model, tokenizer, test_texts))
+</code></pre><p>把微调后的模型用同样脚本跑一遍，对比 PPL 变化，就能快速判断微调是否有效。当然，PPL 低不代表回答好，最终还是要结合人工和模型评判。</p>
+ <h3>常见误区</h3>
+ <ul>
+ <li>LoRA 只能用于注意力层的 q、v 投影，实际上可以作用于任何线性层（如 k、o、FFN），target_modules 的选择需要实验调优。</li>
+ <li>DPO 完全不需要参考模型，实际上 DPO 损失中必须有一个冻结的参考模型来计算 KL 约束，否则训练容易崩溃。</li>
+ <li>指令微调时对所有 token 计算 loss 效果更好，实际上应该只对 assistant 回复部分计算 loss，prompt 部分要 mask 掉。</li>
+ </ul>
+ <h3>自测</h3>
+ <details class="quiz"><summary>LoRA 中秩 r 和缩放系数 lora_alpha 分别起什么作用？增大 r 会带来什么影响？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>r 控制低秩矩阵的秩，决定适配器的容量；lora_alpha 是缩放系数，实际更新量为 (alpha/r)·BA，用于稳定训练。增大 r 会提升模型表达能力，但可训练参数和显存增加，且更容易过拟合，通常从 8 或 16 开始调。</p></div></details>
+ <details class="quiz"><summary>相比 RLHF，DPO 的主要优势是什么？它为什么能省掉奖励模型和 PPO？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>DPO 把 RLHF 的两阶段（训练奖励模型 + PPO 强化学习）合并成一个直接的偏好分类损失。它从数学上推导出 RLHF 最优策略的解析形式，使得只需在 (prompt, chosen, rejected) 数据上做类似监督学习的训练即可，无需显式奖励模型和 PPO，训练更稳定、显存更省、实现更简单。</p></div></details>
+ <h3>动手练习（带参考方案）</h3>
+ <details class="fold"><summary>动手练习 · 使用 Hugging Face 生态，对一个 0.5B 小模型进行 LoRA 指令微调，并对比微调前…</summary><div class="fold-body"><p><b>任务：</b>使用 Hugging Face 生态，对一个 0.5B 小模型进行 LoRA 指令微调，并对比微调前后的生成效果。要求：1）构造至少 20 条指令数据（可手写或从开源数据集截取）；2）使用 tokenizer.apply_chat_template 格式化；3）只对 assistant 部分计算 loss；4）训练后用相同 prompt 对比微调前后输出。</p><p><b>参考方案：</b></p>参考实现如下（使用 trl 的 SFTTrainer 自动处理 chat template 和 loss mask）：
+
+```python
+from datasets import Dataset
+from transformers import AutoModelForCausalLM, AutoTokenizer
+from trl import SFTTrainer, SFTConfig
+
+model_name = "Qwen/Qwen2.5-0.5B"
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForCausalLM.from_pretrained(model_name)
+
+# 1) 构造指令数据（示例 3 条，实际需 20+）
+raw = [
+    {"messages": [{"role": "user", "content": "什么是LoRA？"},
+                  {"role": "assistant", "content": "LoRA是一种低秩适应微调方法，通过训练两个小矩阵近似权重更新，大幅减少可训练参数。"}]},
+    {"messages": [{"role": "user", "content": "解释梯度下降。"},
+                  {"role": "assistant", "content": "梯度下降是一种优化算法，沿损失函数梯度的反方向迭代更新参数，逐步逼近最小值。"}]},
+    {"messages": [{"role": "user", "content": "什么是过拟合？"},
+                  {"role": "assistant", "content": "过拟合指模型在训练集上表现好但在新数据上表现差，通常因模型过于复杂记住了噪声。"}]},
+]
+dataset = Dataset.from_list(raw)
+
+# 2) 配置 LoRA + SFT
+training_args = SFTConfig(
+    output_dir="./sft_out",
+    per_device_train_batch_size=1,
+    num_train_epochs=3,
+    learning_rate=2e-4,
+    logging_steps=1,
+    save_strategy="no",
+    report_to="none",
+)
+
+# SFTTrainer 会自动应用 chat template，并只对 assistant 部分计算 loss
+trainer = SFTTrainer(
+    model=model,
+    args=training_args,
+    train_dataset=dataset,
+    tokenizer=tokenizer,
+    peft_config=__import__("peft").LoraConfig(
+        r=8, lora_alpha=16, target_modules=["q_proj", "v_proj"],
+        lora_dropout=0.05, task_type="CAUSAL_LM"),
+)
+trainer.train()
+
+# 3) 对比微调前后输出
+def generate(model, prompt):
+    msgs = [{"role": "user", "content": prompt}]
+    ids = tokenizer.apply_chat_template(msgs, add_generation_prompt=True, return_tensors="pt")
+    out = model.generate(ids, max_new_tokens=64, do_sample=False)
+    return tokenizer.decode(out[0][ids.shape[1]:], skip_special_tokens=True)
+
+prompt = "什么是LoRA？"
+print("微调前:", generate(model, prompt))
+# 训练后模型已更新，可直接再调用 generate 对比
+print("微调后:", generate(model, prompt))
+```
+
+要点：SFTTrainer 内部使用 DataCollatorForCompletionOnlyLM 或自动识别 assistant 部分做 loss mask；peft_config 传入即启用 LoRA；训练后可直接用同一模型对象生成对比。</div></details>
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/app.js?v=23"></script>
+</body>
+</html>

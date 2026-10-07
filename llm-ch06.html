@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="LLM训练到部署 第6章。">
+<title>第6章 · LLM训练到部署 | Agent 学院</title>
+<link rel="stylesheet" href="assets/css/style.css?v=22">
+</head>
+<body data-gen-course='{&quot;skill&quot;:&quot;llm&quot;,&quot;title&quot;:&quot;LLM训练到部署&quot;,&quot;topic&quot;:&quot;由课题「LLM从训练到部署」自动生成。本课程适合对LLM感兴趣的开发者与运维人员，从零开始掌握大语言模型训练、微调、优化与部署全流程，最终能独立完成生产级部署。&quot;,&quot;chapters&quot;:[{&quot;no&quot;:1,&quot;title&quot;:&quot;LLM基础概念&quot;,&quot;goal&quot;:&quot;理解LLM核心概念与工作原理&quot;,&quot;file&quot;:&quot;llm-ch01.html&quot;},{&quot;no&quot;:2,&quot;title&quot;:&quot;数据准备与预处理&quot;,&quot;goal&quot;:&quot;掌握构建高质量训练数据集的方法&quot;,&quot;file&quot;:&quot;llm-ch02.html&quot;},{&quot;no&quot;:3,&quot;title&quot;:&quot;模型训练基础&quot;,&quot;goal&quot;:&quot;能够配置并启动LLM训练任务&quot;,&quot;file&quot;:&quot;llm-ch03.html&quot;},{&quot;no&quot;:4,&quot;title&quot;:&quot;微调与对齐&quot;,&quot;goal&quot;:&quot;使用微调技术适配下游任务&quot;,&quot;file&quot;:&quot;llm-ch04.html&quot;},{&quot;no&quot;:5,&quot;title&quot;:&quot;模型优化与压缩&quot;,&quot;goal&quot;:&quot;优化模型推理速度与资源占用&quot;,&quot;file&quot;:&quot;llm-ch05.html&quot;},{&quot;no&quot;:6,&quot;title&quot;:&quot;部署架构与API&quot;,&quot;goal&quot;:&quot;设计并实现LLM服务API&quot;,&quot;file&quot;:&quot;llm-ch06.html&quot;},{&quot;no&quot;:7,&quot;title&quot;:&quot;实战：训练小型LLM&quot;,&quot;goal&quot;:&quot;完成一个小型LLM的训练与微调&quot;,&quot;file&quot;:&quot;llm-ch07.html&quot;},{&quot;no&quot;:8,&quot;title&quot;:&quot;实战：生产环境部署&quot;,&quot;goal&quot;:&quot;将训练好的LLM部署到生产环境&quot;,&quot;file&quot;:&quot;llm-ch08.html&quot;}]}' data-chapter="gen-llm-ch6">
+
+<header class="topbar">
+  <button class="icon-btn hamburger" id="hamburger" title="打开导航">☰</button>
+  <a class="brand" href="index.html"><span class="logo">学</span> Agent 学院 <small>从零开发智能体 · Ontology · Harness</small></a>
+  <span class="spacer"></span>
+  <span class="progress-pill" id="progress-pill">进度 0/8 章</span>
+  <button class="icon-btn" id="theme-btn">🌙</button>
+</header>
+
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <main class="content">
+    <div class="content-inner">
+
+      <header class="chapter-head">
+        <div class="kicker">CHAPTER 06 · 生成课程</div>
+        <h1>部署架构与API</h1>
+      </header>
+
+      <p class="lead"><b>本章目标：</b>设计并实现LLM服务API</p>
+ <h3>部署模式：本地、云、边缘</h3>
+ <p>部署大语言模型时，首先要决定模型跑在哪里。常见模式有三种：<b>本地部署</b>、<b>云部署</b>和<b>边缘部署</b>。它们各有优劣，选择取决于你的业务需求、预算和延迟要求。</p><ul><li><b>本地部署</b>：模型运行在自己的服务器或工作站上。优点：数据不出内网，隐私安全；无网络延迟；一次性硬件投入。缺点：需要维护硬件，扩展性差，前期成本高。适合对数据安全要求极高的场景，如金融、医疗。</li><li><b>云部署</b>：模型托管在云服务器（如 AWS、GCP、阿里云）上。优点：弹性伸缩，按需付费，免运维。缺点：数据需上传云端，有网络延迟，长期使用成本可能较高。适合大多数互联网应用。</li><li><b>边缘部署</b>：模型运行在终端设备（如手机、IoT 设备）上。优点：超低延迟，离线可用，隐私保护好。缺点：算力有限，只能跑小模型或量化模型。适合移动端 AI 助手、智能摄像头等。</li></ul><p>实际生产中，常采用<b>混合部署</b>：核心模型在云上，轻量模型在边缘，敏感数据在本地处理。例如，一个智能客服系统可以在云端跑大模型，在手机端跑意图识别小模型。</p><p>下面是一个简单的 Python 脚本，用于检测当前环境适合哪种部署模式（根据可用内存和 GPU）。</p><pre><code class="language-python">import psutil
+import torch
+
+def suggest_deployment():
+    mem_gb = psutil.virtual_memory().total / (1024**3)
+    has_gpu = torch.cuda.is_available()
+    if has_gpu and mem_gb &gt;= 32:
+        return "本地/云服务器（可跑大模型）"
+    elif mem_gb &gt;= 16:
+        return "云服务器（中等模型）"
+    else:
+        return "边缘设备（需量化小模型）"
+
+print(suggest_deployment())</code></pre><p>运行前需安装 <code>psutil</code> 和 <code>torch</code>。这个例子帮你快速判断当前机器适合哪种部署模式。</p>
+ <h3>RESTful API 与 gRPC 接口设计</h3>
+ <p>模型部署后，需要对外提供接口。最常用的是 <b>RESTful API</b> 和 <b>gRPC</b>。RESTful API 基于 HTTP/1.1，使用 JSON 传输，简单通用，适合 Web 和移动端。gRPC 基于 HTTP/2，使用 Protocol Buffers 二进制传输，性能高，适合内部服务间通信。</p><p><b>RESTful API 设计要点</b>：</p><ul><li>使用名词表示资源，如 <code>/v1/completions</code>。</li><li>用 HTTP 方法表示操作：GET 获取，POST 创建，PUT 更新，DELETE 删除。</li><li>状态码：200 成功，400 客户端错误，500 服务器错误。</li><li>请求和响应使用 JSON。</li></ul><p><b>gRPC 设计要点</b>：</p><ul><li>定义 <code>.proto</code> 文件，声明服务和消息格式。</li><li>支持四种流式：一元、服务器流、客户端流、双向流。</li><li>适合低延迟、高吞吐场景，如模型推理。</li></ul><p>下面是一个简单的 gRPC 服务定义示例（<code>inference.proto</code>）：</p><pre><code class="language-python">syntax = "proto3";
+
+service Inference {
+  rpc Predict (PredictRequest) returns (PredictResponse);
+}
+
+message PredictRequest {
+  string prompt = 1;
+  int32 max_tokens = 2;
+}
+
+message PredictResponse {
+  string text = 1;
+}</code></pre><p>对应的 RESTful API 可能长这样：</p><pre><code class="language-python">POST /v1/predict
+Content-Type: application/json
+
+{
+  "prompt": "你好",
+  "max_tokens": 50
+}
+
+响应：
+{
+  "text": "你好！有什么可以帮你的吗？"
+}</code></pre><p><b>选择建议</b>：对外公开 API 用 RESTful，内部微服务间用 gRPC。如果团队熟悉 HTTP，RESTful 更易上手；如果追求极致性能，选 gRPC。</p>
+ <h3>使用 FastAPI 构建推理服务</h3>
+ <p>FastAPI 是一个现代、高性能的 Python Web 框架，非常适合构建 LLM 推理服务。它支持异步、自动生成文档，并且与 Pydantic 集成良好。</p><p>下面是一个完整的 FastAPI 推理服务示例，使用 Hugging Face 的 <code>transformers</code> 加载一个小模型（如 GPT-2）进行文本生成。</p><pre><code class="language-python">from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+from transformers import pipeline
+import uvicorn
+
+app = FastAPI(title="LLM Inference API")
+
+# 加载模型（首次运行会下载）
+generator = pipeline("text-generation", model="gpt2")
+
+class GenerationRequest(BaseModel):
+    prompt: str
+    max_length: int = 50
+    temperature: float = 0.7
+
+class GenerationResponse(BaseModel):
+    generated_text: str
+
+@app.post("/v1/generate", response_model=GenerationResponse)
+async def generate(request: GenerationRequest):
+    try:
+        result = generator(
+            request.prompt,
+            max_length=request.max_length,
+            temperature=request.temperature,
+            do_sample=True
+        )
+        return GenerationResponse(generated_text=result[0]["generated_text"])
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)</code></pre><p>运行方式：<code>python app.py</code>，然后访问 <code>http://localhost:8000/docs</code> 查看自动生成的 API 文档。你可以用 curl 测试：</p><pre><code class="language-python">curl -X POST http://localhost:8000/v1/generate -H "Content-Type: application/json" -d '{"prompt": "Hello, world", "max_length": 30}'</code></pre><p><b>关键点</b>：使用 <code>async def</code> 定义异步端点，避免阻塞；用 Pydantic 模型校验请求和响应；通过 <code>uvicorn</code> 启动服务。对于生产环境，建议使用 Gunicorn 管理多个 Uvicorn worker。</p>
+ <h3>负载均衡与自动扩缩容</h3>
+ <p>当请求量增大时，单个服务实例可能扛不住。这时需要<b>负载均衡</b>和<b>自动扩缩容</b>。</p><p><b>负载均衡</b>：将请求分发到多个服务实例。常见策略：轮询、最少连接、IP 哈希。工具：Nginx、HAProxy、云厂商的 LB（如 AWS ALB）。</p><p><b>自动扩缩容</b>：根据指标（如 CPU、QPS）动态调整实例数量。Kubernetes 的 HPA（Horizontal Pod Autoscaler）是典型方案。它监控 Pod 的 CPU/内存使用率，自动增加或减少副本数。</p><p>下面是一个 Kubernetes HPA 配置示例，针对我们的 FastAPI 服务：</p><pre><code class="language-python">apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: llm-inference-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: llm-inference
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70</code></pre><p>这个 HPA 会在 CPU 平均利用率超过 70% 时增加 Pod，最多 10 个；低于时减少，最少 2 个。</p><p>对于 LLM 服务，由于模型加载慢，扩缩容需要预热。建议使用<b>就绪探针</b>确保模型加载完成后再接收流量。另外，可以结合队列（如 Redis）做请求缓冲，避免突发流量打垮服务。</p><p><b>总结</b>：负载均衡提高可用性，自动扩缩容应对流量波动。两者结合，才能构建稳定的生产级 LLM 服务。</p>
+ <h3>常见误区</h3>
+ <ul>
+ <li>认为本地部署一定比云部署便宜：实际上，本地部署需要购买 GPU 服务器、支付电费和运维人力，长期看可能比云服务更贵，尤其对于波动负载。</li>
+ <li>认为 gRPC 总是比 RESTful 好：gRPC 性能高但调试复杂，浏览器支持有限，对外 API 用 RESTful 更通用。</li>
+ <li>忽略模型加载时间，直接做快速扩缩容：LLM 加载可能需几分钟，扩缩容必须配合就绪探针和预热，否则新实例无法及时处理请求。</li>
+ </ul>
+ <h3>自测</h3>
+ <details class="quiz"><summary>RESTful API 和 gRPC 的主要区别是什么？各自适用什么场景？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>RESTful 基于 HTTP/1.1 和 JSON，简单通用，适合对外 API 和浏览器调用；gRPC 基于 HTTP/2 和 Protobuf，性能高，适合内部服务间通信和高吞吐场景。</p></div></details>
+ <details class="quiz"><summary>在 Kubernetes 中，HPA 如何实现自动扩缩容？针对 LLM 服务需要注意什么？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>HPA 根据 CPU/内存等指标自动调整 Pod 副本数。针对 LLM 服务，由于模型加载慢，需要配置就绪探针，确保模型加载完成后再接收流量，并考虑预热和请求队列。</p></div></details>
+ <h3>动手练习（带参考方案）</h3>
+ <details class="fold"><summary>动手练习 · 使用 FastAPI 构建一个简单的文本生成 API，要求：1) 接收 JSON 请求，包含 pro…</summary><div class="fold-body"><p><b>任务：</b>使用 FastAPI 构建一个简单的文本生成 API，要求：1) 接收 JSON 请求，包含 prompt 和 max_length；2) 返回生成的文本；3) 添加一个健康检查端点 /health；4) 使用 uvicorn 运行，并用 curl 测试。</p><p><b>参考方案：</b></p>参考代码：
+
+from fastapi import FastAPI
+from pydantic import BaseModel
+from transformers import pipeline
+import uvicorn
+
+app = FastAPI()
+generator = pipeline("text-generation", model="gpt2")
+
+class Request(BaseModel):
+    prompt: str
+    max_length: int = 50
+
+@app.post("/generate")
+async def generate(req: Request):
+    result = generator(req.prompt, max_length=req.max_length, do_sample=True)
+    return {"text": result[0]["generated_text"]}
+
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)
+
+测试：
+curl -X POST http://localhost:8000/generate -H "Content-Type: application/json" -d '{"prompt": "Hello", "max_length": 30}'
+curl http://localhost:8000/health</div></details>
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/app.js?v=23"></script>
+</body>
+</html>

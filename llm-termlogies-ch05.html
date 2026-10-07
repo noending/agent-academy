@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="LLM术语精通 第5章。">
+<title>第5章 · LLM术语精通 | Agent 学院</title>
+<link rel="stylesheet" href="assets/css/style.css?v=22">
+</head>
+<body data-gen-course='{&quot;skill&quot;:&quot;llm-termlogies&quot;,&quot;title&quot;:&quot;LLM术语精通&quot;,&quot;topic&quot;:&quot;由课题「精通llms术语」自动生成。适合AI初学者、产品经理和开发者，系统掌握LLM核心术语、评测方法与硬件算力知识，能快速读懂技术文档并落地实践。&quot;,&quot;chapters&quot;:[{&quot;no&quot;:1,&quot;title&quot;:&quot;LLM基础概念&quot;,&quot;goal&quot;:&quot;理解LLM基本定义、发展历程与核心能力&quot;,&quot;file&quot;:&quot;llm-termlogies-ch01.html&quot;},{&quot;no&quot;:2,&quot;title&quot;:&quot;核心架构与训练&quot;,&quot;goal&quot;:&quot;掌握LLM架构组件与训练流程关键术语&quot;,&quot;file&quot;:&quot;llm-termlogies-ch02.html&quot;},{&quot;no&quot;:3,&quot;title&quot;:&quot;推理与优化&quot;,&quot;goal&quot;:&quot;理解LLM推理过程与优化技术术语&quot;,&quot;file&quot;:&quot;llm-termlogies-ch03.html&quot;},{&quot;no&quot;:4,&quot;title&quot;:&quot;模型评测实战&quot;,&quot;goal&quot;:&quot;能设计并执行LLM评测方案，解读评测指标&quot;,&quot;file&quot;:&quot;llm-termlogies-ch04.html&quot;},{&quot;no&quot;:5,&quot;title&quot;:&quot;算力硬件测评&quot;,&quot;goal&quot;:&quot;掌握GPU等硬件选型与性能测评方法&quot;,&quot;file&quot;:&quot;llm-termlogies-ch05.html&quot;}]}' data-chapter="gen-llm-termlogies-ch5">
+
+<header class="topbar">
+  <button class="icon-btn hamburger" id="hamburger" title="打开导航">☰</button>
+  <a class="brand" href="index.html"><span class="logo">学</span> Agent 学院 <small>从零开发智能体 · Ontology · Harness</small></a>
+  <span class="spacer"></span>
+  <span class="progress-pill" id="progress-pill">进度 0/5 章</span>
+  <button class="icon-btn" id="theme-btn">🌙</button>
+</header>
+
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <main class="content">
+    <div class="content-inner">
+
+      <header class="chapter-head">
+        <div class="kicker">CHAPTER 05 · 生成课程</div>
+        <h1>算力硬件测评</h1>
+      </header>
+
+      <p class="lead"><b>本章目标：</b>掌握GPU等硬件选型与性能测评方法</p>
+ <h3>硬件核心指标：算力、显存、带宽、功耗</h3>
+ <p>选GPU就像选车，不能只看马力（算力），还要看油箱大小（显存）、输油管粗细（带宽）和油耗（功耗）。这四个指标共同决定了你能跑多大的模型、跑多快。</p><ul><li><b>算力（FLOPS）</b>：每秒浮点运算次数，衡量计算速度。常见单位有TFLOPS（万亿次）、PFLOPS（千万亿次）。注意区分FP32、FP16、INT8等精度，<b>低精度算力通常更高</b>，而LLM推理常用FP16或INT8。</li><li><b>显存（VRAM）</b>：GPU自带的内存，单位GB。模型参数、中间激活值、KV Cache都要放在显存里。<b>显存不够，模型根本加载不了</b>，会直接报OOM（Out of Memory）。</li><li><b>显存带宽（Memory Bandwidth）</b>：单位GB/s，决定数据从显存搬到计算核心的速度。对于大模型推理，<b>带宽往往是瓶颈</b>，因为每生成一个token都要把整个模型权重读一遍。</li><li><b>功耗（TDP）</b>：热设计功耗，单位W。功耗越高，对电源和散热要求越高，电费也越贵。数据中心还要考虑PUE（能源使用效率）。</li></ul><p>举个例子：NVIDIA A100有19.5 TFLOPS FP32算力、40GB/80GB显存、1555GB/s带宽、400W功耗；而H100提升到约67 TFLOPS FP32、80GB显存、3.35TB/s带宽、700W功耗。选型时要根据模型大小和吞吐需求权衡。</p>
+ <h3>主流AI芯片：NVIDIA GPU、TPU、昇腾、寒武纪</h3>
+ <p>目前AI芯片市场百花齐放，但生态和适用场景差异很大。</p><ul><li><b>NVIDIA GPU</b>：绝对主流，从消费级RTX 4090到数据中心级A100/H100。优势是CUDA生态成熟，几乎所有框架都优先支持。缺点是被制裁导致高端卡获取困难，价格昂贵。</li><li><b>Google TPU</b>：专为TensorFlow/JAX设计的ASIC，通过Google Cloud使用。优势是规模化训练成本低，但生态封闭，不适合通用计算。</li><li><b>华为昇腾（Ascend）</b>：国产代表，昇腾910用于训练，310用于推理。配套CANN软件栈和MindSpore框架，在国产化替代中应用广泛。</li><li><b>寒武纪（Cambricon）</b>：另一家国产AI芯片公司，思元系列覆盖云端和边缘。生态相对较小，但也在逐步完善。</li></ul><p><b>选型建议</b>：如果追求生态和开发效率，优先NVIDIA；如果受限于供应链或需要国产化，考虑昇腾；如果已经在Google Cloud上，TPU是不错的选择。对于初学者，建议从NVIDIA GPU入手，因为学习资料最多。</p>
+ <h3>测评工具：MLPerf、CUDA基准、实际模型推理测试</h3>
+ <p>光看纸面参数不够，实际性能受软件优化、散热、驱动等影响。常用测评方法有三类：</p><ul><li><b>MLPerf</b>：行业公认的AI基准测试，涵盖训练和推理。它定义了标准任务（如ResNet-50、BERT、GPT-3），各家厂商提交成绩，可比性强。但MLPerf跑一次成本高，适合企业采购参考。</li><li><b>CUDA基准</b>：如<code>bandwidthTest</code>测显存带宽，<code>deviceQuery</code>看设备信息，<code>nvprof</code>或<code>nsight</code>做性能分析。适合快速验证硬件是否正常。</li><li><b>实际模型推理测试</b>：最贴近业务，用你的模型和数据集测吞吐量（tokens/s）和延迟（ms/token）。推荐用<code>transformers</code>+<code>torch</code>写脚本，或使用<code>vLLM</code>、<code>TensorRT-LLM</code>等推理引擎。</li></ul><p>下面是一个最小可运行的GPU推理测速脚本，使用Hugging Face的模型：</p><pre><code class="language-python">import torch
+from transformers import AutoModelForCausalLM, AutoTokenizer
+import time
+
+model_name = "gpt2"  # 可换成更大模型
+ tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForCausalLM.from_pretrained(model_name).to("cuda")
+model.eval()
+
+input_text = "The future of AI is"
+inputs = tokenizer(input_text, return_tensors="pt").to("cuda")
+
+# 预热
+with torch.no_grad():
+    for _ in range(3):
+        _ = model.generate(**inputs, max_new_tokens=10)
+
+# 测速
+start = time.time()
+with torch.no_grad():
+    outputs = model.generate(**inputs, max_new_tokens=50)
+end = time.time()
+
+generated_tokens = outputs.shape[1] - inputs.input_ids.shape[1]
+print(f"生成 {generated_tokens} 个token，耗时 {end-start:.2f} 秒")
+print(f"吞吐量: {generated_tokens/(end-start):.2f} tokens/s")
+</code></pre><p>运行前确保已安装<code>torch</code>和<code>transformers</code>，并且有可用的CUDA环境。这个脚本会输出生成速度和吞吐量，你可以调整<code>max_new_tokens</code>和模型大小来对比不同硬件。</p>
+ <h3>实战：使用MLPerf或自定义脚本测评GPU</h3>
+ <p>如果你手头有GPU，可以按以下步骤做一次简单测评：</p><ol><li><b>环境检查</b>：运行<code>nvidia-smi</code>查看GPU型号、显存、功耗。运行<code>nvcc --version</code>查看CUDA版本。</li><li><b>带宽测试</b>：编译并运行CUDA样例中的<code>bandwidthTest</code>，得到实际显存带宽。</li><li><b>推理测试</b>：用上面的脚本，分别测试小模型（如gpt2）和大模型（如facebook/opt-1.3b），记录吞吐量和延迟。</li><li><b>对比分析</b>：将结果与官方参数对比，看是否达到预期。如果差距大，检查散热、驱动、是否使用了Tensor Core等。</li></ol><p>对于企业级测评，可以申请MLPerf推理基准的代码，在本地运行。MLPerf推理有多个场景（SingleStream、MultiStream、Server、Offline），分别对应不同业务需求。例如Server场景模拟在线服务，关注延迟和吞吐的平衡。</p><p><b>注意</b>：测评时要控制变量，比如固定batch size、输入长度、精度（FP16/INT8），否则结果不可比。另外，多次测量取平均值，避免冷启动影响。</p>
+ <h3>常见误区</h3>
+ <ul>
+ <li>显存越大越好，忽略带宽和算力。实际上，如果带宽不足，大显存也无法快速喂数据，导致GPU利用率低。</li>
+ <li>FLOPS越高，模型推理越快。但实际速度还受显存带宽、软件优化、batch size等影响，FLOPS只是理论峰值。</li>
+ <li>国产芯片完全不能用。昇腾等国产芯片在特定场景下已有不错表现，且生态正在完善，选型时应根据实际需求和政策综合考虑。</li>
+ </ul>
+ <h3>自测</h3>
+ <details class="quiz"><summary>为什么说对于大模型推理，显存带宽往往比算力更重要？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>因为大模型推理是内存密集型任务，每生成一个token都需要将整个模型权重从显存读取到计算单元。如果带宽不足，计算单元会经常等待数据，导致算力无法充分发挥。因此，带宽决定了数据搬运速度，直接影响推理吞吐量。</p></div></details>
+ <details class="quiz"><summary>MLPerf基准测试主要用来衡量什么？它有哪些常见场景？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>MLPerf用来衡量AI硬件和软件在训练和推理任务上的性能。推理常见场景包括SingleStream（单流低延迟）、MultiStream（多流）、Server（在线服务）和Offline（离线批处理），分别对应不同业务需求。</p></div></details>
+ <h3>动手练习（带参考方案）</h3>
+ <details class="fold"><summary>动手练习 · 使用Hugging Face的transformers库，在本地GPU上测试gpt2模型和faceb…</summary><div class="fold-body"><p><b>任务：</b>使用Hugging Face的transformers库，在本地GPU上测试gpt2模型和facebook/opt-1.3b模型的推理速度，记录生成50个token的耗时和吞吐量（tokens/s），并对比两个模型的结果。</p><p><b>参考方案：</b></p>参考代码如下：
+
+```python
+import torch
+from transformers import AutoModelForCausalLM, AutoTokenizer
+import time
+
+def benchmark(model_name, max_new_tokens=50):
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    model = AutoModelForCausalLM.from_pretrained(model_name).to("cuda")
+    model.eval()
+    input_text = "The future of AI is"
+    inputs = tokenizer(input_text, return_tensors="pt").to("cuda")
+    # 预热
+    with torch.no_grad():
+        for _ in range(3):
+            _ = model.generate(**inputs, max_new_tokens=10)
+    # 测速
+    start = time.time()
+    with torch.no_grad():
+        outputs = model.generate(**inputs, max_new_tokens=max_new_tokens)
+    end = time.time()
+    generated_tokens = outputs.shape[1] - inputs.input_ids.shape[1]
+    throughput = generated_tokens / (end - start)
+    print(f"{model_name}: 生成 {generated_tokens} tokens, 耗时 {end-start:.2f}s, 吞吐量 {throughput:.2f} tokens/s")
+    return throughput
+
+if __name__ == "__main__":
+    benchmark("gpt2")
+    benchmark("facebook/opt-1.3b")
+```
+
+运行前确保已安装torch和transformers，并且CUDA可用。预期gpt2的吞吐量会明显高于opt-1.3b，因为模型更小。你可以进一步调整max_new_tokens或batch size来观察变化。</div></details>
+
+    </div>
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/app.js?v=23"></script>
+</body>
+</html>

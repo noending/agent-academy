@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="LLM术语精通 第1章。">
+<title>第1章 · LLM术语精通 | Agent 学院</title>
+<link rel="stylesheet" href="assets/css/style.css?v=22">
+</head>
+<body data-gen-course='{&quot;skill&quot;:&quot;llm-termlogies&quot;,&quot;title&quot;:&quot;LLM术语精通&quot;,&quot;topic&quot;:&quot;由课题「精通llms术语」自动生成。适合AI初学者、产品经理和开发者，系统掌握LLM核心术语、评测方法与硬件算力知识，能快速读懂技术文档并落地实践。&quot;,&quot;chapters&quot;:[{&quot;no&quot;:1,&quot;title&quot;:&quot;LLM基础概念&quot;,&quot;goal&quot;:&quot;理解LLM基本定义、发展历程与核心能力&quot;,&quot;file&quot;:&quot;llm-termlogies-ch01.html&quot;},{&quot;no&quot;:2,&quot;title&quot;:&quot;核心架构与训练&quot;,&quot;goal&quot;:&quot;掌握LLM架构组件与训练流程关键术语&quot;,&quot;file&quot;:&quot;llm-termlogies-ch02.html&quot;},{&quot;no&quot;:3,&quot;title&quot;:&quot;推理与优化&quot;,&quot;goal&quot;:&quot;理解LLM推理过程与优化技术术语&quot;,&quot;file&quot;:&quot;llm-termlogies-ch03.html&quot;},{&quot;no&quot;:4,&quot;title&quot;:&quot;模型评测实战&quot;,&quot;goal&quot;:&quot;能设计并执行LLM评测方案，解读评测指标&quot;,&quot;file&quot;:&quot;llm-termlogies-ch04.html&quot;},{&quot;no&quot;:5,&quot;title&quot;:&quot;算力硬件测评&quot;,&quot;goal&quot;:&quot;掌握GPU等硬件选型与性能测评方法&quot;,&quot;file&quot;:&quot;llm-termlogies-ch05.html&quot;}]}' data-chapter="gen-llm-termlogies-ch1">
+
+<header class="topbar">
+  <button class="icon-btn hamburger" id="hamburger" title="打开导航">☰</button>
+  <a class="brand" href="index.html"><span class="logo">学</span> Agent 学院 <small>从零开发智能体 · Ontology · Harness</small></a>
+  <span class="spacer"></span>
+  <span class="progress-pill" id="progress-pill">进度 0/5 章</span>
+  <button class="icon-btn" id="theme-btn">🌙</button>
+</header>
+
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <main class="content">
+    <div class="content-inner">
+
+      <header class="chapter-head">
+        <div class="kicker">CHAPTER 01 · 生成课程</div>
+        <h1>LLM基础概念</h1>
+      </header>
+
+      <p class="lead"><b>本章目标：</b>理解LLM基本定义、发展历程与核心能力</p>
+ <h3>LLM是什么？从规则到统计语言模型</h3>
+ <p>咱们先聊一个最根本的问题：<b>大语言模型（Large Language Model, LLM）到底是什么？</b> 你可以把它想象成一个超级“文字接龙”高手——给它一段话，它预测下一个最可能出现的词，然后把这个词接上去，再预测下一个，如此循环，就生成了一整段话。</p><p>但LLM不是一开始就这么聪明的。早期做自然语言处理，人们靠写规则：比如“如果句子以‘吗’结尾，就是疑问句”。这种方法又累又死板，稍微换个说法就失效。后来大家转向<b>统计语言模型</b>：从大量文本里统计词出现的概率。比如“今天天气很___”，统计发现“好”出现的概率最高，那就填“好”。</p><p>LLM就是统计语言模型的终极进化版：用海量文本训练一个巨大的神经网络，让它学会极其复杂的概率分布。所以记住：<b>LLM本质上是一个概率模型，它输出的是“下一个词的概率”，而不是查数据库得到的确定答案。</b></p><p>下面是一个极简的“文字接龙”示例，用Python模拟一下概率预测的思想：</p><pre><code class="language-python">import random
+
+# 假设我们统计了一个超小型的词频表
+# 给定前一个词，下一个词的概率分布
+bigram = {
+    '今天': {'天气': 0.6, '心情': 0.3, '晚上': 0.1},
+    '天气': {'很': 0.8, '不': 0.2},
+    '很': {'好': 0.7, '差': 0.3},
+    '好': {'。': 1.0}
+}
+
+def generate(start_word, length=5):
+    word = start_word
+    result = [word]
+    for _ in range(length):
+        if word not in bigram:
+            break
+        next_words = list(bigram[word].keys())
+        probs = list(bigram[word].values())
+        word = random.choices(next_words, weights=probs)[0]
+        result.append(word)
+    return ''.join(result)
+
+print(generate('今天'))  # 可能输出：今天天气很好。
+</code></pre><p>这个例子虽然简单，但它体现了LLM的核心思想：<b>根据概率生成下一个词</b>。真正的LLM只是把这个“词频表”换成了千亿参数的神经网络，能处理更长的上下文和更复杂的语言规律。</p>
+ <h3>发展简史：从n-gram到Transformer到GPT</h3>
+ <p>LLM不是一夜之间冒出来的，它经历了几个关键阶段：</p><ul><li><b>n-gram时代（1990s-2000s）</b>：用前n-1个词预测第n个词。比如2-gram（bigram）只看前一个词。简单但记不住长距离依赖，数据稀疏问题严重。</li><li><b>神经网络语言模型（2003-2017）</b>：用词向量（Word2Vec）和RNN/LSTM来建模语言。能捕捉更长的上下文，但训练慢，难以并行。</li><li><b>Transformer革命（2017）</b>：Google发表《Attention is All You Need》，提出<b>Transformer</b>架构，核心是<b>自注意力（Self-Attention）</b>机制。它让模型能同时看到所有词，并计算词与词之间的关联权重，训练可以大规模并行，为LLM铺平了道路。</li><li><b>GPT系列与预训练范式（2018-至今）</b>：OpenAI的GPT系列采用<b>预训练（Pre-training）</b>+微调的模式。先在海量无标注文本上预训练，让模型学会语言通识，再针对具体任务微调。GPT-3（1750亿参数）展示了惊人的少样本学习能力，ChatGPT则通过人类反馈强化学习（RLHF）变得对话友好。</li></ul><p>一句话总结：<b>n-gram是统计，RNN是序列，Transformer是并行注意力，GPT是大规模预训练。</b></p><p>下面用PyTorch伪代码展示一个极简的自注意力计算，帮你直观理解Transformer的核心：</p><pre><code class="language-python">import torch
+import torch.nn.functional as F
+
+# 假设输入序列有3个词，每个词用4维向量表示
+x = torch.randn(3, 4)  # (序列长度, 维度)
+
+# 自注意力：计算Query, Key, Value
+W_q = torch.nn.Linear(4, 4)
+W_k = torch.nn.Linear(4, 4)
+W_v = torch.nn.Linear(4, 4)
+Q = W_q(x)
+K = W_k(x)
+V = W_v(x)
+
+# 计算注意力分数：Q和K的点积，缩放
+attn_scores = torch.matmul(Q, K.T) / (4 ** 0.5)
+attn_weights = F.softmax(attn_scores, dim=-1)
+
+# 加权求和得到输出
+output = torch.matmul(attn_weights, V)
+print(output)
+</code></pre><p>这段代码就是Transformer中自注意力的核心：<b>每个词都根据与其他词的相关性，加权聚合信息。</b> 正是这种机制让LLM能理解上下文。</p>
+ <h3>关键能力：生成、理解、推理与涌现</h3>
+ <p>LLM之所以让人兴奋，是因为它展现出多种能力：</p><ul><li><b>生成</b>：写文章、编代码、翻译、创作诗歌。本质是概率采样，但结果常常流畅自然。</li><li><b>理解</b>：能回答阅读理解问题、总结长文、情感分析。它通过注意力机制捕捉语义关联。</li><li><b>推理</b>：能进行简单的逻辑推理、数学解题、常识推理。但注意，<b>推理能力并不稳定</b>，复杂问题容易出错。</li><li><b>涌现（Emergence）</b>：当模型规模（参数、数据、算力）增大到一定程度，突然出现小模型没有的能力，比如多步推理、代码生成、上下文学习。这被称为“涌现能力”，是LLM研究的热点。</li></ul><p>这些能力都建立在同一个基础上：<b>对下一个词的概率预测</b>。模型在预训练中学会了语言的统计规律，从而“涌现”出看似智能的行为。</p><p>下面是一个用Hugging Face Transformers调用GPT-2生成文本的最小示例，让你亲手体验一下：</p><pre><code class="language-python">from transformers import pipeline
+
+# 加载GPT-2模型（首次运行会自动下载）
+generator = pipeline('text-generation', model='gpt2')
+
+# 输入提示，生成后续文本
+prompt = "Large language models are"
+output = generator(prompt, max_length=30, num_return_sequences=1)
+print(output[0]['generated_text'])
+</code></pre><p>运行后你会看到模型续写的句子。虽然GPT-2能力有限，但已经能体现生成能力。换成更大的模型（如GPT-3、LLaMA），效果会显著提升。</p>
+ <h3>常见误区：LLM不是知识库，而是概率模型</h3>
+ <p>初学者最容易犯的错误，就是把LLM当成一个“知识库”或“搜索引擎”。<b>LLM不是数据库，它没有存储事实的表格，也没有检索机制。</b> 它只是根据训练数据学到的概率分布，预测下一个词。因此：</p><ul><li><b>它可能“一本正经地胡说八道”</b>：生成看似合理但完全错误的内容，这叫“幻觉”（Hallucination）。</li><li><b>它的知识有截止日期</b>：训练数据之后发生的事情，它不知道。</li><li><b>它不会主动核实事实</b>：它只关心“哪个词概率高”，不关心“哪个词是真的”。</li></ul><p>所以，<b>LLM是一个强大的语言生成器，但不是可靠的知识源。</b> 要获取准确信息，需要结合外部检索（如RAG）或人工核实。</p><p>另一个误区是认为LLM“理解”了语言。其实它只是在高维空间里做概率计算，并没有人类意义上的理解。但正是这种概率计算，让它能完成很多实用任务。</p>
+ <h3>常见误区</h3>
+ <ul>
+ <li>LLM是一个知识库，可以像查字典一样查询事实。实际上它是概率模型，可能生成错误信息（幻觉）。</li>
+ <li>LLM真正理解了语言的含义。实际上它只是基于统计规律预测下一个词，没有人类意义上的理解。</li>
+ <li>模型越大，推理能力一定越强。实际上涌现能力并非线性增长，且大模型也可能在简单任务上犯错。</li>
+ </ul>
+ <h3>自测</h3>
+ <details class="quiz"><summary>LLM的核心思想是什么？它和传统规则方法有何不同？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>LLM的核心思想是基于概率预测下一个词，通过海量数据训练神经网络学习语言分布。传统规则方法依赖人工编写规则，而LLM从数据中自动学习统计规律，更灵活且能处理复杂语言。</p></div></details>
+ <details class="quiz"><summary>Transformer中的自注意力机制解决了什么问题？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>自注意力机制让模型在处理每个词时，能同时关注序列中所有其他词，并计算它们之间的相关性权重。这解决了RNN等模型难以捕捉长距离依赖和无法并行计算的问题，使大规模预训练成为可能。</p></div></details>
+ <h3>动手练习（带参考方案）</h3>
+ <details class="fold"><summary>动手练习 · 使用Hugging Face Transformers库，加载一个预训练语言模型（如GPT-2），输…</summary><div class="fold-body"><p><b>任务：</b>使用Hugging Face Transformers库，加载一个预训练语言模型（如GPT-2），输入一段提示文本，生成后续内容。观察生成结果，并尝试调整max_length和num_return_sequences参数，看看输出有什么变化。</p><p><b>参考方案：</b></p>参考代码如下：
+
+```python
+from transformers import pipeline
+
+# 加载GPT-2模型
+generator = pipeline('text-generation', model='gpt2')
+
+# 输入提示
+prompt = "Artificial intelligence is"
+
+# 生成文本，设置最大长度和返回序列数
+outputs = generator(prompt, max_length=50, num_return_sequences=3)
+
+# 打印结果
+for i, out in enumerate(outputs):
+    print(f"生成结果 {i+1}: {out['generated_text']}\n")
+```
+
+运行后，你会看到模型基于提示续写的三段不同文本。调整max_length可以控制生成长度，num_return_sequences可以控制生成几个候选。注意，GPT-2可能生成不连贯或重复的内容，这是正常现象。</div></details>
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/app.js?v=23"></script>
+</body>
+</html>

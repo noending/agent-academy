@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="LLM训练到部署 第2章。">
+<title>第2章 · LLM训练到部署 | Agent 学院</title>
+<link rel="stylesheet" href="assets/css/style.css?v=22">
+</head>
+<body data-gen-course='{&quot;skill&quot;:&quot;llm&quot;,&quot;title&quot;:&quot;LLM训练到部署&quot;,&quot;topic&quot;:&quot;由课题「LLM从训练到部署」自动生成。本课程适合对LLM感兴趣的开发者与运维人员，从零开始掌握大语言模型训练、微调、优化与部署全流程，最终能独立完成生产级部署。&quot;,&quot;chapters&quot;:[{&quot;no&quot;:1,&quot;title&quot;:&quot;LLM基础概念&quot;,&quot;goal&quot;:&quot;理解LLM核心概念与工作原理&quot;,&quot;file&quot;:&quot;llm-ch01.html&quot;},{&quot;no&quot;:2,&quot;title&quot;:&quot;数据准备与预处理&quot;,&quot;goal&quot;:&quot;掌握构建高质量训练数据集的方法&quot;,&quot;file&quot;:&quot;llm-ch02.html&quot;},{&quot;no&quot;:3,&quot;title&quot;:&quot;模型训练基础&quot;,&quot;goal&quot;:&quot;能够配置并启动LLM训练任务&quot;,&quot;file&quot;:&quot;llm-ch03.html&quot;},{&quot;no&quot;:4,&quot;title&quot;:&quot;微调与对齐&quot;,&quot;goal&quot;:&quot;使用微调技术适配下游任务&quot;,&quot;file&quot;:&quot;llm-ch04.html&quot;},{&quot;no&quot;:5,&quot;title&quot;:&quot;模型优化与压缩&quot;,&quot;goal&quot;:&quot;优化模型推理速度与资源占用&quot;,&quot;file&quot;:&quot;llm-ch05.html&quot;},{&quot;no&quot;:6,&quot;title&quot;:&quot;部署架构与API&quot;,&quot;goal&quot;:&quot;设计并实现LLM服务API&quot;,&quot;file&quot;:&quot;llm-ch06.html&quot;},{&quot;no&quot;:7,&quot;title&quot;:&quot;实战：训练小型LLM&quot;,&quot;goal&quot;:&quot;完成一个小型LLM的训练与微调&quot;,&quot;file&quot;:&quot;llm-ch07.html&quot;},{&quot;no&quot;:8,&quot;title&quot;:&quot;实战：生产环境部署&quot;,&quot;goal&quot;:&quot;将训练好的LLM部署到生产环境&quot;,&quot;file&quot;:&quot;llm-ch08.html&quot;}]}' data-chapter="gen-llm-ch2">
+
+<header class="topbar">
+  <button class="icon-btn hamburger" id="hamburger" title="打开导航">☰</button>
+  <a class="brand" href="index.html"><span class="logo">学</span> Agent 学院 <small>从零开发智能体 · Ontology · Harness</small></a>
+  <span class="spacer"></span>
+  <span class="progress-pill" id="progress-pill">进度 0/8 章</span>
+  <button class="icon-btn" id="theme-btn">🌙</button>
+</header>
+
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <main class="content">
+    <div class="content-inner">
+
+      <header class="chapter-head">
+        <div class="kicker">CHAPTER 02 · 生成课程</div>
+        <h1>数据准备与预处理</h1>
+      </header>
+
+      <p class="lead"><b>本章目标：</b>掌握构建高质量训练数据集的方法</p>
+ <h3>数据收集：来源与版权考量</h3>
+ <p>训练一个LLM，第一步不是写模型代码，而是找数据。数据质量直接决定模型的上限。常见的数据来源包括：公开网页（如Common Crawl）、书籍、学术论文、代码仓库、对话数据等。但收集数据时，<b>版权和合规性</b>是必须优先考虑的问题。</p><p>你需要关注：</p><ul><li><b>许可证</b>：数据是否允许商用？例如CC-BY-NC禁止商用，而MIT、Apache 2.0则相对宽松。</li><li><b>隐私</b>：是否包含个人身份信息（PII）？如姓名、电话、地址，必须脱敏。</li><li><b>偏见与毒性</b>：数据中可能包含歧视性言论，需要过滤。</li><li><b>来源可信度</b>：低质量网站（如内容农场）会污染模型。</li></ul><p>实际操作中，可以优先使用已清洗的开源数据集（如The Pile、C4、Wikipedia），或使用爬虫时遵守robots.txt并记录来源。一个简单的数据收集示例：从Hugging Face Datasets加载公开数据集。</p><pre><code class="language-python">from datasets import load_dataset
+
+# 加载wikitext-2数据集作为示例
+dataset = load_dataset('wikitext', 'wikitext-2-raw-v1', split='train')
+print(dataset[0])
+# 输出: {'text': '\n = Valkyria Chronicles III = \n'}</code></pre><p>记住：<b>数据收集不是越多越好，而是越相关、越干净越好</b>。在训练前，务必确认数据集的许可证和隐私政策。</p>
+ <h3>数据清洗：去重、过滤与格式化</h3>
+ <p>原始数据往往包含重复、噪声、格式混乱等问题。清洗的目标是得到<b>干净、一致、高质量</b>的文本。主要步骤包括：</p><ul><li><b>去重</b>：删除完全重复或近似重复的文档。重复数据会导致模型过拟合，降低泛化能力。常用方法：精确哈希（MD5）、SimHash、MinHash。</li><li><b>过滤</b>：移除低质量内容，如过短文本、乱码、HTML标签、广告等。可以基于规则（长度、特殊字符比例）或模型（质量分类器）。</li><li><b>格式化</b>：统一文本格式，如去除多余空格、换行，标准化Unicode字符。</li></ul><p>下面是一个简单的清洗示例，使用Python进行去重和过滤：</p><pre><code class="language-python">import hashlib
+from datasets import load_dataset
+
+def clean_text(text):
+    # 去除首尾空白，替换多个空格为单个
+    text = ' '.join(text.split())
+    return text
+
+def is_quality(text, min_len=50):
+    # 过滤过短文本
+    return len(text) &gt;= min_len
+
+dataset = load_dataset('wikitext', 'wikitext-2-raw-v1', split='train')
+seen_hashes = set()
+cleaned = []
+for example in dataset:
+    text = clean_text(example['text'])
+    if not is_quality(text):
+        continue
+    # 精确去重
+    h = hashlib.md5(text.encode()).hexdigest()
+    if h in seen_hashes:
+        continue
+    seen_hashes.add(h)
+    cleaned.append(text)
+
+print(f'原始样本数: {len(dataset)}, 清洗后: {len(cleaned)}')</code></pre><p><b>去重和过滤是数据清洗的核心</b>，能显著提升训练效率和模型质量。对于大规模数据，可以使用Spark或Dask进行分布式处理。</p>
+ <h3>分词器原理与训练</h3>
+ <p>分词器（Tokenizer）负责将文本转换为模型可处理的数字序列（token IDs）。<b>分词器的选择直接影响模型效果和推理速度</b>。主流的分词算法有BPE（Byte Pair Encoding）、WordPiece和SentencePiece。</p><p>以BPE为例，它从字符开始，反复合并出现频率最高的相邻字符对，直到达到预设的词表大小。这样既能处理未登录词，又能控制词表规模。</p><p>训练一个分词器通常使用Hugging Face的<code>tokenizers</code>库。下面是一个训练BPE分词器的最小示例：</p><pre><code class="language-python">from tokenizers import Tokenizer
+from tokenizers.models import BPE
+from tokenizers.trainers import BpeTrainer
+from tokenizers.pre_tokenizers import Whitespace
+
+# 初始化BPE分词器
+tokenizer = Tokenizer(BPE(unk_token='[UNK]'))
+tokenizer.pre_tokenizer = Whitespace()
+
+# 训练器：词表大小1000，特殊token
+trainer = BpeTrainer(special_tokens=['[UNK]', '[CLS]', '[SEP]', '[PAD]', '[MASK]'], vocab_size=1000)
+
+# 使用清洗后的文本训练
+tokenizer.train_from_iterator(cleaned, trainer=trainer)
+
+# 测试编码
+output = tokenizer.encode('Hello, world!')
+print(output.tokens)  # ['Hello', ',', 'world', '!']
+print(output.ids)     # [123, 45, 678, 90]</code></pre><p>训练完成后，保存分词器供后续使用：<code>tokenizer.save('tokenizer.json')</code>。<b>分词器必须与模型训练时使用的保持一致</b>，否则会导致性能下降。</p>
+ <h3>数据集划分与批处理</h3>
+ <p>在训练前，需要将数据集划分为训练集、验证集和测试集。通常比例为80/10/10或90/5/5。<b>验证集用于调参和早停，测试集用于最终评估</b>。划分时要确保数据分布一致，避免泄漏。</p><p>批处理（Batching）是将数据分成小批次输入模型，以提高训练效率和内存利用率。对于变长文本，需要填充（padding）到相同长度，或使用动态批处理（按长度分组）。</p><p>使用Hugging Face Datasets的<code>map</code>和<code>DataLoader</code>可以方便地实现：</p><pre><code class="language-python">from datasets import Dataset
+from transformers import DataCollatorWithPadding
+from torch.utils.data import DataLoader
+
+# 假设cleaned是清洗后的文本列表
+dataset = Dataset.from_dict({'text': cleaned})
+
+# 划分数据集
+train_test = dataset.train_test_split(test_size=0.2, seed=42)
+train_val = train_test['train'].train_test_split(test_size=0.1, seed=42)
+train_dataset = train_val['train']
+val_dataset = train_val['test']
+test_dataset = train_test['test']
+
+# 使用分词器编码
+def tokenize_function(examples):
+    return tokenizer(examples['text'], truncation=True, padding=False, max_length=128)
+
+train_dataset = train_dataset.map(tokenize_function, batched=True)
+val_dataset = val_dataset.map(tokenize_function, batched=True)
+
+# 动态填充的collator
+data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
+
+# 创建DataLoader
+train_loader = DataLoader(train_dataset, batch_size=8, shuffle=True, collate_fn=data_collator)
+
+# 查看一个批次
+batch = next(iter(train_loader))
+print(batch['input_ids'].shape)  # torch.Size([8, 128])</code></pre><p><b>动态批处理能减少填充，提升训练速度</b>。对于大规模数据，可以使用<code>IterableDataset</code>流式加载，避免内存不足。</p>
+ <h3>常见误区</h3>
+ <ul>
+ <li>数据越多越好：实际上，低质量或重复数据会损害模型性能，清洗和去重比单纯增加数据量更重要。</li>
+ <li>分词器可以随意选择：分词器必须与模型预训练时使用的保持一致，否则token分布不匹配，导致模型效果大幅下降。</li>
+ <li>验证集和测试集可以混用：测试集只能用于最终评估，如果用于调参会导致过拟合，失去客观性。</li>
+ </ul>
+ <h3>自测</h3>
+ <details class="quiz"><summary>为什么数据去重对LLM训练很重要？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>重复数据会导致模型在训练中多次看到相同样本，容易过拟合，降低泛化能力，同时浪费计算资源。去重可以提升数据多样性和训练效率。</p></div></details>
+ <details class="quiz"><summary>训练分词器时，词表大小（vocab_size）设置过小或过大分别有什么问题？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>词表过小会导致很多词被拆分成多个子词，序列变长，增加计算负担；词表过大则会导致参数矩阵变大，模型复杂度增加，且低频词可能训练不充分。需要根据任务和语料规模权衡。</p></div></details>
+ <h3>动手练习（带参考方案）</h3>
+ <details class="fold"><summary>动手练习 · 使用Hugging Face Datasets加载'wikitext-2-raw-v1'数据集，完成…</summary><div class="fold-body"><p><b>任务：</b>使用Hugging Face Datasets加载'wikitext-2-raw-v1'数据集，完成以下任务：1) 清洗文本（去除空行、过短文本，长度至少50字符）；2) 精确去重；3) 划分训练集、验证集、测试集（比例8:1:1）；4) 训练一个BPE分词器（词表大小500）；5) 使用分词器编码并创建DataLoader，批大小4，动态填充。输出各数据集大小和一个批次的input_ids形状。</p><p><b>参考方案：</b></p>import hashlib
+from datasets import load_dataset, Dataset
+from tokenizers import Tokenizer
+from tokenizers.models import BPE
+from tokenizers.trainers import BpeTrainer
+from tokenizers.pre_tokenizers import Whitespace
+from transformers import DataCollatorWithPadding
+from torch.utils.data import DataLoader
+
+# 1. 加载数据
+dataset = load_dataset('wikitext', 'wikitext-2-raw-v1', split='train')
+
+# 2. 清洗与去重
+cleaned = []
+seen = set()
+for example in dataset:
+    text = ' '.join(example['text'].split())
+    if len(text) &lt; 50:
+        continue
+    h = hashlib.md5(text.encode()).hexdigest()
+    if h in seen:
+        continue
+    seen.add(h)
+    cleaned.append(text)
+
+print(f'清洗后样本数: {len(cleaned)}')
+
+# 3. 划分数据集
+dataset = Dataset.from_dict({'text': cleaned})
+train_test = dataset.train_test_split(test_size=0.2, seed=42)
+train_val = train_test['train'].train_test_split(test_size=0.125, seed=42)  # 0.125*0.8=0.1
+train_dataset = train_val['train']
+val_dataset = train_val['test']
+test_dataset = train_test['test']
+print(f'训练集: {len(train_dataset)}, 验证集: {len(val_dataset)}, 测试集: {len(test_dataset)}')
+
+# 4. 训练分词器
+tokenizer = Tokenizer(BPE(unk_token='[UNK]'))
+tokenizer.pre_tokenizer = Whitespace()
+trainer = BpeTrainer(special_tokens=['[UNK]', '[CLS]', '[SEP]', '[PAD]', '[MASK]'], vocab_size=500)
+tokenizer.train_from_iterator(cleaned, trainer=trainer)
+
+# 5. 编码与DataLoader
+def tokenize_function(examples):
+    return tokenizer(examples['text'], truncation=True, padding=False, max_length=128)
+
+train_dataset = train_dataset.map(tokenize_function, batched=True)
+val_dataset = val_dataset.map(tokenize_function, batched=True)
+test_dataset = test_dataset.map(tokenize_function, batched=True)
+
+data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
+train_loader = DataLoader(train_dataset, batch_size=4, shuffle=True, collate_fn=data_collator)
+
+batch = next(iter(train_loader))
+print(batch['input_ids'].shape)  # 例如 torch.Size([4, 128])</div></details>
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/app.js?v=23"></script>
+</body>
+</html>

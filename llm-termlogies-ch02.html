@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="LLM术语精通 第2章。">
+<title>第2章 · LLM术语精通 | Agent 学院</title>
+<link rel="stylesheet" href="assets/css/style.css?v=22">
+</head>
+<body data-gen-course='{&quot;skill&quot;:&quot;llm-termlogies&quot;,&quot;title&quot;:&quot;LLM术语精通&quot;,&quot;topic&quot;:&quot;由课题「精通llms术语」自动生成。适合AI初学者、产品经理和开发者，系统掌握LLM核心术语、评测方法与硬件算力知识，能快速读懂技术文档并落地实践。&quot;,&quot;chapters&quot;:[{&quot;no&quot;:1,&quot;title&quot;:&quot;LLM基础概念&quot;,&quot;goal&quot;:&quot;理解LLM基本定义、发展历程与核心能力&quot;,&quot;file&quot;:&quot;llm-termlogies-ch01.html&quot;},{&quot;no&quot;:2,&quot;title&quot;:&quot;核心架构与训练&quot;,&quot;goal&quot;:&quot;掌握LLM架构组件与训练流程关键术语&quot;,&quot;file&quot;:&quot;llm-termlogies-ch02.html&quot;},{&quot;no&quot;:3,&quot;title&quot;:&quot;推理与优化&quot;,&quot;goal&quot;:&quot;理解LLM推理过程与优化技术术语&quot;,&quot;file&quot;:&quot;llm-termlogies-ch03.html&quot;},{&quot;no&quot;:4,&quot;title&quot;:&quot;模型评测实战&quot;,&quot;goal&quot;:&quot;能设计并执行LLM评测方案，解读评测指标&quot;,&quot;file&quot;:&quot;llm-termlogies-ch04.html&quot;},{&quot;no&quot;:5,&quot;title&quot;:&quot;算力硬件测评&quot;,&quot;goal&quot;:&quot;掌握GPU等硬件选型与性能测评方法&quot;,&quot;file&quot;:&quot;llm-termlogies-ch05.html&quot;}]}' data-chapter="gen-llm-termlogies-ch2">
+
+<header class="topbar">
+  <button class="icon-btn hamburger" id="hamburger" title="打开导航">☰</button>
+  <a class="brand" href="index.html"><span class="logo">学</span> Agent 学院 <small>从零开发智能体 · Ontology · Harness</small></a>
+  <span class="spacer"></span>
+  <span class="progress-pill" id="progress-pill">进度 0/5 章</span>
+  <button class="icon-btn" id="theme-btn">🌙</button>
+</header>
+
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <main class="content">
+    <div class="content-inner">
+
+      <header class="chapter-head">
+        <div class="kicker">CHAPTER 02 · 生成课程</div>
+        <h1>核心架构与训练</h1>
+      </header>
+
+      <p class="lead"><b>本章目标：</b>掌握LLM架构组件与训练流程关键术语</p>
+ <h3>Transformer架构：编码器、解码器与注意力机制</h3>
+ <p>Transformer 是当前所有主流大语言模型（LLM）的基石。它彻底抛弃了循环神经网络（RNN）的序列依赖，完全依赖<b>注意力机制</b>来捕捉长距离依赖，从而实现了高度并行化训练。</p><p>Transformer 最初是一个“编码器-解码器”架构，用于机器翻译。但后来大家发现，根据任务不同，可以只用其中一部分：</p><ul><li><b>编码器 (Encoder)</b>：擅长理解输入。它通过自注意力让每个词看到整个句子，生成富含上下文的表示。代表模型：BERT。适合分类、情感分析等理解任务。</li><li><b>解码器 (Decoder)</b>：擅长生成输出。它使用<b>掩码自注意力</b>，确保每个位置只能看到它之前的词，从而能自回归地逐词生成。代表模型：GPT 系列、LLaMA。适合文本生成、对话等任务。</li><li><b>编码器-解码器</b>：同时使用两者，编码器理解输入，解码器生成输出。代表模型：T5、BART。适合翻译、摘要等序列到序列任务。</li></ul><p>注意力机制的核心是：对于每个词，计算它与所有词的关联权重，然后加权求和得到新的表示。公式为 Attention(Q, K, V) = softmax(QK^T / sqrt(d_k)) V。其中 Q、K、V 分别代表查询、键、值。多头注意力则是并行多个这样的计算，让模型从不同子空间捕捉信息。</p><p>下面是一个极简的 Transformer 解码器层的前向传播示例，帮助你理解数据流动：</p><pre><code class="language-python">import torch
+import torch.nn as nn
+
+class SimpleDecoderLayer(nn.Module):
+    def __init__(self, d_model=512, nhead=8):
+        super().__init__()
+        self.self_attn = nn.MultiheadAttention(d_model, nhead, batch_first=True)
+        self.linear1 = nn.Linear(d_model, d_model*4)
+        self.linear2 = nn.Linear(d_model*4, d_model)
+        self.norm1 = nn.LayerNorm(d_model)
+        self.norm2 = nn.LayerNorm(d_model)
+        self.dropout = nn.Dropout(0.1)
+
+    def forward(self, x, mask=None):
+        # 自注意力 + 残差连接
+        attn_out, _ = self.self_attn(x, x, x, attn_mask=mask)
+        x = self.norm1(x + self.dropout(attn_out))
+        # 前馈网络 + 残差连接
+        ff_out = self.linear2(self.dropout(torch.relu(self.linear1(x))))
+        x = self.norm2(x + self.dropout(ff_out))
+        return x
+
+# 模拟输入：batch=2, seq_len=10, d_model=512
+x = torch.randn(2, 10, 512)
+# 因果掩码：上三角为 -inf，防止看到未来
+mask = torch.triu(torch.ones(10, 10), diagonal=1).bool()
+mask = mask.masked_fill(mask, float('-inf'))
+layer = SimpleDecoderLayer()
+out = layer(x, mask)
+print(out.shape)  # torch.Size([2, 10, 512])</code></pre><p><b>关键结论：</b>编码器用于理解，解码器用于生成；注意力机制是 Transformer 的核心，让模型能动态关注相关部分。</p>
+ <h3>训练三阶段：预训练、微调、对齐</h3>
+ <p>大模型的训练不是一蹴而就的，通常分为三个阶段，每个阶段目标不同：</p><ol><li><b>预训练 (Pre-training)</b>：在海量无标注文本上训练，目标是学习语言的一般规律和世界知识。通常使用自监督学习，比如预测下一个词（GPT）或掩码语言建模（BERT）。这个阶段计算量最大，成本极高，但产出的模型是“通才”。</li><li><b>微调 (Fine-tuning)</b>：在预训练模型基础上，用特定任务的有标注数据继续训练，使模型适应下游任务。例如，用医疗问答数据微调，让模型成为医疗助手。微调可以全参数微调，也可以只微调部分参数（如 LoRA）。</li><li><b>对齐 (Alignment)</b>：让模型的行为符合人类价值观和意图。预训练模型可能生成有害、偏见或不有用的内容。对齐阶段通过人类反馈来调整模型，典型技术是 RLHF（基于人类反馈的强化学习）。对齐后的模型更安全、更有帮助。</li></ol><p>下面是一个使用 Hugging Face 库进行简单微调的代码框架（以文本分类为例）：</p><pre><code class="language-python">from transformers import AutoTokenizer, AutoModelForSequenceClassification, Trainer, TrainingArguments
+from datasets import load_dataset
+
+# 加载预训练模型和分词器
+model_name = "bert-base-uncased"
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=2)
+
+# 加载数据集（示例：IMDB 情感分类）
+dataset = load_dataset("imdb")
+def tokenize(examples):
+    return tokenizer(examples["text"], padding="max_length", truncation=True, max_length=128)
+tokenized_datasets = dataset.map(tokenize, batched=True)
+
+# 设置训练参数
+training_args = TrainingArguments(
+    output_dir="./results",
+    num_train_epochs=1,
+    per_device_train_batch_size=8,
+    evaluation_strategy="epoch",
+)
+
+# 开始微调
+trainer = Trainer(
+    model=model,
+    args=training_args,
+    train_dataset=tokenized_datasets["train"].shuffle().select(range(1000)),
+    eval_dataset=tokenized_datasets["test"].shuffle().select(range(200)),
+)
+trainer.train()</code></pre><p><b>关键结论：</b>预训练赋予模型通用能力，微调使其专精，对齐使其安全有用。三者缺一不可。</p>
+ <h3>关键训练技术：RLHF、指令微调、LoRA</h3>
+ <p>除了基础的三阶段，还有一些关键技术术语你需要掌握：</p><ul><li><b>指令微调 (Instruction Tuning)</b>：一种特殊的微调，使用“指令-回答”格式的数据训练模型，让模型学会遵循人类指令。例如，“把这句话翻译成英文” -&gt; “Translate this sentence into English”。指令微调是让模型变得“听话”的关键步骤。</li><li><b>RLHF (Reinforcement Learning from Human Feedback)</b>：基于人类反馈的强化学习。步骤：1) 收集人类对模型输出的偏好排序；2) 训练一个奖励模型来模拟人类偏好；3) 用强化学习（如 PPO）微调语言模型，使其输出获得更高奖励。RLHF 是 ChatGPT 成功的关键之一。</li><li><b>LoRA (Low-Rank Adaptation)</b>：一种参数高效微调技术。它冻结预训练模型权重，只在每个 Transformer 层中注入可训练的低秩矩阵。这样微调参数量减少几个数量级，大大降低显存和计算需求，同时保持性能。适合快速适配新任务。</li></ul><p>下面是一个使用 PEFT 库实现 LoRA 微调的示例：</p><pre><code class="language-python">from transformers import AutoModelForCausalLM, AutoTokenizer
+from peft import LoraConfig, get_peft_model
+
+model_name = "gpt2"
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForCausalLM.from_pretrained(model_name)
+
+# 配置 LoRA
+lora_config = LoraConfig(
+    r=8,  # 低秩矩阵的秩
+    lora_alpha=32,
+    target_modules=["c_attn"],  # 针对 GPT-2 的注意力层
+    lora_dropout=0.1,
+    bias="none",
+)
+
+# 包装模型
+peft_model = get_peft_model(model, lora_config)
+peft_model.print_trainable_parameters()  # 可训练参数仅占原模型的极小部分
+
+# 之后可以像正常模型一样训练，但只更新 LoRA 参数</code></pre><p><b>关键结论：</b>指令微调让模型听懂指令，RLHF 让模型符合人类偏好，LoRA 让微调变得轻量高效。</p>
+ <h3>模型规模：参数量、层数、隐藏维度与上下文长度</h3>
+ <p>描述一个 LLM 的规模，通常看以下几个指标：</p><ul><li><b>参数量 (Parameters)</b>：模型中可训练权重的总数，通常以百万(M)、十亿(B)为单位。例如 GPT-3 有 175B 参数。参数量越大，模型容量越大，但计算和存储成本也越高。</li><li><b>层数 (Layers)</b>：Transformer 块的堆叠数量。层数越深，模型能捕捉的抽象特征越复杂。例如 GPT-3 有 96 层。</li><li><b>隐藏维度 (Hidden Dimension)</b>：每个 token 表示的向量长度，也叫 d_model。它决定了模型内部表示的宽度。例如 GPT-3 的隐藏维度是 12288。</li><li><b>上下文长度 (Context Length)</b>：模型一次能处理的最大 token 数。例如 GPT-3 是 2048，GPT-4 是 8192 或更高。上下文长度决定了模型能记住多长的对话或文档。</li></ul><p>这些指标共同决定了模型的容量、训练成本和推理速度。通常，参数量 ≈ 层数 × 隐藏维度² × 常数。但具体架构（如注意力头数、前馈网络维度）也会影响。</p><p>下面是一个计算模型参数量的简化示例（仅考虑 Transformer 解码器层的主要部分）：</p><pre><code class="language-python">def estimate_params(n_layers, d_model, n_heads, d_ff, vocab_size):
+    # 每个解码器层的参数量
+    # 自注意力：QKV 线性层 + 输出线性层
+    attn_params = 4 * d_model * d_model
+    # 前馈网络：两个线性层
+    ff_params = 2 * d_model * d_ff
+    # 层归一化
+    norm_params = 2 * d_model
+    layer_params = attn_params + ff_params + norm_params
+    # 总参数量 = 层数 * 每层参数 + 词嵌入 + 位置嵌入（简化）
+    total = n_layers * layer_params + vocab_size * d_model
+    return total
+
+# 以 GPT-2 small 为例：12层，768维，12头，3072前馈，50257词表
+params = estimate_params(12, 768, 12, 3072, 50257)
+print(f"Estimated parameters: {params/1e6:.1f}M")  # 约 124M，接近实际</code></pre><p><b>关键结论：</b>参数量、层数、隐藏维度和上下文长度是衡量模型规模的核心指标，它们共同影响模型的能力和成本。</p>
+ <h3>常见误区</h3>
+ <ul>
+ <li>编码器和解码器是必须成对使用的，所有 Transformer 模型都同时包含两者。实际上，BERT 只用了编码器，GPT 只用了解码器，它们都是 Transformer 的变体。</li>
+ <li>微调必须更新模型的所有参数。实际上，像 LoRA 这样的参数高效微调方法只更新一小部分参数，也能达到接近全参数微调的效果。</li>
+ <li>RLHF 就是让模型直接学习人类标注的答案。实际上，RLHF 是先训练一个奖励模型来模拟人类偏好，再用强化学习优化语言模型，而不是直接监督学习。</li>
+ </ul>
+ <h3>自测</h3>
+ <details class="quiz"><summary>请简要说明编码器和解码器在注意力机制上的主要区别。</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>编码器使用双向自注意力，每个位置可以看到整个输入序列；解码器使用掩码自注意力（因果注意力），每个位置只能看到它之前的 token，以确保生成时不会看到未来信息。</p></div></details>
+ <details class="quiz"><summary>什么是 LoRA？它解决了什么问题？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>LoRA（低秩适应）是一种参数高效微调技术。它冻结预训练模型权重，在 Transformer 层中注入可训练的低秩矩阵，从而大幅减少微调所需的参数量和显存，使大模型微调更轻量、更快速。</p></div></details>
+ <h3>动手练习（带参考方案）</h3>
+ <details class="fold"><summary>动手练习 · 使用 Hugging Face 的 transformers 库加载一个预训练模型（如 distil…</summary><div class="fold-body"><p><b>任务：</b>使用 Hugging Face 的 transformers 库加载一个预训练模型（如 distilbert-base-uncased），并编写代码计算该模型的参数量、层数、隐藏维度和最大上下文长度。然后，尝试使用 PEFT 库为该模型添加 LoRA 适配器，并打印可训练参数的比例。</p><p><b>参考方案：</b></p>import torch
+from transformers import AutoModel, AutoConfig
+from peft import LoraConfig, get_peft_model
+
+model_name = "distilbert-base-uncased"
+config = AutoConfig.from_pretrained(model_name)
+model = AutoModel.from_pretrained(model_name)
+
+# 打印模型规模信息
+print(f"参数量: {sum(p.numel() for p in model.parameters()):,}")
+print(f"层数: {config.num_hidden_layers}")
+print(f"隐藏维度: {config.hidden_size}")
+print(f"最大上下文长度: {config.max_position_embeddings}")
+
+# 添加 LoRA
+lora_config = LoraConfig(
+    r=8,
+    lora_alpha=32,
+    target_modules=["q_lin", "v_lin"],  # DistilBERT 的注意力层名称
+    lora_dropout=0.1,
+    bias="none",
+)
+peft_model = get_peft_model(model, lora_config)
+peft_model.print_trainable_parameters()
+# 输出示例：trainable params: 739,584 || all params: 66,955,008 || trainable%: 1.10</div></details>
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/app.js?v=23"></script>
+</body>
+</html>

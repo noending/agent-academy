@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="LLM术语精通 第3章。">
+<title>第3章 · LLM术语精通 | Agent 学院</title>
+<link rel="stylesheet" href="assets/css/style.css?v=22">
+</head>
+<body data-gen-course='{&quot;skill&quot;:&quot;llm-termlogies&quot;,&quot;title&quot;:&quot;LLM术语精通&quot;,&quot;topic&quot;:&quot;由课题「精通llms术语」自动生成。适合AI初学者、产品经理和开发者，系统掌握LLM核心术语、评测方法与硬件算力知识，能快速读懂技术文档并落地实践。&quot;,&quot;chapters&quot;:[{&quot;no&quot;:1,&quot;title&quot;:&quot;LLM基础概念&quot;,&quot;goal&quot;:&quot;理解LLM基本定义、发展历程与核心能力&quot;,&quot;file&quot;:&quot;llm-termlogies-ch01.html&quot;},{&quot;no&quot;:2,&quot;title&quot;:&quot;核心架构与训练&quot;,&quot;goal&quot;:&quot;掌握LLM架构组件与训练流程关键术语&quot;,&quot;file&quot;:&quot;llm-termlogies-ch02.html&quot;},{&quot;no&quot;:3,&quot;title&quot;:&quot;推理与优化&quot;,&quot;goal&quot;:&quot;理解LLM推理过程与优化技术术语&quot;,&quot;file&quot;:&quot;llm-termlogies-ch03.html&quot;},{&quot;no&quot;:4,&quot;title&quot;:&quot;模型评测实战&quot;,&quot;goal&quot;:&quot;能设计并执行LLM评测方案，解读评测指标&quot;,&quot;file&quot;:&quot;llm-termlogies-ch04.html&quot;},{&quot;no&quot;:5,&quot;title&quot;:&quot;算力硬件测评&quot;,&quot;goal&quot;:&quot;掌握GPU等硬件选型与性能测评方法&quot;,&quot;file&quot;:&quot;llm-termlogies-ch05.html&quot;}]}' data-chapter="gen-llm-termlogies-ch3">
+
+<header class="topbar">
+  <button class="icon-btn hamburger" id="hamburger" title="打开导航">☰</button>
+  <a class="brand" href="index.html"><span class="logo">学</span> Agent 学院 <small>从零开发智能体 · Ontology · Harness</small></a>
+  <span class="spacer"></span>
+  <span class="progress-pill" id="progress-pill">进度 0/5 章</span>
+  <button class="icon-btn" id="theme-btn">🌙</button>
+</header>
+
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <main class="content">
+    <div class="content-inner">
+
+      <header class="chapter-head">
+        <div class="kicker">CHAPTER 03 · 生成课程</div>
+        <h1>推理与优化</h1>
+      </header>
+
+      <p class="lead"><b>本章目标：</b>理解LLM推理过程与优化技术术语</p>
+ <h3>推理流程：从输入到输出的三步走</h3>
+ <p>当你对ChatGPT说“你好”，它背后发生的事就叫<b>推理（Inference）</b>——模型根据输入生成输出的过程。推理可以拆成三个步骤：</p><ul><li><b>输入编码</b>：把文字变成数字。比如“你好”被分词器切成token，再映射成词向量（embedding），加上位置信息，变成模型能处理的数字矩阵。</li><li><b>前向传播</b>：数据穿过Transformer的每一层，经过自注意力、前馈网络等计算，最终输出一个巨大的向量，表示词表里每个词的概率。</li><li><b>输出解码</b>：根据概率选择下一个token，然后把新token拼回输入，重复前向传播，直到生成结束符或达到长度限制。这个过程叫自回归生成。</li></ul><p>下面是一个极简的推理示例，用Hugging Face的transformers库加载一个小模型，看看它是怎么生成文本的。</p><pre><code class="language-python">from transformers import AutoModelForCausalLM, AutoTokenizer
+
+model_name = "gpt2"  # 一个很小的模型，方便快速运行
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForCausalLM.from_pretrained(model_name)
+
+input_text = "Hello, I am"
+inputs = tokenizer(input_text, return_tensors="pt")
+
+# 生成：默认使用贪心解码
+outputs = model.generate(**inputs, max_new_tokens=20)
+print(tokenizer.decode(outputs[0], skip_special_tokens=True))
+# 输出示例: Hello, I am a student at the University of California, Berkeley.
+</code></pre><p>注意：<b>推理是逐token生成的</b>，每生成一个token都要跑一次完整的前向传播（除非用了KV缓存优化，后面会讲）。所以生成100个token，就要跑100次模型，这也是为什么推理速度对LLM应用至关重要。</p>
+ <h3>解码策略：贪心、束搜索、采样与温度</h3>
+ <p>模型每一步输出的是词表上的概率分布，怎么从这个分布里选词，就是<b>解码策略</b>。常见的有：</p><ul><li><b>贪心解码（Greedy Search）</b>：每次都选概率最高的词。简单快速，但容易生成重复、无聊的文本。</li><li><b>束搜索（Beam Search）</b>：同时保留k个最优候选序列，最后选整体概率最高的。适合翻译等任务，但计算量大，且容易生成通用回答。</li><li><b>采样（Sampling）</b>：按概率随机选词，增加多样性。但可能选到低概率的怪词。</li><li><b>温度（Temperature）</b>：调整概率分布的平滑程度。温度&amp;gt;1使分布更平，增加随机性；温度&amp;lt;1使分布更尖，更确定。通常配合采样使用。</li></ul><p>此外还有Top-k采样（只从概率最高的k个词中选）和Top-p采样（从累积概率达到p的最小词集合中选），它们能避免采样到太离谱的词。</p><p>下面代码演示了不同解码策略的效果：</p><pre><code class="language-python">from transformers import AutoModelForCausalLM, AutoTokenizer
+
+model_name = "gpt2"
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForCausalLM.from_pretrained(model_name)
+
+input_text = "The future of AI is"
+inputs = tokenizer(input_text, return_tensors="pt")
+
+# 贪心解码
+greedy_output = model.generate(**inputs, max_new_tokens=20)
+print("Greedy:", tokenizer.decode(greedy_output[0], skip_special_tokens=True))
+
+# 采样 + 温度
+sample_output = model.generate(**inputs, do_sample=True, temperature=0.7, max_new_tokens=20)
+print("Sample:", tokenizer.decode(sample_output[0], skip_special_tokens=True))
+
+# 束搜索
+beam_output = model.generate(**inputs, num_beams=5, max_new_tokens=20)
+print("Beam:", tokenizer.decode(beam_output[0], skip_special_tokens=True))
+</code></pre><p><b>选择哪种策略取决于任务</b>：需要准确答案（如代码生成）用低温或贪心；需要创意（如写故事）用高温采样。</p>
+ <h3>优化技术：量化、剪枝、蒸馏与KV缓存</h3>
+ <p>LLM推理又慢又贵，所以有一堆优化技术。理解这些术语，你就能看懂技术文档里的性能提升手段。</p><ul><li><b>量化（Quantization）</b>：把模型权重从高精度（如FP32）转换成低精度（如INT8、INT4），减少内存占用和计算量。比如FP16转INT8，模型大小减半，速度提升，精度损失很小。</li><li><b>剪枝（Pruning）</b>：去掉模型中不重要的权重或神经元，让模型更稀疏。结构化剪枝可以直接减少计算量。</li><li><b>知识蒸馏（Knowledge Distillation）</b>：用大模型（教师）指导小模型（学生）训练，让小模型获得接近大模型的能力。比如DistilBERT就是BERT的蒸馏版。</li><li><b>KV缓存（KV Cache）</b>：自回归生成时，每次前向传播都会计算所有token的Key和Value矩阵。但前面token的KV是不变的，缓存它们可以避免重复计算，极大加速生成。这是推理加速的标配。</li></ul><p>下面是一个使用KV缓存的示例（Hugging Face默认开启）：</p><pre><code class="language-python">from transformers import AutoModelForCausalLM, AutoTokenizer
+
+model_name = "gpt2"
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForCausalLM.from_pretrained(model_name)
+
+input_text = "Once upon a time"
+inputs = tokenizer(input_text, return_tensors="pt")
+
+# 默认使用KV缓存，生成更快
+outputs = model.generate(**inputs, max_new_tokens=50, use_cache=True)
+print(tokenizer.decode(outputs[0], skip_special_tokens=True))
+</code></pre><p><b>KV缓存是推理加速的关键</b>，但会占用显存。对于长序列，缓存可能比模型本身还大，所以有了MQA、GQA等优化注意力机制。</p>
+ <h3>推理框架：vLLM、TensorRT-LLM、ONNX Runtime</h3>
+ <p>自己写推理代码适合学习，但生产环境需要高性能框架。以下是三个主流选择：</p><ul><li><b>vLLM</b>：专为LLM推理设计，核心是PagedAttention，高效管理KV缓存，支持连续批处理，吞吐量极高。适合云端部署。</li><li><b>TensorRT-LLM</b>：NVIDIA出品，针对自家GPU深度优化，支持量化、内核融合等，延迟极低。适合对性能要求苛刻的场景。</li><li><b>ONNX Runtime</b>：微软的跨平台推理引擎，支持多种硬件，通用性强。适合边缘设备或需要跨平台部署的场景。</li></ul><p>这些框架都帮你处理了批处理、内存管理、算子优化等脏活累活。作为开发者，你只需要调用API。例如用vLLM启动一个服务：</p><pre><code class="language-python"># 安装: pip install vllm
+from vllm import LLM, SamplingParams
+
+# 加载模型
+llm = LLM(model="gpt2")
+
+# 设置采样参数
+sampling_params = SamplingParams(temperature=0.8, top_p=0.95, max_tokens=50)
+
+# 生成
+outputs = llm.generate(["Hello, my name is"], sampling_params)
+for output in outputs:
+    print(output.outputs[0].text)
+</code></pre><p><b>选择框架时考虑</b>：硬件（NVIDIA GPU选TensorRT-LLM，其他选vLLM或ONNX）、吞吐量需求、易用性。对于大多数场景，vLLM是平衡性能和易用性的好选择。</p>
+ <h3>常见误区</h3>
+ <ul>
+ <li>推理（Inference）和训练（Training）是一回事——实际上训练是学习权重，推理是使用权重生成结果，两者计算模式和资源需求完全不同。</li>
+ <li>温度越高，模型越聪明——温度只是调节随机性，高温增加多样性但可能降低准确性，低温更确定但可能重复。</li>
+ <li>量化一定会显著降低模型效果——现代量化技术（如GPTQ、AWQ）在4-bit下也能保持大部分性能，具体取决于方法和校准数据。</li>
+ </ul>
+ <h3>自测</h3>
+ <details class="quiz"><summary>什么是KV缓存？它为什么能加速推理？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>KV缓存是自回归生成中缓存已计算的Key和Value矩阵的技术。因为生成每个新token时，前面token的KV不变，缓存后无需重复计算，从而减少计算量，加速推理。</p></div></details>
+ <details class="quiz"><summary>贪心解码和采样解码的主要区别是什么？各自适用什么场景？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>贪心解码每步选概率最高的词，输出确定但可能重复；采样解码按概率随机选词，输出多样但可能不连贯。贪心适合需要准确答案的任务（如代码生成），采样适合创意任务（如写故事）。</p></div></details>
+ <h3>动手练习（带参考方案）</h3>
+ <details class="fold"><summary>动手练习 · 使用Hugging Face transformers库，加载gpt2模型，分别用贪心解码、束搜索（…</summary><div class="fold-body"><p><b>任务：</b>使用Hugging Face transformers库，加载gpt2模型，分别用贪心解码、束搜索（num_beams=5）和采样（temperature=0.7, top_p=0.9）生成同一提示词的续写，比较输出差异。提示词自定，生成长度20个token。</p><p><b>参考方案：</b></p>from transformers import AutoModelForCausalLM, AutoTokenizer
+
+model_name = "gpt2"
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForCausalLM.from_pretrained(model_name)
+
+prompt = "The best way to learn AI is"
+inputs = tokenizer(prompt, return_tensors="pt")
+
+# 贪心
+greedy = model.generate(**inputs, max_new_tokens=20)
+print("Greedy:", tokenizer.decode(greedy[0], skip_special_tokens=True))
+
+# 束搜索
+beam = model.generate(**inputs, num_beams=5, max_new_tokens=20)
+print("Beam:", tokenizer.decode(beam[0], skip_special_tokens=True))
+
+# 采样
+sample = model.generate(**inputs, do_sample=True, temperature=0.7, top_p=0.9, max_new_tokens=20)
+print("Sample:", tokenizer.decode(sample[0], skip_special_tokens=True))
+
+# 观察：贪心输出最确定，束搜索更流畅但可能保守，采样更多样。</div></details>
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/app.js?v=23"></script>
+</body>
+</html>
