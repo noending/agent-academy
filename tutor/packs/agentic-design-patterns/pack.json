@@ -1,0 +1,216 @@
+{
+  "name": "agentic-design-patterns",
+  "title": "Agentic Design Patterns 实战课程",
+  "kb": "kb/agentic-design-patterns-kb.json",
+  "sources": [
+    {
+      "file": "kb/agentic-design-patterns-kb.json",
+      "source": "agentic-design-patterns",
+      "label": "Agentic Design Patterns 实战课程"
+    }
+  ],
+  "model": {
+    "provider": "deepseek",
+    "id": "deepseek-flash"
+  },
+  "thinkingLevel": "off",
+  "description": "由 https://github.com/evoiz/Agentic-Design-Patterns/tree/main 自动生成的教学包。本仓库是《Agentic Design Patterns》一书的配套代码，包含21章及附录的Jupyter笔记本，涵盖从提示链、路由到多智能体、记忆、评估等设计模式，适合AI工程师和架构师学习构建智能体系统。",
+  "curriculum": [
+    {
+      "no": 1,
+      "title": "智能体设计模式入门与核心概念",
+      "goal": "理解智能体设计模式概览、核心模式分类及课程结构",
+      "chunkIds": [
+        "agentic-design-patterns-c000",
+        "agentic-design-patterns-c001",
+        "agentic-design-patterns-c002",
+        "agentic-design-patterns-c003",
+        "agentic-design-patterns-c009"
+      ],
+      "questions": [
+        "智能体设计模式主要分为哪几类？",
+        "核心模式部分包含哪些章节？",
+        "如何利用本仓库的笔记本进行学习？"
+      ]
+    },
+    {
+      "no": 2,
+      "title": "基础模式：提示链、路由与并行化",
+      "goal": "掌握提示链、路由和并行化的实现方法",
+      "chunkIds": [
+        "agentic-design-patterns-c026",
+        "agentic-design-patterns-c027",
+        "agentic-design-patterns-c028",
+        "agentic-design-patterns-c029",
+        "agentic-design-patterns-c035",
+        "agentic-design-patterns-c040",
+        "agentic-design-patterns-c046"
+      ],
+      "questions": [
+        "提示链中如何将前一个链的输出传递给下一个链？",
+        "在LangGraph中如何实现基于内容的路由？",
+        "并行化模式中如何同时运行多个研究代理？"
+      ]
+    },
+    {
+      "no": 3,
+      "title": "反思与迭代优化模式",
+      "goal": "学会使用反思模式让智能体自我改进输出",
+      "chunkIds": [
+        "agentic-design-patterns-c050",
+        "agentic-design-patterns-c051",
+        "agentic-design-patterns-c052",
+        "agentic-design-patterns-c053",
+        "agentic-design-patterns-c054",
+        "agentic-design-patterns-c055",
+        "agentic-design-patterns-c057",
+        "agentic-design-patterns-c058"
+      ],
+      "questions": [
+        "反思模式中生成器和评审器如何协作？",
+        "迭代循环中如何根据批评改进代码？",
+        "LangChain中如何构建反思链？"
+      ]
+    },
+    {
+      "no": 4,
+      "title": "工具使用与规划能力",
+      "goal": "掌握为智能体添加工具和规划任务的方法",
+      "chunkIds": [
+        "agentic-design-patterns-c060",
+        "agentic-design-patterns-c065",
+        "agentic-design-patterns-c069",
+        "agentic-design-patterns-c071",
+        "agentic-design-patterns-c083",
+        "agentic-design-patterns-c085"
+      ],
+      "questions": [
+        "如何在CrewAI中定义和使用自定义工具？",
+        "智能体如何通过执行代码来解决问题？",
+        "规划模式中如何让智能体分解复杂任务？"
+      ]
+    },
+    {
+      "no": 5,
+      "title": "多智能体系统与协作",
+      "goal": "构建多智能体系统，实现智能体间协作",
+      "chunkIds": [
+        "agentic-design-patterns-c088",
+        "agentic-design-patterns-c091",
+        "agentic-design-patterns-c093",
+        "agentic-design-patterns-c095",
+        "agentic-design-patterns-c097",
+        "agentic-design-patterns-c098"
+      ],
+      "questions": [
+        "如何使用ADK的AgentTool将智能体作为工具？",
+        "协调者智能体如何管理多个子智能体？",
+        "CrewAI中如何定义多个角色并分配任务？"
+      ]
+    },
+    {
+      "no": 6,
+      "title": "记忆管理与知识检索",
+      "goal": "实现智能体的记忆机制和RAG知识检索",
+      "chunkIds": [
+        "agentic-design-patterns-c101",
+        "agentic-design-patterns-c104",
+        "agentic-design-patterns-c106",
+        "agentic-design-patterns-c108",
+        "agentic-design-patterns-c110",
+        "agentic-design-patterns-c135",
+        "agentic-design-patterns-c136",
+        "agentic-design-patterns-c140"
+      ],
+      "questions": [
+        "ADK中如何显式更新会话状态？",
+        "LangChain中如何为对话添加记忆？",
+        "如何使用Vertex AI RAG服务进行知识检索？"
+      ]
+    },
+    {
+      "no": 7,
+      "title": "高级模式：适应、MCP与目标设定",
+      "goal": "学习智能体适应、MCP协议和目标迭代",
+      "chunkIds": [
+        "agentic-design-patterns-c115",
+        "agentic-design-patterns-c116",
+        "agentic-design-patterns-c117",
+        "agentic-design-patterns-c119",
+        "agentic-design-patterns-c122",
+        "agentic-design-patterns-c123",
+        "agentic-design-patterns-c124"
+      ],
+      "questions": [
+        "OpenEvolve如何实现智能体的自适应进化？",
+        "MCP服务器如何与ADK智能体集成？",
+        "目标设定模式中如何迭代生成代码直到满足目标？"
+      ]
+    },
+    {
+      "no": 8,
+      "title": "异常处理、人机协同与智能体通信",
+      "goal": "掌握异常处理、人机回环和A2A通信",
+      "chunkIds": [
+        "agentic-design-patterns-c130",
+        "agentic-design-patterns-c131",
+        "agentic-design-patterns-c132",
+        "agentic-design-patterns-c133",
+        "agentic-design-patterns-c142",
+        "agentic-design-patterns-c145",
+        "agentic-design-patterns-c146"
+      ],
+      "questions": [
+        "如何设计回退机制处理工具调用失败？",
+        "人机回环模式中如何让人类介入决策？",
+        "A2A协议中AgentCard的作用是什么？"
+      ]
+    },
+    {
+      "no": 9,
+      "title": "资源优化、推理与护栏",
+      "goal": "优化资源使用，增强推理能力并设置护栏",
+      "chunkIds": [
+        "agentic-design-patterns-c147",
+        "agentic-design-patterns-c148",
+        "agentic-design-patterns-c150",
+        "agentic-design-patterns-c151",
+        "agentic-design-patterns-c155",
+        "agentic-design-patterns-c160",
+        "agentic-design-patterns-c162",
+        "agentic-design-patterns-c166",
+        "agentic-design-patterns-c168",
+        "agentic-design-patterns-c172"
+      ],
+      "questions": [
+        "如何通过查询路由优化资源使用？",
+        "思维链提示如何提升推理能力？",
+        "如何使用LLM作为护栏过滤不安全输入？"
+      ]
+    },
+    {
+      "no": 10,
+      "title": "评估、优先级与探索发现",
+      "goal": "评估智能体性能，实现任务优先级和探索",
+      "chunkIds": [
+        "agentic-design-patterns-c186",
+        "agentic-design-patterns-c189",
+        "agentic-design-patterns-c196",
+        "agentic-design-patterns-c199",
+        "agentic-design-patterns-c203",
+        "agentic-design-patterns-c208"
+      ],
+      "questions": [
+        "如何计算智能体响应的准确率？",
+        "LLM作为评委时如何设计评分标准？",
+        "SuperSimplePM智能体如何管理任务优先级？"
+      ]
+    }
+  ],
+  "starterQuestions": [
+    "智能体设计模式有哪些核心类别？",
+    "如何实现提示链和路由模式？",
+    "多智能体系统如何协作完成任务？",
+    "如何为智能体添加记忆和知识检索能力？"
+  ]
+}
