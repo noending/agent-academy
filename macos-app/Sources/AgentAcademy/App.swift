@@ -116,6 +116,10 @@ final class WebViewCoordinator: NSObject, WKNavigationDelegate {
         if let bundled = Bundle.main.resourceURL?.appendingPathComponent("site") {
             roots.append(bundled)
         }
+        // 末位兜底:tutor 引擎根(人审清单 packs/<skill>/REVIEW.md 相对 tutor 根)
+        if let tutor = tutorEngineRoot() {
+            roots.append(tutor)
+        }
         siteRoots = roots
         let cfg = WKWebViewConfiguration()
         cfg.websiteDataStore = .default() // 持久化:学习进度(localStorage)跨启动保留

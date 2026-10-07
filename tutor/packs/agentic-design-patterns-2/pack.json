@@ -1,0 +1,204 @@
+{
+  "name": "agentic-design-patterns-2",
+  "title": "Agentic Design Patterns 实战课程",
+  "kb": "kb/agentic-design-patterns-2-kb.json",
+  "sources": [
+    {
+      "file": "kb/agentic-design-patterns-2-kb.json",
+      "source": "agentic-design-patterns-2",
+      "label": "Agentic Design Patterns 实战课程"
+    }
+  ],
+  "model": {
+    "provider": "deepseek",
+    "id": "deepseek-flash"
+  },
+  "thinkingLevel": "off",
+  "description": "由 https://github.com/evoiz/Agentic-Design-Patterns 自动生成的教学包。本仓库是《Agentic Design Patterns》配套代码，包含21章及附录的Jupyter Notebook，覆盖提示链、路由、并行、反思、工具使用、规划、多智能体、记忆、MCP、RAG、评估、护栏等模式，适合AI工程师系统学习智能体设计。",
+  "curriculum": [
+    {
+      "no": 1,
+      "title": "智能体设计模式入门与核心概念",
+      "goal": "理解智能体设计模式全景，能运行基础示例并配置开发环境。",
+      "chunkIds": [
+        "agentic-design-patterns-2-c000",
+        "agentic-design-patterns-2-c001",
+        "agentic-design-patterns-2-c002",
+        "agentic-design-patterns-2-c003",
+        "agentic-design-patterns-2-c004",
+        "agentic-design-patterns-2-c005",
+        "agentic-design-patterns-2-c009"
+      ],
+      "questions": [
+        "Agentic Design Patterns 这本书主要涵盖哪些模式？",
+        "如何安装和配置本仓库的运行环境？",
+        "这些模式适合什么样的应用场景？"
+      ]
+    },
+    {
+      "no": 2,
+      "title": "基础模式：提示链、路由与并行化",
+      "goal": "掌握提示链、路由和并行化的实现，能构建多步骤工作流。",
+      "chunkIds": [
+        "agentic-design-patterns-2-c026",
+        "agentic-design-patterns-2-c027",
+        "agentic-design-patterns-2-c028",
+        "agentic-design-patterns-2-c029",
+        "agentic-design-patterns-2-c035",
+        "agentic-design-patterns-2-c039",
+        "agentic-design-patterns-2-c040",
+        "agentic-design-patterns-2-c046"
+      ],
+      "questions": [
+        "提示链中如何将前一步的输出传递给下一步？",
+        "路由模式中如何根据用户输入选择不同的处理分支？",
+        "并行化模式相比串行执行有哪些优势和挑战？"
+      ]
+    },
+    {
+      "no": 3,
+      "title": "反思与迭代优化",
+      "goal": "实现反思模式，让智能体通过自我批评和迭代改进输出质量。",
+      "chunkIds": [
+        "agentic-design-patterns-2-c050",
+        "agentic-design-patterns-2-c051",
+        "agentic-design-patterns-2-c052",
+        "agentic-design-patterns-2-c053",
+        "agentic-design-patterns-2-c054",
+        "agentic-design-patterns-2-c055",
+        "agentic-design-patterns-2-c057",
+        "agentic-design-patterns-2-c058"
+      ],
+      "questions": [
+        "反思模式中生成器和评审器如何协作？",
+        "迭代循环中如何决定何时停止改进？",
+        "如何设计有效的批评提示来提升输出质量？"
+      ]
+    },
+    {
+      "no": 4,
+      "title": "工具使用与外部能力集成",
+      "goal": "让智能体调用外部工具（搜索、代码执行等），扩展其能力边界。",
+      "chunkIds": [
+        "agentic-design-patterns-2-c060",
+        "agentic-design-patterns-2-c065",
+        "agentic-design-patterns-2-c069",
+        "agentic-design-patterns-2-c071",
+        "agentic-design-patterns-2-c072",
+        "agentic-design-patterns-2-c079",
+        "agentic-design-patterns-2-c080"
+      ],
+      "questions": [
+        "如何定义和注册一个工具供智能体调用？",
+        "智能体如何决定何时调用工具以及如何处理工具返回的结果？",
+        "使用代码执行工具时需要注意哪些安全问题？"
+      ]
+    },
+    {
+      "no": 5,
+      "title": "规划与多智能体协作",
+      "goal": "掌握规划模式和多智能体系统，能设计协作式智能体应用。",
+      "chunkIds": [
+        "agentic-design-patterns-2-c083",
+        "agentic-design-patterns-2-c085",
+        "agentic-design-patterns-2-c088",
+        "agentic-design-patterns-2-c091",
+        "agentic-design-patterns-2-c093",
+        "agentic-design-patterns-2-c095",
+        "agentic-design-patterns-2-c097",
+        "agentic-design-patterns-2-c098"
+      ],
+      "questions": [
+        "规划模式中如何将复杂任务分解为可执行的步骤？",
+        "多智能体系统中协调者如何分配任务给子智能体？",
+        "顺序、并行和循环多智能体编排各适用于什么场景？"
+      ]
+    },
+    {
+      "no": 6,
+      "title": "记忆管理与知识检索",
+      "goal": "实现智能体的记忆机制和RAG检索，提升上下文连贯性和知识准确性。",
+      "chunkIds": [
+        "agentic-design-patterns-2-c101",
+        "agentic-design-patterns-2-c104",
+        "agentic-design-patterns-2-c106",
+        "agentic-design-patterns-2-c108",
+        "agentic-design-patterns-2-c110",
+        "agentic-design-patterns-2-c135",
+        "agentic-design-patterns-2-c136",
+        "agentic-design-patterns-2-c140"
+      ],
+      "questions": [
+        "会话记忆和长期记忆在实现上有什么区别？",
+        "如何将RAG检索集成到智能体中以增强知识问答？",
+        "记忆服务如何影响智能体的多轮对话表现？"
+      ]
+    },
+    {
+      "no": 7,
+      "title": "高级模式：MCP、A2A与资源优化",
+      "goal": "理解MCP协议、智能体间通信和资源优化策略，构建可扩展系统。",
+      "chunkIds": [
+        "agentic-design-patterns-2-c116",
+        "agentic-design-patterns-2-c117",
+        "agentic-design-patterns-2-c119",
+        "agentic-design-patterns-2-c142",
+        "agentic-design-patterns-2-c145",
+        "agentic-design-patterns-2-c146",
+        "agentic-design-patterns-2-c147",
+        "agentic-design-patterns-2-c150"
+      ],
+      "questions": [
+        "MCP协议如何让智能体与外部工具服务器通信？",
+        "A2A协议中智能体如何发现和调用其他智能体？",
+        "资源优化模式如何根据查询复杂度动态选择模型？"
+      ]
+    },
+    {
+      "no": 8,
+      "title": "推理、护栏与评估",
+      "goal": "应用推理增强、安全护栏和评估方法，确保智能体可靠可控。",
+      "chunkIds": [
+        "agentic-design-patterns-2-c155",
+        "agentic-design-patterns-2-c160",
+        "agentic-design-patterns-2-c162",
+        "agentic-design-patterns-2-c166",
+        "agentic-design-patterns-2-c168",
+        "agentic-design-patterns-2-c172",
+        "agentic-design-patterns-2-c186",
+        "agentic-design-patterns-2-c189"
+      ],
+      "questions": [
+        "思维链提示如何提升智能体的推理能力？",
+        "如何设计LLM护栏来过滤不安全或无关的输入？",
+        "LLM-as-Judge评估方法如何对智能体输出进行打分？"
+      ]
+    },
+    {
+      "no": 9,
+      "title": "综合项目与前沿探索",
+      "goal": "综合运用所学模式，完成一个端到端智能体项目并了解前沿方向。",
+      "chunkIds": [
+        "agentic-design-patterns-2-c196",
+        "agentic-design-patterns-2-c199",
+        "agentic-design-patterns-2-c203",
+        "agentic-design-patterns-2-c208",
+        "agentic-design-patterns-2-c115",
+        "agentic-design-patterns-2-c122",
+        "agentic-design-patterns-2-c130",
+        "agentic-design-patterns-2-c132"
+      ],
+      "questions": [
+        "如何构建一个项目管理智能体来自动创建和优先处理任务？",
+        "Agent Laboratory如何模拟科研流程进行探索与发现？",
+        "如何将目标设定、异常处理和人工介入模式整合到实际项目中？"
+      ]
+    }
+  ],
+  "starterQuestions": [
+    "什么是智能体设计模式？它和普通LLM应用有什么区别？",
+    "如何快速运行仓库中的第一个示例并看到效果？",
+    "在多智能体系统中，如何选择顺序、并行或循环的编排方式？",
+    "如何为智能体添加记忆、工具和护栏，使其更实用可靠？"
+  ]
+}
