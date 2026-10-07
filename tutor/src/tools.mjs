@@ -1,7 +1,7 @@
 // 教学工具集:符合 pi-agent-core 的 AgentTool 接口(TypeBox schema + execute)。
 import { Type } from "typebox";
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, writeFileSync } from "node:fs";
+import { mkdtempSync, writeFileSync, appendFileSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -132,6 +132,24 @@ export function buildTools({ index, profile, root }) {
     }
   );
 
-  return [lookup_course, get_student_profile, record_progress, record_misconception, update_plan, run_code];
+  const record_knowledge_gap = makeTool(
+    "record_knowledge_gap",
+    "记盲区",
+    `当 lookup_course 检索不到学生问题相关的内容、或你只能依靠自身知识(而非课程知识库)回答时,调用此工具留档知识盲区——这是课程知识进化的依据。对学生如实说明该部分超出课程库。topic 填主题领域,question 填学生的问题原文。`,
+    Type.Object({
+      topic: Type.String({ description: "主题领域,如 RAG 评估" }),
+      question: Type.String({ description: "学生的问题原文" }),
+    }),
+    async (_id, params) => {
+      const gapsFile = join(root, "knowledge-gaps.jsonl");
+      appendFileSync(gapsFile, JSON.stringify({
+        ts: new Date().toISOString(), pack: "agent-dev",
+        topic: params.topic, question: params.question,
+      }) + "\n");
+      return textResult(`已记录知识盲区: ${params.topic}。已如实告知学生该部分超出课程库,工厂会在知识进化时补齐。`);
+    }
+  );
+
+  return [lookup_course, get_student_profile, record_progress, record_misconception, update_plan, record_knowledge_gap, run_code];
 }
 

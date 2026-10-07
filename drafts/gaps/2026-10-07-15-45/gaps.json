@@ -1,0 +1,61 @@
+{
+  "clusters": {
+    "themes": [
+      {
+        "theme": "LLM 教学与评估",
+        "gaps": [
+          "怎么设计 LLM 课程的教学质量评估集？"
+        ],
+        "recommend": {
+          "pipeline": "paper",
+          "source": "arXiv:2305.18654 (Evaluating Large Language Models: A Comprehensive Survey) 或 arXiv:2307.09288 (Llama 2 中的评估方法)",
+          "priority": "高"
+        }
+      },
+      {
+        "theme": "LLM 推理部署与选型",
+        "gaps": [
+          "小团队如何选择 LLM 推理框架（vLLM/TGI）？"
+        ],
+        "recommend": {
+          "pipeline": "repo",
+          "source": "vllm-project/vllm 和 huggingface/text-generation-inference 的官方文档与基准测试",
+          "priority": "高"
+        }
+      },
+      {
+        "theme": "Agent 安全与提示注入防御",
+        "gaps": [
+          "学生开发的 Agent 如何防提示注入？"
+        ],
+        "recommend": {
+          "pipeline": "paper",
+          "source": "arXiv:2302.12173 (Not what you've signed up for: Compromising Real-World LLM-Integrated Applications with Indirect Prompt Injection) 及后续防御论文",
+          "priority": "高"
+        }
+      }
+    ],
+    "overall": "盲区集中在 LLM 教学评估、推理部署选型与 Agent 安全三个方向。最优先补课的是 Agent 提示注入防御，因其直接关系学生项目安全；其次为推理框架选型与教学评估集设计。"
+  },
+  "gaps": [
+    {
+      "ts": "2026-10-07T15:45:15.424Z",
+      "topic": "测试盲区-评测",
+      "question": "怎么设计 LLM 课程的教学质量评估集?",
+      "source": "导师留档"
+    },
+    {
+      "ts": "2026-10-07T15:45:15.426Z",
+      "topic": "测试盲区-部署",
+      "question": "小团队如何选择 LLM 推理框架(vLLM/TGI)?",
+      "source": "导师留档"
+    },
+    {
+      "ts": "2026-10-07T15:45:15.426Z",
+      "topic": "测试盲区-安全",
+      "question": "学生开发的 Agent 如何防提示注入?",
+      "source": "导师留档"
+    }
+  ],
+  "misses": []
+}

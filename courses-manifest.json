@@ -1,6 +1,190 @@
 {
   "courses": [
     {
+      "kind": "topic",
+      "slug": "e2e-topic",
+      "title": "提示词工程入门",
+      "description": "适合AI应用开发者、产品经理及对提示词工程感兴趣的学习者。从基础概念到端到端测试，掌握设计、优化和评估提示词的核心技能，并能落地实际项目。",
+      "pack": "e2e-topic",
+      "review": "packs/e2e-topic/REVIEW.md",
+      "page": "full-e2e-topic.html",
+      "topic": "提示词工程入门",
+      "chapters": [
+        {
+          "no": 1,
+          "title": "提示词工程基础",
+          "goal": "理解提示词工程概念，能编写简单有效的提示词。",
+          "file": "e2e-topic-ch01.html",
+          "questions": [
+            "提示词工程和传统编程有什么区别？",
+            "如何控制大语言模型的输出长度？",
+            "为什么同样的提示词每次输出不一样？"
+          ]
+        },
+        {
+          "no": 2,
+          "title": "提示词设计原则",
+          "goal": "掌握设计清晰、具体提示词的原则，避免常见错误。",
+          "file": "e2e-topic-ch02.html",
+          "questions": [
+            "如何让模型输出特定格式？",
+            "少样本提示中示例数量多少合适？",
+            "如何避免模型产生幻觉？"
+          ]
+        },
+        {
+          "no": 3,
+          "title": "高级提示词技巧",
+          "goal": "运用思维链、自洽性等高级技巧提升模型表现。",
+          "file": "e2e-topic-ch03.html",
+          "questions": [
+            "思维链提示适用于哪些任务？",
+            "如何评估提示词的效果？",
+            "提示词链和单一提示词相比有什么优势？"
+          ]
+        },
+        {
+          "no": 4,
+          "title": "端到端测试与部署",
+          "goal": "构建端到端提示词测试流程，并部署到实际应用。",
+          "file": "e2e-topic-ch04.html",
+          "questions": [
+            "如何自动化测试提示词的质量？",
+            "生产环境中如何监控提示词性能？",
+            "如何迭代优化提示词？"
+          ]
+        }
+      ],
+      "starterQuestions": [
+        "提示词工程需要编程基础吗？",
+        "如何学习提示词工程？有哪些资源推荐？",
+        "提示词工程在实际项目中有哪些应用？",
+        "如何评估一个提示词的好坏？"
+      ],
+      "generated": true,
+      "generatedAt": "2026-10-07T15:24:17.272Z"
+    },
+    {
+      "kind": "repo",
+      "slug": "e2e-repo",
+      "title": "LLM 全栈实战：从基础到部署",
+      "pack": "e2e-repo",
+      "review": "packs/e2e-repo/REVIEW.md",
+      "page": null,
+      "chapters": [
+        {
+          "no": 1,
+          "title": "LLM 基础：数学、Python 与神经网络",
+          "goal": "掌握线性代数、Python 和神经网络基础，为后续学习铺路",
+          "questions": [
+            "线性代数在 LLM 中具体用在哪些地方？",
+            "Python 需要学到什么程度才能跟上课程？",
+            "神经网络的前向传播和反向传播如何理解？"
+          ]
+        },
+        {
+          "no": 2,
+          "title": "NLP 与 Transformer 架构",
+          "goal": "理解文本预处理、词嵌入及 Transformer 核心架构",
+          "questions": [
+            "分词和词嵌入有什么区别？",
+            "Transformer 的编码器-解码器与仅解码器架构有何不同？",
+            "为什么自注意力机制如此重要？"
+          ]
+        },
+        {
+          "no": 3,
+          "title": "预训练与后训练数据",
+          "goal": "了解预训练数据准备及后训练数据集的结构与存储",
+          "questions": [
+            "预训练需要什么样的数据集？",
+            "后训练数据集为什么采用对话模板存储？",
+            "如何生成合成数据用于后训练？"
+          ]
+        },
+        {
+          "no": 4,
+          "title": "监督微调与偏好对齐",
+          "goal": "掌握 SFT 和偏好对齐技术，将基座模型变为助手",
+          "questions": [
+            "全量微调和参数高效微调如何选择？",
+            "拒绝采样在偏好对齐中起什么作用？",
+            "RLHF 和 DPO 的主要区别是什么？"
+          ]
+        },
+        {
+          "no": 5,
+          "title": "模型评估与量化",
+          "goal": "学会评估 LLM 性能并应用量化技术压缩模型",
+          "questions": [
+            "自动化基准测试如 MMLU 如何评估模型？",
+            "量化中 FP16 和 INT8 精度损失有多大？",
+            "如何对模型进行朴素量化？"
+          ]
+        },
+        {
+          "no": 6,
+          "title": "新趋势：模型合并与推理优化",
+          "goal": "了解模型合并、Flash Attention 等前沿优化技术",
+          "questions": [
+            "模型合并如何在不训练的情况下提升性能？",
+            "Flash Attention 如何降低注意力复杂度？",
+            "GPU 推理优化有哪些常用手段？"
+          ]
+        },
+        {
+          "no": 7,
+          "title": "LLM 应用开发：API 与 RAG",
+          "goal": "使用 LLM API 和 RAG 构建生产级应用",
+          "questions": [
+            "私有 LLM 和开源 LLM 的 API 如何选择？",
+            "RAG 中文档加载和文本分割有哪些最佳实践？",
+            "LangChain 和 LlamaIndex 编排器有何异同？"
+          ]
+        },
+        {
+          "no": 8,
+          "title": "高级应用：查询构建与 Agent",
+          "goal": "掌握结构化查询构建和智能体开发",
+          "questions": [
+            "如何将自然语言转换为 SQL 查询？",
+            "Agent 的思考-行动-观察循环如何工作？",
+            "构建 Agent 需要哪些核心组件？"
+          ]
+        },
+        {
+          "no": 9,
+          "title": "部署与安全",
+          "goal": "学会本地部署 LLM 并防范提示注入等安全风险",
+          "questions": [
+            "本地部署 LLM 有哪些工具和步骤？",
+            "如何用 Streamlit 快速搭建 LLM 应用？",
+            "提示注入攻击如何防范？"
+          ]
+        }
+      ],
+      "starterQuestions": [
+        "这门课程适合什么基础的人学习？",
+        "学习完课程后能独立完成哪些 LLM 任务？",
+        "课程中微调和量化部分需要多少算力？",
+        "如何将 RAG 和 Agent 结合到实际项目中？"
+      ],
+      "generated": false,
+      "generatedAt": "2026-10-07T15:23:50.953Z"
+    },
+    {
+      "kind": "paper",
+      "slug": "e2e-paper",
+      "title": "e2e-paper(机器初稿)",
+      "titleEn": "ReAct: Synergizing Reasoning and Acting in Language Models",
+      "description": "论文翻译与解读(机器初稿)",
+      "page": "full-e2e-paper.html",
+      "pack": null,
+      "review": "drafts/e2e-paper/REVIEW.md",
+      "generated": true,
+      "generatedAt": "2026-10-07T15:23:22.179Z"
+    },
+    {
       "kind": "repo",
       "slug": "agentic-design-patterns-2",
       "title": "Agentic Design Patterns 实战课程",
@@ -742,5 +926,5 @@
       "review": "tutor/llm-termlogy/REVIEW.md"
     }
   ],
-  "updatedAt": "2026-10-07T10:18:04.328Z"
+  "updatedAt": "2026-10-07T15:24:17.272Z"
 }
