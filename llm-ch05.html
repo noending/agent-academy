@@ -30,7 +30,7 @@
 
       <p class="lead"><b>本章目标：</b>优化模型推理速度与资源占用</p>
  <h3>量化：PTQ与QAT</h3>
- <p>量化是把模型参数和激活值从高精度（如FP32）转换为低精度（如INT8）的过程，能大幅减少内存占用和加速推理。<b>训练后量化（PTQ）</b>无需重新训练，直接对训练好的模型进行量化，简单快速但可能损失精度；<b>量化感知训练（QAT）</b>在训练过程中模拟量化误差，让模型适应低精度，通常精度更高但需要训练资源。</p><p>下面是一个使用PyTorch进行动态量化的最小示例，对线性层进行INT8量化：</p><pre><code class="language-python">import torch
+ <p>量化是把模型参数和激活值从高精度（如FP32）转换为低精度（如INT8）的过程，能大幅减少内存占用和加速推理。<b>训练后量化（PTQ）</b>无需重新训练，直接对训练好的模型进行量化，简单快速但可能损失精度；<b>量化感知训练（QAT）</b>在训练过程中模拟量化误差，让模型适应低精度，通常精度更高但需要训练资源。</p><p>下面是一个使用PyTorch进行动态量化的最小示例，对线性层进行INT8量化：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import torch
 import torch.quantization
 
 # 定义一个简单模型
@@ -49,9 +49,9 @@ quantized_model = torch.quantization.quantize_dynamic(
 print(quantized_model)
 # 比较大小
 print(f"原始模型大小: {sum(p.numel() for p in model.parameters()) * 4} bytes")
-print(f"量化模型大小: {sum(p.numel() for p in quantized_model.parameters()) * 1} bytes")</code></pre><p>运行后可以看到量化模型大小约为原始模型的1/4。<b>PTQ适合快速部署，QAT适合对精度要求高的场景。</b></p>
+print(f"量化模型大小: {sum(p.numel() for p in quantized_model.parameters()) * 1} bytes")</code></pre></div><p>运行后可以看到量化模型大小约为原始模型的1/4。<b>PTQ适合快速部署，QAT适合对精度要求高的场景。</b></p>
  <h3>剪枝与知识蒸馏</h3>
- <p><b>剪枝</b>通过移除模型中不重要的权重或神经元来减少参数量和计算量。常见方法有非结构化剪枝（移除单个权重）和结构化剪枝（移除整个通道或层）。<b>知识蒸馏</b>让一个小模型（学生）模仿大模型（教师）的输出分布，从而获得接近大模型的性能。</p><p>下面是一个简单的知识蒸馏训练示例，使用KL散度损失：</p><pre><code class="language-python">import torch
+ <p><b>剪枝</b>通过移除模型中不重要的权重或神经元来减少参数量和计算量。常见方法有非结构化剪枝（移除单个权重）和结构化剪枝（移除整个通道或层）。<b>知识蒸馏</b>让一个小模型（学生）模仿大模型（教师）的输出分布，从而获得接近大模型的性能。</p><p>下面是一个简单的知识蒸馏训练示例，使用KL散度损失：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -71,9 +71,9 @@ with torch.no_grad():
 student_logits = student(x)
 student_log_probs = F.log_softmax(student_logits / 2.0, dim=1)
 loss = F.kl_div(student_log_probs, teacher_probs, reduction='batchmean')
-print(f"蒸馏损失: {loss.item():.4f}")</code></pre><p><b>剪枝和蒸馏可以结合使用，先剪枝再蒸馏微调，能进一步压缩模型。</b></p>
+print(f"蒸馏损失: {loss.item():.4f}")</code></pre></div><p><b>剪枝和蒸馏可以结合使用，先剪枝再蒸馏微调，能进一步压缩模型。</b></p>
  <h3>推理加速：ONNX与TensorRT</h3>
- <p><b>ONNX</b>（Open Neural Network Exchange）是一种开放的模型格式，支持跨框架转换和优化。<b>TensorRT</b>是NVIDIA的高性能推理SDK，能对ONNX模型进一步优化，利用GPU加速。</p><p>将PyTorch模型导出为ONNX格式的示例：</p><pre><code class="language-python">import torch
+ <p><b>ONNX</b>（Open Neural Network Exchange）是一种开放的模型格式，支持跨框架转换和优化。<b>TensorRT</b>是NVIDIA的高性能推理SDK，能对ONNX模型进一步优化，利用GPU加速。</p><p>将PyTorch模型导出为ONNX格式的示例：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import torch
 import torch.onnx
 
 # 定义一个简单模型
@@ -102,9 +102,9 @@ import numpy as np
 ort_session = ort.InferenceSession("model.onnx")
 input_data = np.random.randn(1, 10).astype(np.float32)
 outputs = ort_session.run(None, {"input": input_data})
-print("ONNX Runtime推理输出形状:", outputs[0].shape)</code></pre><p>对于TensorRT，可以使用<code>torch-tensorrt</code>或<code>trtexec</code>工具将ONNX转换为TensorRT引擎，获得更低的延迟。<b>ONNX提供跨平台兼容性，TensorRT则针对NVIDIA GPU极致优化。</b></p>
+print("ONNX Runtime推理输出形状:", outputs[0].shape)</code></pre></div><p>对于TensorRT，可以使用<code>torch-tensorrt</code>或<code>trtexec</code>工具将ONNX转换为TensorRT引擎，获得更低的延迟。<b>ONNX提供跨平台兼容性，TensorRT则针对NVIDIA GPU极致优化。</b></p>
  <h3>内存优化与批处理策略</h3>
- <p>内存优化和批处理能显著提升推理吞吐量。<b>梯度检查点</b>用计算换内存，<b>混合精度训练</b>减少显存占用，<b>动态批处理</b>将多个请求合并处理以提高GPU利用率。</p><p>下面是一个使用PyTorch进行混合精度推理的示例：</p><pre><code class="language-python">import torch
+ <p>内存优化和批处理能显著提升推理吞吐量。<b>梯度检查点</b>用计算换内存，<b>混合精度训练</b>减少显存占用，<b>动态批处理</b>将多个请求合并处理以提高GPU利用率。</p><p>下面是一个使用PyTorch进行混合精度推理的示例：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import torch
 
 model = torch.nn.Linear(1000, 1000).cuda()
 input_data = torch.randn(32, 1000).cuda()
@@ -120,7 +120,7 @@ batch2 = torch.randn(4, 1000).cuda()
 combined = torch.cat([batch1, batch2], dim=0)
 with torch.no_grad():
     out = model(combined)
-print(f"合并批次输出形状: {out.shape}")</code></pre><p><b>合理设置批大小和采用动态批处理能最大化硬件利用率，但需注意延迟与吞吐的权衡。</b></p>
+print(f"合并批次输出形状: {out.shape}")</code></pre></div><p><b>合理设置批大小和采用动态批处理能最大化硬件利用率，但需注意延迟与吞吐的权衡。</b></p>
  <h3>常见误区</h3>
  <ul>
  <li>量化一定会导致明显的精度下降，实际上PTQ在多数模型上精度损失很小，QAT可以几乎无损。</li>

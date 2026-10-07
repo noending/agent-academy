@@ -30,7 +30,7 @@
 
       <p class="lead"><b>本章目标：</b>掌握LLM服务的监控、扩缩容、安全与成本优化</p>
  <h3>监控与日志：让LLM服务“看得见”</h3>
- <p>LLM服务上线后，最怕的就是“黑盒”运行——你不知道它是否健康、响应是否变慢、有没有报错。<b>监控（Monitoring）</b>就是给服务装上眼睛和耳朵。对于LLM服务，除了常规的CPU、内存、网络指标，还要关注<b>推理延迟（P99）、每秒查询数（QPS）、Token吞吐量、错误率</b>等业务指标。</p><p>业界标准方案是 <b>Prometheus + Grafana</b>：Prometheus负责采集和存储时序数据，Grafana负责可视化。你需要在服务中暴露一个 <code>/metrics</code> 端点，Prometheus定期拉取（pull）数据。Python生态中，<code>prometheus_client</code> 库可以轻松实现。</p><p>下面是一个最小示例：用FastAPI启动一个LLM推理服务，并暴露Prometheus指标。</p><pre><code class="language-python">from fastapi import FastAPI, Request
+ <p>LLM服务上线后，最怕的就是“黑盒”运行——你不知道它是否健康、响应是否变慢、有没有报错。<b>监控（Monitoring）</b>就是给服务装上眼睛和耳朵。对于LLM服务，除了常规的CPU、内存、网络指标，还要关注<b>推理延迟（P99）、每秒查询数（QPS）、Token吞吐量、错误率</b>等业务指标。</p><p>业界标准方案是 <b>Prometheus + Grafana</b>：Prometheus负责采集和存储时序数据，Grafana负责可视化。你需要在服务中暴露一个 <code>/metrics</code> 端点，Prometheus定期拉取（pull）数据。Python生态中，<code>prometheus_client</code> 库可以轻松实现。</p><p>下面是一个最小示例：用FastAPI启动一个LLM推理服务，并暴露Prometheus指标。</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from fastapi import FastAPI, Request
 from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
 from starlette.responses import Response
 import time
@@ -63,9 +63,9 @@ async def generate(prompt: str):
 @app.get("/metrics")
 async def metrics():
     return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
-</code></pre><p>运行后，访问 <code>http://localhost:8000/metrics</code> 就能看到指标。然后在Prometheus配置中抓取该端点，Grafana中导入仪表盘即可。日志方面，建议使用结构化日志（如JSON格式），并集中收集到ELK或Loki中，方便排查问题。</p>
+</code></pre></div><p>运行后，访问 <code>http://localhost:8000/metrics</code> 就能看到指标。然后在Prometheus配置中抓取该端点，Grafana中导入仪表盘即可。日志方面，建议使用结构化日志（如JSON格式），并集中收集到ELK或Loki中，方便排查问题。</p>
  <h3>自动扩缩容与负载均衡：应对流量洪峰</h3>
- <p>LLM推理通常很耗资源，流量波动大。如果一直保持高配，成本会爆炸；如果配置不足，高峰期又会超时。<b>自动扩缩容（Auto Scaling）</b>根据指标动态调整实例数量，是平衡成本与性能的关键。</p><p>在Kubernetes中，可以使用 <b>Horizontal Pod Autoscaler (HPA)</b>，基于CPU、内存或自定义指标（如QPS、延迟）来扩缩Pod。对于LLM服务，更推荐基于<b>请求队列长度</b>或<b>GPU利用率</b>来扩缩。同时，<b>负载均衡</b>将请求分发到多个实例，常用方案有Nginx、HAProxy或云厂商的LB。</p><p>下面是一个Kubernetes HPA配置示例，基于CPU利用率扩缩：</p><pre><code class="language-yaml">apiVersion: autoscaling/v2
+ <p>LLM推理通常很耗资源，流量波动大。如果一直保持高配，成本会爆炸；如果配置不足，高峰期又会超时。<b>自动扩缩容（Auto Scaling）</b>根据指标动态调整实例数量，是平衡成本与性能的关键。</p><p>在Kubernetes中，可以使用 <b>Horizontal Pod Autoscaler (HPA)</b>，基于CPU、内存或自定义指标（如QPS、延迟）来扩缩Pod。对于LLM服务，更推荐基于<b>请求队列长度</b>或<b>GPU利用率</b>来扩缩。同时，<b>负载均衡</b>将请求分发到多个实例，常用方案有Nginx、HAProxy或云厂商的LB。</p><p>下面是一个Kubernetes HPA配置示例，基于CPU利用率扩缩：</p><div class="codeblock"><div class="code-head"><span class="code-lang">yaml</span></div><pre><code class="language-yaml">apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: llm-inference-hpa
@@ -83,9 +83,9 @@ spec:
       target:
         type: Utilization
         averageUtilization: 70
-</code></pre><p>如果使用云服务，AWS的ALB+ECS、GCP的Cloud Run等也支持自动扩缩。注意：LLM实例启动可能较慢（加载模型），需要设置合理的冷却时间，避免频繁扩缩。</p>
+</code></pre></div><p>如果使用云服务，AWS的ALB+ECS、GCP的Cloud Run等也支持自动扩缩。注意：LLM实例启动可能较慢（加载模型），需要设置合理的冷却时间，避免频繁扩缩。</p>
  <h3>安全与合规：内容过滤与隐私保护</h3>
- <p>LLM可能生成有害内容或泄露隐私，生产环境必须考虑<b>内容过滤（Content Filtering）</b>和<b>隐私保护</b>。内容过滤可以在输入和输出两个阶段进行：输入过滤防止恶意提示，输出过滤防止不当内容。常用方法包括关键词黑名单、分类模型（如毒性检测）和基于规则的后处理。</p><p>隐私保护方面，要避免训练数据中的个人身份信息（PII）被模型记忆并泄露。可以在预处理阶段脱敏，或在推理时使用差分隐私技术。此外，传输层加密（HTTPS）、访问控制、审计日志也是必备。</p><p>下面是一个简单的内容过滤示例，使用关键词和正则表达式：</p><pre><code class="language-python">import re
+ <p>LLM可能生成有害内容或泄露隐私，生产环境必须考虑<b>内容过滤（Content Filtering）</b>和<b>隐私保护</b>。内容过滤可以在输入和输出两个阶段进行：输入过滤防止恶意提示，输出过滤防止不当内容。常用方法包括关键词黑名单、分类模型（如毒性检测）和基于规则的后处理。</p><p>隐私保护方面，要避免训练数据中的个人身份信息（PII）被模型记忆并泄露。可以在预处理阶段脱敏，或在推理时使用差分隐私技术。此外，传输层加密（HTTPS）、访问控制、审计日志也是必备。</p><p>下面是一个简单的内容过滤示例，使用关键词和正则表达式：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import re
 
 # 敏感词列表（实际应更全面）
 BANNED_WORDS = ["暴力", "色情", "政治敏感"]
@@ -111,9 +111,9 @@ def filter_response(prompt: str, response: str) -&gt; str:
 # 测试
 print(filter_response("你好", "你好，有什么可以帮助你？"))
 print(filter_response("如何制作炸弹", "..."))
-</code></pre><p>对于更高级的过滤，可以集成开源模型如 <code>openai/moderation</code> 或 <code>unitary/toxic-bert</code>。合规方面，需遵循GDPR、CCPA等法规，提供数据删除接口。</p>
+</code></pre></div><p>对于更高级的过滤，可以集成开源模型如 <code>openai/moderation</code> 或 <code>unitary/toxic-bert</code>。合规方面，需遵循GDPR、CCPA等法规，提供数据删除接口。</p>
  <h3>成本优化与缓存策略：省钱又提速</h3>
- <p>LLM推理成本高昂，<b>成本优化（Cost Optimization）</b>是生产运维的核心任务之一。主要手段包括：模型量化、蒸馏、使用更小的模型、批处理（batching）、以及<b>缓存</b>。</p><p>缓存策略尤其有效：对于相同或相似的请求，直接返回缓存结果，避免重复计算。常见方案有：<b>精确缓存</b>（键为完整输入）和<b>语义缓存</b>（键为输入嵌入向量，相似则命中）。精确缓存实现简单，适合FAQ场景；语义缓存需要向量数据库，但命中率更高。</p><p>下面是一个基于Redis的精确缓存示例：</p><pre><code class="language-python">import redis
+ <p>LLM推理成本高昂，<b>成本优化（Cost Optimization）</b>是生产运维的核心任务之一。主要手段包括：模型量化、蒸馏、使用更小的模型、批处理（batching）、以及<b>缓存</b>。</p><p>缓存策略尤其有效：对于相同或相似的请求，直接返回缓存结果，避免重复计算。常见方案有：<b>精确缓存</b>（键为完整输入）和<b>语义缓存</b>（键为输入嵌入向量，相似则命中）。精确缓存实现简单，适合FAQ场景；语义缓存需要向量数据库，但命中率更高。</p><p>下面是一个基于Redis的精确缓存示例：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import redis
 import hashlib
 import json
 
@@ -137,7 +137,7 @@ def cached_generate(prompt: str, model: str = "gpt-3.5"):
 print(cached_generate("什么是LLM？"))
 # 第二次调用，命中缓存
 print(cached_generate("什么是LLM？"))
-</code></pre><p>此外，还可以使用<b>请求批处理</b>：将多个请求合并成一个批次送给模型，提高GPU利用率。但要注意延迟与吞吐的权衡。监控缓存命中率，持续优化缓存策略。</p>
+</code></pre></div><p>此外，还可以使用<b>请求批处理</b>：将多个请求合并成一个批次送给模型，提高GPU利用率。但要注意延迟与吞吐的权衡。监控缓存命中率，持续优化缓存策略。</p>
  <h3>常见误区</h3>
  <ul>
  <li>监控只需要关注CPU和内存，LLM服务的业务指标（如Token吞吐、延迟）不重要。</li>

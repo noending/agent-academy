@@ -234,7 +234,7 @@ writeFileSync(join(packDir, "pack.json"), JSON.stringify(packJson, null, 2));
 // REVIEW.md
 updateManifest({
   kind: "repo", slug: SKILL, title: plan.title, description: plan.description,
-  pack: `packs/${SKILL}`, page: null,
+  pack: SKILL, review: `packs/${SKILL}/REVIEW.md`, page: null,
   chapters: plan.chapters.map((c) => ({ no: c.no, title: c.title, goal: c.goal, questions: c.questions || [] })),
   starterQuestions: plan.starterQuestions || [], generated: false,
 });

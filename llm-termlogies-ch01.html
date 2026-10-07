@@ -30,7 +30,7 @@
 
       <p class="lead"><b>本章目标：</b>理解LLM基本定义、发展历程与核心能力</p>
  <h3>LLM是什么？从规则到统计语言模型</h3>
- <p>咱们先聊一个最根本的问题：<b>大语言模型（Large Language Model, LLM）到底是什么？</b> 你可以把它想象成一个超级“文字接龙”高手——给它一段话，它预测下一个最可能出现的词，然后把这个词接上去，再预测下一个，如此循环，就生成了一整段话。</p><p>但LLM不是一开始就这么聪明的。早期做自然语言处理，人们靠写规则：比如“如果句子以‘吗’结尾，就是疑问句”。这种方法又累又死板，稍微换个说法就失效。后来大家转向<b>统计语言模型</b>：从大量文本里统计词出现的概率。比如“今天天气很___”，统计发现“好”出现的概率最高，那就填“好”。</p><p>LLM就是统计语言模型的终极进化版：用海量文本训练一个巨大的神经网络，让它学会极其复杂的概率分布。所以记住：<b>LLM本质上是一个概率模型，它输出的是“下一个词的概率”，而不是查数据库得到的确定答案。</b></p><p>下面是一个极简的“文字接龙”示例，用Python模拟一下概率预测的思想：</p><pre><code class="language-python">import random
+ <p>咱们先聊一个最根本的问题：<b>大语言模型（Large Language Model, LLM）到底是什么？</b> 你可以把它想象成一个超级“文字接龙”高手——给它一段话，它预测下一个最可能出现的词，然后把这个词接上去，再预测下一个，如此循环，就生成了一整段话。</p><p>但LLM不是一开始就这么聪明的。早期做自然语言处理，人们靠写规则：比如“如果句子以‘吗’结尾，就是疑问句”。这种方法又累又死板，稍微换个说法就失效。后来大家转向<b>统计语言模型</b>：从大量文本里统计词出现的概率。比如“今天天气很___”，统计发现“好”出现的概率最高，那就填“好”。</p><p>LLM就是统计语言模型的终极进化版：用海量文本训练一个巨大的神经网络，让它学会极其复杂的概率分布。所以记住：<b>LLM本质上是一个概率模型，它输出的是“下一个词的概率”，而不是查数据库得到的确定答案。</b></p><p>下面是一个极简的“文字接龙”示例，用Python模拟一下概率预测的思想：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import random
 
 # 假设我们统计了一个超小型的词频表
 # 给定前一个词，下一个词的概率分布
@@ -54,9 +54,9 @@ def generate(start_word, length=5):
     return ''.join(result)
 
 print(generate('今天'))  # 可能输出：今天天气很好。
-</code></pre><p>这个例子虽然简单，但它体现了LLM的核心思想：<b>根据概率生成下一个词</b>。真正的LLM只是把这个“词频表”换成了千亿参数的神经网络，能处理更长的上下文和更复杂的语言规律。</p>
+</code></pre></div><p>这个例子虽然简单，但它体现了LLM的核心思想：<b>根据概率生成下一个词</b>。真正的LLM只是把这个“词频表”换成了千亿参数的神经网络，能处理更长的上下文和更复杂的语言规律。</p>
  <h3>发展简史：从n-gram到Transformer到GPT</h3>
- <p>LLM不是一夜之间冒出来的，它经历了几个关键阶段：</p><ul><li><b>n-gram时代（1990s-2000s）</b>：用前n-1个词预测第n个词。比如2-gram（bigram）只看前一个词。简单但记不住长距离依赖，数据稀疏问题严重。</li><li><b>神经网络语言模型（2003-2017）</b>：用词向量（Word2Vec）和RNN/LSTM来建模语言。能捕捉更长的上下文，但训练慢，难以并行。</li><li><b>Transformer革命（2017）</b>：Google发表《Attention is All You Need》，提出<b>Transformer</b>架构，核心是<b>自注意力（Self-Attention）</b>机制。它让模型能同时看到所有词，并计算词与词之间的关联权重，训练可以大规模并行，为LLM铺平了道路。</li><li><b>GPT系列与预训练范式（2018-至今）</b>：OpenAI的GPT系列采用<b>预训练（Pre-training）</b>+微调的模式。先在海量无标注文本上预训练，让模型学会语言通识，再针对具体任务微调。GPT-3（1750亿参数）展示了惊人的少样本学习能力，ChatGPT则通过人类反馈强化学习（RLHF）变得对话友好。</li></ul><p>一句话总结：<b>n-gram是统计，RNN是序列，Transformer是并行注意力，GPT是大规模预训练。</b></p><p>下面用PyTorch伪代码展示一个极简的自注意力计算，帮你直观理解Transformer的核心：</p><pre><code class="language-python">import torch
+ <p>LLM不是一夜之间冒出来的，它经历了几个关键阶段：</p><ul><li><b>n-gram时代（1990s-2000s）</b>：用前n-1个词预测第n个词。比如2-gram（bigram）只看前一个词。简单但记不住长距离依赖，数据稀疏问题严重。</li><li><b>神经网络语言模型（2003-2017）</b>：用词向量（Word2Vec）和RNN/LSTM来建模语言。能捕捉更长的上下文，但训练慢，难以并行。</li><li><b>Transformer革命（2017）</b>：Google发表《Attention is All You Need》，提出<b>Transformer</b>架构，核心是<b>自注意力（Self-Attention）</b>机制。它让模型能同时看到所有词，并计算词与词之间的关联权重，训练可以大规模并行，为LLM铺平了道路。</li><li><b>GPT系列与预训练范式（2018-至今）</b>：OpenAI的GPT系列采用<b>预训练（Pre-training）</b>+微调的模式。先在海量无标注文本上预训练，让模型学会语言通识，再针对具体任务微调。GPT-3（1750亿参数）展示了惊人的少样本学习能力，ChatGPT则通过人类反馈强化学习（RLHF）变得对话友好。</li></ul><p>一句话总结：<b>n-gram是统计，RNN是序列，Transformer是并行注意力，GPT是大规模预训练。</b></p><p>下面用PyTorch伪代码展示一个极简的自注意力计算，帮你直观理解Transformer的核心：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import torch
 import torch.nn.functional as F
 
 # 假设输入序列有3个词，每个词用4维向量表示
@@ -77,9 +77,9 @@ attn_weights = F.softmax(attn_scores, dim=-1)
 # 加权求和得到输出
 output = torch.matmul(attn_weights, V)
 print(output)
-</code></pre><p>这段代码就是Transformer中自注意力的核心：<b>每个词都根据与其他词的相关性，加权聚合信息。</b> 正是这种机制让LLM能理解上下文。</p>
+</code></pre></div><p>这段代码就是Transformer中自注意力的核心：<b>每个词都根据与其他词的相关性，加权聚合信息。</b> 正是这种机制让LLM能理解上下文。</p>
  <h3>关键能力：生成、理解、推理与涌现</h3>
- <p>LLM之所以让人兴奋，是因为它展现出多种能力：</p><ul><li><b>生成</b>：写文章、编代码、翻译、创作诗歌。本质是概率采样，但结果常常流畅自然。</li><li><b>理解</b>：能回答阅读理解问题、总结长文、情感分析。它通过注意力机制捕捉语义关联。</li><li><b>推理</b>：能进行简单的逻辑推理、数学解题、常识推理。但注意，<b>推理能力并不稳定</b>，复杂问题容易出错。</li><li><b>涌现（Emergence）</b>：当模型规模（参数、数据、算力）增大到一定程度，突然出现小模型没有的能力，比如多步推理、代码生成、上下文学习。这被称为“涌现能力”，是LLM研究的热点。</li></ul><p>这些能力都建立在同一个基础上：<b>对下一个词的概率预测</b>。模型在预训练中学会了语言的统计规律，从而“涌现”出看似智能的行为。</p><p>下面是一个用Hugging Face Transformers调用GPT-2生成文本的最小示例，让你亲手体验一下：</p><pre><code class="language-python">from transformers import pipeline
+ <p>LLM之所以让人兴奋，是因为它展现出多种能力：</p><ul><li><b>生成</b>：写文章、编代码、翻译、创作诗歌。本质是概率采样，但结果常常流畅自然。</li><li><b>理解</b>：能回答阅读理解问题、总结长文、情感分析。它通过注意力机制捕捉语义关联。</li><li><b>推理</b>：能进行简单的逻辑推理、数学解题、常识推理。但注意，<b>推理能力并不稳定</b>，复杂问题容易出错。</li><li><b>涌现（Emergence）</b>：当模型规模（参数、数据、算力）增大到一定程度，突然出现小模型没有的能力，比如多步推理、代码生成、上下文学习。这被称为“涌现能力”，是LLM研究的热点。</li></ul><p>这些能力都建立在同一个基础上：<b>对下一个词的概率预测</b>。模型在预训练中学会了语言的统计规律，从而“涌现”出看似智能的行为。</p><p>下面是一个用Hugging Face Transformers调用GPT-2生成文本的最小示例，让你亲手体验一下：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from transformers import pipeline
 
 # 加载GPT-2模型（首次运行会自动下载）
 generator = pipeline('text-generation', model='gpt2')
@@ -88,7 +88,7 @@ generator = pipeline('text-generation', model='gpt2')
 prompt = "Large language models are"
 output = generator(prompt, max_length=30, num_return_sequences=1)
 print(output[0]['generated_text'])
-</code></pre><p>运行后你会看到模型续写的句子。虽然GPT-2能力有限，但已经能体现生成能力。换成更大的模型（如GPT-3、LLaMA），效果会显著提升。</p>
+</code></pre></div><p>运行后你会看到模型续写的句子。虽然GPT-2能力有限，但已经能体现生成能力。换成更大的模型（如GPT-3、LLaMA），效果会显著提升。</p>
  <h3>常见误区：LLM不是知识库，而是概率模型</h3>
  <p>初学者最容易犯的错误，就是把LLM当成一个“知识库”或“搜索引擎”。<b>LLM不是数据库，它没有存储事实的表格，也没有检索机制。</b> 它只是根据训练数据学到的概率分布，预测下一个词。因此：</p><ul><li><b>它可能“一本正经地胡说八道”</b>：生成看似合理但完全错误的内容，这叫“幻觉”（Hallucination）。</li><li><b>它的知识有截止日期</b>：训练数据之后发生的事情，它不知道。</li><li><b>它不会主动核实事实</b>：它只关心“哪个词概率高”，不关心“哪个词是真的”。</li></ul><p>所以，<b>LLM是一个强大的语言生成器，但不是可靠的知识源。</b> 要获取准确信息，需要结合外部检索（如RAG）或人工核实。</p><p>另一个误区是认为LLM“理解”了语言。其实它只是在高维空间里做概率计算，并没有人类意义上的理解。但正是这种概率计算，让它能完成很多实用任务。</p>
  <h3>常见误区</h3>

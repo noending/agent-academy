@@ -30,18 +30,18 @@
 
       <p class="lead"><b>本章目标：</b>完成一个LLM微调、量化并部署为API的完整项目</p>
  <h3>项目规划：选择基座模型与数据集</h3>
- <p>做任何LLM项目，第一步永远是<b>明确目标</b>：你要解决什么任务？是让模型学会特定领域的问答，还是遵循某种输出格式？目标决定了基座模型和数据集的选择。</p><p><b>基座模型选择</b>：对于中文场景，推荐从以下模型入手：</p><ul><li><b>Qwen2.5-7B</b>：中文能力强，社区活跃，LoRA微调资料多。</li><li><b>Llama-3.1-8B</b>：英文生态好，工具链成熟。</li><li><b>ChatGLM3-6B</b>：轻量，适合消费级显卡。</li></ul><p>选择时考虑：<b>参数量</b>（7B模型LoRA微调需约16GB显存）、<b>许可证</b>（商用是否允许）、<b>社区支持</b>（是否有现成的微调脚本）。</p><p><b>数据集准备</b>：微调数据通常为指令格式，例如：</p><pre><code class="language-json">{
+ <p>做任何LLM项目，第一步永远是<b>明确目标</b>：你要解决什么任务？是让模型学会特定领域的问答，还是遵循某种输出格式？目标决定了基座模型和数据集的选择。</p><p><b>基座模型选择</b>：对于中文场景，推荐从以下模型入手：</p><ul><li><b>Qwen2.5-7B</b>：中文能力强，社区活跃，LoRA微调资料多。</li><li><b>Llama-3.1-8B</b>：英文生态好，工具链成熟。</li><li><b>ChatGLM3-6B</b>：轻量，适合消费级显卡。</li></ul><p>选择时考虑：<b>参数量</b>（7B模型LoRA微调需约16GB显存）、<b>许可证</b>（商用是否允许）、<b>社区支持</b>（是否有现成的微调脚本）。</p><p><b>数据集准备</b>：微调数据通常为指令格式，例如：</p><div class="codeblock"><div class="code-head"><span class="code-lang">json</span></div><pre><code class="language-json">{
   "instruction": "将以下文本翻译成英文",
   "input": "今天天气真好",
   "output": "The weather is nice today."
-}</code></pre><p>数据量建议至少1000条，质量比数量更重要。可以使用开源数据集（如Alpaca、Firefly）或自己标注。</p><p>下面是一个最小示例，展示如何加载数据集并查看格式：</p><pre><code class="language-python">from datasets import load_dataset
+}</code></pre></div><p>数据量建议至少1000条，质量比数量更重要。可以使用开源数据集（如Alpaca、Firefly）或自己标注。</p><p>下面是一个最小示例，展示如何加载数据集并查看格式：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from datasets import load_dataset
 
 # 加载一个开源指令数据集
 dataset = load_dataset("yahma/alpaca-cleaned", split="train")
 print(dataset[0])
-# 输出: {'instruction': '...', 'input': '...', 'output': '...'}</code></pre>
+# 输出: {'instruction': '...', 'input': '...', 'output': '...'}</code></pre></div>
  <h3>使用LoRA微调模型</h3>
- <p>LoRA（Low-Rank Adaptation）是一种参数高效微调方法，它<b>冻结原模型参数</b>，只在Transformer层的注意力模块中注入可训练的低秩矩阵。这样可训练参数减少到原来的0.1%~1%，显存需求大幅降低。</p><p>使用Hugging Face的<code>peft</code>库可以轻松实现LoRA微调。关键参数：</p><ul><li><code>r</code>：低秩矩阵的秩，通常8~32。</li><li><code>lora_alpha</code>：缩放因子，一般设为<code>r</code>的2倍。</li><li><code>target_modules</code>：要注入的模块，如<code>["q_proj", "v_proj"]</code>。</li></ul><p>下面是一个完整的微调脚本（以Qwen2.5-7B为例）：</p><pre><code class="language-python">from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments
+ <p>LoRA（Low-Rank Adaptation）是一种参数高效微调方法，它<b>冻结原模型参数</b>，只在Transformer层的注意力模块中注入可训练的低秩矩阵。这样可训练参数减少到原来的0.1%~1%，显存需求大幅降低。</p><p>使用Hugging Face的<code>peft</code>库可以轻松实现LoRA微调。关键参数：</p><ul><li><code>r</code>：低秩矩阵的秩，通常8~32。</li><li><code>lora_alpha</code>：缩放因子，一般设为<code>r</code>的2倍。</li><li><code>target_modules</code>：要注入的模块，如<code>["q_proj", "v_proj"]</code>。</li></ul><p>下面是一个完整的微调脚本（以Qwen2.5-7B为例）：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments
 from peft import LoraConfig, get_peft_model
 from trl import SFTTrainer
 from datasets import load_dataset
@@ -87,9 +87,9 @@ trainer = SFTTrainer(
     max_seq_length=512,
 )
 trainer.train()
-model.save_pretrained("./lora_adapter")</code></pre><p><b>注意</b>：实际使用时需要将数据集格式化为包含<code>instruction</code>、<code>input</code>、<code>output</code>的文本，例如：<code>### Instruction:\n{instruction}\n### Input:\n{input}\n### Response:\n{output}</code>。</p>
+model.save_pretrained("./lora_adapter")</code></pre></div><p><b>注意</b>：实际使用时需要将数据集格式化为包含<code>instruction</code>、<code>input</code>、<code>output</code>的文本，例如：<code>### Instruction:\n{instruction}\n### Input:\n{input}\n### Response:\n{output}</code>。</p>
  <h3>模型量化与导出</h3>
- <p>微调后，为了部署，通常需要将模型量化以减小显存占用和加速推理。常见的量化方法有：</p><ul><li><b>GPTQ</b>：训练后量化，4-bit，精度损失小。</li><li><b>AWQ</b>：激活感知权重量化，适合LLM。</li><li><b>GGUF</b>：llama.cpp使用的格式，适合CPU推理。</li></ul><p>这里以GPTQ为例，使用<code>auto-gptq</code>库进行量化：</p><pre><code class="language-python">from transformers import AutoModelForCausalLM, AutoTokenizer
+ <p>微调后，为了部署，通常需要将模型量化以减小显存占用和加速推理。常见的量化方法有：</p><ul><li><b>GPTQ</b>：训练后量化，4-bit，精度损失小。</li><li><b>AWQ</b>：激活感知权重量化，适合LLM。</li><li><b>GGUF</b>：llama.cpp使用的格式，适合CPU推理。</li></ul><p>这里以GPTQ为例，使用<code>auto-gptq</code>库进行量化：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from transformers import AutoModelForCausalLM, AutoTokenizer
 from auto_gptq import AutoGPTQForCausalLM, BaseQuantizeConfig
 
 model_name = "Qwen/Qwen2.5-7B"
@@ -111,19 +111,19 @@ calibration_dataset = ["示例文本1", "示例文本2"]  # 实际需更多
 # 执行量化
 model.quantize(calibration_dataset)
 model.save_quantized("./qwen2.5-7b-gptq")
-tokenizer.save_pretrained("./qwen2.5-7b-gptq")</code></pre><p>量化后模型大小约为原模型的1/4，显存需求从~14GB降至~4GB。</p><p>如果使用LoRA微调，也可以将LoRA权重合并到基座模型后再量化：</p><pre><code class="language-python">from peft import PeftModel
+tokenizer.save_pretrained("./qwen2.5-7b-gptq")</code></pre></div><p>量化后模型大小约为原模型的1/4，显存需求从~14GB降至~4GB。</p><p>如果使用LoRA微调，也可以将LoRA权重合并到基座模型后再量化：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from peft import PeftModel
 
 base_model = AutoModelForCausalLM.from_pretrained("Qwen/Qwen2.5-7B")
 lora_model = PeftModel.from_pretrained(base_model, "./lora_adapter")
 merged_model = lora_model.merge_and_unload()
-merged_model.save_pretrained("./merged_model")</code></pre>
+merged_model.save_pretrained("./merged_model")</code></pre></div>
  <h3>使用vLLM部署并测试API</h3>
- <p>vLLM是一个高效推理引擎，支持PagedAttention，吞吐量比Hugging Face高数倍。部署API只需几行命令：</p><pre><code class="language-bash"># 启动OpenAI兼容的API服务
+ <p>vLLM是一个高效推理引擎，支持PagedAttention，吞吐量比Hugging Face高数倍。部署API只需几行命令：</p><div class="codeblock"><div class="code-head"><span class="code-lang">bash</span></div><pre><code class="language-bash"># 启动OpenAI兼容的API服务
 python -m vllm.entrypoints.openai.api_server \
     --model ./qwen2.5-7b-gptq \
     --quantization gptq \
     --port 8000 \
-    --host 0.0.0.0</code></pre><p>然后就可以像调用OpenAI API一样调用：</p><pre><code class="language-python">import openai
+    --host 0.0.0.0</code></pre></div><p>然后就可以像调用OpenAI API一样调用：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import openai
 
 client = openai.OpenAI(base_url="http://localhost:8000/v1", api_key="token-abc123")
 
@@ -133,10 +133,10 @@ response = client.chat.completions.create(
     temperature=0.7,
     max_tokens=100
 )
-print(response.choices[0].message.content)</code></pre><p>测试时注意：<b>并发测试</b>可以使用<code>locust</code>或<code>wrk</code>；<b>监控</b>可以查看vLLM的日志和GPU利用率。</p><p>如果使用LoRA适配器，vLLM也支持动态加载：</p><pre><code class="language-bash">python -m vllm.entrypoints.openai.api_server \
+print(response.choices[0].message.content)</code></pre></div><p>测试时注意：<b>并发测试</b>可以使用<code>locust</code>或<code>wrk</code>；<b>监控</b>可以查看vLLM的日志和GPU利用率。</p><p>如果使用LoRA适配器，vLLM也支持动态加载：</p><div class="codeblock"><div class="code-head"><span class="code-lang">bash</span></div><pre><code class="language-bash">python -m vllm.entrypoints.openai.api_server \
     --model Qwen/Qwen2.5-7B \
     --enable-lora \
-    --lora-modules my-lora=./lora_adapter</code></pre><p>调用时指定<code>model="my-lora"</code>即可。</p>
+    --lora-modules my-lora=./lora_adapter</code></pre></div><p>调用时指定<code>model="my-lora"</code>即可。</p>
  <h3>常见误区</h3>
  <ul>
  <li>LoRA微调后必须合并权重才能部署，实际上vLLM等框架支持直接加载LoRA适配器，无需合并。</li>

@@ -30,7 +30,7 @@
 
       <p class="lead"><b>本章目标：</b>掌握推理加速技术，并部署高性能推理服务</p>
  <h3>推理优化核心技术：KV缓存、连续批处理与PagedAttention</h3>
- <p>大模型推理的性能瓶颈往往不在计算，而在显存和调度。我们先从最基础的KV缓存说起。</p><p><b>KV缓存（KV Cache）</b>：自回归生成时，每生成一个token都需要重新计算之前所有token的Key和Value，这会造成大量重复计算。KV缓存将历史token的K、V矩阵保存下来，生成新token时只需计算当前token的K、V，然后与缓存拼接。这样将每步计算复杂度从O(n²)降到O(n)，但代价是显存占用随序列长度线性增长。</p><p><b>连续批处理（Continuous Batching）</b>：传统静态批处理要求所有请求同时开始、同时结束，短请求要等长请求，GPU利用率低。连续批处理在每次迭代时动态加入新请求、移除已完成请求，让GPU始终处理尽可能多的token。这就像餐厅翻台，而不是等一桌客人吃完才接待下一桌。</p><p><b>PagedAttention</b>：KV缓存通常需要连续显存，导致碎片化和浪费。PagedAttention借鉴操作系统虚拟内存分页思想，将KV缓存分成固定大小的块（block），非连续存储，按需分配。这样显存利用率可提升数倍，并支持高效的内存共享（如并行采样、beam search）。</p><p>下面是一个极简的KV缓存示例，展示其工作原理：</p><pre><code class="language-python">import torch
+ <p>大模型推理的性能瓶颈往往不在计算，而在显存和调度。我们先从最基础的KV缓存说起。</p><p><b>KV缓存（KV Cache）</b>：自回归生成时，每生成一个token都需要重新计算之前所有token的Key和Value，这会造成大量重复计算。KV缓存将历史token的K、V矩阵保存下来，生成新token时只需计算当前token的K、V，然后与缓存拼接。这样将每步计算复杂度从O(n²)降到O(n)，但代价是显存占用随序列长度线性增长。</p><p><b>连续批处理（Continuous Batching）</b>：传统静态批处理要求所有请求同时开始、同时结束，短请求要等长请求，GPU利用率低。连续批处理在每次迭代时动态加入新请求、移除已完成请求，让GPU始终处理尽可能多的token。这就像餐厅翻台，而不是等一桌客人吃完才接待下一桌。</p><p><b>PagedAttention</b>：KV缓存通常需要连续显存，导致碎片化和浪费。PagedAttention借鉴操作系统虚拟内存分页思想，将KV缓存分成固定大小的块（block），非连续存储，按需分配。这样显存利用率可提升数倍，并支持高效的内存共享（如并行采样、beam search）。</p><p>下面是一个极简的KV缓存示例，展示其工作原理：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import torch
 import torch.nn as nn
 
 class SimpleAttention(nn.Module):
@@ -63,9 +63,9 @@ for step in range(5):
     out, cache = model(x, cache)
     print(f"Step {step}, cache K shape: {cache[0].shape}")
     x = torch.randn(1, 1, dim)  # 模拟下一个token
-</code></pre><p>运行后你会看到缓存K的形状从[1,1,64]逐步增长到[1,5,64]，这就是KV缓存累积的过程。</p>
+</code></pre></div><p>运行后你会看到缓存K的形状从[1,1,64]逐步增长到[1,5,64]，这就是KV缓存累积的过程。</p>
  <h3>主流推理引擎：vLLM、TensorRT-LLM与TGI</h3>
- <p>自己实现优化太复杂，生产环境通常直接使用推理引擎。目前三大主流选择：</p><ul><li><b>vLLM</b>：开源社区最活跃，核心创新是PagedAttention和连续批处理。支持HuggingFace模型无缝加载，吞吐量比原生PyTorch高数倍。适合快速部署和大多数场景。</li><li><b>TensorRT-LLM</b>：NVIDIA官方出品，基于TensorRT深度优化，支持量化、内核融合等，在NVIDIA GPU上延迟最低、吞吐最高。但编译流程复杂，模型转换需要额外步骤。</li><li><b>TGI（Text Generation Inference）</b>：HuggingFace推出，支持连续批处理、张量并行，与HF生态集成好，提供生产级监控和部署工具。</li></ul><p>选择建议：追求极致性能且团队有NVIDIA优化经验选TensorRT-LLM；快速上线、社区支持好选vLLM；已用HF生态且需要企业级功能选TGI。</p><p>下面用vLLM启动一个离线推理示例：</p><pre><code class="language-python">from vllm import LLM, SamplingParams
+ <p>自己实现优化太复杂，生产环境通常直接使用推理引擎。目前三大主流选择：</p><ul><li><b>vLLM</b>：开源社区最活跃，核心创新是PagedAttention和连续批处理。支持HuggingFace模型无缝加载，吞吐量比原生PyTorch高数倍。适合快速部署和大多数场景。</li><li><b>TensorRT-LLM</b>：NVIDIA官方出品，基于TensorRT深度优化，支持量化、内核融合等，在NVIDIA GPU上延迟最低、吞吐最高。但编译流程复杂，模型转换需要额外步骤。</li><li><b>TGI（Text Generation Inference）</b>：HuggingFace推出，支持连续批处理、张量并行，与HF生态集成好，提供生产级监控和部署工具。</li></ul><p>选择建议：追求极致性能且团队有NVIDIA优化经验选TensorRT-LLM；快速上线、社区支持好选vLLM；已用HF生态且需要企业级功能选TGI。</p><p>下面用vLLM启动一个离线推理示例：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from vllm import LLM, SamplingParams
 
 # 加载模型（首次运行会下载）
 llm = LLM(model="facebook/opt-125m", tensor_parallel_size=1)
@@ -81,9 +81,9 @@ for output in outputs:
     prompt = output.prompt
     generated = output.outputs[0].text
     print(f"Prompt: {prompt!r}, Generated: {generated!r}")
-</code></pre><p>vLLM自动应用了PagedAttention和连续批处理，你无需手动管理KV缓存。</p>
+</code></pre></div><p>vLLM自动应用了PagedAttention和连续批处理，你无需手动管理KV缓存。</p>
  <h3>服务化框架：FastAPI与Triton Inference Server</h3>
- <p>推理引擎负责算得快，服务化框架负责接得住。常见方案：</p><ul><li><b>FastAPI</b>：轻量级Python Web框架，异步支持好，适合快速构建RESTful API。可以配合vLLM的AsyncLLMEngine实现流式输出。</li><li><b>Triton Inference Server</b>：NVIDIA推出的企业级推理服务框架，支持多模型、多框架（TensorRT、PyTorch、ONNX等），提供动态批处理、模型版本管理、监控指标。适合大规模生产环境。</li></ul><p>FastAPI示例：用vLLM的异步引擎提供流式接口。</p><pre><code class="language-python">from fastapi import FastAPI
+ <p>推理引擎负责算得快，服务化框架负责接得住。常见方案：</p><ul><li><b>FastAPI</b>：轻量级Python Web框架，异步支持好，适合快速构建RESTful API。可以配合vLLM的AsyncLLMEngine实现流式输出。</li><li><b>Triton Inference Server</b>：NVIDIA推出的企业级推理服务框架，支持多模型、多框架（TensorRT、PyTorch、ONNX等），提供动态批处理、模型版本管理、监控指标。适合大规模生产环境。</li></ul><p>FastAPI示例：用vLLM的异步引擎提供流式接口。</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from fastapi import FastAPI
 from fastapi.responses import StreamingResponse
 from vllm import AsyncLLMEngine, AsyncEngineArgs, SamplingParams
 import asyncio
@@ -105,9 +105,9 @@ async def generate(prompt: str):
     return StreamingResponse(generate_stream(prompt), media_type="text/event-stream")
 
 # 运行: uvicorn main:app --host 0.0.0.0 --port 8000
-</code></pre><p>客户端可以用curl或requests以SSE方式接收流式结果。</p>
+</code></pre></div><p>客户端可以用curl或requests以SSE方式接收流式结果。</p>
  <h3>API设计与并发处理</h3>
- <p>设计LLM服务API时，需考虑以下要点：</p><ul><li><b>请求格式</b>：通常包含prompt、max_tokens、temperature、top_p、stream等参数。建议使用JSON Schema校验。</li><li><b>流式响应</b>：使用Server-Sent Events (SSE) 或WebSocket，提升用户体验。注意设置正确的Content-Type和心跳。</li><li><b>并发控制</b>：推理引擎本身支持连续批处理，但API层仍需限制最大并发数，避免过载。可以使用信号量或队列。</li><li><b>超时与重试</b>：为每个请求设置超时，客户端实现指数退避重试。</li><li><b>监控</b>：记录QPS、延迟、错误率、GPU利用率等指标。</li></ul><p>一个简单的并发控制示例：</p><pre><code class="language-python">import asyncio
+ <p>设计LLM服务API时，需考虑以下要点：</p><ul><li><b>请求格式</b>：通常包含prompt、max_tokens、temperature、top_p、stream等参数。建议使用JSON Schema校验。</li><li><b>流式响应</b>：使用Server-Sent Events (SSE) 或WebSocket，提升用户体验。注意设置正确的Content-Type和心跳。</li><li><b>并发控制</b>：推理引擎本身支持连续批处理，但API层仍需限制最大并发数，避免过载。可以使用信号量或队列。</li><li><b>超时与重试</b>：为每个请求设置超时，客户端实现指数退避重试。</li><li><b>监控</b>：记录QPS、延迟、错误率、GPU利用率等指标。</li></ul><p>一个简单的并发控制示例：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import asyncio
 from fastapi import FastAPI, HTTPException
 
 app = FastAPI()
@@ -121,7 +121,7 @@ async def generate(prompt: str):
         # 模拟推理耗时
         await asyncio.sleep(1)
         return {"result": f"Generated for: {prompt}"}
-</code></pre><p>更完善的做法是使用队列和限流中间件，如slowapi。</p>
+</code></pre></div><p>更完善的做法是使用队列和限流中间件，如slowapi。</p>
  <h3>常见误区</h3>
  <ul>
  <li>KV缓存会减少显存占用：实际上KV缓存增加了显存占用，但减少了计算量。它用空间换时间。</li>

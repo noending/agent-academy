@@ -30,7 +30,7 @@
 
       <p class="lead"><b>本章目标：</b>能测量TTFT、TPOT、吞吐等指标，计算每次请求成本。</p>
  <h3>3.1 性能指标：从用户点击到最后一个字</h3>
- <p>想象你去餐厅点餐：<b>TTFT</b> 是“下单到第一道菜上桌”的时间，<b>TPOT</b> 是“吃完一道菜到下一道菜上桌”的平均间隔，<b>端到端延迟</b> 是“从下单到吃完最后一道菜”的总时间。对 LLM 推理来说，用户感知的“快”往往由 TTFT 决定，而“完成快”则由 TPOT 和输出长度共同决定。</p><p>具体定义：</p><ul><li><b>TTFT (Time to First Token)</b>：从发送请求到收到第一个输出 token 的时间，包含网络、排队、prefill 计算。</li><li><b>TPOT (Time per Output Token)</b>：生成阶段每个输出 token 的平均耗时，通常等于 (端到端延迟 - TTFT) / (输出 token 数 - 1)。</li><li><b>ITL (Inter-Token Latency)</b>：相邻两个输出 token 之间的时间间隔，TPOT 是 ITL 的平均值。</li><li><b>吞吐量 (Throughput)</b>：单位时间内系统处理的 token 总数或请求数，常用 tokens/s 表示。</li><li><b>并发 (Concurrency)</b>：同时处理的请求数量，直接影响吞吐和延迟。</li><li><b>P50/P95/P99</b>：延迟的百分位数，P95 表示 95% 的请求延迟低于该值，比平均值更能反映尾部体验。</li><li><b>成功率/错误率/超时率</b>：成功完成的请求比例、返回错误的比例、超过设定时限的比例。</li></ul><p>下面是一个最小可运行示例，用 Python 模拟测量这些指标（实际中需替换为真实 API 调用）：</p><pre><code class="language-python">import time
+ <p>想象你去餐厅点餐：<b>TTFT</b> 是“下单到第一道菜上桌”的时间，<b>TPOT</b> 是“吃完一道菜到下一道菜上桌”的平均间隔，<b>端到端延迟</b> 是“从下单到吃完最后一道菜”的总时间。对 LLM 推理来说，用户感知的“快”往往由 TTFT 决定，而“完成快”则由 TPOT 和输出长度共同决定。</p><p>具体定义：</p><ul><li><b>TTFT (Time to First Token)</b>：从发送请求到收到第一个输出 token 的时间，包含网络、排队、prefill 计算。</li><li><b>TPOT (Time per Output Token)</b>：生成阶段每个输出 token 的平均耗时，通常等于 (端到端延迟 - TTFT) / (输出 token 数 - 1)。</li><li><b>ITL (Inter-Token Latency)</b>：相邻两个输出 token 之间的时间间隔，TPOT 是 ITL 的平均值。</li><li><b>吞吐量 (Throughput)</b>：单位时间内系统处理的 token 总数或请求数，常用 tokens/s 表示。</li><li><b>并发 (Concurrency)</b>：同时处理的请求数量，直接影响吞吐和延迟。</li><li><b>P50/P95/P99</b>：延迟的百分位数，P95 表示 95% 的请求延迟低于该值，比平均值更能反映尾部体验。</li><li><b>成功率/错误率/超时率</b>：成功完成的请求比例、返回错误的比例、超过设定时限的比例。</li></ul><p>下面是一个最小可运行示例，用 Python 模拟测量这些指标（实际中需替换为真实 API 调用）：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import time
 import random
 
 def mock_llm_call(prompt, max_tokens=50):
@@ -64,9 +64,9 @@ import statistics
 ttfts = sorted([r['ttft'] for r in results])
 p50 = ttfts[len(ttfts)//2]
 p95 = ttfts[int(len(ttfts)*0.95)]
-print(f"TTFT P50={p50:.3f}s, P95={p95:.3f}s")</code></pre><p><b>关键结论：首字快不等于完成快，单用户快不等于并发快。</b> 评估时必须同时看 TTFT、TPOT 和吞吐，并在目标并发下测量。</p>
+print(f"TTFT P50={p50:.3f}s, P95={p95:.3f}s")</code></pre></div><p><b>关键结论：首字快不等于完成快，单用户快不等于并发快。</b> 评估时必须同时看 TTFT、TPOT 和吞吐，并在目标并发下测量。</p>
  <h3>3.2 评测条件记录：让结果可复现</h3>
- <p>性能数字脱离条件毫无意义。就像说“我跑得很快”，必须说明是百米还是马拉松、顺风还是逆风。LLM 推理评测必须记录以下条件：</p><ul><li><b>模型版本</b>：具体到 commit 或日期，如 llama-3-8b-instruct-2024-04。</li><li><b>硬件</b>：GPU 型号、数量、显存、互联方式（NVLink/PCIe）。</li><li><b>推理框架</b>：vLLM、TensorRT-LLM、TGI 等及版本。</li><li><b>精度</b>：FP16、BF16、INT8、INT4 等。</li><li><b>输入/输出长度</b>：平均和分布，如输入 512 tokens、输出 128 tokens。</li><li><b>并发与批处理</b>：并发请求数、最大 batch size、是否启用 continuous batching。</li><li><b>缓存</b>：是否启用 KV Cache、prefix caching。</li><li><b>预热</b>：是否预热、预热次数，避免冷启动影响。</li><li><b>测试次数</b>：至少 100 次以上，报告 P50/P95/P99。</li></ul><p>下面是一个记录评测条件的 JSON 模板，可直接用于实验日志：</p><pre><code class="language-python">import json
+ <p>性能数字脱离条件毫无意义。就像说“我跑得很快”，必须说明是百米还是马拉松、顺风还是逆风。LLM 推理评测必须记录以下条件：</p><ul><li><b>模型版本</b>：具体到 commit 或日期，如 llama-3-8b-instruct-2024-04。</li><li><b>硬件</b>：GPU 型号、数量、显存、互联方式（NVLink/PCIe）。</li><li><b>推理框架</b>：vLLM、TensorRT-LLM、TGI 等及版本。</li><li><b>精度</b>：FP16、BF16、INT8、INT4 等。</li><li><b>输入/输出长度</b>：平均和分布，如输入 512 tokens、输出 128 tokens。</li><li><b>并发与批处理</b>：并发请求数、最大 batch size、是否启用 continuous batching。</li><li><b>缓存</b>：是否启用 KV Cache、prefix caching。</li><li><b>预热</b>：是否预热、预热次数，避免冷启动影响。</li><li><b>测试次数</b>：至少 100 次以上，报告 P50/P95/P99。</li></ul><p>下面是一个记录评测条件的 JSON 模板，可直接用于实验日志：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import json
 
 config = {
     "model": "meta-llama/Llama-3-8B-Instruct",
@@ -83,9 +83,9 @@ config = {
     "test_runs": 200,
     "timeout_seconds": 30
 }
-print(json.dumps(config, indent=2))</code></pre><p><b>关键结论：没有条件记录的 benchmark 等于没有 benchmark。</b> 报告结果时，必须附带上述条件，否则无法横向比较。</p>
+print(json.dumps(config, indent=2))</code></pre></div><p><b>关键结论：没有条件记录的 benchmark 等于没有 benchmark。</b> 报告结果时，必须附带上述条件，否则无法横向比较。</p>
  <h3>3.3 成本计算：从每百万 Token 到每个成功任务</h3>
- <p>云厂商常标“每百万 Token 价格”，但业务成本要看<b>每个成功任务</b>花了多少钱。类比：买菜看单价，但请客吃饭要看“一桌菜总价”，还要算上烧焦重做的成本。</p><p>成本计算步骤：</p><ol><li><b>每百万 Token 价格</b>：输入和输出通常不同价，如输入 $0.5/M，输出 $1.5/M。</li><li><b>每次请求成本</b> = (输入 tokens / 1e6) * 输入单价 + (输出 tokens / 1e6) * 输出单价。</li><li><b>考虑重试</b>：如果失败率 5%，则平均请求次数 = 1 / (1 - 0.05) ≈ 1.053。</li><li><b>工具调用和额外推理</b>：Agent 场景可能多次调用 LLM，需累加。</li><li><b>每个成功任务成本</b> = 总成本 / 成功任务数。</li></ol><p>下面是一个计算示例：</p><pre><code class="language-python">def cost_per_request(input_tokens, output_tokens, price_in_per_m, price_out_per_m):
+ <p>云厂商常标“每百万 Token 价格”，但业务成本要看<b>每个成功任务</b>花了多少钱。类比：买菜看单价，但请客吃饭要看“一桌菜总价”，还要算上烧焦重做的成本。</p><p>成本计算步骤：</p><ol><li><b>每百万 Token 价格</b>：输入和输出通常不同价，如输入 $0.5/M，输出 $1.5/M。</li><li><b>每次请求成本</b> = (输入 tokens / 1e6) * 输入单价 + (输出 tokens / 1e6) * 输出单价。</li><li><b>考虑重试</b>：如果失败率 5%，则平均请求次数 = 1 / (1 - 0.05) ≈ 1.053。</li><li><b>工具调用和额外推理</b>：Agent 场景可能多次调用 LLM，需累加。</li><li><b>每个成功任务成本</b> = 总成本 / 成功任务数。</li></ol><p>下面是一个计算示例：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">def cost_per_request(input_tokens, output_tokens, price_in_per_m, price_out_per_m):
     return (input_tokens / 1e6) * price_in_per_m + (output_tokens / 1e6) * price_out_per_m
 
 def cost_per_success(input_tokens, output_tokens, price_in, price_out, success_rate, retries_per_failure=1):
@@ -99,7 +99,7 @@ def cost_per_success(input_tokens, output_tokens, price_in, price_out, success_r
 base = cost_per_request(500, 200, 0.5, 1.5)
 print(f"单次请求成本: ${base:.6f}")
 per_success = cost_per_success(500, 200, 0.5, 1.5, 0.95)
-print(f"每个成功任务成本: ${per_success:.6f}")</code></pre><p><b>关键结论：最低单价不等于最低业务成本。</b> 必须把重试、工具调用、超时和失败率纳入计算。</p>
+print(f"每个成功任务成本: ${per_success:.6f}")</code></pre></div><p><b>关键结论：最低单价不等于最低业务成本。</b> 必须把重试、工具调用、超时和失败率纳入计算。</p>
  <h3>常见误区</h3>
  <ul>
  <li>首字快（TTFT 低）不等于完成快，如果 TPOT 很高，长输出的端到端延迟仍然很大。</li>

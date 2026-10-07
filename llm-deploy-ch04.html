@@ -30,7 +30,7 @@
 
       <p class="lead"><b>本章目标：</b>掌握全量微调、LoRA、RLHF等微调与对齐方法</p>
  <h3>全量微调 vs 参数高效微调：LoRA 与 QLoRA</h3>
- <p>当我们拿到一个预训练好的大模型（比如 LLaMA、Qwen），想让它适应特定任务或领域，最直接的办法就是<b>全量微调</b>：用任务数据继续训练模型的所有参数。这就像把整栋房子重新装修一遍，效果可能最好，但代价极高——7B 模型全量微调通常需要多张 A100，显存动辄上百 GB，而且每个任务都要存一份完整权重，部署时切换成本巨大。</p><p>于是<b>参数高效微调（PEFT）</b>登场了。核心思想：冻结预训练模型的大部分参数，只训练一小部分新增或选定的参数。其中最有代表性的就是 <b>LoRA（Low-Rank Adaptation）</b>。</p><p>LoRA 的直觉来自一个观察：模型在适配新任务时，权重的<strong>变化量</strong> ΔW 往往是低秩的。与其直接更新原始权重 W，不如把 ΔW 分解成两个小矩阵的乘积：ΔW = B·A，其中 A 是 r×d 矩阵，B 是 d×r 矩阵，r（秩）远小于 d。训练时只更新 A 和 B，原始 W 冻结。这样可训练参数量能降到原来的 0.1%~1%，显存和存储都大幅下降。</p><p>前向传播变成：h = Wx + BAx。初始化时 A 用高斯随机，B 置零，保证训练开始时 LoRA 分支输出为 0，不破坏原模型行为。</p><p><b>QLoRA</b> 则更进一步：先把基座模型量化成 4-bit（NF4）加载，再在量化权重上挂 LoRA 适配器。这样 7B 模型可以在单张 24GB 甚至 16GB 显卡上微调，让个人开发者也能玩转大模型微调。</p><p>下面是一个用 Hugging Face <code>peft</code> 库给模型加 LoRA 的最小示例：</p><pre><code class="language-python">from transformers import AutoModelForCausalLM, AutoTokenizer
+ <p>当我们拿到一个预训练好的大模型（比如 LLaMA、Qwen），想让它适应特定任务或领域，最直接的办法就是<b>全量微调</b>：用任务数据继续训练模型的所有参数。这就像把整栋房子重新装修一遍，效果可能最好，但代价极高——7B 模型全量微调通常需要多张 A100，显存动辄上百 GB，而且每个任务都要存一份完整权重，部署时切换成本巨大。</p><p>于是<b>参数高效微调（PEFT）</b>登场了。核心思想：冻结预训练模型的大部分参数，只训练一小部分新增或选定的参数。其中最有代表性的就是 <b>LoRA（Low-Rank Adaptation）</b>。</p><p>LoRA 的直觉来自一个观察：模型在适配新任务时，权重的<strong>变化量</strong> ΔW 往往是低秩的。与其直接更新原始权重 W，不如把 ΔW 分解成两个小矩阵的乘积：ΔW = B·A，其中 A 是 r×d 矩阵，B 是 d×r 矩阵，r（秩）远小于 d。训练时只更新 A 和 B，原始 W 冻结。这样可训练参数量能降到原来的 0.1%~1%，显存和存储都大幅下降。</p><p>前向传播变成：h = Wx + BAx。初始化时 A 用高斯随机，B 置零，保证训练开始时 LoRA 分支输出为 0，不破坏原模型行为。</p><p><b>QLoRA</b> 则更进一步：先把基座模型量化成 4-bit（NF4）加载，再在量化权重上挂 LoRA 适配器。这样 7B 模型可以在单张 24GB 甚至 16GB 显卡上微调，让个人开发者也能玩转大模型微调。</p><p>下面是一个用 Hugging Face <code>peft</code> 库给模型加 LoRA 的最小示例：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from transformers import AutoModelForCausalLM, AutoTokenizer
 from peft import LoraConfig, get_peft_model
 
 model_name = "Qwen/Qwen2.5-0.5B"
@@ -50,9 +50,9 @@ lora_config = LoraConfig(
 model = get_peft_model(model, lora_config)
 model.print_trainable_parameters()
 # 输出类似：trainable params: 540,672 || all params: 494,032,768 || trainable%: 0.1094
-</code></pre><p>可以看到，可训练参数只有约 0.1%。训练完成后，你可以只保存 LoRA 权重（几 MB），推理时再合并回基座模型，或者用 <code>merge_and_unload()</code> 永久合并。</p>
+</code></pre></div><p>可以看到，可训练参数只有约 0.1%。训练完成后，你可以只保存 LoRA 权重（几 MB），推理时再合并回基座模型，或者用 <code>merge_and_unload()</code> 永久合并。</p>
  <h3>指令微调与对话模板设计</h3>
- <p>预训练模型只会“续写”，不会“听话”。<b>指令微调（Instruction Tuning）</b>就是用“指令-回答”格式的数据继续训练，让模型学会遵循人类指令。这一步是 ChatGPT 类模型的关键。</p><p>但这里有个容易被忽视的工程细节：<b>对话模板（Chat Template）</b>。不同模型在训练时使用了不同的特殊 token 和格式来区分 system、user、assistant 角色。比如 Qwen 用 <code>&amp;lt;|im_start|&amp;gt;role\ncontent&amp;lt;|im_end|&amp;gt;</code>，Llama 3 用 <code>&amp;lt;|start_header_id|&amp;gt;</code> 系列。如果你微调时用的模板和推理时不一致，模型表现会断崖式下跌。</p><p>正确做法是：<b>始终使用 tokenizer 自带的 <code>apply_chat_template</code></b>，它封装了模型训练时的标准格式。下面演示如何构造一条训练样本：</p><pre><code class="language-python">from transformers import AutoTokenizer
+ <p>预训练模型只会“续写”，不会“听话”。<b>指令微调（Instruction Tuning）</b>就是用“指令-回答”格式的数据继续训练，让模型学会遵循人类指令。这一步是 ChatGPT 类模型的关键。</p><p>但这里有个容易被忽视的工程细节：<b>对话模板（Chat Template）</b>。不同模型在训练时使用了不同的特殊 token 和格式来区分 system、user、assistant 角色。比如 Qwen 用 <code>&amp;lt;|im_start|&amp;gt;role\ncontent&amp;lt;|im_end|&amp;gt;</code>，Llama 3 用 <code>&amp;lt;|start_header_id|&amp;gt;</code> 系列。如果你微调时用的模板和推理时不一致，模型表现会断崖式下跌。</p><p>正确做法是：<b>始终使用 tokenizer 自带的 <code>apply_chat_template</code></b>，它封装了模型训练时的标准格式。下面演示如何构造一条训练样本：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from transformers import AutoTokenizer
 
 tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen2.5-0.5B")
 
@@ -69,9 +69,9 @@ print(text)
 # 训练时通常只对 assistant 部分计算 loss
 # 做法：先对 prompt 部分设置 label 为 -100（忽略）
 input_ids = tokenizer.apply_chat_template(messages, tokenize=True, return_tensors="pt")
-</code></pre><p><b>关键结论：只对 assistant 回复部分计算损失</b>，prompt 部分的 label 设为 -100。否则模型会去学习“如何提问”，浪费容量还可能降低效果。Hugging Face 的 <code>trl</code> 库中 <code>SFTTrainer</code> 配合 <code>DataCollatorForCompletionOnlyLM</code> 可以自动完成这个掩码。</p><p>指令数据的质量比数量更重要。一条高质量、多样化的指令数据，胜过十条低质重复数据。常见来源包括：人工标注、强模型蒸馏（如用 GPT-4 生成）、开源数据集（Alpaca、ShareGPT）以及业务真实日志。</p>
+</code></pre></div><p><b>关键结论：只对 assistant 回复部分计算损失</b>，prompt 部分的 label 设为 -100。否则模型会去学习“如何提问”，浪费容量还可能降低效果。Hugging Face 的 <code>trl</code> 库中 <code>SFTTrainer</code> 配合 <code>DataCollatorForCompletionOnlyLM</code> 可以自动完成这个掩码。</p><p>指令数据的质量比数量更重要。一条高质量、多样化的指令数据，胜过十条低质重复数据。常见来源包括：人工标注、强模型蒸馏（如用 GPT-4 生成）、开源数据集（Alpaca、ShareGPT）以及业务真实日志。</p>
  <h3>RLHF 与 DPO：让模型对齐人类偏好</h3>
- <p>指令微调让模型“会回答”，但回答是否<strong>有用、诚实、无害</strong>，还需要<b>对齐（Alignment）</b>。经典方案是 <b>RLHF（基于人类反馈的强化学习）</b>，分三步：</p><ol><li><b>监督微调（SFT）</b>：用高质量指令数据微调，得到基础策略模型。</li><li><b>训练奖励模型（RM）</b>：让人类对同一 prompt 的多个回答排序，训练一个模型去预测“人类有多喜欢这个回答”。</li><li><b>PPO 强化学习</b>：用奖励模型作为打分器，用 PPO 算法优化策略模型，同时加 KL 惩罚防止跑偏。</li></ol><p>RLHF 效果好，但工程复杂：要同时加载策略模型、参考模型、奖励模型、价值模型，显存爆炸，训练极不稳定。于是 <b>DPO（Direct Preference Optimization）</b> 出现了。</p><p>DPO 的巧妙之处在于：它从数学上证明了，RLHF 的最优策略可以解析地表示成偏好数据的函数，从而<b>把强化学习问题转化成一个简单的分类损失</b>。你只需要准备 (prompt, chosen, rejected) 三元组，直接像做监督学习一样训练即可，不需要奖励模型，也不需要 PPO。</p><p>DPO 损失的核心是：让模型对 chosen 回答的 log 概率相对 rejected 回答更高，同时用参考模型约束不要偏离太远。下面是一个用 <code>trl</code> 的 <code>DPOTrainer</code> 的最小示例：</p><pre><code class="language-python">from datasets import Dataset
+ <p>指令微调让模型“会回答”，但回答是否<strong>有用、诚实、无害</strong>，还需要<b>对齐（Alignment）</b>。经典方案是 <b>RLHF（基于人类反馈的强化学习）</b>，分三步：</p><ol><li><b>监督微调（SFT）</b>：用高质量指令数据微调，得到基础策略模型。</li><li><b>训练奖励模型（RM）</b>：让人类对同一 prompt 的多个回答排序，训练一个模型去预测“人类有多喜欢这个回答”。</li><li><b>PPO 强化学习</b>：用奖励模型作为打分器，用 PPO 算法优化策略模型，同时加 KL 惩罚防止跑偏。</li></ol><p>RLHF 效果好，但工程复杂：要同时加载策略模型、参考模型、奖励模型、价值模型，显存爆炸，训练极不稳定。于是 <b>DPO（Direct Preference Optimization）</b> 出现了。</p><p>DPO 的巧妙之处在于：它从数学上证明了，RLHF 的最优策略可以解析地表示成偏好数据的函数，从而<b>把强化学习问题转化成一个简单的分类损失</b>。你只需要准备 (prompt, chosen, rejected) 三元组，直接像做监督学习一样训练即可，不需要奖励模型，也不需要 PPO。</p><p>DPO 损失的核心是：让模型对 chosen 回答的 log 概率相对 rejected 回答更高，同时用参考模型约束不要偏离太远。下面是一个用 <code>trl</code> 的 <code>DPOTrainer</code> 的最小示例：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from datasets import Dataset
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from trl import DPOTrainer, DPOConfig
 
@@ -104,9 +104,9 @@ trainer = DPOTrainer(
     tokenizer=tokenizer,
 )
 trainer.train()
-</code></pre><p><b>选型建议</b>：资源充足、追求极致效果，用 RLHF/PPO；资源有限、想快速迭代，用 DPO 或其变体（IPO、KTO、ORPO）。实践中，DPO 已成为大多数团队的首选对齐方案。</p>
+</code></pre></div><p><b>选型建议</b>：资源充足、追求极致效果，用 RLHF/PPO；资源有限、想快速迭代，用 DPO 或其变体（IPO、KTO、ORPO）。实践中，DPO 已成为大多数团队的首选对齐方案。</p>
  <h3>微调数据构建与评估</h3>
- <p>微调的上限往往由数据决定。构建数据时，建议遵循以下原则：</p><ul><li><b>多样性</b>：覆盖任务类型、领域、难度、语言风格，避免模型只会一种腔调。</li><li><b>质量优先</b>：人工审核或强模型过滤，剔除事实错误、格式混乱、重复样本。</li><li><b>格式统一</b>：严格使用目标模型的对话模板，保证训练/推理一致。</li><li><b>规模适中</b>：指令微调通常 1k~100k 条即可见效，LoRA 场景下几千条高质量数据就能有不错表现。</li></ul><p>评估方面，不能只看训练 loss。建议分三层：</p><ol><li><b>自动指标</b>：困惑度（PPL）、ROUGE/BLEU（生成任务）、准确率（分类任务）。</li><li><b>模型评判</b>：用 GPT-4 等强模型对回答打分或做 pairwise 比较（LLM-as-a-Judge）。</li><li><b>人工评估</b>：抽样盲评，关注有用性、事实性、安全性。</li></ol><p>特别提醒：<b>一定要留出和训练集同分布的验证集</b>，并监控是否过拟合。LoRA 虽然参数少，但数据重复多、epoch 大时同样会过拟合。</p><p>下面是一个用 PPL 快速评估微调前后模型的示例：</p><pre><code class="language-python">import torch
+ <p>微调的上限往往由数据决定。构建数据时，建议遵循以下原则：</p><ul><li><b>多样性</b>：覆盖任务类型、领域、难度、语言风格，避免模型只会一种腔调。</li><li><b>质量优先</b>：人工审核或强模型过滤，剔除事实错误、格式混乱、重复样本。</li><li><b>格式统一</b>：严格使用目标模型的对话模板，保证训练/推理一致。</li><li><b>规模适中</b>：指令微调通常 1k~100k 条即可见效，LoRA 场景下几千条高质量数据就能有不错表现。</li></ul><p>评估方面，不能只看训练 loss。建议分三层：</p><ol><li><b>自动指标</b>：困惑度（PPL）、ROUGE/BLEU（生成任务）、准确率（分类任务）。</li><li><b>模型评判</b>：用 GPT-4 等强模型对回答打分或做 pairwise 比较（LLM-as-a-Judge）。</li><li><b>人工评估</b>：抽样盲评，关注有用性、事实性、安全性。</li></ol><p>特别提醒：<b>一定要留出和训练集同分布的验证集</b>，并监控是否过拟合。LoRA 虽然参数少，但数据重复多、epoch 大时同样会过拟合。</p><p>下面是一个用 PPL 快速评估微调前后模型的示例：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 def compute_ppl(model, tokenizer, texts):
@@ -127,7 +127,7 @@ model = AutoModelForCausalLM.from_pretrained(model_name)
 
 test_texts = ["什么是机器学习？", "解释一下梯度下降。"]
 print("PPL:", compute_ppl(model, tokenizer, test_texts))
-</code></pre><p>把微调后的模型用同样脚本跑一遍，对比 PPL 变化，就能快速判断微调是否有效。当然，PPL 低不代表回答好，最终还是要结合人工和模型评判。</p>
+</code></pre></div><p>把微调后的模型用同样脚本跑一遍，对比 PPL 变化，就能快速判断微调是否有效。当然，PPL 低不代表回答好，最终还是要结合人工和模型评判。</p>
  <h3>常见误区</h3>
  <ul>
  <li>LoRA 只能用于注意力层的 q、v 投影，实际上可以作用于任何线性层（如 k、o、FFN），target_modules 的选择需要实验调优。</li>

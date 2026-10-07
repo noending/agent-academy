@@ -49,6 +49,10 @@ const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replac
 const escAllow = (s) => esc(s).replace(/&lt;b&gt;/g, "<b>").replace(/&lt;\/b&gt;/g, "</b>");
 // 放行有限标签的 HTML 净化器(LLM 输出的章节内容只允许结构与强调标签)
 const ALLOWED = ["b", "strong", "i", "em", "code", "pre", "ul", "ol", "li", "table", "thead", "tbody", "tr", "th", "td", "br", "p", "h4", "blockquote"];
+function wrapCodeblocks(html) {
+  return html.replace(/<pre><code class="language-([\w-]+)">([\s\S]*?)<\/code><\/pre>/g,
+    (m, lang, code) => `<div class="codeblock"><div class="code-head"><span class="code-lang">${lang}</span></div><pre><code class="language-${lang}">${code}</code></pre></div>`);
+}
 function sanitizeHTML(s) {
   let t = String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   for (const tag of ALLOWED) {
@@ -340,7 +344,7 @@ for (const { ch, res } of okChapters) {
 
 updateManifest({
   kind: "topic", slug: SKILL, title: plan.title, description: plan.description,
-  pack: `packs/${SKILL}`, page: `full-${SKILL}.html`, topic: TOPIC,
+  pack: SKILL, review: `packs/${SKILL}/REVIEW.md`, page: `full-${SKILL}.html`, topic: TOPIC,
   chapters: genMeta.chapters.map((c) => ({
     no: c.no, title: c.title, goal: c.goal, file: c.file,
     questions: (plan.chapters.find((pc) => pc.no === c.no) || {}).questions || [],

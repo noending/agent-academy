@@ -30,7 +30,7 @@
 
       <p class="lead"><b>本章目标：</b>能看懂GPU等硬件评测指标并选型</p>
  <h3>关键硬件指标：算力、显存、带宽、功耗</h3>
- <p>选GPU就像选车，不能只看马力（算力），还要看油箱大小（显存）、输油管粗细（带宽）和油耗（功耗）。这一节我们把四个核心指标拆开讲清楚。</p><p><b>算力 (FLOPS)</b>：每秒浮点运算次数，衡量GPU做数学计算的速度。常见单位有TFLOPS（万亿次/秒）和PFLOPS（千万亿次/秒）。注意：<b>算力分精度</b>，比如FP32、FP16、BF16、INT8。LLM训练和推理常用FP16/BF16，所以看算力时要确认精度。例如NVIDIA A100的FP16算力约312 TFLOPS（带稀疏），而FP32只有19.5 TFLOPS，差距巨大。</p><p><b>显存 (VRAM)</b>：GPU自带的内存，用来放模型权重、激活值、优化器状态等。显存不够，模型根本跑不起来。粗略估算：推理时，FP16模型每1B参数约需2GB显存；训练时，因为要存优化器状态和梯度，每1B参数约需16-20GB。所以7B模型推理至少14GB显存，训练则要100GB以上。</p><p><b>内存带宽 (Memory Bandwidth)</b>：GPU从显存读写数据的速度，单位GB/s。LLM推理是<b>内存带宽瓶颈</b>型任务：每生成一个token，都要把整个模型权重从显存读一遍。所以推理速度 ≈ 内存带宽 / 模型大小。例如A100带宽约2000GB/s，7B模型FP16约14GB，理论速度约143 token/s。</p><p><b>功耗 (TDP)</b>：热设计功耗，单位瓦特。功耗决定散热和电费，也影响能否塞进机箱。数据中心GPU如H100功耗可达700W，消费级RTX 4090约450W。</p><p>下面用Python快速估算一个模型需要多少显存和理论推理速度：</p><pre><code class="language-python">def estimate_gpu_requirements(params_billion, precision_bytes=2, batch_size=1):
+ <p>选GPU就像选车，不能只看马力（算力），还要看油箱大小（显存）、输油管粗细（带宽）和油耗（功耗）。这一节我们把四个核心指标拆开讲清楚。</p><p><b>算力 (FLOPS)</b>：每秒浮点运算次数，衡量GPU做数学计算的速度。常见单位有TFLOPS（万亿次/秒）和PFLOPS（千万亿次/秒）。注意：<b>算力分精度</b>，比如FP32、FP16、BF16、INT8。LLM训练和推理常用FP16/BF16，所以看算力时要确认精度。例如NVIDIA A100的FP16算力约312 TFLOPS（带稀疏），而FP32只有19.5 TFLOPS，差距巨大。</p><p><b>显存 (VRAM)</b>：GPU自带的内存，用来放模型权重、激活值、优化器状态等。显存不够，模型根本跑不起来。粗略估算：推理时，FP16模型每1B参数约需2GB显存；训练时，因为要存优化器状态和梯度，每1B参数约需16-20GB。所以7B模型推理至少14GB显存，训练则要100GB以上。</p><p><b>内存带宽 (Memory Bandwidth)</b>：GPU从显存读写数据的速度，单位GB/s。LLM推理是<b>内存带宽瓶颈</b>型任务：每生成一个token，都要把整个模型权重从显存读一遍。所以推理速度 ≈ 内存带宽 / 模型大小。例如A100带宽约2000GB/s，7B模型FP16约14GB，理论速度约143 token/s。</p><p><b>功耗 (TDP)</b>：热设计功耗，单位瓦特。功耗决定散热和电费，也影响能否塞进机箱。数据中心GPU如H100功耗可达700W，消费级RTX 4090约450W。</p><p>下面用Python快速估算一个模型需要多少显存和理论推理速度：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">def estimate_gpu_requirements(params_billion, precision_bytes=2, batch_size=1):
     """
     估算LLM推理的显存需求和理论速度
     params_billion: 模型参数量（十亿）
@@ -50,9 +50,9 @@
 # 测试7B模型
 estimate_gpu_requirements(7, precision_bytes=2)
 # 输出：模型大小14.0GB，建议显存16.8GB，理论速度142.9 token/s
-</code></pre><p><b>记住这个公式：推理速度 ≈ 内存带宽 / 模型大小。</b>这就是为什么大模型推理慢——不是算力不够，是数据搬运太慢。</p>
+</code></pre></div><p><b>记住这个公式：推理速度 ≈ 内存带宽 / 模型大小。</b>这就是为什么大模型推理慢——不是算力不够，是数据搬运太慢。</p>
  <h3>常见评测工具：MLPerf、DLBench、自定义基准</h3>
- <p>光看厂商给的峰值算力不靠谱，实际性能要看评测工具。这一节介绍三个层次的评测。</p><p><b>MLPerf</b>：由MLCommons组织维护的行业标准基准，相当于AI硬件界的“奥运会”。它分训练（Training）和推理（Inference）两套，覆盖图像分类、目标检测、语言模型（BERT、GPT-3）等任务。MLPerf的结果可横向对比不同厂商的GPU、TPU、CPU。看MLPerf报告时注意：<b>看场景（Scenario）</b>，比如Offline（离线批处理）、Server（在线服务）、SingleStream（单流低延迟），不同场景排名可能完全不同。</p><p><b>DLBench</b>：国内一些机构推出的深度学习基准，更贴近中文场景和国产硬件。它通常包含ResNet、BERT等模型的训练和推理测试。相比MLPerf，DLBench的测试项更少，但部署更简单。</p><p><b>自定义基准</b>：最实用的评测。因为你的模型、数据、框架和MLPerf不一定一样。自定义基准就是拿你自己的模型和真实数据，测延迟、吞吐、显存占用。关键指标：</p><ul><li><b>推理延迟 (Inference Latency)</b>：从输入到输出的时间，单位ms。对在线服务至关重要。</li><li><b>吞吐量 (Throughput)</b>：每秒处理的请求数或token数。对离线批处理重要。</li><li><b>首token延迟 (TTFT)</b>：生成第一个token的时间，影响用户感知。</li></ul><p>下面是一个自定义基准的简单示例，用PyTorch测推理延迟：</p><pre><code class="language-python">import torch
+ <p>光看厂商给的峰值算力不靠谱，实际性能要看评测工具。这一节介绍三个层次的评测。</p><p><b>MLPerf</b>：由MLCommons组织维护的行业标准基准，相当于AI硬件界的“奥运会”。它分训练（Training）和推理（Inference）两套，覆盖图像分类、目标检测、语言模型（BERT、GPT-3）等任务。MLPerf的结果可横向对比不同厂商的GPU、TPU、CPU。看MLPerf报告时注意：<b>看场景（Scenario）</b>，比如Offline（离线批处理）、Server（在线服务）、SingleStream（单流低延迟），不同场景排名可能完全不同。</p><p><b>DLBench</b>：国内一些机构推出的深度学习基准，更贴近中文场景和国产硬件。它通常包含ResNet、BERT等模型的训练和推理测试。相比MLPerf，DLBench的测试项更少，但部署更简单。</p><p><b>自定义基准</b>：最实用的评测。因为你的模型、数据、框架和MLPerf不一定一样。自定义基准就是拿你自己的模型和真实数据，测延迟、吞吐、显存占用。关键指标：</p><ul><li><b>推理延迟 (Inference Latency)</b>：从输入到输出的时间，单位ms。对在线服务至关重要。</li><li><b>吞吐量 (Throughput)</b>：每秒处理的请求数或token数。对离线批处理重要。</li><li><b>首token延迟 (TTFT)</b>：生成第一个token的时间，影响用户感知。</li></ul><p>下面是一个自定义基准的简单示例，用PyTorch测推理延迟：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import torch
 import time
 
 # 假设有一个简单的模型
@@ -82,9 +82,9 @@ for _ in range(100):
 avg_latency = sum(latencies) / len(latencies) * 1000  # 转ms
 print(f"平均延迟: {avg_latency:.2f} ms")
 print(f"P99延迟: {sorted(latencies)[98]*1000:.2f} ms")
-</code></pre><p><b>评测时一定要预热（warm-up）</b>，因为GPU首次运行会有初始化开销。另外要测P99延迟，而不只是平均延迟，因为用户体验由最慢的请求决定。</p>
+</code></pre></div><p><b>评测时一定要预热（warm-up）</b>，因为GPU首次运行会有初始化开销。另外要测P99延迟，而不只是平均延迟，因为用户体验由最慢的请求决定。</p>
  <h3>硬件与模型匹配：如何根据模型大小选择GPU</h3>
- <p>知道了指标和评测工具，现在来解决实际问题：给定一个模型，该选什么GPU？我们分推理和训练两种情况。</p><p><b>推理场景</b>：主要看显存和带宽。步骤：</p><ol><li>算模型大小：参数量 × 精度字节数。例如7B模型FP16约14GB，INT8约7GB。</li><li>加额外开销：激活值、KV Cache等。KV Cache随序列长度和batch size增长，长上下文时可能比模型还大。粗略加20%-50%。</li><li>选显存足够的GPU：7B FP16建议16GB以上，如RTX 4090（24GB）、A10（24GB）。13B FP16建议32GB以上，如A100 40GB。70B FP16需要140GB，单卡放不下，需多卡或量化。</li><li>看带宽：带宽越高，推理越快。同价位选带宽大的。</li></ol><p><b>训练场景</b>：显存需求暴增，因为要存优化器状态、梯度、激活值。粗略公式：<b>训练显存 ≈ 参数量 × (2 + 2 + 4 + 4) 字节 = 参数量 × 12字节</b>（FP16混合精度：权重2、梯度2、优化器动量4、方差4）。再加上激活值，实际约16-20字节/参数。所以7B模型训练需要约112-140GB显存，至少2张A100 80GB。全量微调13B模型需要8张A100 80GB是常见配置。</p><p>下面用Python写一个选型助手：</p><pre><code class="language-python">def recommend_gpu(params_billion, mode='inference', precision='fp16'):
+ <p>知道了指标和评测工具，现在来解决实际问题：给定一个模型，该选什么GPU？我们分推理和训练两种情况。</p><p><b>推理场景</b>：主要看显存和带宽。步骤：</p><ol><li>算模型大小：参数量 × 精度字节数。例如7B模型FP16约14GB，INT8约7GB。</li><li>加额外开销：激活值、KV Cache等。KV Cache随序列长度和batch size增长，长上下文时可能比模型还大。粗略加20%-50%。</li><li>选显存足够的GPU：7B FP16建议16GB以上，如RTX 4090（24GB）、A10（24GB）。13B FP16建议32GB以上，如A100 40GB。70B FP16需要140GB，单卡放不下，需多卡或量化。</li><li>看带宽：带宽越高，推理越快。同价位选带宽大的。</li></ol><p><b>训练场景</b>：显存需求暴增，因为要存优化器状态、梯度、激活值。粗略公式：<b>训练显存 ≈ 参数量 × (2 + 2 + 4 + 4) 字节 = 参数量 × 12字节</b>（FP16混合精度：权重2、梯度2、优化器动量4、方差4）。再加上激活值，实际约16-20字节/参数。所以7B模型训练需要约112-140GB显存，至少2张A100 80GB。全量微调13B模型需要8张A100 80GB是常见配置。</p><p>下面用Python写一个选型助手：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">def recommend_gpu(params_billion, mode='inference', precision='fp16'):
     """
     根据模型大小推荐GPU配置
     mode: 'inference' 或 'training'
@@ -115,9 +115,9 @@ print(f"P99延迟: {sorted(latencies)[98]*1000:.2f} ms")
 recommend_gpu(7, 'inference', 'fp16')
 recommend_gpu(7, 'training', 'fp16')
 recommend_gpu(70, 'inference', 'int8')
-</code></pre><p><b>关键结论：推理选显存够用且带宽高的；训练选显存大且支持多卡互联的（如NVLink）。</b>不要用消费级显卡做多卡训练，因为PCIe带宽和NVLink差距巨大。</p>
+</code></pre></div><p><b>关键结论：推理选显存够用且带宽高的；训练选显存大且支持多卡互联的（如NVLink）。</b>不要用消费级显卡做多卡训练，因为PCIe带宽和NVLink差距巨大。</p>
  <h3>成本与性能权衡：云GPU vs 本地GPU</h3>
- <p>最后我们来算账。云GPU和本地GPU各有优劣，选择取决于使用频率、预算和隐私要求。</p><p><b>云GPU</b>：按需付费，灵活。优点：无需前期投入，随时升级到最新硬件，适合短期项目、实验、突发流量。缺点：长期使用成本高，数据隐私风险，网络延迟。主流云GPU价格（2024年参考）：</p><table><tr><th>GPU型号</th><th>显存</th><th>按需价格（美元/小时）</th><th>适合场景</th></tr><tr><td>T4</td><td>16GB</td><td>0.35-0.5</td><td>轻量推理</td></tr><tr><td>A10G</td><td>24GB</td><td>1.0-1.5</td><td>中等推理</td></tr><tr><td>A100 40GB</td><td>40GB</td><td>2.5-4.0</td><td>训练/大模型推理</td></tr><tr><td>H100 80GB</td><td>80GB</td><td>8.0-12.0</td><td>大模型训练</td></tr></table><p><b>本地GPU</b>：一次性购买，长期使用成本低。优点：数据安全，无网络延迟，可深度定制。缺点：前期投入大，硬件贬值快，维护麻烦。参考价格：RTX 4090约1600美元，A100 80GB约15000美元，H100约30000美元。</p><p><b>盈亏平衡点计算</b>：假设云GPU每小时3美元，本地GPU购买价15000美元，电费和维护每月200美元。则回本时间 = 15000 / (3*24*30 - 200) ≈ 7.5个月。如果每天使用超过8小时，本地更划算；如果只是偶尔用，云更划算。</p><p>下面用Python算一下：</p><pre><code class="language-python">def cost_comparison(cloud_price_per_hour, local_gpu_price, local_power_cost_per_month, hours_per_day):
+ <p>最后我们来算账。云GPU和本地GPU各有优劣，选择取决于使用频率、预算和隐私要求。</p><p><b>云GPU</b>：按需付费，灵活。优点：无需前期投入，随时升级到最新硬件，适合短期项目、实验、突发流量。缺点：长期使用成本高，数据隐私风险，网络延迟。主流云GPU价格（2024年参考）：</p><table><tr><th>GPU型号</th><th>显存</th><th>按需价格（美元/小时）</th><th>适合场景</th></tr><tr><td>T4</td><td>16GB</td><td>0.35-0.5</td><td>轻量推理</td></tr><tr><td>A10G</td><td>24GB</td><td>1.0-1.5</td><td>中等推理</td></tr><tr><td>A100 40GB</td><td>40GB</td><td>2.5-4.0</td><td>训练/大模型推理</td></tr><tr><td>H100 80GB</td><td>80GB</td><td>8.0-12.0</td><td>大模型训练</td></tr></table><p><b>本地GPU</b>：一次性购买，长期使用成本低。优点：数据安全，无网络延迟，可深度定制。缺点：前期投入大，硬件贬值快，维护麻烦。参考价格：RTX 4090约1600美元，A100 80GB约15000美元，H100约30000美元。</p><p><b>盈亏平衡点计算</b>：假设云GPU每小时3美元，本地GPU购买价15000美元，电费和维护每月200美元。则回本时间 = 15000 / (3*24*30 - 200) ≈ 7.5个月。如果每天使用超过8小时，本地更划算；如果只是偶尔用，云更划算。</p><p>下面用Python算一下：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">def cost_comparison(cloud_price_per_hour, local_gpu_price, local_power_cost_per_month, hours_per_day):
     """
     比较云GPU和本地GPU的月成本
     """
@@ -139,7 +139,7 @@ recommend_gpu(70, 'inference', 'int8')
 for hours in [2, 8, 24]:
     cost_comparison(3.0, 15000, 200, hours)
     print()
-</code></pre><p><b>混合策略</b>：很多团队采用“本地推理+云训练”或“云突发+本地常驻”的混合模式。例如，用本地RTX 4090做日常推理，需要训练时租用云A100集群。这样兼顾成本和灵活性。</p><p><b>最终建议</b>：初学者先用云GPU（如Colab、AutoDL）练手；团队有稳定需求且预算充足时，考虑本地GPU；对数据隐私要求高的场景，必须本地部署。</p>
+</code></pre></div><p><b>混合策略</b>：很多团队采用“本地推理+云训练”或“云突发+本地常驻”的混合模式。例如，用本地RTX 4090做日常推理，需要训练时租用云A100集群。这样兼顾成本和灵活性。</p><p><b>最终建议</b>：初学者先用云GPU（如Colab、AutoDL）练手；团队有稳定需求且预算充足时，考虑本地GPU；对数据隐私要求高的场景，必须本地部署。</p>
  <h3>常见误区</h3>
  <ul>
  <li>算力（FLOPS）越高，LLM推理越快。实际上LLM推理是内存带宽瓶颈，带宽比算力更重要。</li>

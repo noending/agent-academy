@@ -30,7 +30,7 @@
 
       <p class="lead"><b>本章目标：</b>理解预训练目标、分布式训练策略与优化技巧</p>
  <h3>预训练目标：自回归语言建模</h3>
- <p>预训练是LLM获得通用语言能力的基石，而<b>自回归语言建模（Autoregressive Language Modeling）</b>是其中最主流的目标。它的核心思想很简单：给定前文，预测下一个token。形式化地，对于序列 \(x_1, x_2, ..., x_T\)，模型最大化对数似然：</p><p>\[\sum_{t=1}^{T} \log P(x_t | x_1, ..., x_{t-1}; \theta)\]</p><p>训练时，我们通常使用<b>教师强制（teacher forcing）</b>：将真实的前缀作为输入，并行计算所有位置的预测，并与真实的下一个token计算交叉熵损失。这样，一次前向传播就能得到所有位置的损失，效率很高。</p><p>下面是一个最小示例，展示如何用PyTorch实现自回归语言建模的损失计算：</p><pre><code class="language-python">import torch
+ <p>预训练是LLM获得通用语言能力的基石，而<b>自回归语言建模（Autoregressive Language Modeling）</b>是其中最主流的目标。它的核心思想很简单：给定前文，预测下一个token。形式化地，对于序列 \(x_1, x_2, ..., x_T\)，模型最大化对数似然：</p><p>\[\sum_{t=1}^{T} \log P(x_t | x_1, ..., x_{t-1}; \theta)\]</p><p>训练时，我们通常使用<b>教师强制（teacher forcing）</b>：将真实的前缀作为输入，并行计算所有位置的预测，并与真实的下一个token计算交叉熵损失。这样，一次前向传播就能得到所有位置的损失，效率很高。</p><p>下面是一个最小示例，展示如何用PyTorch实现自回归语言建模的损失计算：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import torch
 import torch.nn as nn
 
 # 假设词表大小为1000，批次大小2，序列长度5
@@ -50,9 +50,9 @@ loss = loss_fn(logits.view(-1, vocab_size), targets.view(-1))
 print(f"Loss: {loss.item():.4f}")
 
 # 注意：实际中，模型输出logits[:, :-1]对应targets[:, 1:]
-# 这里简化演示，假设已经对齐</code></pre><p><b>关键点：</b>自回归建模天然适合生成任务，但训练时每个位置只能看到左侧上下文，因此需要因果掩码（causal mask）防止信息泄露。此外，这种目标也常用于零样本和少样本学习。</p>
+# 这里简化演示，假设已经对齐</code></pre></div><p><b>关键点：</b>自回归建模天然适合生成任务，但训练时每个位置只能看到左侧上下文，因此需要因果掩码（causal mask）防止信息泄露。此外，这种目标也常用于零样本和少样本学习。</p>
  <h3>分布式训练：数据并行、模型并行与流水线并行</h3>
- <p>当模型参数量达到数十亿甚至千亿时，单卡显存无法容纳，训练时间也难以接受。分布式训练成为必选项。主要策略有三类：</p><ul><li><b>数据并行（Data Parallelism）</b>：每张卡持有完整的模型副本，但处理不同的数据批次。梯度通过AllReduce同步。适合模型能单卡放下，但数据量大的场景。PyTorch的DistributedDataParallel（DDP）是标准实现。</li><li><b>模型并行（Model Parallelism）</b>：将模型的不同层或同一层的不同部分拆分到不同设备。例如，将Transformer的注意力头拆分到多卡（张量并行）。适合单层参数过大，单卡放不下的情况。</li><li><b>流水线并行（Pipeline Parallelism）</b>：将模型按层切分成多个阶段，每个阶段放在不同设备上，数据像流水线一样依次通过。为了减少气泡，通常采用微批次（micro-batch）和调度策略（如GPipe、PipeDream）。</li></ul><p>实际训练中，常结合多种并行策略，如3D并行（数据+模型+流水线）。下面是一个使用PyTorch DDP的简单示例：</p><pre><code class="language-python">import torch
+ <p>当模型参数量达到数十亿甚至千亿时，单卡显存无法容纳，训练时间也难以接受。分布式训练成为必选项。主要策略有三类：</p><ul><li><b>数据并行（Data Parallelism）</b>：每张卡持有完整的模型副本，但处理不同的数据批次。梯度通过AllReduce同步。适合模型能单卡放下，但数据量大的场景。PyTorch的DistributedDataParallel（DDP）是标准实现。</li><li><b>模型并行（Model Parallelism）</b>：将模型的不同层或同一层的不同部分拆分到不同设备。例如，将Transformer的注意力头拆分到多卡（张量并行）。适合单层参数过大，单卡放不下的情况。</li><li><b>流水线并行（Pipeline Parallelism）</b>：将模型按层切分成多个阶段，每个阶段放在不同设备上，数据像流水线一样依次通过。为了减少气泡，通常采用微批次（micro-batch）和调度策略（如GPipe、PipeDream）。</li></ul><p>实际训练中，常结合多种并行策略，如3D并行（数据+模型+流水线）。下面是一个使用PyTorch DDP的简单示例：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import torch
 import torch.distributed as dist
 import torch.nn as nn
 import torch.optim as optim
@@ -84,9 +84,9 @@ def train(rank, world_size):
     cleanup()
 
 # 启动方式：torchrun --nproc_per_node=2 script.py
-# 每个进程调用train(rank, world_size)</code></pre><p><b>关键点：</b>数据并行通信开销大，模型并行和流水线并行则更复杂但能突破单卡显存限制。选择策略需权衡模型大小、集群网络和开发成本。</p>
+# 每个进程调用train(rank, world_size)</code></pre></div><p><b>关键点：</b>数据并行通信开销大，模型并行和流水线并行则更复杂但能突破单卡显存限制。选择策略需权衡模型大小、集群网络和开发成本。</p>
  <h3>混合精度训练与梯度累积</h3>
- <p><b>混合精度训练（Mixed Precision Training）</b>通过结合FP16和FP32来加速训练并减少显存占用。核心思想：前向和反向传播使用FP16计算，但保留一份FP32的模型权重副本用于更新，避免舍入误差累积。同时，使用损失缩放（loss scaling）防止梯度下溢。</p><p>PyTorch提供了torch.cuda.amp自动混合精度：</p><pre><code class="language-python">import torch
+ <p><b>混合精度训练（Mixed Precision Training）</b>通过结合FP16和FP32来加速训练并减少显存占用。核心思想：前向和反向传播使用FP16计算，但保留一份FP32的模型权重副本用于更新，避免舍入误差累积。同时，使用损失缩放（loss scaling）防止梯度下溢。</p><p>PyTorch提供了torch.cuda.amp自动混合精度：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import torch
 from torch.cuda.amp import autocast, GradScaler
 
 model = torch.nn.Linear(10, 10).cuda()
@@ -100,7 +100,7 @@ for data, target in dataloader:
         loss = loss_fn(output, target)
     scaler.scale(loss).backward()
     scaler.step(optimizer)
-    scaler.update()</code></pre><p><b>梯度累积（Gradient Accumulation）</b>是另一种节省显存的技巧：当显存不足以容纳大batch时，可以多次前向/反向传播，累积梯度，再一次性更新。这等价于增大batch size，但不会增加显存峰值。</p><pre><code class="language-python">accumulation_steps = 4
+    scaler.update()</code></pre></div><p><b>梯度累积（Gradient Accumulation）</b>是另一种节省显存的技巧：当显存不足以容纳大batch时，可以多次前向/反向传播，累积梯度，再一次性更新。这等价于增大batch size，但不会增加显存峰值。</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">accumulation_steps = 4
 optimizer.zero_grad()
 for i, (data, target) in enumerate(dataloader):
     output = model(data)
@@ -108,9 +108,9 @@ for i, (data, target) in enumerate(dataloader):
     loss.backward()
     if (i+1) % accumulation_steps == 0:
         optimizer.step()
-        optimizer.zero_grad()</code></pre><p><b>关键点：</b>混合精度和梯度累积常结合使用，能显著降低显存需求，但需注意数值稳定性（如梯度裁剪）和超参数调整。</p>
+        optimizer.zero_grad()</code></pre></div><p><b>关键点：</b>混合精度和梯度累积常结合使用，能显著降低显存需求，但需注意数值稳定性（如梯度裁剪）和超参数调整。</p>
  <h3>训练稳定性：学习率调度与梯度裁剪</h3>
- <p>大模型训练容易不稳定，表现为损失尖峰或发散。两个关键技巧是学习率调度和梯度裁剪。</p><p><b>学习率调度：</b>常用预热（warmup）和余弦衰减。预热让学习率从0线性增加到峰值，避免早期梯度噪声导致的不稳定；随后余弦衰减到接近0，帮助模型收敛到更平坦的极小值。</p><pre><code class="language-python">from torch.optim.lr_scheduler import LambdaLR
+ <p>大模型训练容易不稳定，表现为损失尖峰或发散。两个关键技巧是学习率调度和梯度裁剪。</p><p><b>学习率调度：</b>常用预热（warmup）和余弦衰减。预热让学习率从0线性增加到峰值，避免早期梯度噪声导致的不稳定；随后余弦衰减到接近0，帮助模型收敛到更平坦的极小值。</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from torch.optim.lr_scheduler import LambdaLR
 import math
 
 def lr_lambda(step):
@@ -122,7 +122,7 @@ def lr_lambda(step):
         progress = (step - warmup_steps) / (total_steps - warmup_steps)
         return 0.5 * (1 + math.cos(math.pi * progress))
 
-scheduler = LambdaLR(optimizer, lr_lambda)</code></pre><p><b>梯度裁剪：</b>将梯度向量的范数限制在一个阈值内，防止梯度爆炸。通常按全局范数裁剪：</p><pre><code class="language-python">torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)</code></pre><p><b>关键点：</b>预热步数通常为总步数的1%-10%，梯度裁剪阈值常设为1.0。这些技巧能显著提升训练稳定性，尤其对于大模型。</p>
+scheduler = LambdaLR(optimizer, lr_lambda)</code></pre></div><p><b>梯度裁剪：</b>将梯度向量的范数限制在一个阈值内，防止梯度爆炸。通常按全局范数裁剪：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)</code></pre></div><p><b>关键点：</b>预热步数通常为总步数的1%-10%，梯度裁剪阈值常设为1.0。这些技巧能显著提升训练稳定性，尤其对于大模型。</p>
  <h3>常见误区</h3>
  <ul>
  <li>自回归语言建模训练时，每个位置可以同时看到左右上下文，因此不需要因果掩码。</li>

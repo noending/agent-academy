@@ -30,7 +30,7 @@
 
       <p class="lead"><b>本章目标：</b>能设计并执行LLM评测方案，解读评测指标</p>
  <h3>评测维度：从准确性到效率，全面衡量模型能力</h3>
- <p>当我们说一个LLM“好”或“不好”时，其实是在多个维度上做判断。就像评价一个学生不能只看数学成绩，评价LLM也要从多个角度出发。本章我们先梳理四个核心评测维度：<b>准确性、流畅性、安全性、效率</b>。</p><ul><li><b>准确性</b>：模型回答是否正确、符合事实。例如问“中国的首都是哪里”，模型答“北京”就是准确的。常用指标有准确率（Accuracy）、F1分数等。</li><li><b>流畅性</b>：生成的文本是否通顺、自然、符合语法。比如“我吃饭了”流畅，而“我饭吃了”就不太自然。常用指标有困惑度（Perplexity，简称PPL）和BLEU分数。</li><li><b>安全性</b>：模型是否会产生有害、偏见、违法或泄露隐私的内容。例如拒绝回答“如何制作炸弹”就是安全的表现。</li><li><b>效率</b>：模型推理速度、显存占用、吞吐量等。例如每秒生成多少token（tokens/s），这对产品落地至关重要。</li></ul><p>这四个维度往往需要权衡。比如一个模型准确性很高，但推理速度很慢，可能不适合实时对话场景。<b>评测就是帮我们在这些维度上量化模型表现，从而做出选型或优化决策。</b></p><p>下面是一个计算困惑度的最小示例。困惑度越低，说明模型对文本越“不困惑”，即预测下一个词的能力越强，流畅性通常越好。</p><pre><code class="language-python">import torch
+ <p>当我们说一个LLM“好”或“不好”时，其实是在多个维度上做判断。就像评价一个学生不能只看数学成绩，评价LLM也要从多个角度出发。本章我们先梳理四个核心评测维度：<b>准确性、流畅性、安全性、效率</b>。</p><ul><li><b>准确性</b>：模型回答是否正确、符合事实。例如问“中国的首都是哪里”，模型答“北京”就是准确的。常用指标有准确率（Accuracy）、F1分数等。</li><li><b>流畅性</b>：生成的文本是否通顺、自然、符合语法。比如“我吃饭了”流畅，而“我饭吃了”就不太自然。常用指标有困惑度（Perplexity，简称PPL）和BLEU分数。</li><li><b>安全性</b>：模型是否会产生有害、偏见、违法或泄露隐私的内容。例如拒绝回答“如何制作炸弹”就是安全的表现。</li><li><b>效率</b>：模型推理速度、显存占用、吞吐量等。例如每秒生成多少token（tokens/s），这对产品落地至关重要。</li></ul><p>这四个维度往往需要权衡。比如一个模型准确性很高，但推理速度很慢，可能不适合实时对话场景。<b>评测就是帮我们在这些维度上量化模型表现，从而做出选型或优化决策。</b></p><p>下面是一个计算困惑度的最小示例。困惑度越低，说明模型对文本越“不困惑”，即预测下一个词的能力越强，流畅性通常越好。</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import torch
 import torch.nn.functional as F
 
 # 假设词表大小为10，模型对下一个词的预测logits
@@ -43,9 +43,9 @@ loss = F.cross_entropy(logits, target)
 # 困惑度 = exp(损失)
 perplexity = torch.exp(loss)
 print(f"损失: {loss.item():.4f}")
-print(f"困惑度: {perplexity.item():.4f}")</code></pre><p>运行这段代码，你会得到一个困惑度数值。在实际评测中，我们会在整个测试集上计算平均困惑度。</p>
+print(f"困惑度: {perplexity.item():.4f}")</code></pre></div><p>运行这段代码，你会得到一个困惑度数值。在实际评测中，我们会在整个测试集上计算平均困惑度。</p>
  <h3>常用基准：MMLU、GLUE、HELM、BIG-bench 都是什么？</h3>
- <p>基准测试（Benchmark）是一套标准化的题目和评分规则，用来公平比较不同模型。就像高考用同一套试卷衡量学生，基准测试让模型在同一起跑线上竞争。下面介绍四个最常听到的基准：</p><ul><li><b>MMLU</b>（Massive Multitask Language Understanding）：涵盖57个学科（数学、历史、法律、医学等）的多选题，考察模型的通用知识。例如“光合作用发生在细胞的哪个部位？”MMLU分数越高，说明模型知识面越广。</li><li><b>GLUE</b>（General Language Understanding Evaluation）：由多个自然语言理解任务组成，如情感分析、句子相似度等。后来升级为SuperGLUE，难度更高。GLUE主要评估模型对语言的理解能力。</li><li><b>HELM</b>（Holistic Evaluation of Language Models）：不只关注准确性，还从公平性、偏见、毒性、效率等全方位评估模型。HELM更像一个“体检套餐”，而不是单一考试。</li><li><b>BIG-bench</b>（Beyond the Imitation Game Benchmark）：包含200多个任务，从逻辑推理到常识问答，甚至有些任务人类都很难。BIG-bench旨在挑战模型的极限。</li></ul><p>这些基准各有侧重，<b>实际评测时通常组合使用</b>。比如用MMLU看知识，用GLUE看理解，用HELM看安全，用BIG-bench看推理。下面是一个模拟计算BLEU分数的例子，BLEU常用于机器翻译等生成任务的流畅性评估。</p><pre><code class="language-python">from nltk.translate.bleu_score import sentence_bleu
+ <p>基准测试（Benchmark）是一套标准化的题目和评分规则，用来公平比较不同模型。就像高考用同一套试卷衡量学生，基准测试让模型在同一起跑线上竞争。下面介绍四个最常听到的基准：</p><ul><li><b>MMLU</b>（Massive Multitask Language Understanding）：涵盖57个学科（数学、历史、法律、医学等）的多选题，考察模型的通用知识。例如“光合作用发生在细胞的哪个部位？”MMLU分数越高，说明模型知识面越广。</li><li><b>GLUE</b>（General Language Understanding Evaluation）：由多个自然语言理解任务组成，如情感分析、句子相似度等。后来升级为SuperGLUE，难度更高。GLUE主要评估模型对语言的理解能力。</li><li><b>HELM</b>（Holistic Evaluation of Language Models）：不只关注准确性，还从公平性、偏见、毒性、效率等全方位评估模型。HELM更像一个“体检套餐”，而不是单一考试。</li><li><b>BIG-bench</b>（Beyond the Imitation Game Benchmark）：包含200多个任务，从逻辑推理到常识问答，甚至有些任务人类都很难。BIG-bench旨在挑战模型的极限。</li></ul><p>这些基准各有侧重，<b>实际评测时通常组合使用</b>。比如用MMLU看知识，用GLUE看理解，用HELM看安全，用BIG-bench看推理。下面是一个模拟计算BLEU分数的例子，BLEU常用于机器翻译等生成任务的流畅性评估。</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from nltk.translate.bleu_score import sentence_bleu
 
 # 参考译文（标准答案）和模型生成的译文
 reference = [['the', 'cat', 'is', 'on', 'the', 'mat']]
@@ -53,9 +53,9 @@ candidate = ['the', 'cat', 'is', 'on', 'the', 'mat']
 
 # 计算BLEU分数
 score = sentence_bleu(reference, candidate)
-print(f"BLEU分数: {score:.4f}")  # 完全匹配时为1.0</code></pre><p>注意：BLEU分数范围是0到1，越接近1表示生成文本与参考文本越相似。但它只衡量表面词汇重叠，不判断语义是否正确。</p>
+print(f"BLEU分数: {score:.4f}")  # 完全匹配时为1.0</code></pre></div><p>注意：BLEU分数范围是0到1，越接近1表示生成文本与参考文本越相似。但它只衡量表面词汇重叠，不判断语义是否正确。</p>
  <h3>评测方法：自动评估、人工评估与对抗测试</h3>
- <p>有了维度和基准，具体怎么评？主要有三种方法：</p><ul><li><b>自动评估</b>：用程序自动计算指标，如准确率、BLEU、困惑度。优点是快、便宜、可复现；缺点是可能无法捕捉语义、幽默、创造力等。适合大规模筛选。</li><li><b>人工评估</b>：请人类标注员对模型输出打分，比如流畅性1-5分、相关性1-5分。优点是能评价主观质量；缺点是贵、慢、可能有标注者偏差。适合最终验收。</li><li><b>对抗测试</b>：故意设计刁钻、有害或边缘的输入来攻击模型，看它是否出错。例如问“如何偷窃而不被发现”，观察模型是否拒绝。对抗测试是安全评估的重要手段。</li></ul><p><b>实际项目中，通常先用自动评估快速迭代，再用人工评估和对抗测试做最终把关。</b>比如开发一个客服机器人，自动评估看回答准确率，人工评估看语气是否友好，对抗测试看会不会被诱导骂人。</p><p>下面是一个简单的人工评估打分表模拟，用代码计算平均分。</p><pre><code class="language-python"># 模拟3位标注员对模型回答的流畅性打分（1-5分）
+ <p>有了维度和基准，具体怎么评？主要有三种方法：</p><ul><li><b>自动评估</b>：用程序自动计算指标，如准确率、BLEU、困惑度。优点是快、便宜、可复现；缺点是可能无法捕捉语义、幽默、创造力等。适合大规模筛选。</li><li><b>人工评估</b>：请人类标注员对模型输出打分，比如流畅性1-5分、相关性1-5分。优点是能评价主观质量；缺点是贵、慢、可能有标注者偏差。适合最终验收。</li><li><b>对抗测试</b>：故意设计刁钻、有害或边缘的输入来攻击模型，看它是否出错。例如问“如何偷窃而不被发现”，观察模型是否拒绝。对抗测试是安全评估的重要手段。</li></ul><p><b>实际项目中，通常先用自动评估快速迭代，再用人工评估和对抗测试做最终把关。</b>比如开发一个客服机器人，自动评估看回答准确率，人工评估看语气是否友好，对抗测试看会不会被诱导骂人。</p><p>下面是一个简单的人工评估打分表模拟，用代码计算平均分。</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python"># 模拟3位标注员对模型回答的流畅性打分（1-5分）
 scores = [4, 5, 3]
 average_score = sum(scores) / len(scores)
 print(f"平均流畅性得分: {average_score:.2f}")
@@ -66,9 +66,9 @@ def is_safe_response(response):
     return not any(keyword in response for keyword in unsafe_keywords)
 
 response = "对不起，我不能提供这类信息。"
-print(f"回答是否安全: {is_safe_response(response)}")</code></pre>
+print(f"回答是否安全: {is_safe_response(response)}")</code></pre></div>
  <h3>实战：使用OpenCompass评测开源模型</h3>
- <p>OpenCompass 是一个开源的大模型评测平台，支持MMLU、C-Eval、GSM8K等数十个数据集，可以一键评测HuggingFace上的开源模型。下面我们以评测一个小模型为例，展示完整流程。</p><p>首先安装OpenCompass（建议在Python 3.8+环境）：</p><pre><code class="language-bash">pip install opencompass</code></pre><p>然后准备配置文件。OpenCompass使用Python配置文件定义模型和数据集。创建一个<code>eval_config.py</code>：</p><pre><code class="language-python">from opencompass.models import HuggingFaceCausalLM
+ <p>OpenCompass 是一个开源的大模型评测平台，支持MMLU、C-Eval、GSM8K等数十个数据集，可以一键评测HuggingFace上的开源模型。下面我们以评测一个小模型为例，展示完整流程。</p><p>首先安装OpenCompass（建议在Python 3.8+环境）：</p><div class="codeblock"><div class="code-head"><span class="code-lang">bash</span></div><pre><code class="language-bash">pip install opencompass</code></pre></div><p>然后准备配置文件。OpenCompass使用Python配置文件定义模型和数据集。创建一个<code>eval_config.py</code>：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from opencompass.models import HuggingFaceCausalLM
 from opencompass.datasets import MMLUDataset
 from opencompass.openicl.icl_inferencer import GenInferencer
 
@@ -104,7 +104,7 @@ datasets = [
             evaluator=dict(type='AccEvaluator'),
         ),
     )
-]</code></pre><p>最后运行评测：</p><pre><code class="language-bash">python run.py eval_config.py --work-dir ./outputs</code></pre><p>运行结束后，在<code>./outputs</code>目录下会生成评测报告，包含准确率等指标。你可以打开<code>summary</code>文件夹查看CSV或HTML格式的结果。</p><p><b>OpenCompass的优势在于标准化和可复现</b>，你只需要换模型路径和数据集名称，就能快速对比不同模型。对于产品经理，可以借此了解模型在关键任务上的表现；对于开发者，可以基于结果做微调或提示词优化。</p>
+]</code></pre></div><p>最后运行评测：</p><div class="codeblock"><div class="code-head"><span class="code-lang">bash</span></div><pre><code class="language-bash">python run.py eval_config.py --work-dir ./outputs</code></pre></div><p>运行结束后，在<code>./outputs</code>目录下会生成评测报告，包含准确率等指标。你可以打开<code>summary</code>文件夹查看CSV或HTML格式的结果。</p><p><b>OpenCompass的优势在于标准化和可复现</b>，你只需要换模型路径和数据集名称，就能快速对比不同模型。对于产品经理，可以借此了解模型在关键任务上的表现；对于开发者，可以基于结果做微调或提示词优化。</p>
  <h3>常见误区</h3>
  <ul>
  <li>困惑度越低，模型生成质量一定越好。实际上困惑度只反映模型对下一个词的预测概率，低困惑度可能只是模型在训练数据上过拟合，并不代表生成内容更有用或更安全。</li>

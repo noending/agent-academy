@@ -30,7 +30,7 @@
 
       <p class="lead"><b>本章目标：</b>理解LLM核心概念、发展历程与主流模型架构</p>
  <h3>1.1 什么是大语言模型：从“接龙”到通用智能</h3>
- <p>你可以把大语言模型（LLM）想象成一个超级“文字接龙”高手：给它一段上文，它预测下一个最可能出现的词。但神奇的是，当这个“接龙”游戏玩到千亿参数、万亿token的规模时，模型就涌现出了<b>生成、理解、推理</b>三大核心能力。</p><ul><li><b>生成</b>：写文章、写代码、翻译、总结，本质是条件概率建模 <code>P(下一个词 | 上文)</code>。</li><li><b>理解</b>：能回答“这段话在说什么”“这句话是正面还是负面”，靠的是预训练中学到的语义表示。</li><li><b>推理</b>：做数学题、逻辑推断、多步规划，这是规模带来的“涌现能力”（Emergent Ability）。</li></ul><p>LLM 的底座是 <b>Transformer 架构</b>，核心是 <b>自注意力机制（Self-Attention）</b>：每个词都能“看到”序列中所有其他词，并动态决定关注谁。相比 RNN 的顺序处理，自注意力可以并行计算，这让训练超大模型成为可能。</p><p>训练流程通常分两步：<b>预训练（Pre-training）</b> 在海量无标注文本上学习语言规律，然后通过指令微调（SFT）、RLHF 等对齐技术，让模型学会“听懂人话”。</p><p>下面是一个最小可运行的“下一个词预测”示例，用 Hugging Face 加载一个小模型，直观感受 LLM 的生成过程：</p><pre><code class="language-python">from transformers import pipeline
+ <p>你可以把大语言模型（LLM）想象成一个超级“文字接龙”高手：给它一段上文，它预测下一个最可能出现的词。但神奇的是，当这个“接龙”游戏玩到千亿参数、万亿token的规模时，模型就涌现出了<b>生成、理解、推理</b>三大核心能力。</p><ul><li><b>生成</b>：写文章、写代码、翻译、总结，本质是条件概率建模 <code>P(下一个词 | 上文)</code>。</li><li><b>理解</b>：能回答“这段话在说什么”“这句话是正面还是负面”，靠的是预训练中学到的语义表示。</li><li><b>推理</b>：做数学题、逻辑推断、多步规划，这是规模带来的“涌现能力”（Emergent Ability）。</li></ul><p>LLM 的底座是 <b>Transformer 架构</b>，核心是 <b>自注意力机制（Self-Attention）</b>：每个词都能“看到”序列中所有其他词，并动态决定关注谁。相比 RNN 的顺序处理，自注意力可以并行计算，这让训练超大模型成为可能。</p><p>训练流程通常分两步：<b>预训练（Pre-training）</b> 在海量无标注文本上学习语言规律，然后通过指令微调（SFT）、RLHF 等对齐技术，让模型学会“听懂人话”。</p><p>下面是一个最小可运行的“下一个词预测”示例，用 Hugging Face 加载一个小模型，直观感受 LLM 的生成过程：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from transformers import pipeline
 
 # 加载一个小型因果语言模型（首次运行会自动下载）
 generator = pipeline("text-generation", model="gpt2")
@@ -40,9 +40,9 @@ output = generator(prompt, max_new_tokens=20, do_sample=True, temperature=0.8)
 
 print(output[0]["generated_text"])
 # 示例输出：Large language models are becoming increasingly powerful...
-</code></pre><p>运行后你会发现，模型只是根据上文“续写”，但续写质量已经能支撑很多实际应用。<b>记住：LLM 的一切能力，都建立在对下一个 token 的预测之上。</b></p>
+</code></pre></div><p>运行后你会发现，模型只是根据上文“续写”，但续写质量已经能支撑很多实际应用。<b>记住：LLM 的一切能力，都建立在对下一个 token 的预测之上。</b></p>
  <h3>1.2 发展简史：从 Transformer 到 GPT、LLaMA、DeepSeek</h3>
- <p>LLM 的爆发不是一夜之间发生的，关键节点可以串成一条线：</p><ol><li><b>2017 · Transformer</b>：Google 发表《Attention Is All You Need》，提出完全基于自注意力的架构，抛弃 RNN，奠定一切基础。</li><li><b>2018 · BERT &amp; GPT-1</b>：BERT 用 Encoder 做理解，GPT 用 Decoder 做生成，两条路线分道扬镳。</li><li><b>2020 · GPT-3</b>：1750 亿参数，首次展示“少样本学习”（Few-shot Learning），提示词工程开始流行。</li><li><b>2022 · ChatGPT</b>：引入 RLHF，把 GPT-3.5 变成对话助手，LLM 正式出圈。</li><li><b>2023 · LLaMA 系列</b>：Meta 开源 LLaMA、Llama 2，引爆开源社区，让“自己微调大模型”成为可能。</li><li><b>2024-2025 · Qwen、DeepSeek</b>：国产模型崛起，DeepSeek 用 MoE（混合专家）和高效训练把成本打下来，性能对标一线闭源模型。</li></ol><p>这条线背后有两个趋势：<b>一是模型越来越大、越来越强；二是开源与闭源的差距在快速缩小。</b>对工程师来说，这意味着你既可以用 API 快速上线，也可以基于开源模型做私有化部署和深度定制。</p><p>下面用代码查看一个开源模型的架构配置，理解“Decoder-only”长什么样：</p><pre><code class="language-python">from transformers import AutoConfig
+ <p>LLM 的爆发不是一夜之间发生的，关键节点可以串成一条线：</p><ol><li><b>2017 · Transformer</b>：Google 发表《Attention Is All You Need》，提出完全基于自注意力的架构，抛弃 RNN，奠定一切基础。</li><li><b>2018 · BERT &amp; GPT-1</b>：BERT 用 Encoder 做理解，GPT 用 Decoder 做生成，两条路线分道扬镳。</li><li><b>2020 · GPT-3</b>：1750 亿参数，首次展示“少样本学习”（Few-shot Learning），提示词工程开始流行。</li><li><b>2022 · ChatGPT</b>：引入 RLHF，把 GPT-3.5 变成对话助手，LLM 正式出圈。</li><li><b>2023 · LLaMA 系列</b>：Meta 开源 LLaMA、Llama 2，引爆开源社区，让“自己微调大模型”成为可能。</li><li><b>2024-2025 · Qwen、DeepSeek</b>：国产模型崛起，DeepSeek 用 MoE（混合专家）和高效训练把成本打下来，性能对标一线闭源模型。</li></ol><p>这条线背后有两个趋势：<b>一是模型越来越大、越来越强；二是开源与闭源的差距在快速缩小。</b>对工程师来说，这意味着你既可以用 API 快速上线，也可以基于开源模型做私有化部署和深度定制。</p><p>下面用代码查看一个开源模型的架构配置，理解“Decoder-only”长什么样：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from transformers import AutoConfig
 
 config = AutoConfig.from_pretrained("Qwen/Qwen2.5-0.5B")
 print("模型类型:", config.model_type)          # qwen2
@@ -50,9 +50,9 @@ print("隐藏层维度:", config.hidden_size)      # 896
 print("层数:", config.num_hidden_layers)      # 24
 print("注意力头数:", config.num_attention_heads)  # 14
 print("是否使用 MoE:", getattr(config, "num_experts", None))
-</code></pre><p>通过配置你能看到：现代 LLM 基本都是 <b>Decoder-only</b> 结构，堆叠几十层 Transformer Block，每层包含自注意力和前馈网络。</p>
+</code></pre></div><p>通过配置你能看到：现代 LLM 基本都是 <b>Decoder-only</b> 结构，堆叠几十层 Transformer Block，每层包含自注意力和前馈网络。</p>
  <h3>1.3 主流模型对比：GPT、Claude、LLaMA、Qwen 怎么选</h3>
- <p>选模型就像选车：没有最好的，只有最适合场景的。下面从几个维度对比主流模型：</p><table><tr><th>模型</th><th>开源/闭源</th><th>特点</th><th>典型场景</th></tr><tr><td>GPT 系列</td><td>闭源</td><td>综合能力最强，生态最成熟</td><td>通用对话、Agent、复杂推理</td></tr><tr><td>Claude 系列</td><td>闭源</td><td>长上下文、安全性好、写作强</td><td>长文档分析、代码、合规场景</td></tr><tr><td>LLaMA 系列</td><td>开源</td><td>社区生态庞大，微调资源多</td><td>私有化部署、学术研究</td></tr><tr><td>Qwen 系列</td><td>开源</td><td>中文强、尺寸全、工具调用好</td><td>中文应用、RAG、Agent</td></tr></table><p>选择时问自己三个问题：<b>1）数据能不能出内网？</b>不能就选开源私有化。<b>2）预算多少？</b>闭源 API 按量付费，开源要算 GPU 成本。<b>3）任务难度？</b>简单任务小模型够用，复杂推理才上大模型。</p><p>实际工程中常用“路由”策略：简单请求走小模型，复杂请求走大模型，兼顾成本和效果。下面是一个极简的模型路由示例：</p><pre><code class="language-python">def route_model(query: str) -&gt; str:
+ <p>选模型就像选车：没有最好的，只有最适合场景的。下面从几个维度对比主流模型：</p><table><tr><th>模型</th><th>开源/闭源</th><th>特点</th><th>典型场景</th></tr><tr><td>GPT 系列</td><td>闭源</td><td>综合能力最强，生态最成熟</td><td>通用对话、Agent、复杂推理</td></tr><tr><td>Claude 系列</td><td>闭源</td><td>长上下文、安全性好、写作强</td><td>长文档分析、代码、合规场景</td></tr><tr><td>LLaMA 系列</td><td>开源</td><td>社区生态庞大，微调资源多</td><td>私有化部署、学术研究</td></tr><tr><td>Qwen 系列</td><td>开源</td><td>中文强、尺寸全、工具调用好</td><td>中文应用、RAG、Agent</td></tr></table><p>选择时问自己三个问题：<b>1）数据能不能出内网？</b>不能就选开源私有化。<b>2）预算多少？</b>闭源 API 按量付费，开源要算 GPU 成本。<b>3）任务难度？</b>简单任务小模型够用，复杂推理才上大模型。</p><p>实际工程中常用“路由”策略：简单请求走小模型，复杂请求走大模型，兼顾成本和效果。下面是一个极简的模型路由示例：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">def route_model(query: str) -&gt; str:
     """根据问题复杂度选择模型"""
     complex_keywords = ["推理", "证明", "代码", "分析", "为什么"]
     if any(kw in query for kw in complex_keywords) or len(query) &gt; 100:
@@ -62,9 +62,9 @@ print("是否使用 MoE:", getattr(config, "num_experts", None))
 queries = ["今天天气怎么样", "请证明勾股定理并给出代码实现"]
 for q in queries:
     print(f"问题: {q} -&gt; 路由到: {route_model(q)}")
-</code></pre><p><b>核心原则：不要用大炮打蚊子，也不要用弹弓打坦克。</b></p>
+</code></pre></div><p><b>核心原则：不要用大炮打蚊子，也不要用弹弓打坦克。</b></p>
  <h3>1.4 典型应用场景：对话、编程、RAG、Agent</h3>
- <p>LLM 落地主要有四大场景，难度和工程复杂度依次递增：</p><ul><li><b>对话（Chat）</b>：最基础，客服、助手、陪聊。核心是提示词设计和多轮上下文管理。</li><li><b>编程（Coding）</b>：代码补全、生成、审查、单测。代表产品 GitHub Copilot、Cursor。</li><li><b>RAG（检索增强生成）</b>：先检索知识库，再让 LLM 基于检索结果回答。解决“模型不知道私有知识”和“幻觉”问题，是企业落地最火的方案。</li><li><b>Agent（智能体）</b>：让 LLM 自主规划、调用工具、多步执行。比如“帮我订机票并安排行程”，需要 LLM + 工具 + 记忆 + 规划。</li></ul><p>这四者不是互斥的，而是层层叠加：<b>对话是交互层，RAG 是知识层，Agent 是行动层，编程是垂直应用。</b>一个成熟的 AI 产品往往是“Agent 调度 + RAG 供知识 + 对话做交互”。</p><p>下面用 20 行代码实现一个最小 RAG 流程，感受“检索 + 生成”的威力：</p><pre><code class="language-python">from sklearn.feature_extraction.text import TfidfVectorizer
+ <p>LLM 落地主要有四大场景，难度和工程复杂度依次递增：</p><ul><li><b>对话（Chat）</b>：最基础，客服、助手、陪聊。核心是提示词设计和多轮上下文管理。</li><li><b>编程（Coding）</b>：代码补全、生成、审查、单测。代表产品 GitHub Copilot、Cursor。</li><li><b>RAG（检索增强生成）</b>：先检索知识库，再让 LLM 基于检索结果回答。解决“模型不知道私有知识”和“幻觉”问题，是企业落地最火的方案。</li><li><b>Agent（智能体）</b>：让 LLM 自主规划、调用工具、多步执行。比如“帮我订机票并安排行程”，需要 LLM + 工具 + 记忆 + 规划。</li></ul><p>这四者不是互斥的，而是层层叠加：<b>对话是交互层，RAG 是知识层，Agent 是行动层，编程是垂直应用。</b>一个成熟的 AI 产品往往是“Agent 调度 + RAG 供知识 + 对话做交互”。</p><p>下面用 20 行代码实现一个最小 RAG 流程，感受“检索 + 生成”的威力：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 # 模拟知识库
@@ -88,7 +88,7 @@ context = retrieve(query, knowledge)
 prompt = f"基于以下资料回答问题：\n{context[0]}\n\n问题：{query}\n回答："
 print(prompt)
 # 实际项目中把 prompt 发给 LLM 即可
-</code></pre><p>这个例子虽然简单，但已经包含了 RAG 的核心思想：<b>先检索、后生成，让模型“有据可依”。</b>后续章节会深入向量数据库、Embedding、重排序等工程细节。</p>
+</code></pre></div><p>这个例子虽然简单，但已经包含了 RAG 的核心思想：<b>先检索、后生成，让模型“有据可依”。</b>后续章节会深入向量数据库、Embedding、重排序等工程细节。</p>
  <h3>常见误区</h3>
  <ul>
  <li>误区：LLM 真的“理解”了语言。实际上模型是在做概率预测，它的“理解”是统计规律的高维表示，并不具备人类意义上的意识和常识，所以会出现幻觉。</li>

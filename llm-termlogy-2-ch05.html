@@ -30,7 +30,7 @@
 
       <p class="lead"><b>本章目标：</b>能估算模型推理显存，区分装得下、跑得快、满足并发。</p>
  <h3>显存都去哪儿了？拆解推理时的显存组成</h3>
- <p>想象你要开一家餐厅：厨房（GPU）里要放食材（模型权重）、备菜台（KV Cache）、临时切菜板（激活与临时缓冲）、还有收银机、冰箱等固定设备（框架开销），最后还得留点空间给客人走动（必要余量）。显存就是厨房面积，任何一样放不下，餐厅就开不了张。</p><p>具体来说，推理时显存主要被以下部分占用：</p><ul><li><b>模型权重</b>：模型参数本身，比如 FP16 下每个参数占 2 字节。</li><li><b>量化元数据</b>：如果用了量化（如 GPTQ、AWQ），除了权重还会存缩放因子、零点等，通常额外占 5%~15%。</li><li><b>KV Cache</b>：自回归生成时缓存历史 Key/Value，避免重复计算。它随上下文长度和并发数线性增长。</li><li><b>激活与临时缓冲</b>：前向传播中的中间结果，通常不大，但长上下文或大 batch 时会显著增加。</li><li><b>框架开销</b>：CUDA context、cuDNN 工作区、通信缓冲等，一般 0.5~2 GB。</li><li><b>必要余量</b>：防止 OOM，建议留 10%~20%。</li></ul><p>下面是一个最小估算函数，帮你快速算个大概：</p><pre><code class="language-python">def estimate_memory_gb(params_b, precision_bytes, context_len, batch_size, n_layers, n_kv_heads, head_dim, overhead_gb=1.5, reserve_ratio=0.15):
+ <p>想象你要开一家餐厅：厨房（GPU）里要放食材（模型权重）、备菜台（KV Cache）、临时切菜板（激活与临时缓冲）、还有收银机、冰箱等固定设备（框架开销），最后还得留点空间给客人走动（必要余量）。显存就是厨房面积，任何一样放不下，餐厅就开不了张。</p><p>具体来说，推理时显存主要被以下部分占用：</p><ul><li><b>模型权重</b>：模型参数本身，比如 FP16 下每个参数占 2 字节。</li><li><b>量化元数据</b>：如果用了量化（如 GPTQ、AWQ），除了权重还会存缩放因子、零点等，通常额外占 5%~15%。</li><li><b>KV Cache</b>：自回归生成时缓存历史 Key/Value，避免重复计算。它随上下文长度和并发数线性增长。</li><li><b>激活与临时缓冲</b>：前向传播中的中间结果，通常不大，但长上下文或大 batch 时会显著增加。</li><li><b>框架开销</b>：CUDA context、cuDNN 工作区、通信缓冲等，一般 0.5~2 GB。</li><li><b>必要余量</b>：防止 OOM，建议留 10%~20%。</li></ul><p>下面是一个最小估算函数，帮你快速算个大概：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">def estimate_memory_gb(params_b, precision_bytes, context_len, batch_size, n_layers, n_kv_heads, head_dim, overhead_gb=1.5, reserve_ratio=0.15):
     # 模型权重
     weights = params_b * 1e9 * precision_bytes / (1024**3)
     # KV Cache: 2 (K和V) * layers * batch * seq_len * kv_heads * head_dim * precision_bytes
@@ -44,9 +44,9 @@
 # 示例：8B 模型，FP16，上下文 4096，batch 1，32 层，8 个 KV 头，头维度 128
 w, kv, act, ov, total = estimate_memory_gb(8, 2, 4096, 1, 32, 8, 128)
 print(f"权重: {w:.2f} GB, KV Cache: {kv:.2f} GB, 激活: {act:.2f} GB, 总需求: {total:.2f} GB")
-</code></pre><p>运行结果会告诉你，8B FP16 模型在 4K 上下文下单并发大约需要 18~19 GB 显存。<b>记住：显存估算不是精确科学，而是快速判断“装不装得下”的工程近似。</b></p>
+</code></pre></div><p>运行结果会告诉你，8B FP16 模型在 4K 上下文下单并发大约需要 18~19 GB 显存。<b>记住：显存估算不是精确科学，而是快速判断“装不装得下”的工程近似。</b></p>
  <h3>手把手估算：8B、32B、70B 在不同精度与并发下的显存</h3>
- <p>我们用一个统一公式来估算：</p><p><b>总显存 ≈ 权重 + KV Cache + 激活 + 框架开销 + 余量</b></p><p>其中：</p><ul><li>权重 = 参数量 × 每参数字节数</li><li>KV Cache = 2 × 层数 × 并发数 × 上下文长度 × KV头数 × 头维度 × 每元素字节数</li><li>激活 ≈ 权重的 5%~10%</li><li>框架开销 ≈ 1~2 GB</li><li>余量 ≈ 总和的 10%~20%</li></ul><p>假设模型结构：层数 = 参数量(B) × 4，KV头数 = 8，头维度 = 128。我们写个脚本对比不同配置：</p><pre><code class="language-python">def estimate(params_b, precision, context_len, batch_size):
+ <p>我们用一个统一公式来估算：</p><p><b>总显存 ≈ 权重 + KV Cache + 激活 + 框架开销 + 余量</b></p><p>其中：</p><ul><li>权重 = 参数量 × 每参数字节数</li><li>KV Cache = 2 × 层数 × 并发数 × 上下文长度 × KV头数 × 头维度 × 每元素字节数</li><li>激活 ≈ 权重的 5%~10%</li><li>框架开销 ≈ 1~2 GB</li><li>余量 ≈ 总和的 10%~20%</li></ul><p>假设模型结构：层数 = 参数量(B) × 4，KV头数 = 8，头维度 = 128。我们写个脚本对比不同配置：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">def estimate(params_b, precision, context_len, batch_size):
     bytes_per_param = {'fp32':4, 'fp16':2, 'int8':1, 'int4':0.5}[precision]
     n_layers = int(params_b * 4)
     n_kv_heads = 8
@@ -67,13 +67,13 @@ configs = [
 for p, prec, ctx, bs in configs:
     w, kv, total = estimate(p, prec, ctx, bs)
     print(f"{p}B {prec} ctx={ctx} bs={bs}: 权重 {w:.1f}GB, KV {kv:.1f}GB, 总需 {total:.1f}GB")
-</code></pre><p>输出示例：</p><pre><code>8B fp16 ctx=4096 bs=1: 权重 14.9GB, KV 0.5GB, 总需 19.5GB
+</code></pre></div><p>输出示例：</p><pre><code>8B fp16 ctx=4096 bs=1: 权重 14.9GB, KV 0.5GB, 总需 19.5GB
 8B int4 ctx=4096 bs=1: 权重 3.7GB, KV 0.5GB, 总需 6.6GB
 32B fp16 ctx=8192 bs=4: 权重 59.6GB, KV 8.0GB, 总需 79.5GB
 70B int4 ctx=4096 bs=8: 权重 32.6GB, KV 4.0GB, 总需 43.9GB
 </code></pre><p><b>关键结论：</b></p><ul><li>8B FP16 单并发 4K 上下文，一张 24GB 卡（如 4090）刚好装下，但并发一高就爆。</li><li>8B INT4 可以轻松跑在 8GB 显存上，适合边缘设备。</li><li>32B FP16 需要至少 80GB 显存，单卡 A100/H100 可行，但并发 4 时已接近极限。</li><li>70B INT4 在 48GB 卡（如 A6000）上可跑，但并发 8 时 KV Cache 会吃掉不少显存。</li></ul><p>注意：这里假设 KV 头数为 8，实际模型可能不同（如 GQA 会减少 KV 头数），需要查模型配置。</p>
  <h3>MoE 模型：总参数与激活参数，别被名字骗了</h3>
- <p>MoE（混合专家）模型像一家大公司：公司有 1000 名员工（总参数），但每个任务只叫 10 个人干活（激活参数）。如果你只按 10 个人算工资（显存），那就大错特错了——因为公司得给所有 1000 人发工资（权重都得存着）。</p><p>MoE 模型有两个关键数字：</p><ul><li><b>总参数</b>：所有专家加起来的参数量，决定权重显存。</li><li><b>激活参数</b>：每次前向实际用到的参数量，决定计算量（FLOPs）和部分激活显存。</li></ul><p>例如，Mixtral 8x7B 总参数约 46.7B，但激活参数只有约 12.9B。如果你按 12.9B 估算权重显存，会严重低估。</p><p>估算 MoE 显存时，权重部分必须用总参数，KV Cache 和激活则与激活参数、层数、注意力头数相关。下面是一个简化示例：</p><pre><code class="language-python">def estimate_moe(total_params_b, active_params_b, precision, context_len, batch_size, n_layers, n_kv_heads, head_dim):
+ <p>MoE（混合专家）模型像一家大公司：公司有 1000 名员工（总参数），但每个任务只叫 10 个人干活（激活参数）。如果你只按 10 个人算工资（显存），那就大错特错了——因为公司得给所有 1000 人发工资（权重都得存着）。</p><p>MoE 模型有两个关键数字：</p><ul><li><b>总参数</b>：所有专家加起来的参数量，决定权重显存。</li><li><b>激活参数</b>：每次前向实际用到的参数量，决定计算量（FLOPs）和部分激活显存。</li></ul><p>例如，Mixtral 8x7B 总参数约 46.7B，但激活参数只有约 12.9B。如果你按 12.9B 估算权重显存，会严重低估。</p><p>估算 MoE 显存时，权重部分必须用总参数，KV Cache 和激活则与激活参数、层数、注意力头数相关。下面是一个简化示例：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">def estimate_moe(total_params_b, active_params_b, precision, context_len, batch_size, n_layers, n_kv_heads, head_dim):
     bytes_per_param = {'fp16':2, 'int8':1, 'int4':0.5}[precision]
     weights = total_params_b * 1e9 * bytes_per_param / (1024**3)
     kv = 2 * n_layers * batch_size * context_len * n_kv_heads * head_dim * bytes_per_param / (1024**3)
@@ -86,7 +86,7 @@ for p, prec, ctx, bs in configs:
 # Mixtral 8x7B: 总参数 46.7B, 激活 12.9B, 32 层, 8 KV 头, 头维度 128
 w, kv, total = estimate_moe(46.7, 12.9, 'int4', 4096, 1, 32, 8, 128)
 print(f"权重: {w:.1f}GB, KV: {kv:.1f}GB, 总需: {total:.1f}GB")
-</code></pre><p>输出：权重约 21.8GB，总需约 27GB。如果误用激活参数 12.9B 算权重，会得到约 6GB，差了三倍多。</p><p><b>记住：MoE 的权重显存看总参数，计算量看激活参数。</b>部署时，显存按总参数准备，算力按激活参数评估。</p>
+</code></pre></div><p>输出：权重约 21.8GB，总需约 27GB。如果误用激活参数 12.9B 算权重，会得到约 6GB，差了三倍多。</p><p><b>记住：MoE 的权重显存看总参数，计算量看激活参数。</b>部署时，显存按总参数准备，算力按激活参数评估。</p>
  <h3>部署选型：API、云 GPU、本地工作站、多卡服务器怎么选？</h3>
  <p>选部署方式就像选交通工具：API 是打车，云 GPU 是租车，本地工作站是买私家车，多卡服务器是买大巴。没有绝对好坏，只有合不合适。</p><p>我们从几个维度比较：</p><table><tr><th>维度</th><th>API</th><th>云 GPU</th><th>本地工作站</th><th>多卡服务器</th></tr><tr><td>质量</td><td>取决于提供商，通常最强</td><td>自选模型，灵活</td><td>自选模型，受硬件限制</td><td>可跑最大模型</td></tr><tr><td>延迟</td><td>网络延迟，通常 100ms~2s</td><td>取决于网络和实例</td><td>极低，本地推理</td><td>低，但需内部网络</td></tr><tr><td>并发</td><td>按量付费，弹性好</td><td>弹性伸缩</td><td>受单卡显存限制</td><td>高并发，需负载均衡</td></tr><tr><td>使用率</td><td>按 token 计费，无闲置成本</td><td>按小时计费，闲置也花钱</td><td>一次性投入，闲置浪费</td><td>高投入，需高使用率摊薄</td></tr><tr><td>隐私</td><td>数据出域，风险高</td><td>数据在云，需信任提供商</td><td>数据完全本地</td><td>数据完全本地</td></tr><tr><td>兼容</td><td>无需操心</td><td>需自己配环境</td><td>需自己配环境</td><td>需自己配环境，多卡通信复杂</td></tr><tr><td>运维</td><td>无</td><td>中等</td><td>低</td><td>高</td></tr><tr><td>TCO</td><td>按量，短期低，长期可能高</td><td>灵活，适合波动负载</td><td>前期高，长期低</td><td>前期很高，适合稳定高负载</td></tr></table><p>如何决策？问自己几个问题：</p><ul><li>数据敏感吗？敏感选本地或多卡服务器。</li><li>负载稳定吗？稳定且高选本地/多卡，波动大选 API/云。</li><li>有运维团队吗？没有就选 API 或托管云。</li><li>预算多少？算一下 3 年 TCO：本地 = 硬件 + 电费 + 运维；云 = 每小时费用 × 使用小时；API = token 单价 × 用量。</li></ul><p><b>没有银弹，只有权衡。</b>建议先用 API 验证需求，再根据使用率和隐私要求逐步迁移到云 GPU 或本地。</p>
  <h3>常见误区</h3>

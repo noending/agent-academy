@@ -30,7 +30,7 @@
 
       <p class="lead"><b>本章目标：</b>建立LLM知识地图，解释20+高频术语及其关系。</p>
  <h3>1.1 从一句话到Token：LLM的输入输出流水线</h3>
- <p>想象你对着一个博学但只会“接龙”的朋友说话：你给他前半句，他根据读过的海量文本，猜下一个词最可能是什么。LLM 本质上就是这样一个超级接龙机器，只不过它把“词”切成了更小的单位——<b>Token（词元）</b>。</p><p>当你输入“我爱吃苹果”，模型并不会直接看到汉字。它先经过 <b>Tokenizer（分词器）</b>，把文本切成 Token 序列，比如 <code>['我', '爱', '吃', '苹果']</code>，每个 Token 再映射成一个整数 ID。这些 ID 进入模型后，会被转换成 <b>Embedding（嵌入）</b>——一串高维浮点数向量，表示这个 Token 的语义。模型内部通过 <b>Transformer（变换器）</b> 和 <b>Attention（注意力机制）</b> 不断计算这些向量之间的关系，最终输出下一个 Token 的概率分布。</p><p>这里有两个关键数字：<b>参数量</b>（模型内部可学习的权重总数，比如 7B 表示 70 亿）和 <b>上下文窗口</b>（模型一次能“看到”的最大 Token 数，比如 8K、128K）。参数量决定模型的“脑容量”，上下文窗口决定它一次能读多长的文章。</p><p>下面是一个最小可运行示例，用 Hugging Face 的 tokenizer 观察分词和 Embedding 维度：</p><pre><code class="language-python">from transformers import AutoTokenizer, AutoModel
+ <p>想象你对着一个博学但只会“接龙”的朋友说话：你给他前半句，他根据读过的海量文本，猜下一个词最可能是什么。LLM 本质上就是这样一个超级接龙机器，只不过它把“词”切成了更小的单位——<b>Token（词元）</b>。</p><p>当你输入“我爱吃苹果”，模型并不会直接看到汉字。它先经过 <b>Tokenizer（分词器）</b>，把文本切成 Token 序列，比如 <code>['我', '爱', '吃', '苹果']</code>，每个 Token 再映射成一个整数 ID。这些 ID 进入模型后，会被转换成 <b>Embedding（嵌入）</b>——一串高维浮点数向量，表示这个 Token 的语义。模型内部通过 <b>Transformer（变换器）</b> 和 <b>Attention（注意力机制）</b> 不断计算这些向量之间的关系，最终输出下一个 Token 的概率分布。</p><p>这里有两个关键数字：<b>参数量</b>（模型内部可学习的权重总数，比如 7B 表示 70 亿）和 <b>上下文窗口</b>（模型一次能“看到”的最大 Token 数，比如 8K、128K）。参数量决定模型的“脑容量”，上下文窗口决定它一次能读多长的文章。</p><p>下面是一个最小可运行示例，用 Hugging Face 的 tokenizer 观察分词和 Embedding 维度：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from transformers import AutoTokenizer, AutoModel
 import torch
 
 model_name = "bert-base-chinese"
@@ -44,9 +44,9 @@ print("Tokens:", tokenizer.convert_ids_to_tokens(inputs["input_ids"][0]))
 
 with torch.no_grad():
     outputs = model(**inputs)
-print("Embedding shape:", outputs.last_hidden_state.shape)  # [batch, seq_len, hidden_dim]</code></pre><p>运行后你会看到类似 <code>['[CLS]', '我', '爱', '吃', '苹', '果', '[SEP]']</code> 的 Token 列表，以及形状为 <code>[1, 7, 768]</code> 的 Embedding。这 768 就是<b>隐藏维度</b>，是模型内部表示向量的宽度。</p>
+print("Embedding shape:", outputs.last_hidden_state.shape)  # [batch, seq_len, hidden_dim]</code></pre></div><p>运行后你会看到类似 <code>['[CLS]', '我', '爱', '吃', '苹', '果', '[SEP]']</code> 的 Token 列表，以及形状为 <code>[1, 7, 768]</code> 的 Embedding。这 768 就是<b>隐藏维度</b>，是模型内部表示向量的宽度。</p>
  <h3>1.2 模型结构术语：Transformer、Attention、Dense与MoE</h3>
- <p>Transformer 是 LLM 的骨架。它由很多<b>层</b>堆叠而成，每一层包含一个 Attention 模块和一个前馈网络。Attention 让每个 Token 都能“看到”序列中其他 Token，并决定关注谁。比如在“苹果很好吃，因为它很甜”中，“它”会高度关注“苹果”。</p><p>传统 Transformer 的前馈网络是 <b>Dense（稠密）</b> 的：每个输入都会激活全部参数。而 <b>MoE（Mixture of Experts，混合专家）</b> 把前馈网络拆成多个“专家”，每次只激活其中一小部分。这样总参数量可以很大，但实际计算量只相当于一个小模型。例如 Mixtral 8x7B 总参数量约 47B，但每次推理只激活约 13B 参数。</p><p>另一个重要概念是<b>位置编码</b>。Attention 本身不知道顺序，所以需要给每个 Token 加上位置信息。早期用正弦函数，现在主流用 RoPE（旋转位置编码），它能让模型更好地外推到更长的上下文。</p><p>下面用 PyTorch 手写一个极简的单头 Attention，帮助理解其计算过程：</p><pre><code class="language-python">import torch
+ <p>Transformer 是 LLM 的骨架。它由很多<b>层</b>堆叠而成，每一层包含一个 Attention 模块和一个前馈网络。Attention 让每个 Token 都能“看到”序列中其他 Token，并决定关注谁。比如在“苹果很好吃，因为它很甜”中，“它”会高度关注“苹果”。</p><p>传统 Transformer 的前馈网络是 <b>Dense（稠密）</b> 的：每个输入都会激活全部参数。而 <b>MoE（Mixture of Experts，混合专家）</b> 把前馈网络拆成多个“专家”，每次只激活其中一小部分。这样总参数量可以很大，但实际计算量只相当于一个小模型。例如 Mixtral 8x7B 总参数量约 47B，但每次推理只激活约 13B 参数。</p><p>另一个重要概念是<b>位置编码</b>。Attention 本身不知道顺序，所以需要给每个 Token 加上位置信息。早期用正弦函数，现在主流用 RoPE（旋转位置编码），它能让模型更好地外推到更长的上下文。</p><p>下面用 PyTorch 手写一个极简的单头 Attention，帮助理解其计算过程：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import torch
 import torch.nn.functional as F
 
 def attention(Q, K, V):
@@ -60,9 +60,9 @@ Q = torch.randn(seq_len, d_k)
 K = torch.randn(seq_len, d_k)
 V = torch.randn(seq_len, d_k)
 out = attention(Q, K, V)
-print("Attention output shape:", out.shape)  # [4, 8]</code></pre><p><b>结论：Transformer 通过 Attention 捕捉上下文关系，通过层数堆叠增加表达能力，通过 MoE 在参数量和计算量之间做权衡。</b></p>
+print("Attention output shape:", out.shape)  # [4, 8]</code></pre></div><p><b>结论：Transformer 通过 Attention 捕捉上下文关系，通过层数堆叠增加表达能力，通过 MoE 在参数量和计算量之间做权衡。</b></p>
  <h3>1.3 训练与适配术语：从预训练到LoRA</h3>
- <p>LLM 的训练像培养一个学生：先大量阅读（<b>预训练</b>），再专项辅导（<b>SFT</b>），最后根据反馈调整（<b>RLHF/DPO</b>）。</p><ul><li><b>预训练</b>：在海量文本上做“预测下一个 Token”的任务，让模型学会语言规律和世界知识。成本极高，通常只有大公司做。</li><li><b>SFT（Supervised Fine-Tuning，监督微调）</b>：用人工标注的“问题-答案”对，教模型遵循指令。</li><li><b>RLHF（Reinforcement Learning from Human Feedback，人类反馈强化学习）</b>：训练一个奖励模型来模拟人类偏好，再用强化学习优化 LLM。DPO 是它的简化替代，直接用偏好数据优化，不需要奖励模型。</li><li><b>蒸馏</b>：让一个小模型模仿大模型的输出，从而用更低成本获得接近的能力。</li><li><b>微调</b>：在预训练模型上继续训练，适配特定领域。</li><li><b>LoRA（Low-Rank Adaptation，低秩适应）</b>：冻结原模型，只训练两个小矩阵，大幅减少可训练参数量。QLoRA 则在此基础上把原模型量化到 4-bit，进一步降低显存。</li><li><b>量化</b>：把模型权重从 FP16 压缩到 INT8/INT4，减少显存和加速推理，但可能损失精度。</li></ul><p>下面用 PEFT 库演示如何给模型加上 LoRA：</p><pre><code class="language-python">from transformers import AutoModelForCausalLM
+ <p>LLM 的训练像培养一个学生：先大量阅读（<b>预训练</b>），再专项辅导（<b>SFT</b>），最后根据反馈调整（<b>RLHF/DPO</b>）。</p><ul><li><b>预训练</b>：在海量文本上做“预测下一个 Token”的任务，让模型学会语言规律和世界知识。成本极高，通常只有大公司做。</li><li><b>SFT（Supervised Fine-Tuning，监督微调）</b>：用人工标注的“问题-答案”对，教模型遵循指令。</li><li><b>RLHF（Reinforcement Learning from Human Feedback，人类反馈强化学习）</b>：训练一个奖励模型来模拟人类偏好，再用强化学习优化 LLM。DPO 是它的简化替代，直接用偏好数据优化，不需要奖励模型。</li><li><b>蒸馏</b>：让一个小模型模仿大模型的输出，从而用更低成本获得接近的能力。</li><li><b>微调</b>：在预训练模型上继续训练，适配特定领域。</li><li><b>LoRA（Low-Rank Adaptation，低秩适应）</b>：冻结原模型，只训练两个小矩阵，大幅减少可训练参数量。QLoRA 则在此基础上把原模型量化到 4-bit，进一步降低显存。</li><li><b>量化</b>：把模型权重从 FP16 压缩到 INT8/INT4，减少显存和加速推理，但可能损失精度。</li></ul><p>下面用 PEFT 库演示如何给模型加上 LoRA：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from transformers import AutoModelForCausalLM
 from peft import LoraConfig, get_peft_model
 
 model = AutoModelForCausalLM.from_pretrained("gpt2")
@@ -75,9 +75,9 @@ config = LoraConfig(
 )
 model = get_peft_model(model, config)
 model.print_trainable_parameters()
-# 输出类似：trainable params: 294,912 || all params: 124,734,720 || trainable%: 0.24%</code></pre><p><b>关键结论：预训练赋予通用能力，SFT/RLHF 对齐人类偏好，LoRA/QLoRA/量化让适配和部署变得平民化。</b></p>
+# 输出类似：trainable params: 294,912 || all params: 124,734,720 || trainable%: 0.24%</code></pre></div><p><b>关键结论：预训练赋予通用能力，SFT/RLHF 对齐人类偏好，LoRA/QLoRA/量化让适配和部署变得平民化。</b></p>
  <h3>1.4 应用与推理术语：Prompt、RAG、Agent与KV Cache</h3>
- <p>模型训练好后，怎么用？这涉及应用层和推理层术语。</p><ul><li><b>Prompt（提示词）</b>：你给模型的输入。好的 Prompt 能显著提升效果。</li><li><b>RAG（Retrieval-Augmented Generation，检索增强生成）</b>：先从知识库检索相关文档，再把文档和问题一起交给模型生成答案。适合需要最新或私有知识的场景。</li><li><b>Agent（智能体）</b>：让 LLM 自主规划、调用工具、多步执行任务。工具调用是 Agent 的核心能力，比如调用计算器、搜索 API。</li><li><b>Temperature</b>：控制输出随机性。值越高越随机，越低越确定。Top-p 是另一种采样策略，只从累积概率达到 p 的 Token 中采样。</li><li><b>KV Cache（键值缓存）</b>：自回归生成时，缓存之前 Token 的 Key 和 Value，避免重复计算，大幅加速推理。</li><li><b>Batching（批处理）</b>：同时处理多个请求，提高 GPU 利用率。连续批处理（Continuous Batching）是 vLLM 等推理框架的关键技术。</li></ul><p>下面用 OpenAI API 风格演示 Temperature 和 Top-p 的影响（伪代码，需替换为实际 API）：</p><pre><code class="language-python"># 假设使用 openai 库
+ <p>模型训练好后，怎么用？这涉及应用层和推理层术语。</p><ul><li><b>Prompt（提示词）</b>：你给模型的输入。好的 Prompt 能显著提升效果。</li><li><b>RAG（Retrieval-Augmented Generation，检索增强生成）</b>：先从知识库检索相关文档，再把文档和问题一起交给模型生成答案。适合需要最新或私有知识的场景。</li><li><b>Agent（智能体）</b>：让 LLM 自主规划、调用工具、多步执行任务。工具调用是 Agent 的核心能力，比如调用计算器、搜索 API。</li><li><b>Temperature</b>：控制输出随机性。值越高越随机，越低越确定。Top-p 是另一种采样策略，只从累积概率达到 p 的 Token 中采样。</li><li><b>KV Cache（键值缓存）</b>：自回归生成时，缓存之前 Token 的 Key 和 Value，避免重复计算，大幅加速推理。</li><li><b>Batching（批处理）</b>：同时处理多个请求，提高 GPU 利用率。连续批处理（Continuous Batching）是 vLLM 等推理框架的关键技术。</li></ul><p>下面用 OpenAI API 风格演示 Temperature 和 Top-p 的影响（伪代码，需替换为实际 API）：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python"># 假设使用 openai 库
 # import openai
 # openai.api_key = "your-key"
 
@@ -92,7 +92,7 @@ def generate(prompt, temperature=0.7, top_p=0.9):
     return f"模拟输出：temperature={temperature}, top_p={top_p}"
 
 print(generate("写一句诗", temperature=0.2))
-print(generate("写一句诗", temperature=1.2))</code></pre><p><b>记住：Prompt 是入口，RAG 补知识，Agent 做执行，KV Cache 和 Batching 是推理加速的两大支柱。</b></p>
+print(generate("写一句诗", temperature=1.2))</code></pre></div><p><b>记住：Prompt 是入口，RAG 补知识，Agent 做执行，KV Cache 和 Batching 是推理加速的两大支柱。</b></p>
  <h3>常见误区</h3>
  <ul>
  <li>Token 等于字或词：实际上 Token 是子词单元，不同 Tokenizer 切分方式不同，一个汉字可能对应一个或多个 Token。</li>

@@ -32,7 +32,7 @@
  <h3>从需求到验收标准：把业务语言翻译成可测量的指标</h3>
  <p>选型不是“哪个模型跑分高就选哪个”，而是“哪个模型最匹配业务约束”。先做需求翻译：把业务方的模糊诉求（“要准、要快、要便宜”）变成可测量的验收标准（Acceptance Criteria）。</p><p>以企业知识库问答 + 订单分析助手为例，业务约束通常有三类：<b>效果</b>（回答正确率、结构化字段准确率）、<b>性能</b>（P95 延迟、吞吐）、<b>成本</b>（每千次调用成本、TCO）。</p><p>把约束写成 SLO（Service Level Objective），例如：知识库问答答案正确率 ≥ 90%，订单字段提取 F1 ≥ 0.95，P95 延迟 ≤ 3s，单次调用成本 ≤ 0.01 元。这些数字就是后续评测的标尺。</p><p>关键结论：<b>没有验收标准的选型是主观偏好，有验收标准的选型才是工程决策。</b></p>
  <h3>准备脱敏测试数据：让评测可复现、可对比</h3>
- <p>评测数据必须脱敏（Anonymized Data）：替换真实姓名、手机号、订单号，但保留分布特征（长度、格式、噪声）。数据要覆盖五类任务：</p><ul><li>订单信息提取：从自然语言中抽取结构化字段</li><li>结构化输出：要求模型返回 JSON</li><li>知识库问答：基于给定文档回答</li><li>异常解释：解释订单异常原因</li><li>受控工具调用：调用查询接口并传参</li></ul><p>每类准备 30~50 条，标注标准答案。下面是一个最小可运行的数据构造与评测示例：</p><pre><code class="language-python">import json, re
+ <p>评测数据必须脱敏（Anonymized Data）：替换真实姓名、手机号、订单号，但保留分布特征（长度、格式、噪声）。数据要覆盖五类任务：</p><ul><li>订单信息提取：从自然语言中抽取结构化字段</li><li>结构化输出：要求模型返回 JSON</li><li>知识库问答：基于给定文档回答</li><li>异常解释：解释订单异常原因</li><li>受控工具调用：调用查询接口并传参</li></ul><p>每类准备 30~50 条，标注标准答案。下面是一个最小可运行的数据构造与评测示例：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import json, re
 
 # 脱敏后的测试样本
 test_cases = [
@@ -58,9 +58,9 @@ def score(pred, gold):
 for case in test_cases:
     pred = extract(case["input"])
     print(case["input"][:20], "-&gt;", score(pred, case["expected"]))
-</code></pre><p>关键结论：<b>脱敏数据既要保护隐私，又要保留真实分布，否则评测结果无法外推。</b></p>
+</code></pre></div><p>关键结论：<b>脱敏数据既要保护隐私，又要保留真实分布，否则评测结果无法外推。</b></p>
  <h3>比较模型与性能成本：设计评测并估算部署资源</h3>
- <p>评测要同时测四件事：效果、延迟、吞吐、成本。效果用准确率/F1；延迟看 P50/P95；吞吐看 QPS；成本按 token 计费或按 GPU 小时折算。</p><p>部署资源估算公式：<b>显存 ≈ 参数量 × 精度字节数 × 1.2（KV Cache 与开销）</b>。例如 7B 模型 FP16 约 14GB，INT8 约 7GB，INT4 约 3.5GB。并发高时 KV Cache 会显著增加显存。</p><p>下面是一个评测脚本骨架，输出效果与延迟：</p><pre><code class="language-python">import time, statistics
+ <p>评测要同时测四件事：效果、延迟、吞吐、成本。效果用准确率/F1；延迟看 P50/P95；吞吐看 QPS；成本按 token 计费或按 GPU 小时折算。</p><p>部署资源估算公式：<b>显存 ≈ 参数量 × 精度字节数 × 1.2（KV Cache 与开销）</b>。例如 7B 模型 FP16 约 14GB，INT8 约 7GB，INT4 约 3.5GB。并发高时 KV Cache 会显著增加显存。</p><p>下面是一个评测脚本骨架，输出效果与延迟：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import time, statistics
 
 def evaluate(model_fn, cases):
     scores, latencies = [], []
@@ -78,7 +78,7 @@ def evaluate(model_fn, cases):
 # 假设 model_fn 是某个模型的调用封装
 # result = evaluate(model_fn, test_cases)
 # print(result)
-</code></pre><p>成本估算示例：若模型每千 token 收费 0.002 元，平均每次请求 500 token，则单次成本 0.001 元；日调用 10 万次，日成本 100 元，月成本约 3000 元。自建部署则按 GPU 小时费 × 24 × 30 折算 TCO。</p><p>关键结论：<b>选型要算 TCO，不只看单价；延迟和吞吐必须用真实并发压测，不能只看单条测试。</b></p>
+</code></pre></div><p>成本估算示例：若模型每千 token 收费 0.002 元，平均每次请求 500 token，则单次成本 0.001 元；日调用 10 万次，日成本 100 元，月成本约 3000 元。自建部署则按 GPU 小时费 × 24 × 30 折算 TCO。</p><p>关键结论：<b>选型要算 TCO，不只看单价；延迟和吞吐必须用真实并发压测，不能只看单条测试。</b></p>
  <h3>撰写选型报告：结构、证据与适用边界</h3>
  <p>选型报告（Selection Report）要让决策者一眼看懂“为什么选它、什么情况下不选它”。推荐结构：</p><ol><li>业务约束与验收标准</li><li>评测方法与脱敏数据说明</li><li>效果结果（表格对比）</li><li>性能结果（延迟/吞吐）</li><li>成本估算与 TCO</li><li>硬件需求</li><li>推荐方案</li><li>适用边界（Applicability Boundary）</li><li>待验证风险（Risks to Validate）</li></ol><p>效果对比表示例：</p><table><tr><th>模型</th><th>提取 F1</th><th>问答准确率</th><th>P95 延迟</th><th>单次成本</th></tr><tr><td>模型A</td><td>0.96</td><td>0.91</td><td>2.1s</td><td>0.001元</td></tr><tr><td>模型B</td><td>0.93</td><td>0.88</td><td>1.2s</td><td>0.0005元</td></tr></table><p>推荐方案要写清适用边界：例如“模型A 适合高准确率场景，模型B 适合高并发低成本场景”。待验证风险包括：长尾订单格式、工具调用失败率、数据漂移。</p><p>关键结论：<b>报告的价值在于证据链完整、边界清晰、风险可追踪，而不是给出一个绝对答案。</b></p>
  <h3>常见误区</h3>

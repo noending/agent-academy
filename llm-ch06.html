@@ -30,7 +30,7 @@
 
       <p class="lead"><b>本章目标：</b>设计并实现LLM服务API</p>
  <h3>部署模式：本地、云、边缘</h3>
- <p>部署大语言模型时，首先要决定模型跑在哪里。常见模式有三种：<b>本地部署</b>、<b>云部署</b>和<b>边缘部署</b>。它们各有优劣，选择取决于你的业务需求、预算和延迟要求。</p><ul><li><b>本地部署</b>：模型运行在自己的服务器或工作站上。优点：数据不出内网，隐私安全；无网络延迟；一次性硬件投入。缺点：需要维护硬件，扩展性差，前期成本高。适合对数据安全要求极高的场景，如金融、医疗。</li><li><b>云部署</b>：模型托管在云服务器（如 AWS、GCP、阿里云）上。优点：弹性伸缩，按需付费，免运维。缺点：数据需上传云端，有网络延迟，长期使用成本可能较高。适合大多数互联网应用。</li><li><b>边缘部署</b>：模型运行在终端设备（如手机、IoT 设备）上。优点：超低延迟，离线可用，隐私保护好。缺点：算力有限，只能跑小模型或量化模型。适合移动端 AI 助手、智能摄像头等。</li></ul><p>实际生产中，常采用<b>混合部署</b>：核心模型在云上，轻量模型在边缘，敏感数据在本地处理。例如，一个智能客服系统可以在云端跑大模型，在手机端跑意图识别小模型。</p><p>下面是一个简单的 Python 脚本，用于检测当前环境适合哪种部署模式（根据可用内存和 GPU）。</p><pre><code class="language-python">import psutil
+ <p>部署大语言模型时，首先要决定模型跑在哪里。常见模式有三种：<b>本地部署</b>、<b>云部署</b>和<b>边缘部署</b>。它们各有优劣，选择取决于你的业务需求、预算和延迟要求。</p><ul><li><b>本地部署</b>：模型运行在自己的服务器或工作站上。优点：数据不出内网，隐私安全；无网络延迟；一次性硬件投入。缺点：需要维护硬件，扩展性差，前期成本高。适合对数据安全要求极高的场景，如金融、医疗。</li><li><b>云部署</b>：模型托管在云服务器（如 AWS、GCP、阿里云）上。优点：弹性伸缩，按需付费，免运维。缺点：数据需上传云端，有网络延迟，长期使用成本可能较高。适合大多数互联网应用。</li><li><b>边缘部署</b>：模型运行在终端设备（如手机、IoT 设备）上。优点：超低延迟，离线可用，隐私保护好。缺点：算力有限，只能跑小模型或量化模型。适合移动端 AI 助手、智能摄像头等。</li></ul><p>实际生产中，常采用<b>混合部署</b>：核心模型在云上，轻量模型在边缘，敏感数据在本地处理。例如，一个智能客服系统可以在云端跑大模型，在手机端跑意图识别小模型。</p><p>下面是一个简单的 Python 脚本，用于检测当前环境适合哪种部署模式（根据可用内存和 GPU）。</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import psutil
 import torch
 
 def suggest_deployment():
@@ -43,9 +43,9 @@ def suggest_deployment():
     else:
         return "边缘设备（需量化小模型）"
 
-print(suggest_deployment())</code></pre><p>运行前需安装 <code>psutil</code> 和 <code>torch</code>。这个例子帮你快速判断当前机器适合哪种部署模式。</p>
+print(suggest_deployment())</code></pre></div><p>运行前需安装 <code>psutil</code> 和 <code>torch</code>。这个例子帮你快速判断当前机器适合哪种部署模式。</p>
  <h3>RESTful API 与 gRPC 接口设计</h3>
- <p>模型部署后，需要对外提供接口。最常用的是 <b>RESTful API</b> 和 <b>gRPC</b>。RESTful API 基于 HTTP/1.1，使用 JSON 传输，简单通用，适合 Web 和移动端。gRPC 基于 HTTP/2，使用 Protocol Buffers 二进制传输，性能高，适合内部服务间通信。</p><p><b>RESTful API 设计要点</b>：</p><ul><li>使用名词表示资源，如 <code>/v1/completions</code>。</li><li>用 HTTP 方法表示操作：GET 获取，POST 创建，PUT 更新，DELETE 删除。</li><li>状态码：200 成功，400 客户端错误，500 服务器错误。</li><li>请求和响应使用 JSON。</li></ul><p><b>gRPC 设计要点</b>：</p><ul><li>定义 <code>.proto</code> 文件，声明服务和消息格式。</li><li>支持四种流式：一元、服务器流、客户端流、双向流。</li><li>适合低延迟、高吞吐场景，如模型推理。</li></ul><p>下面是一个简单的 gRPC 服务定义示例（<code>inference.proto</code>）：</p><pre><code class="language-python">syntax = "proto3";
+ <p>模型部署后，需要对外提供接口。最常用的是 <b>RESTful API</b> 和 <b>gRPC</b>。RESTful API 基于 HTTP/1.1，使用 JSON 传输，简单通用，适合 Web 和移动端。gRPC 基于 HTTP/2，使用 Protocol Buffers 二进制传输，性能高，适合内部服务间通信。</p><p><b>RESTful API 设计要点</b>：</p><ul><li>使用名词表示资源，如 <code>/v1/completions</code>。</li><li>用 HTTP 方法表示操作：GET 获取，POST 创建，PUT 更新，DELETE 删除。</li><li>状态码：200 成功，400 客户端错误，500 服务器错误。</li><li>请求和响应使用 JSON。</li></ul><p><b>gRPC 设计要点</b>：</p><ul><li>定义 <code>.proto</code> 文件，声明服务和消息格式。</li><li>支持四种流式：一元、服务器流、客户端流、双向流。</li><li>适合低延迟、高吞吐场景，如模型推理。</li></ul><p>下面是一个简单的 gRPC 服务定义示例（<code>inference.proto</code>）：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">syntax = "proto3";
 
 service Inference {
   rpc Predict (PredictRequest) returns (PredictResponse);
@@ -58,7 +58,7 @@ message PredictRequest {
 
 message PredictResponse {
   string text = 1;
-}</code></pre><p>对应的 RESTful API 可能长这样：</p><pre><code class="language-python">POST /v1/predict
+}</code></pre></div><p>对应的 RESTful API 可能长这样：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">POST /v1/predict
 Content-Type: application/json
 
 {
@@ -69,9 +69,9 @@ Content-Type: application/json
 响应：
 {
   "text": "你好！有什么可以帮你的吗？"
-}</code></pre><p><b>选择建议</b>：对外公开 API 用 RESTful，内部微服务间用 gRPC。如果团队熟悉 HTTP，RESTful 更易上手；如果追求极致性能，选 gRPC。</p>
+}</code></pre></div><p><b>选择建议</b>：对外公开 API 用 RESTful，内部微服务间用 gRPC。如果团队熟悉 HTTP，RESTful 更易上手；如果追求极致性能，选 gRPC。</p>
  <h3>使用 FastAPI 构建推理服务</h3>
- <p>FastAPI 是一个现代、高性能的 Python Web 框架，非常适合构建 LLM 推理服务。它支持异步、自动生成文档，并且与 Pydantic 集成良好。</p><p>下面是一个完整的 FastAPI 推理服务示例，使用 Hugging Face 的 <code>transformers</code> 加载一个小模型（如 GPT-2）进行文本生成。</p><pre><code class="language-python">from fastapi import FastAPI, HTTPException
+ <p>FastAPI 是一个现代、高性能的 Python Web 框架，非常适合构建 LLM 推理服务。它支持异步、自动生成文档，并且与 Pydantic 集成良好。</p><p>下面是一个完整的 FastAPI 推理服务示例，使用 Hugging Face 的 <code>transformers</code> 加载一个小模型（如 GPT-2）进行文本生成。</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from transformers import pipeline
 import uvicorn
@@ -103,9 +103,9 @@ async def generate(request: GenerationRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)</code></pre><p>运行方式：<code>python app.py</code>，然后访问 <code>http://localhost:8000/docs</code> 查看自动生成的 API 文档。你可以用 curl 测试：</p><pre><code class="language-python">curl -X POST http://localhost:8000/v1/generate -H "Content-Type: application/json" -d '{"prompt": "Hello, world", "max_length": 30}'</code></pre><p><b>关键点</b>：使用 <code>async def</code> 定义异步端点，避免阻塞；用 Pydantic 模型校验请求和响应；通过 <code>uvicorn</code> 启动服务。对于生产环境，建议使用 Gunicorn 管理多个 Uvicorn worker。</p>
+    uvicorn.run(app, host="0.0.0.0", port=8000)</code></pre></div><p>运行方式：<code>python app.py</code>，然后访问 <code>http://localhost:8000/docs</code> 查看自动生成的 API 文档。你可以用 curl 测试：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">curl -X POST http://localhost:8000/v1/generate -H "Content-Type: application/json" -d '{"prompt": "Hello, world", "max_length": 30}'</code></pre></div><p><b>关键点</b>：使用 <code>async def</code> 定义异步端点，避免阻塞；用 Pydantic 模型校验请求和响应；通过 <code>uvicorn</code> 启动服务。对于生产环境，建议使用 Gunicorn 管理多个 Uvicorn worker。</p>
  <h3>负载均衡与自动扩缩容</h3>
- <p>当请求量增大时，单个服务实例可能扛不住。这时需要<b>负载均衡</b>和<b>自动扩缩容</b>。</p><p><b>负载均衡</b>：将请求分发到多个服务实例。常见策略：轮询、最少连接、IP 哈希。工具：Nginx、HAProxy、云厂商的 LB（如 AWS ALB）。</p><p><b>自动扩缩容</b>：根据指标（如 CPU、QPS）动态调整实例数量。Kubernetes 的 HPA（Horizontal Pod Autoscaler）是典型方案。它监控 Pod 的 CPU/内存使用率，自动增加或减少副本数。</p><p>下面是一个 Kubernetes HPA 配置示例，针对我们的 FastAPI 服务：</p><pre><code class="language-python">apiVersion: autoscaling/v2
+ <p>当请求量增大时，单个服务实例可能扛不住。这时需要<b>负载均衡</b>和<b>自动扩缩容</b>。</p><p><b>负载均衡</b>：将请求分发到多个服务实例。常见策略：轮询、最少连接、IP 哈希。工具：Nginx、HAProxy、云厂商的 LB（如 AWS ALB）。</p><p><b>自动扩缩容</b>：根据指标（如 CPU、QPS）动态调整实例数量。Kubernetes 的 HPA（Horizontal Pod Autoscaler）是典型方案。它监控 Pod 的 CPU/内存使用率，自动增加或减少副本数。</p><p>下面是一个 Kubernetes HPA 配置示例，针对我们的 FastAPI 服务：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: llm-inference-hpa
@@ -122,7 +122,7 @@ spec:
       name: cpu
       target:
         type: Utilization
-        averageUtilization: 70</code></pre><p>这个 HPA 会在 CPU 平均利用率超过 70% 时增加 Pod，最多 10 个；低于时减少，最少 2 个。</p><p>对于 LLM 服务，由于模型加载慢，扩缩容需要预热。建议使用<b>就绪探针</b>确保模型加载完成后再接收流量。另外，可以结合队列（如 Redis）做请求缓冲，避免突发流量打垮服务。</p><p><b>总结</b>：负载均衡提高可用性，自动扩缩容应对流量波动。两者结合，才能构建稳定的生产级 LLM 服务。</p>
+        averageUtilization: 70</code></pre></div><p>这个 HPA 会在 CPU 平均利用率超过 70% 时增加 Pod，最多 10 个；低于时减少，最少 2 个。</p><p>对于 LLM 服务，由于模型加载慢，扩缩容需要预热。建议使用<b>就绪探针</b>确保模型加载完成后再接收流量。另外，可以结合队列（如 Redis）做请求缓冲，避免突发流量打垮服务。</p><p><b>总结</b>：负载均衡提高可用性，自动扩缩容应对流量波动。两者结合，才能构建稳定的生产级 LLM 服务。</p>
  <h3>常见误区</h3>
  <ul>
  <li>认为本地部署一定比云部署便宜：实际上，本地部署需要购买 GPU 服务器、支付电费和运维人力，长期看可能比云服务更贵，尤其对于波动负载。</li>

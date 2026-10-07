@@ -58,7 +58,11 @@
       ((ch.questions || []).length ? `<div class="ch-qs">${(ch.questions || []).map(q => "<span>" + esc(q) + "</span>").join("")}</div>` : "") +
       `</li>`).join("");
     const btns = [];
-    if (c.page) btns.push(`<a class="btn" href="${esc(c.page)}">📖 打开课程页</a>`);
+    if (c.page) {
+      btns.push(`<a class="btn" href="${esc(c.page)}">📖 打开课程页</a>`);
+    } else {
+      btns.push('<span style="font-size:12.5px;color:var(--text-2)">纯导师课程(无站点页面)· 切到导师面板直接学习</span>');
+    }
     if (c.pack) btns.push(`<a class="btn primary" href="academy://switch-pack/${esc(c.pack)}">🎓 在导师中学习</a>`);
     if (c.review) btns.push(`<a class="btn" href="${esc(c.review)}">📋 人审清单</a>`);
     if (c.slug !== "agent-dev") btns.push(`<a class="btn danger" href="academy://delete-course/${esc(c.slug)}" data-del="${esc(c.slug)}">🗑 删除</a>`);
@@ -67,7 +71,7 @@
         <span class="cc-kind">${KIND_LABEL[c.kind] || c.kind || "课程"}</span>
         ${c.generated ? '<span class="cc-badge">机器初稿 · 待人审</span>' : '<span class="cc-badge ok">已审定</span>'}
       </div>
-      <h3><a href="${c.page ? esc(c.page) : "#"}">${esc(c.title)}</a></h3>
+      <h3>${c.page ? `<a href="${esc(c.page)}">${esc(c.title)}</a>` : esc(c.title)}</h3>
       <p class="cc-desc">${esc(c.description || "")}</p>
       ${(c.chapters || []).length ? `<details class="fold"><summary>课程目录(${(c.chapters || []).length} 章)</summary><div class="fold-body"><ol class="cc-toc">${chapters}</ol></div></details>` : ""}
       <div class="cc-btns">${btns.join("")}</div>

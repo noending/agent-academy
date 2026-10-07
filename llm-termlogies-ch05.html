@@ -34,7 +34,7 @@
  <h3>主流AI芯片：NVIDIA GPU、TPU、昇腾、寒武纪</h3>
  <p>目前AI芯片市场百花齐放，但生态和适用场景差异很大。</p><ul><li><b>NVIDIA GPU</b>：绝对主流，从消费级RTX 4090到数据中心级A100/H100。优势是CUDA生态成熟，几乎所有框架都优先支持。缺点是被制裁导致高端卡获取困难，价格昂贵。</li><li><b>Google TPU</b>：专为TensorFlow/JAX设计的ASIC，通过Google Cloud使用。优势是规模化训练成本低，但生态封闭，不适合通用计算。</li><li><b>华为昇腾（Ascend）</b>：国产代表，昇腾910用于训练，310用于推理。配套CANN软件栈和MindSpore框架，在国产化替代中应用广泛。</li><li><b>寒武纪（Cambricon）</b>：另一家国产AI芯片公司，思元系列覆盖云端和边缘。生态相对较小，但也在逐步完善。</li></ul><p><b>选型建议</b>：如果追求生态和开发效率，优先NVIDIA；如果受限于供应链或需要国产化，考虑昇腾；如果已经在Google Cloud上，TPU是不错的选择。对于初学者，建议从NVIDIA GPU入手，因为学习资料最多。</p>
  <h3>测评工具：MLPerf、CUDA基准、实际模型推理测试</h3>
- <p>光看纸面参数不够，实际性能受软件优化、散热、驱动等影响。常用测评方法有三类：</p><ul><li><b>MLPerf</b>：行业公认的AI基准测试，涵盖训练和推理。它定义了标准任务（如ResNet-50、BERT、GPT-3），各家厂商提交成绩，可比性强。但MLPerf跑一次成本高，适合企业采购参考。</li><li><b>CUDA基准</b>：如<code>bandwidthTest</code>测显存带宽，<code>deviceQuery</code>看设备信息，<code>nvprof</code>或<code>nsight</code>做性能分析。适合快速验证硬件是否正常。</li><li><b>实际模型推理测试</b>：最贴近业务，用你的模型和数据集测吞吐量（tokens/s）和延迟（ms/token）。推荐用<code>transformers</code>+<code>torch</code>写脚本，或使用<code>vLLM</code>、<code>TensorRT-LLM</code>等推理引擎。</li></ul><p>下面是一个最小可运行的GPU推理测速脚本，使用Hugging Face的模型：</p><pre><code class="language-python">import torch
+ <p>光看纸面参数不够，实际性能受软件优化、散热、驱动等影响。常用测评方法有三类：</p><ul><li><b>MLPerf</b>：行业公认的AI基准测试，涵盖训练和推理。它定义了标准任务（如ResNet-50、BERT、GPT-3），各家厂商提交成绩，可比性强。但MLPerf跑一次成本高，适合企业采购参考。</li><li><b>CUDA基准</b>：如<code>bandwidthTest</code>测显存带宽，<code>deviceQuery</code>看设备信息，<code>nvprof</code>或<code>nsight</code>做性能分析。适合快速验证硬件是否正常。</li><li><b>实际模型推理测试</b>：最贴近业务，用你的模型和数据集测吞吐量（tokens/s）和延迟（ms/token）。推荐用<code>transformers</code>+<code>torch</code>写脚本，或使用<code>vLLM</code>、<code>TensorRT-LLM</code>等推理引擎。</li></ul><p>下面是一个最小可运行的GPU推理测速脚本，使用Hugging Face的模型：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import time
 
@@ -60,7 +60,7 @@ end = time.time()
 generated_tokens = outputs.shape[1] - inputs.input_ids.shape[1]
 print(f"生成 {generated_tokens} 个token，耗时 {end-start:.2f} 秒")
 print(f"吞吐量: {generated_tokens/(end-start):.2f} tokens/s")
-</code></pre><p>运行前确保已安装<code>torch</code>和<code>transformers</code>，并且有可用的CUDA环境。这个脚本会输出生成速度和吞吐量，你可以调整<code>max_new_tokens</code>和模型大小来对比不同硬件。</p>
+</code></pre></div><p>运行前确保已安装<code>torch</code>和<code>transformers</code>，并且有可用的CUDA环境。这个脚本会输出生成速度和吞吐量，你可以调整<code>max_new_tokens</code>和模型大小来对比不同硬件。</p>
  <h3>实战：使用MLPerf或自定义脚本测评GPU</h3>
  <p>如果你手头有GPU，可以按以下步骤做一次简单测评：</p><ol><li><b>环境检查</b>：运行<code>nvidia-smi</code>查看GPU型号、显存、功耗。运行<code>nvcc --version</code>查看CUDA版本。</li><li><b>带宽测试</b>：编译并运行CUDA样例中的<code>bandwidthTest</code>，得到实际显存带宽。</li><li><b>推理测试</b>：用上面的脚本，分别测试小模型（如gpt2）和大模型（如facebook/opt-1.3b），记录吞吐量和延迟。</li><li><b>对比分析</b>：将结果与官方参数对比，看是否达到预期。如果差距大，检查散热、驱动、是否使用了Tensor Core等。</li></ol><p>对于企业级测评，可以申请MLPerf推理基准的代码，在本地运行。MLPerf推理有多个场景（SingleStream、MultiStream、Server、Offline），分别对应不同业务需求。例如Server场景模拟在线服务，关注延迟和吞吐的平衡。</p><p><b>注意</b>：测评时要控制变量，比如固定batch size、输入长度、精度（FP16/INT8），否则结果不可比。另外，多次测量取平均值，避免冷启动影响。</p>
  <h3>常见误区</h3>

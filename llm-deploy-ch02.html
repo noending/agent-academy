@@ -30,7 +30,7 @@
 
       <p class="lead"><b>本章目标：</b>掌握LLM训练数据的收集、清洗、去重与格式化方法</p>
  <h3>数据来源与采集：网页、书籍、代码、对话</h3>
- <p>大家好，欢迎来到第2章。上一章我们聊了LLM的整体链路，这一章我们钻进最脏最累但也最重要的环节——数据工程。模型再牛，数据不行，出来的东西就是“垃圾进，垃圾出”。</p><p>先看数据从哪来。LLM训练数据主要有四大来源：</p><ul><li><b>网页</b>：Common Crawl是典型代表，体量巨大但噪声也巨大。需要做正文提取、语言过滤、质量打分。</li><li><b>书籍</b>：长文本、高质量、逻辑连贯，但版权和获取难度是问题。常用Books3、Project Gutenberg等。</li><li><b>代码</b>：GitHub、Stack Overflow等，对代码生成和推理能力至关重要。需要按许可证过滤、去重、解析AST。</li><li><b>对话</b>：论坛、客服记录、多轮对话数据，用于指令微调和对话能力。格式多样，需要统一成对话模板。</li></ul><p>采集时要注意：<b>数据来源的多样性直接决定模型能力的广度</b>。只喂网页，模型可能不会写代码；只喂代码，模型可能不会聊天。所以数据配比是后面要讲的重点。</p><p>下面是一个最小示例，演示如何从本地文件加载不同来源的数据并统一成字典格式：</p><pre><code class="language-python">import json
+ <p>大家好，欢迎来到第2章。上一章我们聊了LLM的整体链路，这一章我们钻进最脏最累但也最重要的环节——数据工程。模型再牛，数据不行，出来的东西就是“垃圾进，垃圾出”。</p><p>先看数据从哪来。LLM训练数据主要有四大来源：</p><ul><li><b>网页</b>：Common Crawl是典型代表，体量巨大但噪声也巨大。需要做正文提取、语言过滤、质量打分。</li><li><b>书籍</b>：长文本、高质量、逻辑连贯，但版权和获取难度是问题。常用Books3、Project Gutenberg等。</li><li><b>代码</b>：GitHub、Stack Overflow等，对代码生成和推理能力至关重要。需要按许可证过滤、去重、解析AST。</li><li><b>对话</b>：论坛、客服记录、多轮对话数据，用于指令微调和对话能力。格式多样，需要统一成对话模板。</li></ul><p>采集时要注意：<b>数据来源的多样性直接决定模型能力的广度</b>。只喂网页，模型可能不会写代码；只喂代码，模型可能不会聊天。所以数据配比是后面要讲的重点。</p><p>下面是一个最小示例，演示如何从本地文件加载不同来源的数据并统一成字典格式：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import json
 from pathlib import Path
 
 def load_jsonl(path):
@@ -60,9 +60,9 @@ for item in code_data:
 
 print(f'Total samples: {len(all_data)}')
 print(all_data[0])
-</code></pre><p>这个例子很简单，但体现了数据工程的第一步：<b>统一数据格式，方便后续处理</b>。</p>
+</code></pre></div><p>这个例子很简单，但体现了数据工程的第一步：<b>统一数据格式，方便后续处理</b>。</p>
  <h3>数据清洗：去噪、去重与质量过滤</h3>
- <p>原始数据里全是“脏东西”：HTML标签、乱码、广告、重复段落、低质量内容。清洗的目标是<b>保留高质量、多样化的文本，去掉噪声和冗余</b>。</p><p><b>去噪</b>：常见操作包括去除HTML标签、特殊字符、多余空白、页眉页脚。可以用正则或专门的库如trafilatura提取正文。</p><p><b>去重</b>：重复数据会让模型记住特定样本，降低泛化。去重分三个层次：</p><ul><li>精确去重：完全相同的文本，用哈希即可。</li><li>近似去重：相似但不完全相同的文本，常用MinHash+LSH或SimHash。</li><li>子串去重：长文档中重复的段落，可以用后缀数组或n-gram重叠检测。</li></ul><p><b>质量过滤</b>：用规则或模型打分。规则包括：文本长度、平均词长、符号与词的比例、是否包含禁用词。模型方法如用fastText分类器判断是否像维基百科文本。</p><p>下面是一个综合示例，展示去噪、精确去重和简单质量过滤：</p><pre><code class="language-python">import re
+ <p>原始数据里全是“脏东西”：HTML标签、乱码、广告、重复段落、低质量内容。清洗的目标是<b>保留高质量、多样化的文本，去掉噪声和冗余</b>。</p><p><b>去噪</b>：常见操作包括去除HTML标签、特殊字符、多余空白、页眉页脚。可以用正则或专门的库如trafilatura提取正文。</p><p><b>去重</b>：重复数据会让模型记住特定样本，降低泛化。去重分三个层次：</p><ul><li>精确去重：完全相同的文本，用哈希即可。</li><li>近似去重：相似但不完全相同的文本，常用MinHash+LSH或SimHash。</li><li>子串去重：长文档中重复的段落，可以用后缀数组或n-gram重叠检测。</li></ul><p><b>质量过滤</b>：用规则或模型打分。规则包括：文本长度、平均词长、符号与词的比例、是否包含禁用词。模型方法如用fastText分类器判断是否像维基百科文本。</p><p>下面是一个综合示例，展示去噪、精确去重和简单质量过滤：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import re
 import hashlib
 from collections import defaultdict
 
@@ -110,20 +110,20 @@ unique = deduplicate(filtered)
 print('Cleaned:', cleaned)
 print('Filtered:', filtered)
 print('Unique:', unique)
-</code></pre><p>注意：去重时，<b>精确去重只能去掉完全一样的文本，近似去重才能解决“换几个词”的重复</b>。工业级流水线通常用MinHash+LSH做大规模近似去重。</p>
+</code></pre></div><p>注意：去重时，<b>精确去重只能去掉完全一样的文本，近似去重才能解决“换几个词”的重复</b>。工业级流水线通常用MinHash+LSH做大规模近似去重。</p>
  <h3>数据格式化：指令微调与对话模板</h3>
- <p>预训练数据是纯文本，但指令微调和对话模型需要结构化格式。这一步就是把数据整理成模型能理解的“模板”。</p><p><b>指令微调数据</b>通常包含三部分：instruction（指令）、input（可选输入）、output（期望输出）。例如：</p><pre><code class="language-json">{
+ <p>预训练数据是纯文本，但指令微调和对话模型需要结构化格式。这一步就是把数据整理成模型能理解的“模板”。</p><p><b>指令微调数据</b>通常包含三部分：instruction（指令）、input（可选输入）、output（期望输出）。例如：</p><div class="codeblock"><div class="code-head"><span class="code-lang">json</span></div><pre><code class="language-json">{
   "instruction": "将以下句子翻译成英文",
   "input": "今天天气真好",
   "output": "The weather is really nice today."
 }
-</code></pre><p><b>对话模板</b>则把多轮对话组织成角色标记的序列。常见格式有Alpaca、ShareGPT、ChatML等。以ChatML为例：</p><pre><code class="language-text">&amp;lt;|im_start|&amp;gt;system
+</code></pre></div><p><b>对话模板</b>则把多轮对话组织成角色标记的序列。常见格式有Alpaca、ShareGPT、ChatML等。以ChatML为例：</p><div class="codeblock"><div class="code-head"><span class="code-lang">text</span></div><pre><code class="language-text">&amp;lt;|im_start|&amp;gt;system
 You are a helpful assistant.&amp;lt;|im_end|&amp;gt;
 &amp;lt;|im_start|&amp;gt;user
 你好&amp;lt;|im_end|&amp;gt;
 &amp;lt;|im_start|&amp;gt;assistant
 你好！有什么可以帮你的？&amp;lt;|im_end|&amp;gt;
-</code></pre><p>格式化时要注意：<b>训练和推理必须使用完全相同的模板</b>，否则模型会“精神分裂”。另外，要正确处理padding和attention mask，把padding token的loss忽略掉。</p><p>下面是一个把Alpaca格式转成ChatML格式的示例：</p><pre><code class="language-python">def alpaca_to_chatml(example):
+</code></pre></div><p>格式化时要注意：<b>训练和推理必须使用完全相同的模板</b>，否则模型会“精神分裂”。另外，要正确处理padding和attention mask，把padding token的loss忽略掉。</p><p>下面是一个把Alpaca格式转成ChatML格式的示例：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">def alpaca_to_chatml(example):
     instruction = example.get('instruction', '')
     input_text = example.get('input', '')
     output = example.get('output', '')
@@ -144,9 +144,9 @@ example = {
     'output': 'The weather is really nice today.'
 }
 print(alpaca_to_chatml(example)['text'])
-</code></pre><p>实际训练时，我们通常只对assistant部分的token计算loss，system和user部分mask掉。这需要在tokenizer层面处理。</p>
+</code></pre></div><p>实际训练时，我们通常只对assistant部分的token计算loss，system和user部分mask掉。这需要在tokenizer层面处理。</p>
  <h3>数据配比与课程学习策略</h3>
- <p>数据配比（Data Mixture）是指不同来源数据在训练集中的比例。它直接决定模型的能力偏向。比如：</p><ul><li>网页数据多 → 知识面广，但可能废话多。</li><li>代码数据多 → 代码能力强，但可能不会聊天。</li><li>书籍数据多 → 长文本理解好，但可能缺乏时效性。</li></ul><p>常见配比策略：<b>按经验设定初始比例，然后通过小规模实验调整</b>。例如Llama 2的预训练数据中，代码占比约5%，网页占比约80%以上。指令微调数据则更注重质量而非数量，通常几万到几百万条。</p><p><b>课程学习（Curriculum Learning）</b>是另一种策略：先喂简单数据，再喂难数据。比如先短文本后长文本，先通用后专业。但LLM预训练中课程学习的效果仍有争议，因为数据量太大，很难定义“简单”和“难”。更常见的做法是<b>动态数据配比</b>，在训练过程中调整不同来源的采样权重。</p><p>下面是一个按比例采样数据配比的示例：</p><pre><code class="language-python">import random
+ <p>数据配比（Data Mixture）是指不同来源数据在训练集中的比例。它直接决定模型的能力偏向。比如：</p><ul><li>网页数据多 → 知识面广，但可能废话多。</li><li>代码数据多 → 代码能力强，但可能不会聊天。</li><li>书籍数据多 → 长文本理解好，但可能缺乏时效性。</li></ul><p>常见配比策略：<b>按经验设定初始比例，然后通过小规模实验调整</b>。例如Llama 2的预训练数据中，代码占比约5%，网页占比约80%以上。指令微调数据则更注重质量而非数量，通常几万到几百万条。</p><p><b>课程学习（Curriculum Learning）</b>是另一种策略：先喂简单数据，再喂难数据。比如先短文本后长文本，先通用后专业。但LLM预训练中课程学习的效果仍有争议，因为数据量太大，很难定义“简单”和“难”。更常见的做法是<b>动态数据配比</b>，在训练过程中调整不同来源的采样权重。</p><p>下面是一个按比例采样数据配比的示例：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import random
 from collections import defaultdict
 
 def sample_by_ratio(data, ratios, total_samples):
@@ -179,7 +179,7 @@ sampled = sample_by_ratio(data, ratios, 1000)
 print(f'Sampled {len(sampled)} items')
 from collections import Counter
 print(Counter(item['source'] for item in sampled))
-</code></pre><p>记住：<b>数据配比没有银弹，必须结合评测结果反复迭代</b>。建议先跑小规模消融实验，再放大到全量训练。</p>
+</code></pre></div><p>记住：<b>数据配比没有银弹，必须结合评测结果反复迭代</b>。建议先跑小规模消融实验，再放大到全量训练。</p>
  <h3>常见误区</h3>
  <ul>
  <li>数据去重只需要精确去重，近似去重没必要。实际上，近似重复（如换几个词、调整语序）在网页数据中非常普遍，不做近似去重会导致模型重复记忆，降低泛化能力。</li>

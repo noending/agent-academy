@@ -30,17 +30,17 @@
 
       <p class="lead"><b>本章目标：</b>动手部署LLM并优化推理性能</p>
  <h3>部署环境搭建：CUDA、PyTorch、Transformers库</h3>
- <p>要动手部署LLM，第一步是把环境搭好。别怕，跟着做就行。</p><p><b>CUDA</b> 是 NVIDIA 的并行计算平台，让 PyTorch 能调用 GPU 加速。你需要先装好显卡驱动，再装 CUDA Toolkit。但更简单的方法是直接装 PyTorch 的 CUDA 版本，它会自带所需的 CUDA 运行时。</p><p><b>PyTorch</b> 是深度学习框架，LLM 推理和训练都靠它。<b>Transformers</b> 是 Hugging Face 的库，提供了大量预训练模型和便捷的 API，几行代码就能加载模型。</p><p>安装命令（假设 CUDA 12.1）：</p><pre><code class="language-python"># 安装 PyTorch（CUDA 12.1 版本）
+ <p>要动手部署LLM，第一步是把环境搭好。别怕，跟着做就行。</p><p><b>CUDA</b> 是 NVIDIA 的并行计算平台，让 PyTorch 能调用 GPU 加速。你需要先装好显卡驱动，再装 CUDA Toolkit。但更简单的方法是直接装 PyTorch 的 CUDA 版本，它会自带所需的 CUDA 运行时。</p><p><b>PyTorch</b> 是深度学习框架，LLM 推理和训练都靠它。<b>Transformers</b> 是 Hugging Face 的库，提供了大量预训练模型和便捷的 API，几行代码就能加载模型。</p><p>安装命令（假设 CUDA 12.1）：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python"># 安装 PyTorch（CUDA 12.1 版本）
 pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
 
 # 安装 Transformers 和加速库
 pip install transformers accelerate
-</code></pre><p>验证安装：</p><pre><code class="language-python">import torch
+</code></pre></div><p>验证安装：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import torch
 print(torch.__version__)          # 应显示 2.x.x+cu121
 print(torch.cuda.is_available())  # 应显示 True
-</code></pre><p>如果 <code>torch.cuda.is_available()</code> 返回 False，检查驱动和 CUDA 版本是否匹配。环境搭好，后面就顺了。</p>
+</code></pre></div><p>如果 <code>torch.cuda.is_available()</code> 返回 False，检查驱动和 CUDA 版本是否匹配。环境搭好，后面就顺了。</p>
  <h3>模型量化与剪枝：减少显存占用与加速推理</h3>
- <p>大模型动辄几十 GB 显存，普通显卡跑不动。量化与剪枝是两大压缩技术。</p><p><b>量化 (Quantization)</b>：把模型权重从高精度（如 FP32）转换为低精度（如 INT8、INT4）。<b>精度越低，显存占用越小，推理越快，但可能损失一点准确率。</b>常见方法有训练后量化（PTQ）和量化感知训练（QAT）。Hugging Face 的 <code>bitsandbytes</code> 库支持 8-bit 和 4-bit 量化，一行代码就能加载。</p><p><b>剪枝 (Pruning)</b>：移除模型中不重要的权重（置零或删除），减少计算量。分为非结构化剪枝（单个权重）和结构化剪枝（整个神经元/注意力头）。剪枝后通常需要微调恢复性能。</p><p>最小示例：使用 4-bit 量化加载模型。</p><pre><code class="language-python">from transformers import AutoModelForCausalLM, AutoTokenizer
+ <p>大模型动辄几十 GB 显存，普通显卡跑不动。量化与剪枝是两大压缩技术。</p><p><b>量化 (Quantization)</b>：把模型权重从高精度（如 FP32）转换为低精度（如 INT8、INT4）。<b>精度越低，显存占用越小，推理越快，但可能损失一点准确率。</b>常见方法有训练后量化（PTQ）和量化感知训练（QAT）。Hugging Face 的 <code>bitsandbytes</code> 库支持 8-bit 和 4-bit 量化，一行代码就能加载。</p><p><b>剪枝 (Pruning)</b>：移除模型中不重要的权重（置零或删除），减少计算量。分为非结构化剪枝（单个权重）和结构化剪枝（整个神经元/注意力头）。剪枝后通常需要微调恢复性能。</p><p>最小示例：使用 4-bit 量化加载模型。</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from transformers import AutoModelForCausalLM, AutoTokenizer
 import torch
 
 model_name = "meta-llama/Llama-2-7b-chat-hf"  # 需申请权限，可换成其他小模型如 "gpt2"
@@ -52,9 +52,9 @@ model = AutoModelForCausalLM.from_pretrained(
     torch_dtype=torch.float16
 )
 print(model.device)  # 查看模型所在设备
-</code></pre><p>注意：量化需要安装 <code>bitsandbytes</code>：<code>pip install bitsandbytes</code>。量化后显存占用可减少 50%~75%。</p>
+</code></pre></div><p>注意：量化需要安装 <code>bitsandbytes</code>：<code>pip install bitsandbytes</code>。量化后显存占用可减少 50%~75%。</p>
  <h3>推理优化：批处理、KV缓存、Flash Attention</h3>
- <p>部署时不仅要跑起来，还要跑得快。三个关键优化技术：</p><p><b>批处理 (Batching)</b>：一次处理多个输入，提高 GPU 利用率。但要注意序列长度对齐，避免 padding 浪费。动态批处理（如 vLLM 的 continuous batching）能进一步提升吞吐。</p><p><b>KV缓存 (KV Cache)</b>：自回归生成时，每次预测新 token 都要重新计算之前所有 token 的 Key/Value 矩阵。KV 缓存把这些中间结果存下来，避免重复计算。<b>没有 KV 缓存，生成速度会慢几倍。</b>但缓存会占用显存，需权衡。</p><p><b>Flash Attention</b>：一种注意力计算优化算法，通过分块计算和重计算，减少显存访问，提升速度。PyTorch 2.0+ 已内置支持，只需在加载模型时设置 <code>attn_implementation="flash_attention_2"</code>（需安装 <code>flash-attn</code>）。</p><p>示例：启用 Flash Attention 并生成文本。</p><pre><code class="language-python">from transformers import AutoModelForCausalLM, AutoTokenizer
+ <p>部署时不仅要跑起来，还要跑得快。三个关键优化技术：</p><p><b>批处理 (Batching)</b>：一次处理多个输入，提高 GPU 利用率。但要注意序列长度对齐，避免 padding 浪费。动态批处理（如 vLLM 的 continuous batching）能进一步提升吞吐。</p><p><b>KV缓存 (KV Cache)</b>：自回归生成时，每次预测新 token 都要重新计算之前所有 token 的 Key/Value 矩阵。KV 缓存把这些中间结果存下来，避免重复计算。<b>没有 KV 缓存，生成速度会慢几倍。</b>但缓存会占用显存，需权衡。</p><p><b>Flash Attention</b>：一种注意力计算优化算法，通过分块计算和重计算，减少显存访问，提升速度。PyTorch 2.0+ 已内置支持，只需在加载模型时设置 <code>attn_implementation="flash_attention_2"</code>（需安装 <code>flash-attn</code>）。</p><p>示例：启用 Flash Attention 并生成文本。</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from transformers import AutoModelForCausalLM, AutoTokenizer
 import torch
 
 model_name = "gpt2"  # 小模型演示，实际可用 Llama 等
@@ -71,9 +71,9 @@ inputs = tokenizer(input_text, return_tensors="pt").to("cuda")
 # 生成时使用 KV 缓存（默认开启）
 outputs = model.generate(**inputs, max_new_tokens=50, use_cache=True)
 print(tokenizer.decode(outputs[0], skip_special_tokens=True))
-</code></pre><p>如果 <code>flash_attention_2</code> 报错，可先安装：<code>pip install flash-attn --no-build-isolation</code>。注意：Flash Attention 需要 Ampere 架构以上 GPU（如 RTX 30 系、A100）。</p>
+</code></pre></div><p>如果 <code>flash_attention_2</code> 报错，可先安装：<code>pip install flash-attn --no-build-isolation</code>。注意：Flash Attention 需要 Ampere 架构以上 GPU（如 RTX 30 系、A100）。</p>
  <h3>实战：使用 Hugging Face 部署一个 LLM 并评测</h3>
- <p>现在我们把前面知识串起来，部署一个 LLM 并做简单评测。</p><p>步骤：1. 加载模型和分词器；2. 编写推理函数；3. 用几个 prompt 测试生成质量；4. 测量推理速度（吞吐量、延迟）。</p><p>完整代码示例（使用 <code>gpt2</code> 避免权限问题，可替换为其他模型）：</p><pre><code class="language-python">from transformers import AutoModelForCausalLM, AutoTokenizer
+ <p>现在我们把前面知识串起来，部署一个 LLM 并做简单评测。</p><p>步骤：1. 加载模型和分词器；2. 编写推理函数；3. 用几个 prompt 测试生成质量；4. 测量推理速度（吞吐量、延迟）。</p><p>完整代码示例（使用 <code>gpt2</code> 避免权限问题，可替换为其他模型）：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from transformers import AutoModelForCausalLM, AutoTokenizer
 import torch
 import time
 
@@ -111,7 +111,7 @@ for p in prompts:
     print(f"Prompt: {p}")
     print(f"Output: {output}")
     print(f"Latency: {latency:.2f}s\n")
-</code></pre><p>评测指标：<b>延迟 (Latency)</b> 指生成一个回复的时间；<b>吞吐量 (Throughput)</b> 指每秒生成的 token 数。你可以调整 <code>max_new_tokens</code> 观察变化。如果显存不足，尝试量化或换更小模型。</p><p>进阶：使用 <code>text-generation-inference</code> 或 <code>vLLM</code> 部署为 API 服务，支持高并发。</p>
+</code></pre></div><p>评测指标：<b>延迟 (Latency)</b> 指生成一个回复的时间；<b>吞吐量 (Throughput)</b> 指每秒生成的 token 数。你可以调整 <code>max_new_tokens</code> 观察变化。如果显存不足，尝试量化或换更小模型。</p><p>进阶：使用 <code>text-generation-inference</code> 或 <code>vLLM</code> 部署为 API 服务，支持高并发。</p>
  <h3>常见误区</h3>
  <ul>
  <li>量化一定会显著降低模型准确率——实际上，4-bit 量化对大多数任务影响很小，甚至可忽略。</li>
