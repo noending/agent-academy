@@ -21,7 +21,7 @@ const pack = JSON.parse(readFileSync(packPath, "utf8"));
 const page = join(SITE, `full-${skill}.html`);
 if (!existsSync(page)) { console.error(`✗ 单页课程不存在: ${page}`); process.exit(1); }
 let html = readFileSync(page, "utf8");
-if (html.includes("data-gen-course")) { console.log("已是分章格式,跳过"); process.exit(0); }
+if (html.includes("data-gen-course") && !args.includes("--force")) { console.log("已是分章格式,跳过(--force 可强制重切)"); process.exit(0); }
 
 // 分章:按「<h2>第N章 · 标题</h2>」切块
 const marks = [...html.matchAll(/<h2>第(\d+)章 · ([^<]+)<\/h2>/g)];
@@ -39,7 +39,7 @@ const chapters = marks.map((m, i) => {
   if (draftIdx > start && (end < 0 || draftIdx < end)) end = draftIdx;
   if (scriptIdx > start && scriptIdx < end) end = scriptIdx;
   // 剥掉页面尾部闭合符(骨架会重新补上)
-  let body = html.slice(start, end).replace(/(?:<\/main>\s*)?(?:<\/div>\s*)+$/, "").trim();
+  let body = html.slice(start, end).replace(/(?:<\/div>\s*|<\/main>\s*)+$/, "").trim();
   body = body.replace(/^\s*<p><b>本章目标：<\/b>/, "\n      <p class=\"lead\"><b>本章目标：</b>");
   return { no, title, file: `${skill}-ch${pad(no)}.html`, body };
 });
@@ -116,9 +116,18 @@ const homeCards = chapters.map((c) => {
 
 // 抽取原页面的草稿工具条与人审须知(若有)
 const draftStart = html.indexOf('<div class="draft-only">');
-const draftBlock = draftStart >= 0
-  ? `<div class="draft-only">${html.slice(draftStart + '<div class="draft-only">'.length, html.lastIndexOf("</div>"))}</div>`
-  : "";
+let draftBlock = "";
+if (draftStart >= 0) {
+  // 嵌套深度匹配:精确截取 draft-only 块(工具条+人审须知),不吞后续章节内容
+  const tagRe = /<\/?(div|details)\b[^>]*>/g;
+  tagRe.lastIndex = draftStart;
+  let depth = 0, m, endIdx = html.length;
+  while ((m = tagRe.exec(html))) {
+    depth += m[0].startsWith("</") ? -1 : 1;
+    if (depth === 0) { endIdx = m.index + m[0].length; break; }
+  }
+  draftBlock = html.slice(draftStart, endIdx);
+}
 
 const headMatch = html.match(/<header class="chapter-head">([\s\S]*?)<\/header>/);
 const leadText = headMatch ? headMatch[1] : "";
