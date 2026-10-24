@@ -23,6 +23,7 @@ const args = process.argv.slice(2);
 const argOf = (k) => { const i = args.indexOf(k); return i >= 0 ? args[i + 1] : null; };
 const PACK = argOf("--pack") || "agent-dev";
 const APPLY_DIR = argOf("--apply");
+const SKIP_EVALS = args.includes("--skip-evals");
 
 const esc = (s) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 const parseJSON = (s) => {
@@ -187,7 +188,7 @@ async function analyzeAndPropose() {
   const diff = lineDiff(currentPrompt, proposal.newPrompt);
   const proposalMd = `# 教法提案 · ${PACK}\n\n> 依据同日分析报告 · ${proposal.changes.length} 处修改 · 结构校验通过\n\n## 修改点\n\n` +
     proposal.changes.map((c, i) => `${i + 1}. ${esc(c.change)}\n   - 依据发现:${esc(c.finding)}`).join("\n") +
-    `\n\n## 提示词 diff(旧 → 新)\n\n\`\`\`diff\n${diff}\n\`\`\`\n\n## 应用与回滚\n\n\`\`\`bash\n# 应用(会自动跑结构校验与回归测试)\nnode scripts/evolve-teaching.mjs --apply "${outDir}"\n# 回滚\ngit checkout -- packs/${PACK}/system-prompt.md\n\`\`\`\n`;
+    `\n\n## 提示词 diff(旧 → 新)\n\n\`\`\`diff\n${diff}\n\`\`\`\n\n## 应用与回滚\n\n\`\`\`bash\n# 应用(自动跑结构校验、回归测试与教学行为评估;--skip-evals 跳过行为评估)\nnode scripts/evolve-teaching.mjs --apply "${outDir}"\n# 回滚\ngit checkout -- packs/${PACK}/system-prompt.md\n\`\`\`\n`;
   writeFileSync(join(outDir, "PROPOSAL.md"), proposalMd);
   writeFileSync(join(outDir, "PROPOSAL.json"), JSON.stringify({
     pack: PACK, target: `packs/${PACK}/system-prompt.md`,
@@ -213,16 +214,32 @@ function applyProposal(dir) {
   writeFileSync(target, proposal.newPrompt);
   console.log(`✓ 已应用 ${proposal.changes.length} 处修改 → ${proposal.target}`);
 
-  console.log("→ 回归测试(35 项)…");
+  console.log("→ 回归测试(npm test,结构层)…");
   try {
     execFileSync("npm", ["test"], { cwd: TUTOR, stdio: "inherit" });
-    console.log(`\n✓ 回归通过。提案已生效;回滚: git checkout -- ${proposal.target}`);
-    console.log(`  旧版本已留存于本次 diff(${backup.split("\n").length} 行),也可从 git 历史恢复。`);
   } catch {
     writeFileSync(target, backup); // 回归失败自动回滚
-    console.error("\n✗ 回归失败,已自动回滚到原提示词。");
+    console.error("\n✗ 结构回归失败,已自动回滚到原提示词。");
     process.exit(1);
   }
+
+  // 行为层:教学行为评估集(真实 API)——提示词改动可能结构合法但把教学行为改坏,这层兜住
+  if (process.env.DEEPSEEK_API_KEY && !SKIP_EVALS) {
+    console.log("→ 教学行为评估(真实 API;--skip-evals 可跳过)…");
+    try {
+      execFileSync("node", [join(TUTOR, "scripts", "eval-teaching.mjs"), "--pack", proposal.pack],
+        { cwd: TUTOR, stdio: "inherit", timeout: 900_000 });
+    } catch {
+      writeFileSync(target, backup);
+      console.error("\n✗ 教学行为评估未通过,已自动回滚到原提示词。");
+      process.exit(1);
+    }
+  } else {
+    console.log(`(跳过教学行为评估: ${SKIP_EVALS ? "--skip-evals" : "无 DEEPSEEK_API_KEY"})`);
+  }
+
+  console.log(`\n✓ 回归全部通过。提案已生效;回滚: git checkout -- ${proposal.target}`);
+  console.log(`  旧版本已留存于本次 diff(${backup.split("\n").length} 行),也可从 git 历史恢复。`);
 }
 
 if (APPLY_DIR) applyProposal(APPLY_DIR);

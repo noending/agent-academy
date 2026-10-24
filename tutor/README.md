@@ -9,13 +9,14 @@
 ```
 学生 ⇄ CLI 对话 ⇄ Agent loop(pi-agent-core)
                       ├─ 模型层 pi-ai(默认 deepseek-v4-flash,可换任意引擎)
-                      ├─ 教学工具(6 个)
-                      │    lookup_course      BM25 检索课程知识库(492 块,标题加权,CJK 二元组分词)
-                      │    get_student_profile  读学生档案
-                      │    record_progress      记录「展示了理解」的概念(有证据才算)
-                      │    record_misconception 记录误解,后续针对性纠正
-                      │    update_plan          更新当前焦点 / 下一步 / 水平
-                      │    run_code             JS/Python 沙箱(10s 超时),验证示例与练习
+                      ├─ 教学工具(7 个)
+│    lookup_course      BM25 检索课程知识库(课程 531 块 + Gulli 589 块,标题加权,CJK 二元组分词)
+│    get_student_profile  读学生档案
+│    record_progress      记录「展示了理解」的概念(有证据才算)
+│    record_misconception 记录误解,后续针对性纠正
+│    update_plan          更新当前焦点 / 下一步 / 水平
+│    record_knowledge_gap 留档课程库覆盖不到的盲区(带 pack 归因,知识进化的依据)
+│    run_code             JS/Python 沙箱(10s 超时),验证示例与练习
                       ├─ 教学包 packs/agent-dev(系统提示词:苏格拉底式 + 先诊断再教学)
                       ├─ 学生记忆 students/<id>.json(跨会话持久)
                       └─ 会话日志 students/<id>.session.jsonl(JSONL,可回放)
@@ -51,13 +52,16 @@ npm start                          # 开始上课
 
 ```bash
 node src/tutor.mjs --rpc      # stdin: {"type":"user","text":…} / {"type":"context","page":{"file","title"}}
-                              #        / {"type":"control","cmd":"reset|profile|exit"}
-                              # stdout: hello → delta* → tool_start/tool_end → turn_end → ready(一轮结束)
+                              #        / {"type":"control","cmd":"reset|abort|profile|exit"}
+                              # stdout: hello → delta* → tool_start/tool_end(成败都发) → turn_end → ready(一轮结束)
+                              #         control abort → aborted(中断正在生成的一轮,之后照常 ready)
 ```
+
+turn 串行执行:greet/user 消息依次排队,期间到达的不会并发 prompt,每轮结束都发 `ready`;同一进程内重复 `greet` 不重复开场(只补一个 ready,`reset` 后可重新开场)。
 
 `context` 消息上报学生当前阅读页面(嵌入方翻页时推送);tutor 在下一条学生消息前注入 `[正在学习: …]` 前缀,教学贴合当前章节,并记录进会话日志的 `page` 字段。
 
-macOS App 的「导师模式」就是这个协议的客户端。学生数据默认写 `tutor/students/`;嵌入方设 `TUTOR_DATA_DIR=<数据根>` 重定向(其下建 `students/`)。长对话超 24k token 触发**总结式压缩**:被剪前缀由 LLM 压成要点摘要(按前缀缓存,不重复付费;摘要失败自动回退丢弃式修剪,工具调用/结果成对保留)。
+macOS App 的「导师模式」就是这个协议的客户端。学生数据默认写 `tutor/students/`;嵌入方设 `TUTOR_DATA_DIR=<数据根>` 重定向(其下建 `students/`);盲区档案可设 `TUTOR_GAPS_FILE=<文件>` 重定向(默认 `tutor/knowledge-gaps.jsonl`,记录带 pack 归因)。长对话超 24k token 触发**总结式压缩**:被剪前缀由 LLM 压成要点摘要(按前缀缓存,不重复付费;摘要失败自动回退丢弃式修剪,工具调用/结果成对保留)。
 
 ## 文件结构
 
@@ -76,8 +80,9 @@ tutor/
 │   ├── tutor.mjs           # 入口:Agent loop + CLI + 会话日志
 │   ├── retrieval.mjs       # BM25(中文二元组 + 英文词)
 │   ├── memory.mjs          # 学生档案读写与渲染
-│   └── tools.mjs           # 6 个教学工具(pi-agent-core AgentTool 接口)
+│   └── tools.mjs           # 7 个教学工具(pi-agent-core AgentTool 接口)
 ├── students/               # 运行时生成:<id>.json 档案、<id>.session.jsonl 会话
+├── scripts/eval-teaching.mjs  # 教学行为评估集(真实 API:脚本化学生场景→行为断言)
 └── test/smoke.mjs          # 冒烟测试(检索/记忆/沙箱/全链路)
 ```
 
@@ -104,5 +109,10 @@ node src/tutor.mjs --pack packs/<新技能> --student <id>
 ## 测试
 
 ```bash
-npm test    # 17 项:检索命中章/节、记忆模块与记忆工具 execute 路径、JS/Python 沙箱、mock 全链路、会话 JSONL
+npm test    # 51 项(结构层):检索命中章/节、记忆与工具 execute 路径、盲区归因、JS/Python 沙箱、
+            # mock 全链路、会话 JSONL 无双记、RPC 协议(串行/abort/tool_end)
+npm run eval  # 教学行为评估集(行为层,真实 API,成本 < $0.01):6 个脚本化学生场景——
+              # 目标当轮入档、误解同轮留档、掌握须凭证据、超纲留档盲区(pack 归因)、
+              # 引用出处(课程/Gulli)、页面上下文;评估数据隔离在临时目录,报告落 drafts/evals/。
+              # evolve-teaching --apply 应用提示词提案时会自动跑(失败自动回滚,--skip-evals 跳过)。
 ```
