@@ -160,7 +160,7 @@ function mockStreamFn(_model, context) {
 }
 
 // ---------- 组装 Agent ----------
-const tools = buildTools({ index, profile, root: ROOT });
+const tools = buildTools({ index, profile, root: ROOT, packName: pack.name });
 
 const agent = new Agent({
   initialState: { systemPrompt, model, tools, thinkingLevel },
@@ -210,9 +210,10 @@ agent.subscribe((event) => {
       console.log(`\n  ⚙ [${event.toolName}] ${brief.length > 90 ? brief.slice(0, 90) + "…" : brief}`);
     }
   }
-  if (event.type === "tool_execution_end" && event.isError) {
-    if (RPC) send({ type: "tool_end", name: event.toolName, isError: true });
-    else console.log(`  ⚠ 工具执行出错`);
+  if (event.type === "tool_execution_end") {
+    // RPC 无论成败都发 tool_end(嵌入方要显示工具完成态);CLI 只在出错时提示
+    if (RPC) send({ type: "tool_end", name: event.toolName, isError: !!event.isError });
+    else if (event.isError) console.log(`  ⚠ 工具执行出错`);
   }
   if (event.type === "turn_end") {
     if (printing) { process.stdout.write("\n"); printing = false; }
@@ -221,8 +222,9 @@ agent.subscribe((event) => {
     if (RPC) send({ type: "turn_end", cost: u?.cost?.total ?? 0 });
   }
   if (event.type === "agent_end") {
+    // user 消息不在此记录:CLI runTurn / RPC 收到消息时已显式落盘(保留原始文本与 page 字段),
+    // 这里再记会把 pi 归一化后的数组形式重复写一遍,污染进化循环的分析输入
     for (const m of event.messages) {
-      if (m.role === "user") log({ student: STUDENT, role: "user", text: typeof m.content === "string" ? m.content : JSON.stringify(m.content) });
       if (m.role === "assistant") {
         const text = (m.content || []).filter((c) => c.type === "text").map((c) => c.text).join("");
         if (text) log({ student: STUDENT, role: "assistant", text, stopReason: m.stopReason });
@@ -250,6 +252,19 @@ if (RPC) {
   if (!assertApiKey()) process.exit(1);
   send({ type: "hello", student: STUDENT, model: MOCK ? "mock" : `${provider}/${modelId}` });
   let currentPage = null; // 嵌入方上报的当前页面(App 里学生正在读哪页)
+  // turn 串行化:并发 agent.prompt 行为未定义,greet/user 到达时入队依次执行;
+  // 每轮结束都会发 ready,嵌入方按轮消费。abort 只中断正在生成的一轮,不清队列。
+  let turnChain = Promise.resolve();
+  let greeted = false;
+  const runTurn = (fn) => {
+    const p = turnChain.then(fn, fn);
+    turnChain = p.catch(() => {});
+    return p;
+  };
+  const finishTurn = () => {
+    saveProfile(ROOT, profile);
+    send({ type: "ready", totalCost: +totalCost.toFixed(4) });
+  };
   const rlRpc = readline.createInterface({ input: process.stdin });
   rlRpc.on("line", (l) => {
     let msg;
@@ -257,9 +272,12 @@ if (RPC) {
     if (msg.type === "context" && msg.page) {
       currentPage = msg.page; // { file, title }
     } else if (msg.type === "greet") {
-      // 面板打开/重置时的开场:导师根据档案与当前页面主动打招呼
-      (async () => {
-        log({ student: STUDENT, role: "greet", page: currentPage?.file ?? null });
+      // 面板打开/重置时的开场:导师根据档案与当前页面主动打招呼。
+      // 同一进程内重复 greet(面板重开)不重复开场,只补一个 ready 维持协议节奏
+      if (greeted) { send({ type: "ready", totalCost: +totalCost.toFixed(4) }); return; }
+      greeted = true;
+      log({ student: STUDENT, role: "greet", page: currentPage?.file ?? null });
+      runTurn(async () => {
         try {
           await agent.prompt(
             `[系统事件: 学生刚刚打开了导师面板,这是本次会话的开场]${currentPage ? `\n(学生当前页面: ${currentPage.title || currentPage.file})` : ""}\n` +
@@ -268,28 +286,30 @@ if (RPC) {
         } catch (e) {
           send({ type: "error", message: String(e?.message || e) });
         }
-        saveProfile(ROOT, profile);
-        send({ type: "ready", totalCost: +totalCost.toFixed(4) });
-      })();
+        finishTurn();
+      });
     } else if (msg.type === "user" && msg.text) {
-      (async () => {
-        // 页面上下文以「正在学习」前缀注入,导师教学贴合当前章节
-        const text = currentPage
-          ? `[正在学习: ${currentPage.title || currentPage.file}]\n\n${msg.text}`
-          : msg.text;
-        log({ student: STUDENT, role: "user", text: msg.text, page: currentPage?.file ?? null });
+      // 页面上下文以「正在学习」前缀注入,导师教学贴合当前章节
+      const text = currentPage
+        ? `[正在学习: ${currentPage.title || currentPage.file}]\n\n${msg.text}`
+        : msg.text;
+      log({ student: STUDENT, role: "user", text: msg.text, page: currentPage?.file ?? null });
+      runTurn(async () => {
         try {
           await agent.prompt(text);
         } catch (e) {
           send({ type: "error", message: String(e?.message || e) });
         }
-        saveProfile(ROOT, profile);
-        send({ type: "ready", totalCost: +totalCost.toFixed(4) });
-      })();
+        finishTurn();
+      });
     } else if (msg.type === "control") {
       if (msg.cmd === "reset") {
         agent.reset();
+        greeted = false; // 重置后允许面板重新开场
         send({ type: "ready", totalCost: +totalCost.toFixed(4) });
+      } else if (msg.cmd === "abort") {
+        agent.abort(); // 空闲时为无害空操作;中断后当前轮照常走 ready
+        send({ type: "aborted" });
       } else if (msg.cmd === "profile") {
         send({ type: "profile", profile });
       } else if (msg.cmd === "exit") {

@@ -3,7 +3,7 @@ import { Type } from "typebox";
 import { spawnSync } from "node:child_process";
 import { mkdtempSync, writeFileSync, appendFileSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 
 function textResult(text, details = {}) {
   return { content: [{ type: "text", text }], details };
@@ -13,7 +13,7 @@ function makeTool(name, label, description, parameters, execute) {
   return { name, label, description, parameters, execute };
 }
 
-export function buildTools({ index, profile, root }) {
+export function buildTools({ index, profile, root, packName = "agent-dev" }) {
   const sandboxDir = mkdtempSync(join(tmpdir(), "tutor-sandbox-"));
 
   const lookup_course = makeTool(
@@ -141,9 +141,10 @@ export function buildTools({ index, profile, root }) {
       question: Type.String({ description: "学生的问题原文" }),
     }),
     async (_id, params) => {
-      const gapsFile = join(root, "knowledge-gaps.jsonl");
+      // TUTOR_GAPS_FILE 供评估等场景重定向,避免污染真实盲区档案;默认写 tutor 根
+      const gapsFile = process.env.TUTOR_GAPS_FILE ? resolve(process.env.TUTOR_GAPS_FILE) : join(root, "knowledge-gaps.jsonl");
       appendFileSync(gapsFile, JSON.stringify({
-        ts: new Date().toISOString(), pack: "agent-dev",
+        ts: new Date().toISOString(), pack: packName,
         topic: params.topic, question: params.question,
       }) + "\n");
       return textResult(`已记录知识盲区: ${params.topic}。已如实告知学生该部分超出课程库,工厂会在知识进化时补齐。`);

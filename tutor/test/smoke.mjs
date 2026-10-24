@@ -92,7 +92,7 @@ check("记忆: renderProfile 包含掌握项", renderProfile(reloaded).includes(
 
 // 3. 代码沙箱(直接调用工具 execute)
 const { buildTools } = await import(join(ROOT, "src", "tools.mjs"));
-const tools = buildTools({ index, profile: reloaded, root: ROOT });
+const tools = buildTools({ index, profile: reloaded, root: ROOT, packName: "smoke-pack" });
 const runCode = tools.find((t) => t.name === "run_code");
 const r1 = await runCode.execute("t1", { language: "javascript", code: "console.log(2+3)" });
 check("沙箱: JS 执行", r1.content[0].text.includes("✓") && r1.content[0].text.includes("5"));
@@ -111,6 +111,20 @@ check("记忆工具: record_progress 写入且去重", reloaded.mastered.filter(
   && reloaded.mastered.find((m) => m.topic === "冒烟概念").evidence === "更新后的证据");
 check("记忆工具: record_misconception 写入", reloaded.misconceptions.some((m) => m.topic === "冒烟概念"));
 check("记忆工具: update_plan 写入", reloaded.currentFocus === "冒烟焦点" && reloaded.nextStep === "冒烟下一步");
+
+// 3b-2. 盲区工具:pack 归因(不再硬编码 agent-dev)+ TUTOR_GAPS_FILE 重定向
+const recGap = tools.find((t) => t.name === "record_knowledge_gap");
+process.env.TUTOR_GAPS_FILE = join(ROOT, "students", "smoke-gaps.jsonl");
+await recGap.execute("t7", { topic: "冒烟盲区", question: "冒烟问题" });
+delete process.env.TUTOR_GAPS_FILE;
+let gapOk = false, gapPack = "";
+try {
+  const j = JSON.parse(readFileSync(join(ROOT, "students", "smoke-gaps.jsonl"), "utf8").trim());
+  gapOk = j.pack === "smoke-pack" && j.topic === "冒烟盲区";
+  gapPack = j.pack;
+} catch {}
+check("盲区工具: pack 归因正确 + 可重定向", gapOk, `pack=${gapPack}`);
+rmSync(join(ROOT, "students", "smoke-gaps.jsonl"), { force: true });
 
 // 4. 上下文修剪(同步丢弃式,作为总结式压缩的兜底已被 1c 覆盖主路径)
 const long = [];
@@ -135,6 +149,8 @@ check("mock 全链路: 会话 JSONL 落盘", existsSync(sessionPath));
 if (existsSync(sessionPath)) {
   const lines = readFileSync(sessionPath, "utf8").trim().split("\n").map((l) => JSON.parse(l));
   check("会话记录: 含 user/assistant/tool_call/tool_result", ["user", "assistant", "tool_call", "tool_result"].every((r) => lines.some((l) => l.role === r)));
+  check("会话记录: user 不双记(单轮恰好一条)", lines.filter((l) => l.role === "user").length === 1,
+    `count=${lines.filter((l) => l.role === "user").length}`);
   const tr = lines.find((l) => l.role === "tool_result" && l.name === "lookup_course");
   check("会话记录: 检索结果非空且非错误", tr && !tr.isError && tr.preview.includes("Agent"), tr && tr.preview.slice(0, 60));
 }
@@ -180,6 +196,27 @@ if (existsSync(sessionPath)) {
   } catch { check("RPC: 一轮后收到 ready", false); }
   check("RPC: 流式 delta 事件", events.some((x) => x.type === "delta" && x.text));
   check("RPC: tool_start 事件(mock 会调 lookup_course)", events.some((x) => x.type === "tool_start" && x.name === "lookup_course"));
+  check("RPC: tool_end 事件(成功也发送)", events.some((x) => x.type === "tool_end" && x.name === "lookup_course" && !x.isError));
+
+  // 连发两条(一次 write):验证 turn 串行化——依次完成、各自 ready、进程不崩
+  child.stdin.write(JSON.stringify({ type: "user", text: "第一条:Agent 是什么?" }) + "\n" +
+    JSON.stringify({ type: "user", text: "第二条:工具怎么执行?" }) + "\n");
+  try {
+    await waitEvent("ready", 4);
+    check("RPC: 连发两条串行完成(各收到 ready)", true);
+  } catch { check("RPC: 连发两条串行完成(各收到 ready)", false); }
+
+  // abort 控制消息:空闲时为无害空操作,有 ack;随后对话仍正常
+  child.stdin.write(JSON.stringify({ type: "control", cmd: "abort" }) + "\n");
+  const aborted = await waitEvent("aborted").catch(() => null);
+  check("RPC: abort 空闲时返回 ack", !!aborted);
+  child.stdin.write(JSON.stringify({ type: "user", text: "abort 后还能问吗?" }) + "\n");
+  try {
+    await waitEvent("ready", 5);
+    check("RPC: abort 后对话继续正常", true);
+  } catch { check("RPC: abort 后对话继续正常", false); }
+  check("RPC: 全程无 error 事件", !events.some((x) => x.type === "error"));
+
   child.stdin.write(JSON.stringify({ type: "control", cmd: "exit" }) + "\n");
   const exited = await new Promise((res) => {
     const t0 = Date.now();
@@ -191,9 +228,12 @@ if (existsSync(sessionPath)) {
   check("RPC: 学生档案落盘", existsSync(rpcProfile));
   const rpcLog = readFileSync(join(ROOT, "students", "smoke-rpc.session.jsonl"), "utf8")
     .trim().split("\n").map((l) => JSON.parse(l));
-  // agent_end 会额外落一条带前缀的内部 prompt 消息(page 为空);要找的是显式记录的学生消息
   const rpcUser = rpcLog.find((l) => l.role === "user" && typeof l.page === "string");
   check("RPC: 页面上下文落盘", rpcUser?.page === "03-prompt-engineering.html", rpcUser && `page=${rpcUser.page}`);
+  // 双记回归:user 只应有显式记录(带 page 字段),不应出现 agent_end 落的数组形式文本
+  const rpcUserAll = rpcLog.filter((l) => l.role === "user");
+  check("RPC: user 消息无双记(4 轮对话恰好 4 条)", rpcUserAll.length === 4 && !rpcUserAll.some((l) => String(l.text).startsWith('[{"type"')),
+    `count=${rpcUserAll.length}`);
   rmSync(rpcProfile, { force: true });
   rmSync(join(ROOT, "students", "smoke-rpc.session.jsonl"), { force: true });
 }
