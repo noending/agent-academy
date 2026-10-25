@@ -277,6 +277,12 @@ struct AgentAcademyApp: App {
     @State private var findMissed = false
     @State private var showTutor = false
     @State private var showFactory = false
+    /// 导师面板宽度:拖分隔条调节(280–640),记忆上次值
+    @State private var tutorWidth: CGFloat = {
+        let v = UserDefaults.standard.double(forKey: "tutorPanelWidth")
+        return v >= 280 && v <= 640 ? CGFloat(v) : 390
+    }()
+    @State private var dragStartWidth: CGFloat?
     @StateObject private var tutor = TutorModel()
     @StateObject private var factory = FactoryModel()
     @FocusState private var findFieldFocused: Bool
@@ -286,9 +292,9 @@ struct AgentAcademyApp: App {
             HStack(spacing: 0) {
                 SiteView(coordinator: coordinator)
                 if showTutor {
-                    Divider()
+                    tutorDivider
                     TutorPanel(model: tutor)
-                        .frame(width: 390)
+                        .frame(width: tutorWidth)
                 }
             }
             .frame(minWidth: 1000, minHeight: 660)
@@ -397,6 +403,31 @@ struct AgentAcademyApp: App {
 
     private func toggleTutor() {
         showTutor.toggle()
+    }
+
+    /// 分隔条:1pt 细线上叠 9pt 透明热区,向左拖加宽、向右拖收窄,松手记忆
+    private var tutorDivider: some View {
+        Divider()
+            .overlay {
+                Rectangle()
+                    .fill(.clear)
+                    .contentShape(Rectangle())
+                    .frame(width: 9)
+                    .onHover { inside in
+                        if inside { NSCursor.resizeLeftRight.push() } else { NSCursor.pop() }
+                    }
+                    .gesture(
+                        DragGesture(minimumDistance: 1)
+                            .onChanged { v in
+                                if dragStartWidth == nil { dragStartWidth = tutorWidth }
+                                tutorWidth = min(640, max(280, (dragStartWidth ?? 390) - v.translation.width))
+                            }
+                            .onEnded { _ in
+                                dragStartWidth = nil
+                                UserDefaults.standard.set(Double(tutorWidth), forKey: "tutorPanelWidth")
+                            }
+                    )
+            }
     }
 
     @ViewBuilder

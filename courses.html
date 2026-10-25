@@ -47,7 +47,7 @@
 <script>
 /* 课程管理页:从 courses-manifest.json 动态渲染(由内容工厂维护) */
 (function () {
-  const KIND_LABEL = { paper: "论文翻译", repo: "仓库课程", topic: "课题课程" };
+  const KIND_LABEL = { paper: "论文翻译", repo: "仓库课程", topic: "课题课程", book: "读书导读" };
   const list = document.getElementById("course-list");
 
   function esc(s) { return String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
@@ -122,6 +122,6 @@
 })();
 </script>
 
-<script src="assets/js/app.js?v=23"></script>
+<script src="assets/js/app.js?v=24"></script>
 </body>
 </html>

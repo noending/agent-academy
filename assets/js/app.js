@@ -23,6 +23,7 @@ const NAV = [
   { id: "courses", file: "courses.html", icon: "管", title: "课程管理", group: "附录" },
   { id: "papers", file: "papers.html", icon: "论", title: "论文精读", group: "附录" },
   { id: "translations", file: "translations.html", icon: "译", title: "中文精读版", group: "附录" },
+  { id: "books", file: "books.html", icon: "书", title: "读书导读", group: "附录" },
   { id: "full", file: "full-react.html", icon: "全", title: "全文翻译（8 篇）", group: "附录" },
   { id: "res", file: "resources.html", icon: "索", title: "资源与术语表", group: "附录" },
 ];
@@ -253,6 +254,8 @@ const LITE_PKG_MAP = {
 const LITE_STDLIB = new Set(("abc asyncio base64 collections copy csv dataclasses datetime enum functools hashlib "
   + "heapq inspect itertools json math os pathlib pickle random re secrets shutil statistics string "
   + "sys textwrap time typing uuid warnings zipfile").split(" "));
+// 标签命中这些关键词的代码块不给 ⚡(参考答案是教学答案,不适合直接跑)
+const LITE_SKIP = ["参考答案"];
 // 出现这些用法 → 浏览器内必然失败(联网 API / 本地文件 / 无法在 Pyodide 运行的框架)
 const LITE_LOCAL_ONLY = /client\.chat\.completions|OpenAI\(|api_key\s*=|\.launch\(|gradio|torch|transformers|pd\.read_csv|requests\.(get|post)|urlopen|embeddings\.create/;
 
@@ -431,14 +434,9 @@ function markIndexCards() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  initTheme();
-  renderSidebar();
-  initHamburger();
-  initCodeBlocks();
-  initLite();
-  initToc();
-  initChapterFooter();
-  markIndexCards();
+  // 单步容错:任一初始化抛错只影响自身,不拖垮后面的完成按钮/目录等关键功能
+  [initTheme, renderSidebar, initHamburger, initCodeBlocks, initLite, initToc, initChapterFooter, markIndexCards]
+    .forEach(fn => { try { fn(); } catch (e) { console.error("[init]", fn.name, e); } });
 });
 
 /* ============================================================
