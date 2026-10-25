@@ -283,6 +283,7 @@ struct AgentAcademyApp: App {
         return v >= 280 && v <= 640 ? CGFloat(v) : 390
     }()
     @State private var dragStartWidth: CGFloat?
+    @State private var tutorHandleHover = false
     @StateObject private var tutor = TutorModel()
     @StateObject private var factory = FactoryModel()
     @FocusState private var findFieldFocused: Bool
@@ -292,9 +293,10 @@ struct AgentAcademyApp: App {
             HStack(spacing: 0) {
                 SiteView(coordinator: coordinator)
                 if showTutor {
-                    tutorDivider
+                    Divider()
                     TutorPanel(model: tutor)
                         .frame(width: tutorWidth)
+                        .overlay(alignment: .leading) { tutorHandle }
                 }
             }
             .frame(minWidth: 1000, minHeight: 660)
@@ -405,29 +407,41 @@ struct AgentAcademyApp: App {
         showTutor.toggle()
     }
 
-    /// 分隔条:1pt 细线上叠 9pt 透明热区,向左拖加宽、向右拖收窄,松手记忆
-    private var tutorDivider: some View {
-        Divider()
-            .overlay {
+    /// 拖拽手柄:热区长在面板自身 bounds 内(叠在分隔线上的 overlay 溢出到相邻视图后
+    /// 命中不可靠——左侧被 WKWebView 的 AppKit 事件截走,右侧被更靠后的面板兄弟视图抢占,
+    /// 实际只剩 1pt 细线可命中)。14pt 透明条 + 悬停/拖动时 3pt 高亮竖线 + 左右箭头光标,
+    /// 向左拖加宽、向右拖收窄,松手记忆;光标 push/pop 按进出配对,拖动中途出界不提前还原
+    private var tutorHandle: some View {
+        Color.clear
+            .frame(width: 14)
+            .contentShape(Rectangle())
+            .overlay(alignment: .leading) {
                 Rectangle()
-                    .fill(.clear)
-                    .contentShape(Rectangle())
-                    .frame(width: 9)
-                    .onHover { inside in
-                        if inside { NSCursor.resizeLeftRight.push() } else { NSCursor.pop() }
-                    }
-                    .gesture(
-                        DragGesture(minimumDistance: 1)
-                            .onChanged { v in
-                                if dragStartWidth == nil { dragStartWidth = tutorWidth }
-                                tutorWidth = min(640, max(280, (dragStartWidth ?? 390) - v.translation.width))
-                            }
-                            .onEnded { _ in
-                                dragStartWidth = nil
-                                UserDefaults.standard.set(Double(tutorWidth), forKey: "tutorPanelWidth")
-                            }
-                    )
+                    .fill(Color.accentColor.opacity(tutorHandleHover || dragStartWidth != nil ? 0.55 : 0))
+                    .frame(width: 3)
             }
+            .onHover { inside in
+                let wasInside = tutorHandleHover
+                tutorHandleHover = inside
+                if inside && !wasInside {
+                    NSCursor.resizeLeftRight.push()
+                } else if !inside && wasInside && dragStartWidth == nil {
+                    NSCursor.pop()
+                }
+            }
+            .gesture(
+                DragGesture(minimumDistance: 1)
+                    .onChanged { v in
+                        if dragStartWidth == nil { dragStartWidth = tutorWidth }
+                        tutorWidth = min(640, max(280, (dragStartWidth ?? 390) - v.translation.width))
+                    }
+                    .onEnded { _ in
+                        dragStartWidth = nil
+                        if !tutorHandleHover { NSCursor.pop() }
+                        UserDefaults.standard.set(Double(tutorWidth), forKey: "tutorPanelWidth")
+                    }
+            )
+            .help("拖动调节导师面板宽度")
     }
 
     @ViewBuilder
