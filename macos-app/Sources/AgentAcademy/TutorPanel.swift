@@ -17,12 +17,34 @@ struct PageContext: Equatable {
     let title: String
 }
 
+/// 读书包元数据(pack.json 的 book 字段;import-book/make-book-page 生成)
+struct BookMeta {
+    let slug: String
+    let title: String
+    let authors: String?
+    let pdf: String?      // 站内相对路径,如 papers/pdf/xxx.pdf
+    let page: String?     // 导读页,如 book-xxx.html
+}
+
+/// 读书包的章节(来自 curriculum;选择「正在读」后作为上下文上报)
+struct ChapterMeta: Identifiable {
+    let no: Int
+    let title: String
+    let goal: String
+    let appendix: Bool
+    var id: Int { no }
+    var label: String { appendix ? "附录 · \(title)" : "第 \(no) 章 · \(title)" }
+}
+
 /// 教学包元数据(课程菜单 + 预置问题来源)
 struct PackMeta {
     let name: String
     let title: String
     let starter: [String]        // pack.json starterQuestions
     let chapterQuestions: [String] // curriculum 各章 questions 拼平
+    let book: BookMeta?          // 非 nil = 读书包
+    let chapters: [ChapterMeta]  // curriculum 章节列表(读书包的章节选择器用)
+    var isBook: Bool { book != nil }
 }
 
 // MARK: - 每个课程页面的预置问题(键 = 文件名)
@@ -104,6 +126,11 @@ let PRESET_QUESTIONS: [String: [String]] = [
         "验收测试全红起步,第一刀从哪切?",
         "交付五件套文档分别是什么?",
     ],
+    "books.html": [
+        "读书板块怎么用?",
+        "书架上这本书值不值得我读?",
+        "快读路径具体怎么安排?",
+    ],
 ]
 
 let DEFAULT_QUESTIONS = [
@@ -132,6 +159,7 @@ final class TutorModel: ObservableObject {
     @Published private(set) var packTitle = "Agent 学院 · 开发导师"
     @Published private(set) var packs: [PackMeta] = []
     @Published private(set) var currentPack: PackMeta?
+    @Published private(set) var readingChapter: ChapterMeta? // 读书包:正在读的章(作为下一条消息的上下文)
 
     private var pageDirty = false // 页面变化后还没上报过
 
@@ -153,10 +181,27 @@ final class TutorModel: ObservableObject {
             let title = (obj["title"] as? String) ?? name
             let starter = (obj["starterQuestions"] as? [String]) ?? []
             var chapterQs: [String] = []
-            if let chapters = obj["curriculum"] as? [[String: Any]] {
-                for ch in chapters { if let qs = ch["questions"] as? [String] { chapterQs += qs } }
+            var chapters: [ChapterMeta] = []
+            if let curriculum = obj["curriculum"] as? [[String: Any]] {
+                for ch in curriculum {
+                    if let qs = ch["questions"] as? [String] { chapterQs += qs }
+                    if let no = ch["no"] as? Int, let t = ch["title"] as? String {
+                        chapters.append(ChapterMeta(no: no, title: t,
+                                                    goal: (ch["goal"] as? String) ?? "",
+                                                    appendix: (ch["appendix"] as? Bool) ?? (no >= 100)))
+                    }
+                }
             }
-            list.append(PackMeta(name: name, title: title, starter: starter, chapterQuestions: chapterQs))
+            var book: BookMeta?
+            if let b = obj["book"] as? [String: Any], let slug = b["slug"] as? String {
+                book = BookMeta(slug: slug,
+                                title: (b["title"] as? String) ?? title,
+                                authors: b["authors"] as? String,
+                                pdf: b["pdf"] as? String,
+                                page: b["page"] as? String)
+            }
+            list.append(PackMeta(name: name, title: title, starter: starter,
+                                 chapterQuestions: chapterQs, book: book, chapters: chapters))
         }
         packs = list
         currentPack = packs.first(where: { $0.name == packName })
@@ -171,8 +216,40 @@ final class TutorModel: ObservableObject {
         }
     }
 
-    /// 预置问题分层:生成课用课程自带问题(规划器按章生成)+ 页面问题兜底;agent-dev 用页面映射
+    /// 读书包:选「正在读」的章 → 作为页面上下文随下一条消息上报;nil = 回到导读页
+    func selectReadingChapter(_ ch: ChapterMeta?) {
+        guard let book = currentPack?.book else { return }
+        readingChapter = ch
+        let page = book.page ?? "book-\(book.slug).html"
+        if let ch {
+            currentPage = PageContext(file: "\(page)#ch-\(ch.no)", title: "\(book.title) · \(ch.label)")
+        } else {
+            currentPage = PageContext(file: page, title: "\(book.title) · 导读页")
+        }
+        pageDirty = true
+    }
+
+    /// 页面文件(PDF/导读页)属于某读书包 → 返回该包名(读书模式自动切换用)
+    func bookPack(forPageFile file: String) -> String? {
+        for p in packs where p.isBook {
+            if let pdf = p.book?.pdf?.components(separatedBy: "/").last, pdf == file { return p.name }
+            if let page = p.book?.page, page == file { return p.name }
+        }
+        return nil
+    }
+
+    /// 预置问题分层:读书包按「选章/未选章」给陪读问题;生成课用课程自带问题;agent-dev 用页面映射
     func presets() -> [String] {
+        if let meta = currentPack, meta.isBook {
+            if let ch = readingChapter {
+                return ["\(ch.label)的核心思想是什么?",
+                        "我在读\(ch.label),卡住了,帮我讲讲重点",
+                        "读完\(ch.label),考考我"]
+            }
+            return ["这本书适合我吗?我该怎么读?",
+                    "快读路径具体怎么安排?",
+                    "带着我的问题,该从哪章读起?"]
+        }
         let pageQs = PRESET_QUESTIONS[currentPage?.file ?? ""]
         if let meta = currentPack, !(meta.starter.isEmpty && meta.chapterQuestions.isEmpty) {
             let merged = (meta.starter + meta.chapterQuestions + (pageQs ?? []))
@@ -357,6 +434,7 @@ final class TutorModel: ObservableObject {
         statusText = nil
         failureReason = nil
         pageDirty = false
+        readingChapter = nil // 读书包的「正在读」随包切换重置
         if let found = packs.first(where: { $0.name == name }) {
             packTitle = found.title
             currentPack = found
@@ -451,6 +529,7 @@ struct TutorPanel: View {
     var body: some View {
         VStack(spacing: 0) {
             header
+            if model.currentPack?.isBook == true { readingBar }
             Divider()
             chatList
             Divider()
@@ -463,6 +542,42 @@ struct TutorPanel: View {
             model.ensureStarted()
             model.greetIfIdle() // 引擎已在跑且没有对话时(如关开面板),也补开场
         }
+    }
+
+    /// 读书模式条:选「正在读」的章(作为上下文上报,导师回答贴合该章)+ 读完考考我
+    private var readingBar: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "book.fill").font(.caption).foregroundStyle(.purple)
+            Menu {
+                Button("导读页 · 未选章") { model.selectReadingChapter(nil) }
+                ForEach(model.currentPack?.chapters ?? []) { ch in
+                    Button(ch.label) { model.selectReadingChapter(ch) }
+                }
+            } label: {
+                HStack(spacing: 4) {
+                    Text(model.readingChapter?.label ?? "正在读:选章节")
+                        .font(.caption).lineLimit(1)
+                    Image(systemName: "chevron.down").font(.system(size: 8)).foregroundStyle(.secondary)
+                }
+            }
+            .menuStyle(.borderlessButton)
+            .fixedSize()
+            .help("告诉导师你在读哪一章(回答会贴合该章并标注出处)")
+            Spacer()
+            Button {
+                if let ch = model.readingChapter {
+                    model.send("我刚读完\(ch.label),考考我对这章的理解")
+                }
+            } label: {
+                Label("考考我", systemImage: "checkmark.seal")
+                    .font(.caption)
+            }
+            .buttonStyle(.borderless)
+            .disabled(model.readingChapter == nil || model.thinking || model.failureReason != nil)
+            .help("读完当前章,让导师出题检验(答对会记入学习档案)")
+        }
+        .padding(.horizontal, 12).padding(.vertical, 6)
+        .background(Color.purple.opacity(0.05))
     }
 
     private var header: some View {

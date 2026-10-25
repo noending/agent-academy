@@ -400,8 +400,9 @@ ${relationsHtml || '<li class="small-note">(未发现强关联)</li>'}
       <div class="callout info">
         <div class="co-title">导读只回答「读什么、怎么读」;具体问题请到导师模式,答案只来自书中原文与思想</div>
         <p style="margin-bottom:0">
+          <a class="btn primary" href="academy://switch-pack/${esc(PACK)}">🎓 打开读书导师(App)</a><br>
           CLI:<code>cd tutor && node src/tutor.mjs --pack packs/${esc(PACK)}</code><br>
-          macOS App:导师模式对话中提问即可(课程菜单切到「读书 · ${esc(TITLE)}」)。导师检索不到的内容会直说「书里没有」,不编造。
+          macOS App:点上方按钮或课程菜单切到「读书 · ${esc(TITLE)}」;读原书 PDF 时导师自动切到本书。导师检索不到的内容会直说「书里没有」,不编造。
         </p>
       </div>
 

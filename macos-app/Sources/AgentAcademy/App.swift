@@ -312,7 +312,12 @@ struct AgentAcademyApp: App {
             .onAppear {
                 // 站点翻页 → 导师面板:上报当前页面,预置问题与教学上下文随之切换
                 coordinator.onPageChange = { [weak tutor] file, title in
-                    tutor?.updatePage(file: file, title: title)
+                    guard let tutor else { return }
+                    // 读书模式:翻开某本书的原书 PDF 或导读页 → 面板开着时自动切到对应读书导师
+                    if showTutor, let bookPack = tutor.bookPack(forPageFile: file), bookPack != tutor.packName {
+                        tutor.switchPack(bookPack)
+                    }
+                    tutor.updatePage(file: file, title: title)
                 }
                 // 课程管理页/草稿页深链: 切换课程 / 删除课程 / 按意见重新生成
                 coordinator.onCommand = { [weak tutor] cmd, arg, url in
