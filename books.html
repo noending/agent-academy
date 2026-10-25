@@ -48,7 +48,10 @@
 
  <div class="callout tip">
  <div class="co-title">想添加新书？</div>
- <p>把书的 PDF 放到 <code>papers/pdf/</code>，然后跑读书管线：<code>cd tutor && node scripts/make-book-page.mjs --kb kb/&lt;书&gt;.json --slug &lt;slug&gt; --title "&lt;书名&gt;" --authors "&lt;作者&gt;"</code>（需先用 build-gulli-kb.py 式脚本把 PDF 切成 kb）。生成的导读是机器初稿，人审通过后用 publish-book.mjs 发布。版权边界：导读页只保留提炼与短引用，全文检索与问答只在本地导师。</p>
+ <p>一条命令搞定（自动切块建库 → 导读页 → 读书导师包）：<br>
+ ① PDF 书：<code>cd tutor && node scripts/import-book.mjs --pdf /path/to/book.pdf --slug &lt;slug&gt; --title "书名" --authors "作者" --pdf-link papers/pdf/book.pdf --ctx-run</code><br>
+ ② 网页长文/在线书：<code>node scripts/import-book.mjs --url https://… --slug &lt;slug&gt; --title "标题"</code>（按 h2 自动分章）<br>
+ 生成的是机器初稿，人审通过后 <code>node scripts/publish-book.mjs --slug &lt;slug&gt;</code> 发布。版权边界：导读页只保留提炼与短引用，全文检索与问答只在本地导师。</p>
  </div>
 
  <div class="callout story">

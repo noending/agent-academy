@@ -350,7 +350,7 @@ const html = `<!DOCTYPE html>
         <div class="kicker">读书导读 · 机器初稿 · 未审勿发布</div>
         <h1>${esc(TITLE)}<span style="color:var(--warn)">(机器导读初稿)</span></h1>
         <p class="lead">
-          ${esc(AUTHORS)}${PAGES ? ` · ${esc(PAGES)} 页` : ""}${PDF_LINK ? ` · <a href="${esc(PDF_LINK)}" target="_blank" rel="noopener">原书 PDF</a>` : ""}
+          ${esc(AUTHORS)}${PAGES ? ` · ${esc(PAGES)} 页` : ""}${PDF_LINK ? ` · <a href="${esc(PDF_LINK)}" target="_blank" rel="noopener">${/\.pdf(\?|$)/i.test(PDF_LINK) ? "原书 PDF" : "原文链接"}</a>` : ""}
           <br><b style="color:var(--warn)">本页由读书管线自动生成,尚未人工审校。</b>
           基于知识库 ${kb.chunks.length} 块(分章摘要 ${chList.length} 章),金句 ${golden.length} 条(全部逐字校验通过)。
         </p>

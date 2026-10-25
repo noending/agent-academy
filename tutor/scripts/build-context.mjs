@@ -27,6 +27,19 @@ const SOURCES = [
     doc: (c) => `Gulli《Agentic Design Patterns》${c.chapterTitle} ${c.title}`,
   },
 ];
+// 单源模式(import-book 调用): node build-context.mjs --kb kb/x-kb.json --title "书名"
+const _args = process.argv.slice(2);
+const _argOf = (k) => { const i = _args.indexOf(k); return i >= 0 ? _args[i + 1] : null; };
+if (_argOf("--kb")) {
+  const kbFile = _argOf("--kb").replace(/^\.?\//, "");
+  const bookTitle = _argOf("--title") || "书籍";
+  SOURCES.length = 0;
+  SOURCES.push({
+    file: kbFile,
+    out: kbFile.replace(/\.json$/, "-ctx.json"),
+    doc: (c) => `《${bookTitle}》${c.chapterTitle || ""} ${c.title}`,
+  });
+}
 
 const client = { key: process.env.DEEPSEEK_API_KEY };
 
