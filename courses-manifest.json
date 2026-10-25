@@ -1,6 +1,23 @@
 {
   "courses": [
     {
+      "kind": "book",
+      "slug": "gulli-patterns",
+      "title": "Agentic Design Patterns",
+      "description": "读书导读：21个可落地模式，系统构建可靠智能体",
+      "page": "book-gulli-patterns.html",
+      "pack": "gulli-patterns",
+      "review": "drafts/gulli-patterns/REVIEW.md",
+      "generated": true,
+      "generatedAt": "2026-10-25T10:26:53.083Z",
+      "authors": "Antonio Gulli · 2025",
+      "pages": "458",
+      "pdf": "papers/pdf/gulli-agentic-design-patterns.pdf",
+      "quickChapters": "1,4,5,7",
+      "approved": true,
+      "published": true
+    },
+    {
       "kind": "topic",
       "slug": "e2e-topic",
       "title": "提示词工程入门",
@@ -926,5 +943,5 @@
       "review": "tutor/llm-termlogy/REVIEW.md"
     }
   ],
-  "updatedAt": "2026-10-07T15:24:17.272Z"
+  "updatedAt": "2026-10-25T10:26:53.083Z"
 }

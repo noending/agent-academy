@@ -1,0 +1,1269 @@
+{
+ "meta": {
+  "slug": "gulli-patterns",
+  "title": "Agentic Design Patterns",
+  "authors": "Antonio Gulli · 2025",
+  "pages": "458",
+  "pdf": "papers/pdf/gulli-agentic-design-patterns.pdf",
+  "pack": "gulli-patterns",
+  "kb": "kb/gulli-patterns.json",
+  "builtAt": "2026-10-25T08:45:31.469Z",
+  "model": "deepseek-v4-flash",
+  "chunks": 589
+ },
+ "chapters": [
+  {
+   "no": 1,
+   "titleEn": "Chapter 1: Prompt Chaining",
+   "appendix": false,
+   "chunks": 20,
+   "titleZh": "提示链 Prompt Chaining",
+   "oneLiner": "把复杂任务拆成顺序子任务，前一步输出作为后一步输入，提升可靠性与可控性。",
+   "keyIdeas": [
+    "分而治之：将庞杂任务分解为聚焦的子问题序列",
+    "每步输出作为下一步输入，形成依赖链与上下文积累",
+    "结构化输出（JSON/XML）保证步骤间数据完整可解析",
+    "可插入外部工具与确定性逻辑，是构建Agent的基础模式"
+   ],
+   "dependsOn": [],
+   "difficulty": 1,
+   "quotes": [
+    {
+     "q": "Rather than expecting an LLM to solve a complex problem in a single, monolithic step, prompt chaining advocates for a divide-and-conquer strategy.",
+     "why": "点明本章核心：用分治替代单次大提示",
+     "verified": true
+    },
+    {
+     "q": "The output of one step acting as the input for the next is crucial.",
+     "why": "一句话概括链式依赖的本质机制",
+     "verified": true
+    },
+    {
+     "q": "The reliability of a prompt chain is highly dependent on the integrity of the data passed between steps.",
+     "why": "强调结构化输出对链条可靠性的关键作用",
+     "verified": true
+    }
+   ]
+  },
+  {
+   "no": 2,
+   "titleEn": "Chapter 2: Routing",
+   "appendix": false,
+   "chunks": 19,
+   "titleZh": "路由 Routing",
+   "oneLiner": "本章讲如何用条件逻辑让智能体按输入或状态动态选择工具、子流程或子代理。",
+   "keyIdeas": [
+    "路由为智能体引入条件逻辑，突破线性执行，实现动态决策",
+    "实现方式有LLM提示、嵌入相似度、规则和训练分类器四种",
+    "路由可发生在任务开始、处理中间或子程序选工具等多个节点",
+    "LangGraph用状态图显式定义路由，ADK靠工具与子代理自动委派"
+   ],
+   "dependsOn": [
+    1
+   ],
+   "difficulty": 1,
+   "quotes": [
+    {
+     "q": "Routing introduces conditional logic into an agent's operational framework, enabling a shift from a fixed execution path to a model where the agent dynamically evaluates specific criteria to select from a set of possible subsequent actions.",
+     "why": "点明路由本质：用条件逻辑替代固定执行路径",
+     "verified": true
+    },
+    {
+     "q": "Ultimately, routing provides the capacity for logical arbitration that is essential for creating functionally diverse and context-aware systems.",
+     "why": "概括路由的价值：逻辑仲裁与上下文感知",
+     "verified": true
+    },
+    {
+     "q": "Use the Routing pattern when an agent must decide between multiple distinct workflows, tools, or sub-agents based on the user's input or the current state.",
+     "why": "给出何时该用路由模式的判断准则",
+     "verified": true
+    }
+   ]
+  },
+  {
+   "no": 3,
+   "titleEn": "Chapter 3: Parallelization",
+   "appendix": false,
+   "chunks": 20,
+   "titleZh": "并行化 Parallelization",
+   "oneLiner": "讲解如何并发执行无依赖的LLM调用、工具与子代理，以缩短任务总耗时。",
+   "keyIdeas": [
+    "识别无依赖的子任务，并发执行以降低整体延迟",
+    "适用于多源检索、多API调用、多模态处理等场景",
+    "LangChain用RunnableParallel，ADK用ParallelAgent实现",
+    "并发会带来设计、调试与日志的复杂度与成本"
+   ],
+   "dependsOn": [
+    1,
+    2
+   ],
+   "difficulty": 1,
+   "quotes": [
+    {
+     "q": "The core idea is to identify parts of the workflow that do not depend on the output of other parts and execute them in parallel.",
+     "why": "点明并行化的判断标准：无依赖即可并发",
+     "verified": true
+    },
+    {
+     "q": "Note that asyncio provides concurrency, not parallelism.",
+     "why": "澄清并发与并行的区别，避免误解",
+     "verified": true
+    },
+    {
+     "q": "Parallelization is a pattern for executing independent tasks concurrently to improve efficiency.",
+     "why": "一句话概括本章核心定义",
+     "verified": true
+    }
+   ]
+  },
+  {
+   "no": 4,
+   "titleEn": "Chapter 4: Reflection",
+   "appendix": false,
+   "chunks": 19,
+   "titleZh": "反思模式 Reflection",
+   "oneLiner": "让智能体评估自身输出并迭代改进，以提升质量与准确性。",
+   "keyIdeas": [
+    "反思引入反馈回路：执行、评估、改进、迭代",
+    "生产者-批评者分离角色可避免自我审查的认知偏差",
+    "适用于高质量要求的写作、代码、规划等场景",
+    "代价是更高延迟、成本与上下文膨胀"
+   ],
+   "dependsOn": [
+    1,
+    2,
+    3
+   ],
+   "difficulty": 1,
+   "quotes": [
+    {
+     "q": "The Reflection pattern involves an agent evaluating its own work, output, or internal state and using that evaluation to improve its performance or refine its response.",
+     "why": "定义反思模式的核心机制",
+     "verified": true
+    },
+    {
+     "q": "This separation of concerns is powerful because it prevents the \"cognitive bias\" of an agent reviewing its own work.",
+     "why": "解释为何用独立批评者更客观",
+     "verified": true
+    },
+    {
+     "q": "Use the Reflection pattern when the quality, accuracy, and detail of the final output are more important than speed and cost.",
+     "why": "给出何时使用的判断准则",
+     "verified": true
+    }
+   ]
+  },
+  {
+   "no": 5,
+   "titleEn": "Chapter 5: Tool Use (Function Calling)",
+   "appendix": false,
+   "chunks": 27,
+   "titleZh": "工具使用 Tool Use (Function Calling)",
+   "oneLiner": "讲智能体如何通过函数调用调用外部API、数据库与代码，突破LLM静态知识限制。",
+   "keyIdeas": [
+    "工具调用流程：定义工具→LLM决策→生成结构化调用→执行→回传结果",
+    "工具不止函数，还包括API、数据库查询、委派其他智能体",
+    "LangChain用@tool装饰器与AgentExecutor简化工具绑定",
+    "Google ADK提供Google Search、代码执行、Vertex AI Search等预置工具"
+   ],
+   "dependsOn": [
+    1
+   ],
+   "difficulty": 1,
+   "quotes": [
+    {
+     "q": "It allows the LLM at the core of the agent to decide when and how to use a specific external function based on the user's request or the current state of the task.",
+     "why": "点明工具使用的核心：由LLM自主决定何时调用",
+     "verified": true
+    },
+    {
+     "q": "This pattern is fundamental because it breaks the limitations of the LLM's training data and allows it to access up-to-date information",
+     "why": "概括工具模式的根本价值：突破训练数据局限",
+     "verified": true
+    },
+    {
+     "q": "Tool Use is what transforms a language model from a text generator into an agent capable of sensing, reasoning, and acting in the digital or physical world",
+     "why": "一句话定义工具使用对智能体的意义",
+     "verified": true
+    }
+   ]
+  },
+  {
+   "no": 6,
+   "titleEn": "Chapter 6: Planning",
+   "appendix": false,
+   "chunks": 16,
+   "titleZh": "规划 Planning",
+   "oneLiner": "讲智能体如何把复杂目标拆解为可执行步骤序列，并动态调整计划。",
+   "keyIdeas": [
+    "规划是从初始状态到目标状态制定行动序列的能力",
+    "计划是起点而非固定脚本，需随新信息动态调整",
+    "已知解法时用固定工作流更可靠，需发现how时才用规划",
+    "LLM可自主生成分步计划，适用于多步依赖任务"
+   ],
+   "dependsOn": [],
+   "difficulty": 1,
+   "quotes": [
+    {
+     "q": "At its core, planning is the ability for an agent or a system of agents to formulate a sequence of actions to move from an initial state towards a goal state.",
+     "why": "定义规划的核心，全章立论基础",
+     "verified": true
+    },
+    {
+     "q": "An initial plan is merely a starting point, not a rigid script.",
+     "why": "强调计划的动态适应性，关键思想",
+     "verified": true
+    },
+    {
+     "q": "does the \"how\" need to be discovered, or is it already known?",
+     "why": "给出是否采用规划智能体的判断标准",
+     "verified": true
+    }
+   ]
+  },
+  {
+   "no": 7,
+   "titleEn": "Chapter 7: Multi-Agent Collaboration",
+   "appendix": false,
+   "chunks": 22,
+   "titleZh": "多智能体协作 Multi-Agent Collaboration",
+   "oneLiner": "把复杂任务拆给多个专业化智能体，靠通信协议与协作结构协同完成。",
+   "keyIdeas": [
+    "任务分解后分配给具备专用工具与知识的智能体",
+    "协作形式含顺序交接、并行、辩论、层级、专家团队、批评评审",
+    "通信模型谱系：单智能体、网络、主管、主管即工具、层级、自定义",
+    "CrewAI 与 Google ADK 提供角色、任务与流程编排的落地框架"
+   ],
+   "dependsOn": [
+    1
+   ],
+   "difficulty": 2,
+   "quotes": [
+    {
+     "q": "This approach is predicated on the principle of task decomposition, where a high-level objective is broken down into discrete sub-problems.",
+     "why": "点明多智能体协作的根基是任务分解",
+     "verified": true
+    },
+    {
+     "q": "The collaboration allows for a synergistic outcome where the collective performance of the multi-agent system surpasses the potential capabilities of any single agent within the ensemble.",
+     "why": "概括协同效应：整体强于任何单体",
+     "verified": true
+    },
+    {
+     "q": "The efficacy of such a system is not merely due to the division of labor but is critically dependent on the mechanisms for inter-agent communication.",
+     "why": "强调通信机制才是成败关键",
+     "verified": true
+    }
+   ]
+  },
+  {
+   "no": 8,
+   "titleEn": "Chapter 8: Memory Management",
+   "appendix": false,
+   "chunks": 29,
+   "titleZh": "记忆管理 Memory Management",
+   "oneLiner": "讲智能体如何用短期上下文与长期持久存储管理记忆，并给出ADK与LangChain实现。",
+   "keyIdeas": [
+    "短期记忆存在于LLM上下文窗口，容量有限且会话结束即失",
+    "长期记忆存于向量库等外部存储，按语义检索并注入当前上下文",
+    "ADK用Session、State、MemoryService三层管理会话与长期知识",
+    "LangChain/LangGraph用ConversationBufferMemory与Store实现短长期记忆"
+   ],
+   "dependsOn": [],
+   "difficulty": 2,
+   "quotes": [
+    {
+     "q": "Short-Term Memory (Contextual Memory): Similar to working memory, this holds information currently being processed or recently accessed.",
+     "why": "定义短期记忆，是理解全章的基础",
+     "verified": true
+    },
+    {
+     "q": "Long-Term Memory (Persistent Memory): This acts as a repository for information agents need to retain across various interactions, tasks, or extended periods, akin to long-term knowledge bases.",
+     "why": "点明长期记忆的持久化本质",
+     "verified": true
+    },
+    {
+     "q": "The standardized solution is to implement a dual-component memory system that distinguishes between short-term and long-term storage.",
+     "why": "概括本章核心方案：双组件记忆系统",
+     "verified": true
+    }
+   ]
+  },
+  {
+   "no": 9,
+   "titleEn": "Chapter 9: Learning and Adaptation",
+   "appendix": false,
+   "chunks": 18,
+   "titleZh": "学习与适应 Learning and Adaptation",
+   "oneLiner": "讲智能体如何通过经验与数据自主学习、持续适应动态环境。",
+   "keyIdeas": [
+    "学习方式涵盖强化、监督、无监督、少样本及在线学习等",
+    "PPO用裁剪机制稳定策略更新，DPO直接优化人类偏好",
+    "SICA通过修改自身代码迭代自我改进，并配子智能体与监督者",
+    "AlphaEvolve与OpenEvolve用LLM加进化算法自动发现优化算法"
+   ],
+   "dependsOn": [],
+   "difficulty": 2,
+   "quotes": [
+    {
+     "q": "Agents learn and adapt by changing their thinking, actions, or knowledge based on new experiences and data.",
+     "why": "点明学习与适应的本质：依据经验改变自身。",
+     "verified": true
+    },
+    {
+     "q": "In short, PPO balances improving performance with staying close to a known, working strategy, which prevents catastrophic failures during training and leads to more stable learning.",
+     "why": "一句话概括PPO裁剪机制的核心价值。",
+     "verified": true
+    },
+    {
+     "q": "SICA acts as both the modifier and the modified entity, iteratively refining its code base to improve performance across various coding challenges.",
+     "why": "揭示自我改进智能体的关键特征。",
+     "verified": true
+    }
+   ]
+  },
+  {
+   "no": 10,
+   "titleEn": "Chapter 10: Model Context Protocol",
+   "appendix": false,
+   "chunks": 22,
+   "titleZh": "模型上下文协议 Model Context Protocol",
+   "oneLiner": "介绍MCP这一开放标准，用客户端-服务器架构统一LLM与外部工具、数据源的连接方式。",
+   "keyIdeas": [
+    "MCP是开放标准，让任意LLM以统一方式发现并调用外部工具、资源与提示",
+    "采用客户端-服务器架构，支持动态发现、可复用与联邦式集成",
+    "MCP与工具函数调用不同：前者标准化、可发现、跨厂商互操作",
+    "底层API需为智能体优化（过滤、排序、可解析格式），MCP本身不保证"
+   ],
+   "dependsOn": [
+    1
+   ],
+   "difficulty": 2,
+   "quotes": [
+    {
+     "q": "Imagine a universal adapter that allows any LLM to plug into any external system, database, or tool without a custom integration for each one.",
+     "why": "用万能适配器比喻，一句话点明MCP的核心价值。",
+     "verified": true
+    },
+    {
+     "q": "In short, function calling provides direct access to a few specific functions, while MCP is the standardized communication framework that lets LLMs discover and use a vast range of external resources.",
+     "why": "精炼区分函数调用与MCP的定位差异。",
+     "verified": true
+    },
+    {
+     "q": "This highlights that agents do not magically replace deterministic workflows; they often require stronger deterministic support to succeed.",
+     "why": "提醒智能体仍需确定性API支撑，避免盲目封装旧接口。",
+     "verified": true
+    }
+   ]
+  },
+  {
+   "no": 11,
+   "titleEn": "Chapter 11: Goal Setting and Monitoring",
+   "appendix": false,
+   "chunks": 14,
+   "titleZh": "目标设定与监控 Goal Setting and Monitoring",
+   "oneLiner": "为智能体设定可衡量目标并持续监控进度，使其从被动反应转为主动达成目标。",
+   "keyIdeas": [
+    "目标应具体、可衡量、可达成、相关且有时限（SMART）",
+    "监控需观察智能体动作、环境状态与工具输出",
+    "反馈闭环让智能体自我评估、修正计划或升级问题",
+    "将生成与评审分离为多智能体可提升评估客观性"
+   ],
+   "dependsOn": [
+    1
+   ],
+   "difficulty": 2,
+   "quotes": [
+    {
+     "q": "It's about giving agents specific objectives to work towards and equipping them with the means to track their progress and determine if those objectives have been met.",
+     "why": "一句话点明本章模式的核心定义",
+     "verified": true
+    },
+    {
+     "q": "This creates a crucial feedback loop, enabling the agent to assess its performance, correct its course, and adapt its plan if it deviates from the path to success.",
+     "why": "揭示监控的价值在于形成反馈闭环",
+     "verified": true
+    },
+    {
+     "q": "When the same LLM is responsible for both writing the code and judging its quality, it may have a harder time discovering it is going in the wrong direction.",
+     "why": "提醒自评的局限，引出多智能体分工",
+     "verified": true
+    }
+   ]
+  },
+  {
+   "no": 12,
+   "titleEn": "Chapter 12: Exception Handling and",
+   "appendix": false,
+   "chunks": 11,
+   "titleZh": "异常处理与恢复 Exception Handling and Recovery",
+   "oneLiner": "本章讲如何让智能体检测错误、优雅处理并恢复稳定运行，从而在真实环境中保持可靠。",
+   "keyIdeas": [
+    "异常处理分三阶段：错误检测、错误处理、恢复。",
+    "处理策略包括日志、重试、回退、优雅降级与通知。",
+    "恢复手段包括状态回滚、诊断、自校正与升级人工。",
+    "可与反思模式结合，分析失败后改进提示再重试。"
+   ],
+   "dependsOn": [],
+   "difficulty": 2,
+   "quotes": [
+    {
+     "q": "This pattern focuses on developing exceptionally durable and resilient agents that can maintain uninterrupted functionality and operational integrity despite various difficulties and anomalies.",
+     "why": "点明本章核心目标：构建有韧性的智能体。",
+     "verified": true
+    },
+    {
+     "q": "It could involve reversing recent changes or transactions to undo the effects of the error (state rollback).",
+     "why": "说明状态回滚是恢复阶段的重要手段。",
+     "verified": true
+    }
+   ]
+  },
+  {
+   "no": 13,
+   "titleEn": "Chapter 13: Human-in-the-Loop",
+   "appendix": false,
+   "chunks": 14,
+   "titleZh": "人在回路 Human-in-the-Loop",
+   "oneLiner": "讲如何把人类判断、监督与反馈嵌入智能体工作流，以应对高风险与模糊场景。",
+   "keyIdeas": [
+    "HITL将人类判断与AI算力结合，而非用AI取代人",
+    "核心机制：监督、干预纠错、反馈学习、决策增强、升级策略",
+    "主要局限是可扩展性差、依赖专家、隐私与匿名化成本",
+    "Human-on-the-loop：人定策略，AI实时执行合规动作"
+   ],
+   "dependsOn": [],
+   "difficulty": 1,
+   "quotes": [
+    {
+     "q": "The HITL approach fundamentally revolves around the idea of synergy between artificial and human intelligence.",
+     "why": "点明HITL本质是人机协同而非替代。",
+     "verified": true
+    },
+    {
+     "q": "Despite its benefits, the HITL pattern has significant caveats, chief among them being a lack of scalability.",
+     "why": "诚实指出该模式最大代价，避免盲目套用。",
+     "verified": true
+    },
+    {
+     "q": "Escalation Policies are established protocols that dictate when and how an agent should escalate tasks to human operators",
+     "why": "升级策略是HITL落地的关键工程机制。",
+     "verified": true
+    }
+   ]
+  },
+  {
+   "no": 14,
+   "titleEn": "Chapter 14: Knowledge Retrieval (RAG)",
+   "appendix": false,
+   "chunks": 25,
+   "titleZh": "知识检索 Knowledge Retrieval (RAG)",
+   "oneLiner": "讲RAG如何让LLM接入外部实时与私有数据，并介绍GraphRAG与Agentic RAG。",
+   "keyIdeas": [
+    "RAG先语义检索相关片段，再拼入提示词，让回答有据可查",
+    "嵌入、语义相似度、分块与向量数据库是RAG的四大基础",
+    "GraphRAG用知识图谱补足跨文档关联推理",
+    "Agentic RAG加推理层，可校验来源、消解冲突、多步检索"
+   ],
+   "dependsOn": [],
+   "difficulty": 1,
+   "quotes": [
+    {
+     "q": "This process effectively transforms the LLM from a closed-book reasoner into an open-book one, significantly enhancing its utility and trustworthiness.",
+     "why": "一句话点明RAG的本质：从闭卷到开卷",
+     "verified": true
+    },
+    {
+     "q": "In essence, while other techniques search for words, vector databases search for meaning.",
+     "why": "精炼区分关键词检索与语义检索",
+     "verified": true
+    },
+    {
+     "q": "Instead of just retrieving and augmenting, an \"agent\"—a specialized AI component—acts as a critical gatekeeper and refiner of knowledge.",
+     "why": "概括Agentic RAG的核心增量",
+     "verified": true
+    }
+   ]
+  },
+  {
+   "no": 15,
+   "titleEn": "Chapter 15: Inter-Agent Communication",
+   "appendix": false,
+   "chunks": 18,
+   "titleZh": "智能体间通信 Inter-Agent Communication (A2A)",
+   "oneLiner": "介绍Google A2A开放协议，让不同框架构建的智能体互相发现、委派任务并协作。",
+   "keyIdeas": [
+    "A2A是HTTP上的开放标准，实现跨框架智能体互操作",
+    "Agent Card是智能体数字身份，描述能力、端点与认证",
+    "支持同步请求、异步轮询、SSE流式与Webhook推送",
+    "A2A负责智能体间协调，MCP负责对接外部工具与数据"
+   ],
+   "dependsOn": [],
+   "difficulty": 2,
+   "quotes": [
+    {
+     "q": "The Agent2Agent (A2A) protocol is an open standard designed to enable communication and collaboration between different AI agent frameworks.",
+     "why": "点明A2A的核心定位：跨框架互操作开放标准",
+     "verified": true
+    },
+    {
+     "q": "An agent's digital identity is defined by its Agent Card, usually a JSON file.",
+     "why": "Agent Card是发现与交互的关键机制",
+     "verified": true
+    },
+    {
+     "q": "While MCP focuses on structuring context for agents and their interaction with external data and tools, A2A facilitates coordination and communication among agents, enabling task delegation and collaboration.",
+     "why": "清晰区分A2A与MCP的互补分工",
+     "verified": true
+    }
+   ]
+  },
+  {
+   "no": 16,
+   "titleEn": "Chapter 16: Resource-Aware",
+   "appendix": false,
+   "chunks": 19,
+   "titleZh": "资源感知优化 Resource-Aware Optimization",
+   "oneLiner": "讲智能体如何在预算、延迟与算力约束下动态分配模型与工具资源。",
+   "keyIdeas": [
+    "按任务复杂度在昂贵强模型与廉价快模型间动态切换",
+    "Router Agent 分类请求，Critique Agent 反馈优化路由",
+    "回退机制在模型不可用时降级以保服务连续",
+    "扩展手段含上下文剪枝、自适应工具选择与能耗优化"
+   ],
+   "dependsOn": [
+    1
+   ],
+   "difficulty": 2,
+   "quotes": [
+    {
+     "q": "Resource-Aware Optimization enables intelligent agents to dynamically monitor and manage computational, temporal, and financial resources during operation.",
+     "why": "本章核心定义，点明三类资源与动态管理。",
+     "verified": true
+    },
+    {
+     "q": "A key strategy in this category is the fallback mechanism, which acts as a safeguard when a preferred model is unavailable due to being overloaded or throttled.",
+     "why": "回退机制是资源感知的关键保障。",
+     "verified": true
+    },
+    {
+     "q": "This dynamic, multi-agent approach ensures the system operates efficiently, balancing response quality with cost-effectiveness.",
+     "why": "概括路由加评审的整体权衡思想。",
+     "verified": true
+    }
+   ]
+  },
+  {
+   "no": 17,
+   "titleEn": "Chapter 17: Reasoning Techniques",
+   "appendix": false,
+   "chunks": 37,
+   "titleZh": "推理技术 Reasoning Techniques",
+   "oneLiner": "系统讲解智能体多步推理方法及推理时计算资源扩展原则。",
+   "keyIdeas": [
+    "思维链 CoT 通过分步推理提升复杂任务准确性与透明度",
+    "思维树 ToT 与自我修正支持回溯、多路径探索与迭代优化",
+    "ReAct 将推理与工具行动结合，形成 Thought-Action-Observation 循环",
+    "Scaling Inference Law 表明增加推理时计算可让小模型超越大模型"
+   ],
+   "dependsOn": [
+    4
+   ],
+   "difficulty": 2,
+   "quotes": [
+    {
+     "q": "A core principle among these advanced methods is the allocation of increased computational resources during inference.",
+     "why": "点明全章核心：推理时计算资源分配是高级推理方法的基础。",
+     "verified": true
+    },
+    {
+     "q": "This iterative loop of “Thought, Action, Observation, Thought...” allows the agent to dynamically adapt its plan, correct errors, and achieve goals requiring multiple interactions with the environment.",
+     "why": "精炼概括 ReAct 的核心循环机制与自适应能力。",
+     "verified": true
+    }
+   ]
+  },
+  {
+   "no": 18,
+   "titleEn": "Chapter 18: Guardrails/Safety Patterns",
+   "appendix": false,
+   "chunks": 30,
+   "titleZh": "护栏/安全模式 Guardrails/Safety Patterns",
+   "oneLiner": "讲如何用多层护栏让智能体安全、合规、可信地运行。",
+   "keyIdeas": [
+    "护栏是保护层而非限制，确保智能体安全、合乎伦理且可预测",
+    "在输入校验、输出过滤、行为约束、工具限制、人工监督等多阶段实施",
+    "可用轻量模型或提示词做内容策略执行器，预筛输入、复核输出",
+    "可靠智能体应像传统软件一样应用容错、模块化、可观测与最小权限原则"
+   ],
+   "dependsOn": [],
+   "difficulty": 2,
+   "quotes": [
+    {
+     "q": "The primary aim of guardrails is not to restrict an agent's capabilities but to ensure its operation is robust, trustworthy, and beneficial.",
+     "why": "点明护栏的本质是引导而非限制，纠正误解。",
+     "verified": true
+    },
+    {
+     "q": "Guardrails, also referred to as safety patterns, are crucial mechanisms that ensure intelligent agents operate safely, ethically, and as intended",
+     "why": "概括本章核心定义与目标。",
+     "verified": true
+    },
+    {
+     "q": "A combination of different guardrail techniques provides the most robust protection.",
+     "why": "强调多层防御优于单一方案。",
+     "verified": true
+    }
+   ]
+  },
+  {
+   "no": 19,
+   "titleEn": "Chapter 19: Evaluation and Monitoring",
+   "appendix": false,
+   "chunks": 26,
+   "titleZh": "评估与监控 Evaluation and Monitoring",
+   "oneLiner": "讲如何系统度量智能体的效果、效率与合规性，并建立反馈闭环持续监控。",
+   "keyIdeas": [
+    "评估需超越精确匹配，用语义相似度、LLM-as-a-Judge等指标",
+    "监控延迟与token用量，保障体验并控制成本",
+    "评估智能体轨迹与工具调用，而非只看最终输出",
+    "多智能体需评估协作质量，并向正式契约式承包商演进"
+   ],
+   "dependsOn": [
+    11,
+    17
+   ],
+   "difficulty": 2,
+   "quotes": [
+    {
+     "q": "Evaluating agents' trajectories is essential, as traditional software tests are insufficient.",
+     "why": "点明智能体评估与传统测试的根本差异",
+     "verified": true
+    },
+    {
+     "q": "This LLM-as-a-Judge approach assesses another AI agent's output based on predefined criteria for \"helpfulness.\"",
+     "why": "概括主观质量评估的核心方法",
+     "verified": true
+    },
+    {
+     "q": "This transformation is supported by four key pillars that collectively ensure clarity, reliability, and robust execution of tasks that were previously beyond the scope of autonomous systems.",
+     "why": "引出从智能体到承包商的四支柱框架",
+     "verified": true
+    }
+   ]
+  },
+  {
+   "no": 20,
+   "titleEn": "Chapter 20: Prioritization",
+   "appendix": false,
+   "chunks": 14,
+   "titleZh": "优先级排序 Prioritization",
+   "oneLiner": "讲智能体如何在多任务、资源受限时按紧迫性、重要性与依赖关系排序并动态调整。",
+   "keyIdeas": [
+    "定义准则：紧迫性、重要性、依赖、资源与成本收益",
+    "任务评估可用简单规则或LLM打分推理",
+    "调度选择决定下一步动作或任务序列",
+    "动态重优先级化让智能体实时调整焦点"
+   ],
+   "dependsOn": [],
+   "difficulty": 1,
+   "quotes": [
+    {
+     "q": "The prioritization pattern addresses this issue by enabling agents to assess and rank tasks, objectives, or actions based on their significance, urgency, dependencies, and established criteria.",
+     "why": "一句话概括该模式的定义与核心维度。",
+     "verified": true
+    },
+    {
+     "q": "A key feature of this agentic behavior is dynamic re-prioritization, which grants the agent the autonomy to adapt its focus in real-time as conditions change.",
+     "why": "点出智能体区别于脚本的关键能力。",
+     "verified": true
+    },
+    {
+     "q": "This ability to self-manage its workflow is what separates a true agentic system from a simple automated script.",
+     "why": "强调自主管理工作流是智能体本质。",
+     "verified": true
+    }
+   ]
+  },
+  {
+   "no": 21,
+   "titleEn": "Chapter 21: Exploration and Discovery",
+   "appendix": false,
+   "chunks": 20,
+   "titleZh": "探索与发现 Exploration and Discovery",
+   "oneLiner": "让智能体主动探索未知、生成新假设，而非只在预设空间内优化。",
+   "keyIdeas": [
+    "探索与发现面向开放式、复杂、快速演化的领域，追求发现未知的未知。",
+    "多智能体框架模拟科学方法：生成、评审、排序、演化假设。",
+    "Google Co-Scientist 与 Agent Laboratory 展示自主科研工作流。",
+    "强调增强而非取代人类，需安全与伦理监督。"
+   ],
+   "dependsOn": [],
+   "difficulty": 2,
+   "quotes": [
+    {
+     "q": "This chapter explores patterns that enable intelligent agents to actively seek out novel information, uncover new possibilities, and identify unknown unknowns within their operational environment.",
+     "why": "点明本章核心：主动探索未知的未知。",
+     "verified": true
+    },
+    {
+     "q": "The system follows an iterative \"generate, debate, and evolve\" approach mirroring the scientific method.",
+     "why": "概括多智能体科研的核心循环。",
+     "verified": true
+    },
+    {
+     "q": "In conclusion, the Exploration and Discovery pattern is the very essence of a truly agentic system, defining its ability to move beyond passive instruction-following to proactively explore its environment.",
+     "why": "总结该模式是真正智能体性的本质。",
+     "verified": true
+    }
+   ]
+  },
+  {
+   "no": 100,
+   "titleEn": "Appendix A: Advanced Prompting",
+   "appendix": true,
+   "chunks": 46,
+   "titleZh": "附录A：高级提示技术 Advanced Prompting",
+   "oneLiner": "系统讲解从基础到进阶的提示工程技术，把提示重构为构建可靠智能体的工程实践。",
+   "keyIdeas": [
+    "核心原则：清晰、简洁、用动词、正向指令、迭代实验",
+    "基础与结构化：零样本/单样本/少样本、系统提示、角色、分隔符、结构化输出",
+    "推理技术：思维链 CoT、自洽性、后退提示、思维树 ToT",
+    "行动与增强：工具调用、ReAct、RAG、上下文工程、自动提示优化"
+   ],
+   "dependsOn": [],
+   "difficulty": 1,
+   "quotes": [
+    {
+     "q": "Prompting, the primary interface for interacting with language models, is the process of crafting inputs to guide the model towards generating a desired output.",
+     "why": "点明提示是人与模型交互的核心接口",
+     "verified": true
+    },
+    {
+     "q": "The objective of prompt engineering is to consistently elicit high-quality responses from language models.",
+     "why": "一句话定义提示工程的目标",
+     "verified": true
+    },
+    {
+     "q": "This appendix provides a comprehensive overview of prompting, reframing it as a disciplined engineering practice rather than a simple act of asking questions.",
+     "why": "总结全章主旨：提示是工程实践",
+     "verified": true
+    }
+   ]
+  },
+  {
+   "no": 101,
+   "titleEn": "Appendix B - AI Agentic Interactions:: Appendix B",
+   "appendix": true,
+   "chunks": 12,
+   "titleZh": "附录B - AI 智能体交互 AI Agentic Interactions：从 GUI 到真实世界",
+   "oneLiner": "综述智能体如何通过视觉操控GUI、感知物理环境并与开发者对话式编程。",
+   "keyIdeas": [
+    "ACI让智能体像人一样看屏幕、识别元素并操作鼠标键盘",
+    "多模态感知使智能体理解物理环境并实时对话",
+    "ChatGPT Agent等融合浏览、代码执行与第三方应用操作",
+    "Vibe Coding以对话迭代取代精确指令，聚焦目标而非实现"
+   ],
+   "dependsOn": [],
+   "difficulty": 1,
+   "quotes": [
+    {
+     "q": "It must learn to \"see\" the screen not as a mere collection of pixels, but as a structured layout with interactive components",
+     "why": "点明GUI交互的核心：结构化理解而非像素识别",
+     "verified": true
+    },
+    {
+     "q": "This moves beyond simple voice commands to a truly embodied understanding of the user's immediate physical context.",
+     "why": "概括从语音命令到具身环境理解的关键跃迁",
+     "verified": true
+    },
+    {
+     "q": "The developer focuses on the desired outcome (the \"what\") and leaves the implementation details (the \"how\") to the AI.",
+     "why": "一句话定义Vibe Coding的分工本质",
+     "verified": true
+    }
+   ]
+  },
+  {
+   "no": 102,
+   "titleEn": "Appendix C - Quick overview of Agentic: Appendix C",
+   "appendix": true,
+   "chunks": 11,
+   "titleZh": "智能体框架速览 Appendix C: Agentic Frameworks Overview",
+   "oneLiner": "横向对比LangChain、LangGraph、ADK、CrewAI等框架的抽象层级与选型依据。",
+   "keyIdeas": [
+    "LangChain用LCEL串联线性DAG流程，适合简单可预测任务",
+    "LangGraph以有状态图支持循环、重试与多智能体协作",
+    "ADK、CrewAI等高层框架以预置模式编排智能体团队",
+    "选型核心是权衡图级细粒度控制与平台化开发效率"
+   ],
+   "dependsOn": [],
+   "difficulty": 1,
+   "quotes": [
+    {
+     "q": "Its core strength lies in its LangChain Expression Language (LCEL), which allows you to \"pipe\" components together into a chain.",
+     "why": "点明LangChain的核心抽象与线性管道思想",
+     "verified": true
+    },
+    {
+     "q": "Its main advantage is the ability to create cycles, allowing the application to loop, retry, or call tools in a flexible order until a task is complete.",
+     "why": "概括LangGraph相对LangChain的关键差异",
+     "verified": true
+    },
+    {
+     "q": "Consequently, selecting the right framework hinges on whether the application requires a simple sequence, a dynamic reasoning loop, or a managed team of specialists.",
+     "why": "给出全章框架选型的三分法判断标准",
+     "verified": true
+    }
+   ]
+  },
+  {
+   "no": 103,
+   "titleEn": "Appendix D - Building an Agent with: Appendix D",
+   "appendix": true,
+   "chunks": 4,
+   "titleZh": "附录 D：用 AgentSpace 构建智能体",
+   "oneLiner": "介绍用 AgentSpace 平台无代码构建企业级 AI 智能体，涵盖知识图谱与多智能体协作。",
+   "keyIdeas": [
+    "AgentSpace 统一搜索企业数字足迹并构建企业知识图谱",
+    "智能体可自主推理、规划并执行多步任务",
+    "支持 A2A 协议实现多智能体互通协作",
+    "Agent Designer 提供无代码界面降低构建门槛"
+   ],
+   "dependsOn": [],
+   "difficulty": 1,
+   "quotes": [
+    {
+     "q": "These agents are not merely chatbots; they can reason, plan, and execute multi-step actions autonomously.",
+     "why": "点明智能体区别于聊天机器人的核心能力",
+     "verified": true
+    },
+    {
+     "q": "AgentSpace constructs an enterprise knowledge graph, mapping the relationships between people, documents, and data.",
+     "why": "揭示企业知识图谱是上下文理解的基础",
+     "verified": true
+    },
+    {
+     "q": "This approach abstracts the underlying technical complexity, enabling the construction of specialized multi-agent systems without requiring deep programming expertise.",
+     "why": "概括无代码构建多智能体系统的价值",
+     "verified": true
+    }
+   ]
+  },
+  {
+   "no": 104,
+   "titleEn": "Appendix E - AI Agents on the CLI: Appendix E",
+   "appendix": true,
+   "chunks": 9,
+   "titleZh": "命令行上的 AI 智能体 AI Agents on the CLI",
+   "oneLiner": "对比 Claude、Gemini、Aider、Copilot 四款 CLI 智能体的定位与选型。",
+   "keyIdeas": [
+    "CLI 从执行命令的 shell 演变为理解自然语言、维护上下文的协作工作区",
+    "四款工具各有专长：架构重构、多模态、git 直改、GitHub 集成",
+    "MCP 与沙箱机制决定智能体可扩展的工具范围与安全边界",
+    "Terminal-Bench 提供命令行智能体的标准化评测框架"
+   ],
+   "dependsOn": [],
+   "difficulty": 1,
+   "quotes": [
+    {
+     "q": "It is evolving from a simple shell into an intelligent, collaborative workspace powered by a new class of tools: AI Agent Command-Line Interfaces (CLIs).",
+     "why": "点明本章主题：终端正演变为智能协作工作区",
+     "verified": true
+    },
+    {
+     "q": "The key differentiator between these tools frequently lies in the quality, efficiency, and nuance of the results they are able to achieve for a given task.",
+     "why": "说明工具差异在于结果质量而非功能有无",
+     "verified": true
+    },
+    {
+     "q": "there is no single \"best\" tool; instead, a vibrant ecosystem is forming where each agent offers a specialized strength.",
+     "why": "选型结论：按需求选择，而非追求唯一最优",
+     "verified": true
+    }
+   ]
+  },
+  {
+   "no": 105,
+   "titleEn": "Appendix F - Under the Hood: An Inside",
+   "appendix": true,
+   "chunks": 20,
+   "titleZh": "附录 F - 深入底层：智能体推理引擎内部机制",
+   "oneLiner": "通过让六大LLM自述推理步骤，揭示智能体核心推理引擎的共性机制。",
+   "keyIdeas": [
+    "LLM是智能体的核心推理引擎，而非单纯文本生成器",
+    "各模型推理均遵循拆解提示、检索知识、综合、生成响应的多阶段框架",
+    "推理本质是模式匹配与概率预测，而非人类式理解",
+    "链式思维模拟是智能体规划与执行的基础"
+   ],
+   "dependsOn": [],
+   "difficulty": 2,
+   "quotes": [
+    {
+     "q": "This LLM is not merely a sophisticated text generator; it serves as the foundational reasoning engine, the central \"mind\" that empowers the Agent to make decisions, formulate plans, and interact with its environment.",
+     "why": "点明LLM在智能体中的核心地位",
+     "verified": true
+    },
+    {
+     "q": "In essence, my reasoning is a sophisticated form of pattern matching and prediction.",
+     "why": "揭示推理的本质是模式匹配与预测",
+     "verified": true
+    },
+    {
+     "q": "It is precisely this systematic, step-by-step procedure that makes these LLMs powerful core reasoning engines for autonomous Agents.",
+     "why": "总结系统性推理对智能体的关键价值",
+     "verified": true
+    }
+   ]
+  },
+  {
+   "no": 106,
+   "titleEn": "Appendix G - Coding Agents: Appendix G",
+   "appendix": true,
+   "chunks": 47,
+   "titleZh": "编码智能体 Coding Agents",
+   "oneLiner": "以人类主导编排、上下文优先、直连前沿模型为原则，组织专家编码智能体团队协作开发",
+   "keyIdeas": [
+    "Vibe Coding 适合快速原型与创意探索，生产级软件需结构化协作",
+    "人类开发者作为编排者与架构师，始终在环并做最终质量把关",
+    "按角色提示构建脚手架、测试、文档、优化、审查等专家智能体",
+    "上下文暂存区、版本化提示库与 Git Hooks 将智能体工作流落地"
+   ],
+   "dependsOn": [
+    4,
+    7
+   ],
+   "difficulty": 2,
+   "quotes": [
+    {
+     "q": "The most effective development teams are not merely delegating tasks to Agent; they are augmenting themselves with a suite of sophisticated coding agents.",
+     "why": "点明核心范式：不是委托而是增强团队",
+     "verified": true
+    },
+    {
+     "q": "An agent's performance is entirely dependent on the quality and completeness of its context. A powerful LLM with poor context is useless.",
+     "why": "上下文优先原则的精辟概括",
+     "verified": true
+    },
+    {
+     "q": "An agent's output is always a proposal, never a command.",
+     "why": "强调人类是最终质量门，智能体输出需审核",
+     "verified": true
+    }
+   ]
+  }
+ ],
+ "book": {
+  "positioning": {
+   "oneLiner": "21个可落地模式，系统构建可靠智能体",
+   "problem": "智能体开发缺乏系统方法论，本书把提示链、路由、反思、多智能体等模式整理成可复用工程范式，解决从原型到生产的可靠性问题。",
+   "audience": "写给有LLM基础的开发者与架构师；不适合零基础或只想了解概念者。",
+   "prereqs": [
+    "了解LLM基本用法",
+    "会写Python",
+    "熟悉API调用"
+   ]
+  },
+  "coreIdeas": [
+   {
+    "title": "分治与编排",
+    "explain": "把复杂任务拆成子任务，用<b>提示链、路由、并行</b>等模式编排执行顺序与条件分支，是构建一切智能体的基础。",
+    "chapters": [
+     1,
+     2,
+     3
+    ]
+   },
+   {
+    "title": "反馈与自适应",
+    "explain": "通过<b>反思、目标监控、异常恢复</b>形成闭环，让智能体评估自身输出、修正计划并在失败后恢复。",
+    "chapters": [
+     4,
+     11,
+     12
+    ]
+   },
+   {
+    "title": "外部能力接入",
+    "explain": "用<b>工具调用、MCP、RAG、A2A</b>突破模型静态知识，连接外部API、数据与其它智能体。",
+    "chapters": [
+     5,
+     10,
+     14,
+     15
+    ]
+   },
+   {
+    "title": "多智能体与记忆",
+    "explain": "把任务分给专业化智能体，靠<b>通信协议与协作结构</b>协同；用短期/长期记忆管理上下文与持久知识。",
+    "chapters": [
+     7,
+     8
+    ]
+   },
+   {
+    "title": "安全与评估",
+    "explain": "用<b>护栏、人在回路、评估监控</b>确保智能体安全合规、可度量，并持续优化。",
+    "chapters": [
+     13,
+     18,
+     19
+    ]
+   }
+  ],
+  "parts": [
+   {
+    "title": "基础执行模式",
+    "why": "从单步到多步、从线性到条件与并发，构成智能体执行骨架。",
+    "chapters": [
+     1,
+     2,
+     3
+    ]
+   },
+   {
+    "title": "质量与自适应",
+    "why": "反思、规划、目标监控与异常恢复，让智能体自我改进并稳定运行。",
+    "chapters": [
+     4,
+     6,
+     11,
+     12
+    ]
+   },
+   {
+    "title": "外部连接与协作",
+    "why": "工具、MCP、RAG、A2A与多智能体，扩展智能体能力边界。",
+    "chapters": [
+     5,
+     7,
+     10,
+     14,
+     15
+    ]
+   },
+   {
+    "title": "记忆与学习",
+    "why": "管理上下文与持久知识，并从经验中持续适应。",
+    "chapters": [
+     8,
+     9
+    ]
+   },
+   {
+    "title": "安全、评估与优化",
+    "why": "护栏、人在回路、评估监控、资源优化与优先级排序，保障生产可用。",
+    "chapters": [
+     13,
+     16,
+     18,
+     19,
+     20
+    ]
+   },
+   {
+    "title": "前沿与探索",
+    "why": "推理技术、探索发现与附录，覆盖高级推理、自主科研与工程实践。",
+    "chapters": [
+     17,
+     21,
+     100,
+     101,
+     102,
+     103,
+     104,
+     105,
+     106
+    ]
+   }
+  ],
+  "paths": {
+   "quick": {
+    "minutes": 90,
+    "chapters": [
+     1,
+     4,
+     5,
+     7
+    ],
+    "story": "先读提示链打基础，再读反思与工具使用掌握质量与外部能力，最后读多智能体协作理解任务分解与协同，90分钟拿到核心模式。"
+   },
+   "deep": {
+    "minutes": 720,
+    "chapters": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12,
+     13,
+     14,
+     15,
+     16,
+     17,
+     18,
+     19,
+     20,
+     21,
+     100,
+     101,
+     102,
+     103,
+     104,
+     105,
+     106
+    ],
+    "story": "按章顺序精读全部正章与附录，系统掌握21个模式及工程落地细节。"
+   },
+   "problem": [
+    {
+     "q": "如何让智能体调用外部API和数据库？",
+     "chapters": [
+      5,
+      10,
+      14
+     ],
+     "note": "第5章工具调用、第10章MCP标准化、第14章RAG检索外部知识。"
+    },
+    {
+     "q": "如何保证智能体输出质量与安全？",
+     "chapters": [
+      4,
+      13,
+      18,
+      19
+     ],
+     "note": "第4章反思迭代、第13章人在回路、第18章护栏、第19章评估监控。"
+    },
+    {
+     "q": "如何设计多智能体协作系统？",
+     "chapters": [
+      7,
+      15,
+      8
+     ],
+     "note": "第7章协作结构、第15章A2A通信协议、第8章记忆管理。"
+    }
+   ]
+  },
+  "goldenQuotes": [
+   0,
+   3,
+   6,
+   9,
+   14,
+   15,
+   18,
+   23,
+   27,
+   38,
+   49,
+   52
+  ],
+  "relations": [
+   {
+    "title": "Agent 工程进阶",
+    "url": "05-agent-patterns.html",
+    "why": "站内进阶课，可与本书模式对照学习。"
+   },
+   {
+    "title": "知识库与 RAG 全链路",
+    "url": "04-knowledge-base.html",
+    "why": "深入RAG工程细节，补充第14章。"
+   },
+   {
+    "title": "Prompt 工程与上下文设计",
+    "url": "03-prompt-engineering.html",
+    "why": "夯实提示工程基础，配合附录A。"
+   },
+   {
+    "title": "深入理解 Harness（智能体框架）",
+    "url": "07-harness.html",
+    "why": "框架选型与本书附录C互补。"
+   }
+  ],
+  "verdict": "值得读：系统覆盖智能体设计模式，适合开发者与架构师。零基础或仅需概念者可跳过。"
+ },
+ "golden": [
+  {
+   "ch": 1,
+   "q": "Rather than expecting an LLM to solve a complex problem in a single, monolithic step, prompt chaining advocates for a divide-and-conquer strategy.",
+   "why": "点明本章核心：用分治替代单次大提示",
+   "verified": true
+  },
+  {
+   "ch": 2,
+   "q": "Routing introduces conditional logic into an agent's operational framework, enabling a shift from a fixed execution path to a model where the agent dynamically evaluates specific criteria to select from a set of possible subsequent actions.",
+   "why": "点明路由本质：用条件逻辑替代固定执行路径",
+   "verified": true
+  },
+  {
+   "ch": 3,
+   "q": "The core idea is to identify parts of the workflow that do not depend on the output of other parts and execute them in parallel.",
+   "why": "点明并行化的判断标准：无依赖即可并发",
+   "verified": true
+  },
+  {
+   "ch": 4,
+   "q": "The Reflection pattern involves an agent evaluating its own work, output, or internal state and using that evaluation to improve its performance or refine its response.",
+   "why": "定义反思模式的核心机制",
+   "verified": true
+  },
+  {
+   "ch": 5,
+   "q": "Tool Use is what transforms a language model from a text generator into an agent capable of sensing, reasoning, and acting in the digital or physical world",
+   "why": "一句话定义工具使用对智能体的意义",
+   "verified": true
+  },
+  {
+   "ch": 6,
+   "q": "At its core, planning is the ability for an agent or a system of agents to formulate a sequence of actions to move from an initial state towards a goal state.",
+   "why": "定义规划的核心，全章立论基础",
+   "verified": true
+  },
+  {
+   "ch": 7,
+   "q": "This approach is predicated on the principle of task decomposition, where a high-level objective is broken down into discrete sub-problems.",
+   "why": "点明多智能体协作的根基是任务分解",
+   "verified": true
+  },
+  {
+   "ch": 8,
+   "q": "The standardized solution is to implement a dual-component memory system that distinguishes between short-term and long-term storage.",
+   "why": "概括本章核心方案：双组件记忆系统",
+   "verified": true
+  },
+  {
+   "ch": 10,
+   "q": "Imagine a universal adapter that allows any LLM to plug into any external system, database, or tool without a custom integration for each one.",
+   "why": "用万能适配器比喻，一句话点明MCP的核心价值。",
+   "verified": true
+  },
+  {
+   "ch": 14,
+   "q": "This process effectively transforms the LLM from a closed-book reasoner into an open-book one, significantly enhancing its utility and trustworthiness.",
+   "why": "一句话点明RAG的本质：从闭卷到开卷",
+   "verified": true
+  },
+  {
+   "ch": 18,
+   "q": "The primary aim of guardrails is not to restrict an agent's capabilities but to ensure its operation is robust, trustworthy, and beneficial.",
+   "why": "点明护栏的本质是引导而非限制，纠正误解。",
+   "verified": true
+  },
+  {
+   "ch": 19,
+   "q": "Evaluating agents' trajectories is essential, as traditional software tests are insufficient.",
+   "why": "点明智能体评估与传统测试的根本差异",
+   "verified": true
+  }
+ ]
+}

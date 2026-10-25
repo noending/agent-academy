@@ -1,0 +1,392 @@
+{
+  "name": "gulli-patterns",
+  "title": "读书 · Agentic Design Patterns",
+  "kb": "kb/gulli-patterns.json",
+  "sources": [
+    {
+      "file": "kb/gulli-patterns.json",
+      "source": "book",
+      "label": "《Agentic Design Patterns》原书"
+    }
+  ],
+  "model": {
+    "provider": "deepseek",
+    "id": "deepseek-flash"
+  },
+  "thinkingLevel": "off",
+  "description": "21个可落地模式，系统构建可靠智能体。——读书导师:导读定路径、陪读答疑、答案只来自书中内容并标注章节。",
+  "book": {
+    "slug": "gulli-patterns",
+    "title": "Agentic Design Patterns",
+    "authors": "Antonio Gulli · 2025",
+    "pages": "458",
+    "pdf": "papers/pdf/gulli-agentic-design-patterns.pdf",
+    "page": "book-gulli-patterns.html"
+  },
+  "curriculum": [
+    {
+      "no": 1,
+      "title": "提示链 Prompt Chaining",
+      "goal": "把复杂任务拆成顺序子步骤，前一步输出作为后一步输入，提升可靠性与可控性。",
+      "outline": [
+        "分而治之：将庞杂任务分解为聚焦的子问题序列",
+        "单提示易致指令忽视、上下文漂移、错误放大与幻觉",
+        "步骤间用JSON/XML等结构化输出保证数据完整性",
+        "可插入外部工具与确定性逻辑，是构建Agent的基础模式"
+      ],
+      "keyTerms": [],
+      "appendix": false
+    },
+    {
+      "no": 2,
+      "title": "路由 Routing",
+      "goal": "本章讲如何用条件逻辑让智能体按输入或状态动态选择工具、子流程或子代理。",
+      "outline": [
+        "路由为智能体引入条件逻辑，替代固定线性执行路径",
+        "核心机制是评估输入并决定后续流向",
+        "实现方式有LLM、嵌入、规则和训练分类器四种",
+        "LangGraph用状态图、ADK用工具选择来实现路由"
+      ],
+      "keyTerms": [],
+      "appendix": false
+    },
+    {
+      "no": 3,
+      "title": "并行化 Parallelization",
+      "goal": "讲解如何识别无依赖的子任务并并发执行LLM调用、工具与子代理，以缩短总耗时。",
+      "outline": [
+        "识别工作流中互不依赖的步骤，并发执行以降低延迟",
+        "适用于多源检索、多API调用、多模态处理等独立任务",
+        "LangChain用RunnableParallel，ADK用ParallelAgent实现并发",
+        "并发会带来设计、调试与日志的复杂度与成本"
+      ],
+      "keyTerms": [],
+      "appendix": false
+    },
+    {
+      "no": 4,
+      "title": "反思模式 Reflection",
+      "goal": "让智能体评估自身输出并迭代改进，以提升质量与准确性。",
+      "outline": [
+        "反思引入反馈回路：执行、评估、改进、迭代",
+        "生产者-批评者分离可避免自我审查的认知偏差",
+        "适用于写作、代码、规划等高质量要求场景",
+        "代价是更高延迟、成本与上下文开销"
+      ],
+      "keyTerms": [],
+      "appendix": false
+    },
+    {
+      "no": 5,
+      "title": "工具使用 Tool Use (Function Calling)",
+      "goal": "讲如何让LLM通过函数调用调用外部API、数据库与代码，突破训练数据限制。",
+      "outline": [
+        "工具调用流程：定义工具→LLM决策→生成结构化调用→执行→回传结果",
+        "工具不止函数，还包括API、数据库、其他Agent，强调tool calling广义概念",
+        "LangChain用@tool与AgentExecutor，ADK提供Google Search、代码执行等预置工具",
+        "适用场景：实时信息、私有数据、精确计算、执行代码、触发外部动作"
+      ],
+      "keyTerms": [],
+      "appendix": false
+    },
+    {
+      "no": 6,
+      "title": "规划 Planning",
+      "goal": "讲智能体如何把复杂目标拆解为可执行步骤序列，并动态调整计划。",
+      "outline": [
+        "规划是从初始状态到目标状态制定行动序列的能力",
+        "初始计划只是起点，需根据新信息动态调整",
+        "已知解法时用固定工作流，需探索how时才用规划",
+        "适用于多步任务、工作流自动化与复杂环境导航"
+      ],
+      "keyTerms": [],
+      "appendix": false
+    },
+    {
+      "no": 7,
+      "title": "多智能体协作 Multi-Agent Collaboration",
+      "goal": "把复杂任务拆给多个专业化智能体，靠通信协议与协作结构协同完成。",
+      "outline": [
+        "任务分解后分配给具备专用工具与知识的智能体",
+        "协作形式含顺序交接、并行、辩论、层级、专家团队、批评评审",
+        "通信模型谱系：单智能体、网络、主管、主管即工具、层级、自定义",
+        "CrewAI 与 Google ADK 提供角色、任务与流程编排的落地框架"
+      ],
+      "keyTerms": [],
+      "appendix": false
+    },
+    {
+      "no": 8,
+      "title": "记忆管理 Memory Management",
+      "goal": "讲智能体如何用短期上下文与长期持久存储记住信息，并给出ADK与LangChain实现。",
+      "outline": [
+        "短期记忆存在于LLM上下文窗口，容量有限且会话结束即失",
+        "长期记忆存于外部数据库/向量库，靠语义检索跨会话召回",
+        "ADK用Session、State、MemoryService三层管理记忆",
+        "LangChain/LangGraph用缓冲记忆与命名空间Store实现长短记忆"
+      ],
+      "keyTerms": [],
+      "appendix": false
+    },
+    {
+      "no": 9,
+      "title": "学习与适应 Learning and Adaptation",
+      "goal": "本章讲智能体如何通过经验与数据自主学习并适应动态环境，涵盖PPO、DPO、SICA与AlphaEvolve。",
+      "outline": [
+        "学习方式包括强化、监督、无监督、少样本/零样本、在线与基于记忆的学习",
+        "PPO用裁剪机制限制策略更新幅度，保证训练稳定",
+        "DPO跳过奖励模型，直接用人类偏好数据优化LLM策略",
+        "SICA通过迭代修改自身源码自我改进，AlphaEvolve用LLM+进化算法发现新算法"
+      ],
+      "keyTerms": [],
+      "appendix": false
+    },
+    {
+      "no": 10,
+      "title": "模型上下文协议 Model Context Protocol",
+      "goal": "介绍MCP这一开放标准，用客户端-服务器架构统一LLM与外部工具、数据源的连接方式。",
+      "outline": [
+        "MCP是开放标准，通过客户端-服务器架构暴露资源、提示与工具",
+        "MCP与工具函数调用不同：前者标准化、可动态发现、可复用",
+        "MCP效果依赖底层API设计，需过滤排序等确定性支持与可解析数据",
+        "FastMCP与ADK简化MCP服务器开发及智能体集成"
+      ],
+      "keyTerms": [],
+      "appendix": false
+    },
+    {
+      "no": 11,
+      "title": "目标设定与监控 Goal Setting and Monitoring",
+      "goal": "本章讲如何为AI智能体设定明确目标并持续监控进度，使其从被动反应转为主动达成目标。",
+      "outline": [
+        "目标应具体、可衡量、可达成、相关且有时限（SMART）",
+        "监控需观察智能体动作、环境状态与工具输出，形成反馈闭环",
+        "反馈循环让智能体自我评估、修正计划或在失败时升级处理",
+        "将编码与评审分离为多智能体角色可提升评估客观性"
+      ],
+      "keyTerms": [],
+      "appendix": false
+    },
+    {
+      "no": 12,
+      "title": "异常处理与恢复 Exception Handling and Recovery",
+      "goal": "本章讲智能体如何检测、处理并从运行故障中恢复，以保证可靠性。",
+      "outline": [
+        "异常处理模式分三阶段：错误检测、错误处理、恢复。",
+        "处理策略包括日志、重试、回退、优雅降级与通知。",
+        "恢复手段包括状态回滚、诊断、自校正与升级人工。",
+        "可与反思模式结合，分析失败后改进提示再重试。"
+      ],
+      "keyTerms": [],
+      "appendix": false
+    },
+    {
+      "no": 13,
+      "title": "人在回路 Human-in-the-Loop",
+      "goal": "讲如何把人类判断、监督与反馈嵌入智能体工作流，以保障高风险场景的安全与伦理。",
+      "outline": [
+        "HITL将人类判断与AI算力结合，而非用AI取代人",
+        "核心机制：监督、干预纠正、反馈学习、决策增强、升级策略",
+        "主要局限是可扩展性差、依赖专家、隐私与匿名化成本",
+        "适用于医疗、金融、自动驾驶等高风险或模糊场景"
+      ],
+      "keyTerms": [],
+      "appendix": false
+    },
+    {
+      "no": 14,
+      "title": "知识检索 Knowledge Retrieval (RAG)",
+      "goal": "讲RAG如何让LLM接入外部实时与私有数据，并介绍GraphRAG与Agentic RAG。",
+      "outline": [
+        "RAG先语义检索相关片段，再拼入提示词，让回答有据可查",
+        "嵌入、语义相似度、分块与向量数据库是RAG的四大基础",
+        "GraphRAG用知识图谱处理跨文档的复杂关联查询",
+        "Agentic RAG加入推理层，可校验来源、消解冲突、多步检索"
+      ],
+      "keyTerms": [],
+      "appendix": false
+    },
+    {
+      "no": 15,
+      "title": "智能体间通信 Inter-Agent Communication (A2A)",
+      "goal": "介绍Google A2A开放协议，让不同框架构建的智能体互相发现、委派任务并协作。",
+      "outline": [
+        "A2A是HTTP上的开放标准，实现跨框架智能体互操作",
+        "Agent Card是智能体数字身份，描述能力、端点与认证",
+        "通信围绕异步任务，支持同步、轮询、SSE流式与Webhook推送",
+        "A2A负责智能体间协调，MCP负责智能体与外部工具数据的连接"
+      ],
+      "keyTerms": [],
+      "appendix": false
+    },
+    {
+      "no": 16,
+      "title": "资源感知优化 Resource-Aware Optimization",
+      "goal": "讲智能体如何在预算、延迟与算力约束下动态分配计算、时间与财务资源。",
+      "outline": [
+        "按任务复杂度路由到不同模型，简单查询用廉价模型、复杂推理用强模型",
+        "Critique Agent 通过反馈修正路由逻辑，间接优化预算与资源分配",
+        "回退机制在主模型不可用时自动降级，保证服务连续性",
+        "扩展手段包括自适应工具选择、上下文剪枝、能耗优化与学习型资源策略"
+      ],
+      "keyTerms": [],
+      "appendix": false
+    },
+    {
+      "no": 17,
+      "title": "推理技术 Reasoning Techniques",
+      "goal": "系统讲解CoT、ToT、ReAct等推理技术及推理时计算扩展原则。",
+      "outline": [
+        "CoT通过分步推理将复杂问题拆解为可管理的子问题",
+        "ReAct以Thought-Action-Observation循环结合推理与工具行动",
+        "Scaling Inference Law表明增加推理时计算可让小模型超越大模型",
+        "ToT、Self-Correction与CoD等多路径探索和协作提升鲁棒性"
+      ],
+      "keyTerms": [],
+      "appendix": false
+    },
+    {
+      "no": 18,
+      "title": "护栏/安全模式 Guardrails/Safety Patterns",
+      "goal": "讲如何用多层护栏让智能体安全、合规、可信地运行。",
+      "outline": [
+        "护栏是保护层而非限制，确保智能体安全、合乎伦理且行为可预测",
+        "在输入校验、输出过滤、行为约束、工具限制、人工监督等多阶段实施",
+        "可用轻量LLM作为快速预筛或复核的额外安全层",
+        "可靠智能体应像传统软件一样应用容错、模块化、可观测与最小权限原则"
+      ],
+      "keyTerms": [],
+      "appendix": false
+    },
+    {
+      "no": 19,
+      "title": "评估与监控 Evaluation and Monitoring",
+      "goal": "讲如何持续度量智能体的效果、效率与合规性，并建立反馈闭环。",
+      "outline": [
+        "评估不止看最终答案，还要看智能体轨迹与工具调用序列",
+        "用延迟、token 用量、LLM-as-a-Judge 等指标做多维监控",
+        "多智能体系统需评估协作、计划遵循与智能体选择",
+        "从简单提示走向正式契约式承包商，实现可验证执行"
+      ],
+      "keyTerms": [],
+      "appendix": false
+    },
+    {
+      "no": 20,
+      "title": "优先级排序 Prioritization",
+      "goal": "讲智能体如何在多任务、资源受限时按紧迫性、重要性与依赖关系排序并动态调整。",
+      "outline": [
+        "定义准则：紧迫性、重要性、依赖、资源与成本收益",
+        "任务评估可用简单规则或LLM打分推理",
+        "调度选择决定下一步动作或任务序列",
+        "动态重优先级化让智能体实时调整焦点"
+      ],
+      "keyTerms": [],
+      "appendix": false
+    },
+    {
+      "no": 21,
+      "title": "探索与发现 Exploration and Discovery",
+      "goal": "让智能体主动探索未知、生成新假设，而非只在预设空间内优化。",
+      "outline": [
+        "探索发现超越反应式行为与已知解空间优化，追求未知的未知",
+        "多智能体模拟科学方法：生成、评审、排序、演化假设",
+        "Google Co-Scientist 与 Agent Laboratory 展示自主科研工作流",
+        "强调人机协同增强而非完全自动化，并需安全与伦理审查"
+      ],
+      "keyTerms": [],
+      "appendix": false
+    },
+    {
+      "no": 100,
+      "title": "附录A：高级提示技术 Advanced Prompting",
+      "goal": "系统讲解从基础到进阶的提示工程技术，把提示重构为构建可靠智能体的工程实践。",
+      "outline": [
+        "核心原则：清晰、简洁、用动作动词、正向指令、迭代实验",
+        "基础与结构化：零样本/单样本/少样本、系统提示、角色、分隔符、结构化输出",
+        "推理技术：思维链 CoT、自洽性、后退提示、思维树 ToT",
+        "行动与增强：工具调用、ReAct、RAG、上下文工程、自动提示优化"
+      ],
+      "keyTerms": [],
+      "appendix": true
+    },
+    {
+      "no": 101,
+      "title": "附录B - AI 智能体交互 AI Agentic Interactions：从 GUI 到真实世界",
+      "goal": "综述智能体如何通过视觉操控GUI、感知物理环境并与开发者对话式编程。",
+      "outline": [
+        "ACI让智能体像人一样看屏幕、识别元素并操作鼠标键盘",
+        "多模态感知使智能体理解物理环境并实时对话",
+        "ChatGPT Agent等融合浏览、代码执行与第三方应用操作",
+        "Vibe Coding以对话迭代取代精确指令，聚焦目标而非实现"
+      ],
+      "keyTerms": [],
+      "appendix": true
+    },
+    {
+      "no": 102,
+      "title": "智能体框架速览 Agentic Frameworks",
+      "goal": "概览LangChain、LangGraph、ADK、CrewAI等框架的定位与选型权衡",
+      "outline": [
+        "LangChain用LCEL构建线性DAG链，适合简单可预测流程",
+        "LangGraph以有状态图支持循环、重试与多智能体协作",
+        "ADK与CrewAI提供高层编排，聚焦团队协作而非底层连线",
+        "选型取决于需要简单序列、动态推理循环还是托管专家团队"
+      ],
+      "keyTerms": [],
+      "appendix": true
+    },
+    {
+      "no": 103,
+      "title": "附录 D：用 AgentSpace 构建智能体（Building an Agent with AgentSpace）",
+      "goal": "介绍用 AgentSpace 无代码平台构建企业级多步自主智能体的方法与能力。",
+      "outline": [
+        "AgentSpace 统一搜索企业数字足迹并构建企业知识图谱",
+        "智能体可自主推理、规划并执行多步任务，而非仅聊天",
+        "支持 A2A 协议实现多智能体互通协作",
+        "Agent Designer 提供无代码界面，降低构建门槛"
+      ],
+      "keyTerms": [],
+      "appendix": true
+    },
+    {
+      "no": 104,
+      "title": "命令行上的 AI 智能体 AI Agents on the CLI",
+      "goal": "对比 Claude、Gemini、Aider、Copilot 四款 CLI 智能体的定位与用例，并介绍 Terminal-Bench 评测。",
+      "outline": [
+        "CLI 从执行命令的 shell 演变为理解自然语言、维护上下文的协作工作区",
+        "四款工具各有专长：架构重构、多模态与云、git 直改、GitHub 流程集成",
+        "MCP 与沙箱机制决定智能体可扩展的工具范围与安全边界",
+        "Terminal-Bench 用 80 个精选任务标准化评估 CLI 智能体能力"
+      ],
+      "keyTerms": [],
+      "appendix": true
+    },
+    {
+      "no": 105,
+      "title": "附录 F - 深入底层：智能体推理引擎内部机制",
+      "goal": "通过让六大LLM自述推理步骤，揭示智能体核心推理引擎的共性机制。",
+      "outline": [
+        "各模型推理均始于拆解提示、识别意图与约束",
+        "检索依赖模式识别而非数据库式查找",
+        "推理本质是概率性预测与思维链模拟",
+        "该多阶段框架是自主智能体规划能力的基石"
+      ],
+      "keyTerms": [],
+      "appendix": true
+    },
+    {
+      "no": 106,
+      "title": "编码智能体 Coding Agents",
+      "goal": "以人类主导、上下文优先、直连前沿模型为原则，用专家智能体团队增强开发者。",
+      "outline": [
+        "Vibe Coding 适合快速原型与创意探索，生产级软件需结构化协作",
+        "人类开发者作为编排者，负责架构、上下文策展与最终质量把关",
+        "用角色提示构建脚手架、测试、文档、优化、审查等专家智能体",
+        "提示词入库版本控制，并用 Git Hooks 自动化审查流程"
+      ],
+      "keyTerms": [],
+      "appendix": true
+    }
+  ]
+}

@@ -73,6 +73,8 @@ tutor/
 ├── scripts/build-context.mjs  # 上下文化索引(Anthropic Contextual Retrieval:LLM 为每块生成中文定位前缀,8 并发/断点续跑)
 ├── scripts/extract-pdf.py     # 通用 PDF 提取(pypdf layout 模式)
 ├── scripts/make-paper-page.mjs   # M1 论文管线: PDF → 翻译+解读 → 草稿页 + 人审清单
+├── scripts/make-book-page.mjs    # 读书管线: 书的 kb → 分章摘要 → 导读草稿页 + 读书导师 pack(答案只来自书内,金句逐字校验)
+├── scripts/publish-book.mjs      # 读书导读发布: 剥初稿标记 + manifest approved
 ├── scripts/make-pack-from-repo.mjs # M2 仓库管线: GitHub 仓库 → 教学包(课程规划器)
 ├── scripts/make-course-from-topic.mjs # M3 课题管线: 课题 → 整门课(教学包+站点草稿;内容为模型知识,须人审核实)
 ├── kb/course-chunks.json   # 构建产物(可重建,勿手改)

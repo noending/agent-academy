@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="读书导读：每本书先给导读（定位/核心论点/三条阅读路径/金句），再带着路径读原文；具体问题到导师模式，答案只来自书中内容。">
+<title>读书 · 导读与陪读 | Agent 学院</title>
+<link rel="stylesheet" href="assets/css/style.css?v=22">
+</head>
+<body data-chapter="books">
+
+<header class="topbar">
+ <button class="icon-btn hamburger" id="hamburger" title="打开导航">☰</button>
+ <a class="brand" href="index.html"><span class="logo">学</span> Agent 学院 <small>从零开发智能体 · Ontology · Harness</small></a>
+ <span class="spacer"></span>
+ <span class="progress-pill" id="progress-pill">读书板块</span>
+ <button class="icon-btn" id="theme-btn">🌙</button>
+</header>
+
+<div class="layout">
+ <aside class="sidebar" id="sidebar"></aside>
+
+ <main class="content">
+ <div class="content-inner">
+
+ <header class="chapter-head">
+ <div class="kicker">READING · 读书 · 先导读再开卷</div>
+ <h1>读书<span class="grad">板块</span></h1>
+ <p class="lead">
+ 读书的正确姿势不是从第 1 页熬到最后一页。本板块每本书配一份<b>机器导读 + 人工审校</b>：
+ 这本书讲什么、值不值得读、核心论点是什么、<b>三条阅读路径</b>（快读 / 精读 / 问题驱动）。
+ 导读定完路径就去读原文；读的过程中有任何问题，到<b>读书导师</b>那里问——答案只引用书中原文并标注章节，检索不到就明说，不编造。
+ </p>
+ <div class="head-meta">
+ <span class="chip">导读先行</span>
+ <span class="chip">三条阅读路径</span>
+ <span class="chip">导师答案只来自书内</span>
+ </div>
+ </header>
+
+ <div class="callout info">
+ <div class="co-title">怎么用这个板块（三步）</div>
+ <p>① <b>读导读</b>：五分钟搞清这本书的骨架，从三条路径里挑一条适合自己的；② <b>读原书</b>：按路径进原文（站内 PDF 或你自己的版本），卡住的地方记下来；③ <b>问导师</b>：每本书配了专属读书导师（课程菜单切换，或点书卡上的「🎓 读书导师」），它检索的是全书切块，回答必标章节。</p>
+ </div>
+
+ <h2>书架</h2>
+ <div id="book-grid"><p class="small-note">加载中…</p></div>
+
+ <div class="callout tip">
+ <div class="co-title">想添加新书？</div>
+ <p>把书的 PDF 放到 <code>papers/pdf/</code>，然后跑读书管线：<code>cd tutor && node scripts/make-book-page.mjs --kb kb/&lt;书&gt;.json --slug &lt;slug&gt; --title "&lt;书名&gt;" --authors "&lt;作者&gt;"</code>（需先用 build-gulli-kb.py 式脚本把 PDF 切成 kb）。生成的导读是机器初稿，人审通过后用 publish-book.mjs 发布。版权边界：导读页只保留提炼与短引用，全文检索与问答只在本地导师。</p>
+ </div>
+
+ <div class="callout story">
+ <div class="co-title">读书与论文精读的关系</div>
+ <p><a href="papers.html">论文精读</a>回答「这个方法的第一性原理是什么」，读书板块回答「这个领域的完整体系长什么样」。同一主题两边互相引用：比如《Agentic Design Patterns》的导读页里就挂了对应的课程与论文链接——书给体系，论文给深度。</p>
+ </div>
+
+ </div>
+ </main>
+</div>
+
+<script src="assets/js/app.js?v=24"></script>
+<script>
+(function () {
+  const grid = document.getElementById("book-grid");
+  fetch("courses-manifest.json")
+    .then((r) => r.json())
+    .then((m) => {
+      const books = (m.courses || []).filter((c) => c.kind === "book");
+      if (!books.length) {
+        grid.innerHTML = '<div class="callout info"><div class="co-title">书架还是空的</div><p>用读书管线导入第一本书（见下方「想添加新书」）。</p></div>';
+        return;
+      }
+      grid.innerHTML = '<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px">' +
+        books.map((b) => {
+          const badge = b.approved ? '<span class="cc-badge ok">已审定</span>' : '<span class="cc-badge">机器初稿 · 待人审</span>';
+          const pdf = b.pdf ? `<a class="btn" href="${b.pdf}" target="_blank" rel="noopener">原书 PDF</a>` : "";
+          const pack = b.pack ? `<a class="btn primary" href="academy://switch-pack/${b.pack}">🎓 读书导师</a>` : "";
+          const review = b.review ? `<a class="btn" href="${b.review}">📋 人审清单</a>` : "";
+          return `<div class="card course-card" style="padding:16px 18px">
+            <div class="cc-head"><span class="cc-kind">读书导读</span>${badge}</div>
+            <h4 style="margin:6px 0 2px"><a href="${b.page}">${b.title}</a></h4>
+            <div class="small-note">${b.authors || ""}${b.pages ? " · " + b.pages + " 页" : ""}</div>
+            <p class="cc-desc" style="margin:8px 0">${b.description || ""}</p>
+            <div style="display:flex;flex-wrap:wrap;gap:8px">
+              <a class="btn primary" href="${b.page}">打开导读</a>${pack}${pdf}${review}
+            </div>
+          </div>`;
+        }).join("") + "</div>";
+    })
+    .catch(() => {
+      grid.innerHTML = '<div class="callout warn"><div class="co-title">书架加载失败</div><p>courses-manifest.json 读取失败(本地 file:// 直开时浏览器可能拦截 fetch,请用 App 或本地服务器打开)。</p></div>';
+    });
+})();
+</script>
+</body>
+</html>
