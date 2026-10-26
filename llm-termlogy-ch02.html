@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="LLM术语精通课 第2章。">
 <title>第2章 · LLM术语精通课 | Agent 学院</title>
-<link rel="stylesheet" href="assets/css/style.css?v=22">
+<link rel="stylesheet" href="assets/css/style.css?v=24">
 </head>
 <body data-gen-course='{&quot;skill&quot;:&quot;llm-termlogy&quot;,&quot;title&quot;:&quot;LLM术语精通课&quot;,&quot;topic&quot;:&quot;由课题「LLM术语学习到精通」自动生成。适合AI初学者或需读懂LLM术语与评测的从业者。从基础概念到实战部署，掌握术语、模型评测与硬件评测，能独立分析技术文档。&quot;,&quot;chapters&quot;:[{&quot;no&quot;:1,&quot;title&quot;:&quot;LLM基础概念&quot;,&quot;goal&quot;:&quot;理解LLM基本定义、发展历程与核心能力&quot;,&quot;file&quot;:&quot;llm-termlogy-ch01.html&quot;},{&quot;no&quot;:2,&quot;title&quot;:&quot;核心术语解析&quot;,&quot;goal&quot;:&quot;掌握LLM常见术语如Transformer、注意力机制等&quot;,&quot;file&quot;:&quot;llm-termlogy-ch02.html&quot;},{&quot;no&quot;:3,&quot;title&quot;:&quot;模型评测方法&quot;,&quot;goal&quot;:&quot;学会阅读和解读LLM模型评测报告与基准&quot;,&quot;file&quot;:&quot;llm-termlogy-ch03.html&quot;},{&quot;no&quot;:4,&quot;title&quot;:&quot;硬件评测实战&quot;,&quot;goal&quot;:&quot;能看懂GPU等硬件评测指标并选型&quot;,&quot;file&quot;:&quot;llm-termlogy-ch04.html&quot;},{&quot;no&quot;:5,&quot;title&quot;:&quot;部署与优化实战&quot;,&quot;goal&quot;:&quot;动手部署LLM并优化推理性能&quot;,&quot;file&quot;:&quot;llm-termlogy-ch05.html&quot;}]}' data-chapter="gen-llm-termlogy-ch2">
 
@@ -23,14 +23,17 @@
   <main class="content">
     <div class="content-inner">
 
-      <header class="chapter-head">
-        <div class="kicker">CHAPTER 02 · 生成课程</div>
+                  <header class="chapter-head">
+        <div class="kicker">CHAPTER 02 · 机器初稿 · 待人审</div>
         <h1>核心术语解析</h1>
+        <p class="lead"><b>本章目标：</b>掌握LLM常见术语如Transformer、注意力机制等</p>
       </header>
-
-      <p class="lead"><b>本章目标：</b>掌握LLM常见术语如Transformer、注意力机制等</p>
+<!--flow-v1--><div class="flow">
+        <span class="flow-node">LLM是什么<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">先定位大语言模型的基本概念</small></span><span class="flow-arrow">→</span><span class="flow-node">Transformer架构<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">拆解模型骨架与组成模块</small></span><span class="flow-arrow">→</span><span class="flow-node">注意力机制<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">理解模型如何聚焦关键信息</small></span><span class="flow-arrow">→</span><span class="flow-node">术语串联<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">把零散名词连成一张知识网</small></span>
+        <div class="flow-note">从整体概念到核心机制，再到术语互联，10秒建立LLM术语地图。</div>
+      </div><!--/flow-v1-->
  <h3>Transformer 架构：自注意力、多头注意力与位置编码</h3>
- <p>Transformer 是几乎所有现代大语言模型（LLM）的骨架。它抛弃了循环神经网络（RNN）的时序递归，完全依赖<b>注意力机制</b>来捕捉序列中任意两个位置的关系。你可以把它想象成一个“全局信息路由器”：每个词都能直接看到句子里的其他所有词，并根据相关性分配注意力权重。</p><p><b>自注意力（Self-Attention）</b>是核心。对于输入序列的每个词向量，我们生成三个向量：Query（查询）、Key（键）、Value（值）。计算时，用当前词的 Query 与所有词的 Key 做点积，得到注意力分数，再经过 Softmax 归一化，最后用这些权重对 Value 加权求和。公式为：<code>Attention(Q, K, V) = softmax(QK^T / sqrt(d_k)) V</code>。除以 <code>sqrt(d_k)</code> 是为了防止点积过大导致梯度消失。</p><p><b>多头注意力（Multi-Head Attention）</b>则是把自注意力并行做多次（比如 8 个头），每个头学习不同的关注模式（如语法、语义、指代等），最后拼接并线性变换。这让模型能同时从多个“视角”理解句子。</p><p>由于自注意力本身不包含顺序信息，Transformer 引入了<b>位置编码（Positional Encoding）</b>。原始论文使用正弦和余弦函数生成固定编码，后来也常用可学习的位置嵌入。位置编码与词嵌入相加，让模型知道“谁在前、谁在后”。</p><p>下面是一个极简的自注意力实现，帮助你直观理解计算过程：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import torch
+ <p>想象你在读一句话“小猫追着球跑，因为它很兴奋”。当读到“它”时，你的大脑会自动回指“小猫”，而不是“球”。Transformer 的自注意力机制就是在模拟这种“全局回看”的能力：序列中的每个词都能直接与所有其他词计算相关性，而不像 RNN 那样必须一步步传递信息。这种设计让模型可以并行处理整个序列，训练速度大幅提升。</p><p>具体来说，<b>自注意力（Self-Attention）</b>为每个词向量生成三个角色：Query（我在找什么）、Key（我能提供什么）、Value（我实际携带的信息）。用当前词的 Query 与所有词的 Key 做点积，得到注意力分数，再经过 Softmax 归一化，最后用这些权重对 Value 加权求和。公式为：<code>Attention(Q, K, V) = softmax(QK^T / sqrt(d_k)) V</code>。除以 <code>sqrt(d_k)</code> 是为了防止点积过大导致 Softmax 进入饱和区、梯度消失。举个例子：如果 <code>d_k=64</code>，点积结果可能达到几十甚至上百，除以 8 后数值更稳定，训练更容易收敛。</p><p><b>多头注意力（Multi-Head Attention）</b>则是把自注意力并行做多次（比如 8 个头），每个头学习不同的关注模式——有的头可能关注语法依存，有的头关注指代关系，有的头关注相邻词。最后把所有头的输出拼接并线性变换。你可以把它理解为“八个专家同时从不同角度审阅同一句话，最后汇总意见”。</p><p>由于自注意力本身不包含顺序信息（打乱词序，计算结果只跟位置对应关系有关），Transformer 引入了<b>位置编码（Positional Encoding）</b>。原始论文使用正弦和余弦函数生成固定编码，后来也常用可学习的位置嵌入。位置编码与词嵌入相加，让模型知道“谁在前、谁在后”。如果没有位置编码，模型无法区分“狗咬人”和“人咬狗”。</p><p>下面是一个极简的自注意力实现，帮助你直观理解计算过程。输入是一个形状为 <code>(1, 3, 4)</code> 的随机张量（batch=1，序列长度=3，维度=4），输出形状保持不变，但每个位置的向量已经融合了全局信息：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import torch
 import torch.nn.functional as F
 
 # 假设 batch=1, 序列长度=3, 维度=4
@@ -48,9 +51,9 @@ scores = torch.matmul(Q, K.transpose(-2, -1)) / (4 ** 0.5)  # (1, 3, 3)
 attn = F.softmax(scores, dim=-1)
 out = torch.matmul(attn, V)  # (1, 3, 4)
 print(out.shape)  # torch.Size([1, 3, 4])
-</code></pre></div><p><b>记住：Transformer = 自注意力 + 多头 + 位置编码 + 前馈网络 + 残差连接 + 层归一化。</b>这些组件堆叠起来，就构成了 GPT、BERT 等模型的基础。</p>
+</code></pre></div><p><b>记住：Transformer = 自注意力 + 多头 + 位置编码 + 前馈网络 + 残差连接 + 层归一化。</b>这些组件堆叠起来，就构成了 GPT、BERT 等模型的基础。残差连接让梯度可以绕过深层网络直接回传，层归一化则稳定每层的输入分布，两者共同保证深层模型可训练。</p>
  <h3>Token 与 Tokenization：子词切分、BPE 与 WordPiece</h3>
- <p>LLM 不直接处理文字，而是处理 <b>Token</b>——可以理解为“词片”或“子词”。Tokenization 就是把原始文本切分成 Token 序列的过程。为什么不用整词？因为词汇表会爆炸，而且遇到未登录词（OOV）就束手无策。子词切分在“词”和“字符”之间取得平衡，既能控制词表大小，又能处理罕见词。</p><p><b>BPE（Byte Pair Encoding）</b>是最常用的子词算法之一。它从字符开始，反复合并出现频率最高的相邻字符对，直到达到预设的词表大小。例如，“low”和“lower”可能被切分为 <code>low</code> 和 <code>er</code>。GPT 系列、RoBERTa 都使用 BPE 的变体。</p><p><b>WordPiece</b> 是 BERT 使用的算法，与 BPE 类似，但合并时选择能最大化语言模型似然的字符对，而不是单纯看频率。它用 <code>##</code> 前缀表示子词是词的延续，比如 <code>playing</code> 可能切成 <code>play</code> + <code>##ing</code>。</p><p>Tokenization 直接影响模型的行为：同样的句子，不同 tokenizer 切出的 Token 数量不同，进而影响上下文长度、推理成本和生成质量。例如，中文通常一个汉字可能对应一个或多个 Token，而英文一个单词可能被切成多个子词。</p><p>下面用 Hugging Face 的 tokenizer 观察实际切分效果：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from transformers import AutoTokenizer
+ <p>LLM 不直接处理文字，而是处理 <b>Token</b>——可以理解为“词片”或“子词”。你可以把 Tokenization 想象成把一整块乐高拆成标准零件：零件太大（整词）则组合不灵活、遇到新词就傻眼；零件太小（单字符）则序列太长、计算成本高。子词切分正好在两者之间取得平衡。</p><p><b>BPE（Byte Pair Encoding）</b>是最常用的子词算法之一。它从字符开始，反复合并出现频率最高的相邻字符对，直到达到预设的词表大小。例如，语料中“low”和“lower”频繁出现，BPE 可能先合并出 <code>low</code>，再单独保留 <code>er</code> 作为后缀。GPT 系列、RoBERTa 都使用 BPE 的变体。词表大小通常设为 3 万到 5 万，既能覆盖常见词，又能用子词拼出罕见词。</p><p><b>WordPiece</b> 是 BERT 使用的算法，与 BPE 类似，但合并时选择能最大化语言模型似然的字符对，而不是单纯看频率。它用 <code>##</code> 前缀表示子词是词的延续，比如 <code>playing</code> 可能切成 <code>play</code> + <code>##ing</code>。这种标记方式让模型能区分“词首”和“词中”的子词。</p><p>Tokenization 直接影响模型的行为：同样的句子，不同 tokenizer 切出的 Token 数量不同，进而影响上下文长度、推理成本和生成质量。例如，英文句子“Tokenization is fun!”在 BERT 的 WordPiece 下可能切成 5 个 Token，而中文句子“今天天气很好”可能每个汉字对应一个 Token 或更少。Token 数越多，同样的上下文窗口能容纳的内容越少，API 计费也越高。</p><p>下面用 Hugging Face 的 tokenizer 观察实际切分效果。输入是句子 <code>"Tokenization is fun!"</code>，输出是切分后的 Token 列表和对应的 ID：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from transformers import AutoTokenizer
 
 tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
 text = "Tokenization is fun!"
@@ -58,9 +61,9 @@ tokens = tokenizer.tokenize(text)
 print(tokens)  # ['token', '##ization', 'is', 'fun', '!']
 ids = tokenizer.convert_tokens_to_ids(tokens)
 print(ids)
-</code></pre></div><p><b>关键结论：Token 是模型处理文本的最小单位，Tokenization 策略决定了词表大小、序列长度和模型对罕见词的泛化能力。</b></p>
+</code></pre></div><p><b>关键结论：Token 是模型处理文本的最小单位，Tokenization 策略决定了词表大小、序列长度和模型对罕见词的泛化能力。</b>理解这一点，你就能明白为什么同样的提示词在不同模型上消耗的 Token 数不同，以及为什么某些拼写错误会导致模型表现异常。</p>
  <h3>嵌入与向量表示：词嵌入、位置嵌入与上下文嵌入</h3>
- <p>嵌入（Embedding）是把离散的 Token 映射到连续向量空间的技术。每个 Token 对应一个稠密向量，语义相近的词在向量空间中距离更近。比如“猫”和“狗”的向量会比“猫”和“汽车”更接近。</p><p><b>词嵌入（Word Embedding）</b>是静态的，每个词只有一个向量，与上下文无关。Word2Vec、GloVe 是经典方法。但同一个词在不同句子中含义可能不同（如“苹果”指水果还是公司），静态嵌入无法区分。</p><p><b>位置嵌入（Position Embedding）</b>为每个位置生成一个向量，加到词嵌入上，让 Transformer 感知顺序。它可以是固定的正弦函数，也可以是可学习的参数。</p><p><b>上下文嵌入（Contextual Embedding）</b>则根据整个句子动态生成每个词的向量。BERT、GPT 等模型输出的就是上下文嵌入。同一个词在不同上下文中会有不同的向量表示，从而解决一词多义问题。</p><p>下面演示如何用 BERT 获取上下文嵌入：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from transformers import BertTokenizer, BertModel
+ <p>嵌入（Embedding）是把离散的 Token 映射到连续向量空间的技术。你可以把它想象成给每个词在一个高维地图上分配一个坐标：语义相近的词，坐标也相近。比如“猫”和“狗”的向量距离会比“猫”和“汽车”更近。这个向量通常是几百到几千维的稠密数组，模型后续的所有计算都基于这些向量。</p><p><b>词嵌入（Word Embedding）</b>是静态的，每个词只有一个向量，与上下文无关。Word2Vec、GloVe 是经典方法。但同一个词在不同句子中含义可能不同——比如“苹果”指水果还是公司，静态嵌入无法区分。这就好比给每个词发了一张固定身份证，不管它出现在什么场合。</p><p><b>位置嵌入（Position Embedding）</b>为每个位置生成一个向量，加到词嵌入上，让 Transformer 感知顺序。它可以是固定的正弦函数，也可以是可学习的参数。位置嵌入不关心词是什么，只关心它在第几位。</p><p><b>上下文嵌入（Contextual Embedding）</b>则根据整个句子动态生成每个词的向量。BERT、GPT 等模型输出的就是上下文嵌入。同一个词在不同上下文中会有不同的向量表示，从而解决一词多义问题。例如，“bank”在“river bank”和“bank account”中的向量会明显不同。</p><p>下面演示如何用 BERT 获取上下文嵌入。输入句子 <code>"I love apples."</code>，输出是每个 Token 的 768 维向量，形状为 <code>(1, seq_len, 768)</code>：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from transformers import BertTokenizer, BertModel
 import torch
 
 tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
@@ -72,9 +75,9 @@ with torch.no_grad():
 
 last_hidden = outputs.last_hidden_state  # (1, seq_len, 768)
 print(last_hidden.shape)
-</code></pre></div><p><b>记住：词嵌入是静态的，上下文嵌入是动态的；位置嵌入负责注入顺序信息。</b>三者共同构成了 LLM 的输入表示层。</p>
+</code></pre></div><p><b>记住：词嵌入是静态的，上下文嵌入是动态的；位置嵌入负责注入顺序信息。</b>三者共同构成了 LLM 的输入表示层。理解它们的区别，你就能明白为什么 BERT 适合做语义相似度任务，而 Word2Vec 更适合做快速检索。</p>
  <h3>训练与推理术语：批处理、学习率、温度与 Top-p 采样</h3>
- <p>训练和推理阶段有一堆术语，理解它们才能调参和读懂技术文档。</p><p><b>批处理（Batch Size）</b>指一次前向/反向传播处理的样本数量。大批量训练更稳定、GPU 利用率高，但需要更多显存；小批量则噪声大，可能有助于泛化。</p><p><b>学习率（Learning Rate）</b>控制参数更新的步长。太大容易震荡不收敛，太小则训练缓慢。常用预热（warmup）和衰减策略。</p><p>推理阶段，<b>温度（Temperature）</b>用于调整 Softmax 输出的概率分布。温度越低（如 0.1），分布越尖锐，模型更倾向于选择概率最高的词，输出更确定；温度越高（如 1.5），分布越平坦，输出更随机、有创意。公式为 <code>softmax(logits / T)</code>。</p><p><b>Top-p 采样（Nucleus Sampling）</b>又称核采样。它从累积概率达到 p（如 0.9）的最小词集合中采样，动态截断尾部。相比 Top-k 固定截断，Top-p 能根据分布形状自适应，避免生成不连贯的文本。</p><p>下面用代码模拟温度与 Top-p 对采样分布的影响：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import torch
+ <p>训练和推理阶段有一堆术语，理解它们才能调参和读懂技术文档。先建立直觉：训练就像学生刷题，批处理是每次做几道题，学习率是每次订正时改多少；推理就像考试答题，温度决定你多大胆地选答案，Top-p 决定你从几个候选中挑。</p><p><b>批处理（Batch Size）</b>指一次前向/反向传播处理的样本数量。大批量训练更稳定、GPU 利用率高，但需要更多显存；小批量则噪声大，可能有助于泛化。例如，批大小从 8 增加到 64，梯度估计更准，但显存占用可能翻几倍，需要配合学习率调整。</p><p><b>学习率（Learning Rate）</b>控制参数更新的步长。太大容易震荡不收敛，太小则训练缓慢。常用预热（warmup）和衰减策略：训练初期用小学习率预热，避免早期梯度爆炸；后期逐步衰减，让模型精细收敛。</p><p>推理阶段，<b>温度（Temperature）</b>用于调整 Softmax 输出的概率分布。温度越低（如 0.1），分布越尖锐，模型更倾向于选择概率最高的词，输出更确定；温度越高（如 1.5），分布越平坦，输出更随机、有创意。公式为 <code>softmax(logits / T)</code>。举个例子：原始 logits 为 <code>[2.0, 1.0, 0.5]</code>，T=0.5 时最高概率可能超过 0.9，T=1.5 时最高概率可能降到 0.5 左右。</p><p><b>Top-p 采样（Nucleus Sampling）</b>又称核采样。它从累积概率达到 p（如 0.9）的最小词集合中采样，动态截断尾部。相比 Top-k 固定截断，Top-p 能根据分布形状自适应：分布尖锐时候选集小，分布平坦时候选集大，避免生成不连贯的文本。</p><p>下面用代码模拟温度与 Top-p 对采样分布的影响。输入是一组 logits，输出是采样得到的 Token 索引：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import torch
 import torch.nn.functional as F
 
 logits = torch.tensor([2.0, 1.0, 0.5, 0.1, -1.0])
@@ -93,18 +96,19 @@ def sample(logits, temperature=1.0, top_p=1.0):
 
 print("T=0.5, top_p=0.9:", sample(logits, 0.5, 0.9))
 print("T=1.5, top_p=0.9:", sample(logits, 1.5, 0.9))
-</code></pre></div><p><b>总结：温度控制随机性，Top-p 控制候选集大小；两者常配合使用，例如 temperature=0.7, top_p=0.9。</b></p>
+</code></pre></div><p><b>总结：温度控制随机性，Top-p 控制候选集大小；两者常配合使用，例如 temperature=0.7, top_p=0.9。</b>温度太低会让输出重复乏味，温度太高则可能胡言乱语；Top-p 太小会限制创意，太大则引入低质量候选。</p>
  <h3>常见误区</h3>
  <ul>
- <li>自注意力机制中，每个词只关注相邻的词。实际上，自注意力允许每个词关注序列中的所有词，包括它自己。</li>
- <li>Token 就是单词。实际上，一个单词可能被切分成多个 Token，一个 Token 也可能是一个子词或字符。</li>
- <li>温度越高，模型输出越准确。实际上，温度越高输出越随机、有创意，但可能不准确；温度越低输出越确定，但可能缺乏多样性。</li>
+  <li>错误理解：自注意力机制中，每个词只关注相邻的词。→ 后果：会误以为 Transformer 和 RNN 一样依赖局部窗口，无法理解长距离依赖，从而低估其在长文本任务上的能力。→ 正确做法：自注意力允许每个词关注序列中的所有词（包括它自己），注意力权重由 Query 和 Key 的点积决定，与距离无关。</li>
+  <li>错误理解：Token 就是单词。→ 后果：会错误估算上下文长度和 API 成本，比如以为 1000 个单词就是 1000 个 Token，实际可能多出 30% 以上；也会困惑为什么模型对拼写错误敏感。→ 正确做法：一个单词可能被切分成多个 Token，一个 Token 也可能是一个子词或字符，具体取决于 tokenizer 的词表和切分算法。</li>
+  <li>错误理解：温度越高，模型输出越准确。→ 后果：在需要事实准确的任务中调高温度，会导致模型随机选择低概率词，输出不准确甚至矛盾的内容。→ 正确做法：温度越高输出越随机、有创意，但可能不准确；温度越低输出越确定，但可能缺乏多样性。应根据任务选择：事实问答用低温（如 0.1~0.3），创意写作用高温（如 0.8~1.2）。</li>
  </ul>
  <h3>自测</h3>
- <details class="quiz"><summary>请解释 Transformer 中多头注意力的作用，以及为什么需要位置编码？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>多头注意力让模型并行地从多个子空间学习不同的注意力模式，从而捕捉更丰富的语义和语法关系。位置编码是因为自注意力本身对序列顺序不敏感，需要额外注入位置信息，让模型知道词的先后顺序。</p></div></details>
- <details class="quiz"><summary>温度（Temperature）和 Top-p 采样在文本生成中分别起什么作用？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>温度调整 Softmax 输出的概率分布：温度低使分布更尖锐，输出更确定；温度高使分布更平坦，输出更随机。Top-p 采样从累积概率达到 p 的最小词集合中采样，动态截断低概率词，避免生成不连贯内容。两者常结合使用以平衡确定性和多样性。</p></div></details>
+ <details class="quiz"><summary>请解释 Transformer 中多头注意力的作用，以及为什么需要位置编码？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>多头注意力让模型并行地从多个子空间学习不同的注意力模式。推理过程：单个注意力头只能输出一种加权组合，容易只关注某一种关系（比如相邻词）；把自注意力复制成 8 个头，每个头有独立的 Q/K/V 投影矩阵，就能分别捕捉语法依存、指代关系、语义相似等不同模式，最后拼接并线性变换，信息更丰富。位置编码的必要性在于：自注意力的计算是排列等变的——打乱输入顺序，输出只是跟着打乱，模型本身无法感知“谁在前谁在后”。如果不加位置编码，“狗咬人”和“人咬狗”的注意力分数集合相同，模型无法区分语义。位置编码与词嵌入相加，为每个位置注入唯一信号，模型才能利用顺序信息。</p></div></details>
+ <details class="quiz"><summary>温度（Temperature）和 Top-p 采样在文本生成中分别起什么作用？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>温度调整 Softmax 输出的概率分布。推理过程：Softmax 的输入是 logits，除以温度 T 后再归一化。T&lt;1 时，logits 差距被放大，高概率词更高、低概率词更低，分布更尖锐，输出更确定；T&gt;1 时，差距被缩小，分布更平坦，输出更随机。Top-p 采样则从累积概率达到 p 的最小词集合中采样。推理过程：先把概率降序排列并累加，当累加和首次超过 p 时截断，只保留前面的词并重新归一化。这样候选集大小随分布形状自适应——分布尖锐时候选少，分布平坦时候选多。两者常结合使用：温度控制整体随机性，Top-p 控制候选集边界，共同平衡确定性和多样性。</p></div></details>
+ <details class="quiz"><summary>词嵌入和上下文嵌入有什么区别？请结合“bank”这个词举例说明。</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>词嵌入是静态的，每个词只有一个固定向量，与上下文无关；上下文嵌入是动态的，根据整个句子生成每个词的向量。推理过程：Word2Vec 训练完后，“bank”只有一个向量，无法区分“river bank”和“bank account”。BERT 等模型在每一层都让词与句子中其他词做注意力交互，因此“bank”在“I sat on the river bank.”中会吸收“river”的信息，在“I went to the bank to deposit money.”中会吸收“deposit”的信息，最终两个向量不同。实际计算余弦相似度时，两个“bank”向量的相似度通常低于 0.9，说明上下文嵌入确实区分了一词多义。</p></div></details>
  <h3>动手练习（带参考方案）</h3>
- <details class="fold"><summary>动手练习 · 使用 Hugging Face transformers 库，加载 bert-base-uncase…</summary><div class="fold-body"><p><b>任务：</b>使用 Hugging Face transformers 库，加载 bert-base-uncased 模型和 tokenizer，对句子 "The bank can guarantee deposits will eventually cover future tuition costs." 进行 Tokenization，并获取每个 Token 的上下文嵌入。然后比较单词 "bank" 在另一个句子 "I sat on the river bank." 中的嵌入向量，计算余弦相似度，观察上下文嵌入是否不同。</p><p><b>参考方案：</b></p>import torch
+ <details class="fold"><summary>练习 · 使用 Hugging Face transformers 库，加载 bert-base-uncased 模型和 toke…</summary><div class="fold-body"><p><b>任务：</b>使用 Hugging Face transformers 库，加载 bert-base-uncased 模型和 tokenizer，对句子 "The bank can guarantee deposits will eventually cover future tuition costs." 进行 Tokenization，并获取每个 Token 的上下文嵌入。然后比较单词 "bank" 在另一个句子 "I sat on the river bank." 中的嵌入向量，计算余弦相似度，观察上下文嵌入是否不同。验收标准：程序能正确输出两个句子中 "bank" 的向量形状（均为 768 维）以及余弦相似度数值，并打印 Token 列表。</p><p><b>参考方案：</b></p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import torch
 from transformers import BertTokenizer, BertModel
 from sklearn.metrics.pairwise import cosine_similarity
 
@@ -116,18 +120,21 @@ def get_embedding(sentence, word):
     with torch.no_grad():
         outputs = model(**inputs)
     tokens = tokenizer.convert_ids_to_tokens(inputs['input_ids'][0])
+    print('Tokens:', tokens)
     idx = tokens.index(word)
     return outputs.last_hidden_state[0, idx].numpy()
 
 emb1 = get_embedding('The bank can guarantee deposits will eventually cover future tuition costs.', 'bank')
 emb2 = get_embedding('I sat on the river bank.', 'bank')
+print('emb1 shape:', emb1.shape)  # (768,)
+print('emb2 shape:', emb2.shape)  # (768,)
 sim = cosine_similarity([emb1], [emb2])[0][0]
 print(f'Cosine similarity: {sim:.4f}')
-# 输出相似度通常低于 0.9，说明上下文嵌入不同。</div></details>
+# 输出相似度通常低于 0.9，说明上下文嵌入不同。</code></pre></div></div></details>
     </div>
   </main>
 </div>
 
-<script src="assets/js/app.js?v=24"></script>
+<script src="assets/js/app.js?v=28"></script>
 </body>
 </html>

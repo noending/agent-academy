@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="LLM训练到部署 第5章。">
 <title>第5章 · LLM训练到部署 | Agent 学院</title>
-<link rel="stylesheet" href="assets/css/style.css?v=22">
+<link rel="stylesheet" href="assets/css/style.css?v=24">
 </head>
 <body data-gen-course='{&quot;skill&quot;:&quot;llm&quot;,&quot;title&quot;:&quot;LLM训练到部署&quot;,&quot;topic&quot;:&quot;由课题「LLM从训练到部署」自动生成。本课程适合对LLM感兴趣的开发者与运维人员，从零开始掌握大语言模型训练、微调、优化与部署全流程，最终能独立完成生产级部署。&quot;,&quot;chapters&quot;:[{&quot;no&quot;:1,&quot;title&quot;:&quot;LLM基础概念&quot;,&quot;goal&quot;:&quot;理解LLM核心概念与工作原理&quot;,&quot;file&quot;:&quot;llm-ch01.html&quot;},{&quot;no&quot;:2,&quot;title&quot;:&quot;数据准备与预处理&quot;,&quot;goal&quot;:&quot;掌握构建高质量训练数据集的方法&quot;,&quot;file&quot;:&quot;llm-ch02.html&quot;},{&quot;no&quot;:3,&quot;title&quot;:&quot;模型训练基础&quot;,&quot;goal&quot;:&quot;能够配置并启动LLM训练任务&quot;,&quot;file&quot;:&quot;llm-ch03.html&quot;},{&quot;no&quot;:4,&quot;title&quot;:&quot;微调与对齐&quot;,&quot;goal&quot;:&quot;使用微调技术适配下游任务&quot;,&quot;file&quot;:&quot;llm-ch04.html&quot;},{&quot;no&quot;:5,&quot;title&quot;:&quot;模型优化与压缩&quot;,&quot;goal&quot;:&quot;优化模型推理速度与资源占用&quot;,&quot;file&quot;:&quot;llm-ch05.html&quot;},{&quot;no&quot;:6,&quot;title&quot;:&quot;部署架构与API&quot;,&quot;goal&quot;:&quot;设计并实现LLM服务API&quot;,&quot;file&quot;:&quot;llm-ch06.html&quot;},{&quot;no&quot;:7,&quot;title&quot;:&quot;实战：训练小型LLM&quot;,&quot;goal&quot;:&quot;完成一个小型LLM的训练与微调&quot;,&quot;file&quot;:&quot;llm-ch07.html&quot;},{&quot;no&quot;:8,&quot;title&quot;:&quot;实战：生产环境部署&quot;,&quot;goal&quot;:&quot;将训练好的LLM部署到生产环境&quot;,&quot;file&quot;:&quot;llm-ch08.html&quot;}]}' data-chapter="gen-llm-ch5">
 
@@ -23,14 +23,17 @@
   <main class="content">
     <div class="content-inner">
 
-      <header class="chapter-head">
-        <div class="kicker">CHAPTER 05 · 生成课程</div>
+                  <header class="chapter-head">
+        <div class="kicker">CHAPTER 05 · 机器初稿 · 待人审</div>
         <h1>模型优化与压缩</h1>
+        <p class="lead"><b>本章目标：</b>优化模型推理速度与资源占用</p>
       </header>
-
-      <p class="lead"><b>本章目标：</b>优化模型推理速度与资源占用</p>
+<!--flow-v1--><div class="flow">
+        <span class="flow-node">基线评估<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">测速度、显存与精度</small></span><span class="flow-arrow">→</span><span class="flow-node">瓶颈定位<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">找出算力与带宽热点</small></span><span class="flow-arrow">→</span><span class="flow-node">压缩优化<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">量化剪枝蒸馏并行</small></span><span class="flow-arrow">→</span><span class="flow-node">精度校验<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">对比优化前后指标</small></span><span class="flow-arrow">→</span><span class="flow-node">部署迭代<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">上线监控再回基线</small></span>
+        <div class="flow-note">优化是评估、定位、压缩、校验、部署的闭环，每轮都回到基线重测。</div>
+      </div><!--/flow-v1-->
  <h3>量化：PTQ与QAT</h3>
- <p>量化是把模型参数和激活值从高精度（如FP32）转换为低精度（如INT8）的过程，能大幅减少内存占用和加速推理。<b>训练后量化（PTQ）</b>无需重新训练，直接对训练好的模型进行量化，简单快速但可能损失精度；<b>量化感知训练（QAT）</b>在训练过程中模拟量化误差，让模型适应低精度，通常精度更高但需要训练资源。</p><p>下面是一个使用PyTorch进行动态量化的最小示例，对线性层进行INT8量化：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import torch
+ <p>想象你有一张高保真的照片（FP32），文件很大但细节丰富；为了在手机上快速分享，你把它压缩成JPEG（INT8），文件小了，肉眼几乎看不出差别。量化就是这样的“有损压缩”：把模型参数和激活值从高精度（如FP32）转换为低精度（如INT8），从而大幅减少内存占用和加速推理。关键在于，这种“损失”在多数模型上非常小，甚至可以通过训练来补偿。</p><p>具体来说，<b>训练后量化（PTQ）</b>无需重新训练，直接对训练好的模型进行量化，简单快速但可能损失精度；<b>量化感知训练（QAT）</b>在训练过程中模拟量化误差，让模型适应低精度，通常精度更高但需要训练资源。一个直观的对比：一个10M参数的FP32模型约占40MB，INT8量化后仅约10MB，内存直接降为1/4；在CPU上推理速度通常能提升2-4倍（具体取决于硬件和模型结构，待核实）。</p><p>下面是一个使用PyTorch进行动态量化的最小示例，对线性层进行INT8量化。输入是一个简单的全连接模型，输出是量化后的模型结构以及大小对比。注意：动态量化仅量化权重，激活在运行时量化，适合LSTM、Transformer等模型。</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import torch
 import torch.quantization
 
 # 定义一个简单模型
@@ -47,11 +50,11 @@ quantized_model = torch.quantization.quantize_dynamic(
     model, {torch.nn.Linear}, dtype=torch.qint8
 )
 print(quantized_model)
-# 比较大小
+# 比较大小（注意：量化后参数以qint8存储，每个参数约1字节）
 print(f"原始模型大小: {sum(p.numel() for p in model.parameters()) * 4} bytes")
-print(f"量化模型大小: {sum(p.numel() for p in quantized_model.parameters()) * 1} bytes")</code></pre></div><p>运行后可以看到量化模型大小约为原始模型的1/4。<b>PTQ适合快速部署，QAT适合对精度要求高的场景。</b></p>
+print(f"量化模型大小: {sum(p.numel() for p in quantized_model.parameters()) * 1} bytes")</code></pre></div><p>运行后可以看到量化模型大小约为原始模型的1/4。<b>PTQ适合快速部署，QAT适合对精度要求高的场景。</b>实际选择时，可以先尝试PTQ，如果精度下降超过可接受阈值（如1%），再考虑QAT。</p>
  <h3>剪枝与知识蒸馏</h3>
- <p><b>剪枝</b>通过移除模型中不重要的权重或神经元来减少参数量和计算量。常见方法有非结构化剪枝（移除单个权重）和结构化剪枝（移除整个通道或层）。<b>知识蒸馏</b>让一个小模型（学生）模仿大模型（教师）的输出分布，从而获得接近大模型的性能。</p><p>下面是一个简单的知识蒸馏训练示例，使用KL散度损失：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import torch
+ <p>剪枝就像给一棵树修剪枝叶：去掉不重要的枝条，树依然能健康生长，甚至更茂盛。在神经网络中，<b>剪枝</b>通过移除模型中不重要的权重或神经元来减少参数量和计算量。常见方法有非结构化剪枝（移除单个权重，产生稀疏矩阵）和结构化剪枝（移除整个通道或层，直接减小模型尺寸）。非结构化剪枝虽然能大幅减少参数量，但需要特定硬件支持稀疏计算才能加速；结构化剪枝则可以直接获得更小的稠密模型，通用性更好。</p><p><b>知识蒸馏</b>则像“师徒传承”：让一个小模型（学生）模仿大模型（教师）的输出分布，从而获得接近大模型的性能。教师模型的“软标签”（softmax概率分布）包含了类别间的相似性信息，比硬标签更丰富。例如，教师模型对一张“猫”的图片可能给出“猫0.9，狗0.08，兔子0.02”的概率，学生模型学习这种分布，能更好地泛化。</p><p>下面是一个简单的知识蒸馏训练示例，使用KL散度损失。输入是随机生成的模拟数据，输出是蒸馏损失值。温度参数T=2用于平滑概率分布，让学生模型学到更多暗知识。</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -71,9 +74,9 @@ with torch.no_grad():
 student_logits = student(x)
 student_log_probs = F.log_softmax(student_logits / 2.0, dim=1)
 loss = F.kl_div(student_log_probs, teacher_probs, reduction='batchmean')
-print(f"蒸馏损失: {loss.item():.4f}")</code></pre></div><p><b>剪枝和蒸馏可以结合使用，先剪枝再蒸馏微调，能进一步压缩模型。</b></p>
+print(f"蒸馏损失: {loss.item():.4f}")</code></pre></div><p><b>剪枝和蒸馏可以结合使用，先剪枝再蒸馏微调，能进一步压缩模型。</b>例如，先对教师模型进行结构化剪枝得到学生模型，再用蒸馏损失微调，往往能获得比单独使用任一方法更好的压缩效果。</p>
  <h3>推理加速：ONNX与TensorRT</h3>
- <p><b>ONNX</b>（Open Neural Network Exchange）是一种开放的模型格式，支持跨框架转换和优化。<b>TensorRT</b>是NVIDIA的高性能推理SDK，能对ONNX模型进一步优化，利用GPU加速。</p><p>将PyTorch模型导出为ONNX格式的示例：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import torch
+ <p>想象你要把一份Word文档发给不同的人，有人用Mac，有人用Windows，直接发.docx可能格式错乱；但如果导出为PDF，所有人都能一致地查看。ONNX就是深度学习界的“PDF”：<b>ONNX</b>（Open Neural Network Exchange）是一种开放的模型格式，支持跨框架转换和优化。它让PyTorch训练的模型可以方便地部署到TensorFlow、Caffe2等不同运行时，并利用各平台的优化器。</p><p>而<b>TensorRT</b>是NVIDIA的高性能推理SDK，能对ONNX模型进一步优化，利用GPU加速。它通过层融合、精度校准（如FP16/INT8）、内核自动调优等技术，将推理延迟降到最低。例如，在NVIDIA T4 GPU上，TensorRT相比原生PyTorch推理通常有数倍的加速（具体倍数因模型而异，待核实）。</p><p>下面是将PyTorch模型导出为ONNX格式并使用ONNX Runtime推理的示例。输入是一个简单的全连接模型和随机数据，输出是ONNX模型文件以及推理结果的形状。注意dynamic_axes参数允许批大小动态变化，方便部署时处理不同 batch size 的请求。</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import torch
 import torch.onnx
 
 # 定义一个简单模型
@@ -102,9 +105,9 @@ import numpy as np
 ort_session = ort.InferenceSession("model.onnx")
 input_data = np.random.randn(1, 10).astype(np.float32)
 outputs = ort_session.run(None, {"input": input_data})
-print("ONNX Runtime推理输出形状:", outputs[0].shape)</code></pre></div><p>对于TensorRT，可以使用<code>torch-tensorrt</code>或<code>trtexec</code>工具将ONNX转换为TensorRT引擎，获得更低的延迟。<b>ONNX提供跨平台兼容性，TensorRT则针对NVIDIA GPU极致优化。</b></p>
+print("ONNX Runtime推理输出形状:", outputs[0].shape)</code></pre></div><p>对于TensorRT，可以使用<code>torch-tensorrt</code>或<code>trtexec</code>工具将ONNX转换为TensorRT引擎，获得更低的延迟。<b>ONNX提供跨平台兼容性，TensorRT则针对NVIDIA GPU极致优化。</b>实际部署时，通常先用ONNX统一格式，再根据目标硬件选择TensorRT、OpenVINO等后端。</p>
  <h3>内存优化与批处理策略</h3>
- <p>内存优化和批处理能显著提升推理吞吐量。<b>梯度检查点</b>用计算换内存，<b>混合精度训练</b>减少显存占用，<b>动态批处理</b>将多个请求合并处理以提高GPU利用率。</p><p>下面是一个使用PyTorch进行混合精度推理的示例：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import torch
+ <p>内存优化就像整理行李箱：同样的空间，合理折叠（混合精度）能装更多东西；而批处理则像拼车，把多个乘客（请求）合并到一辆车（GPU）上，提高利用率。具体来说，<b>梯度检查点</b>用计算换内存（在反向传播时重新计算部分激活，而不是全部存储），<b>混合精度训练</b>减少显存占用（FP16/BF16代替FP32），<b>动态批处理</b>将多个请求合并处理以提高GPU利用率。</p><p>混合精度推理的核心是让模型在FP16下计算，同时保持FP32的数值稳定性。例如，一个1000x1000的线性层，FP32权重占4MB，FP16仅占2MB，显存减半；在支持Tensor Core的GPU上，矩阵乘法速度还能提升。动态批处理则是在线服务中的常用技巧：当多个请求到达时，服务端等待一个短时间窗口（如10ms），将能合并的请求拼成一个批次一起推理，从而提升吞吐量，但会略微增加延迟。</p><p>下面是一个使用PyTorch进行混合精度推理和动态批处理模拟的示例。输入是随机数据，输出是混合精度下的输出类型（应为float16）以及合并批次后的输出形状。注意：autocast会自动为不同操作选择合适精度，无需手动转换。</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import torch
 
 model = torch.nn.Linear(1000, 1000).cuda()
 input_data = torch.randn(32, 1000).cuda()
@@ -120,18 +123,19 @@ batch2 = torch.randn(4, 1000).cuda()
 combined = torch.cat([batch1, batch2], dim=0)
 with torch.no_grad():
     out = model(combined)
-print(f"合并批次输出形状: {out.shape}")</code></pre></div><p><b>合理设置批大小和采用动态批处理能最大化硬件利用率，但需注意延迟与吞吐的权衡。</b></p>
+print(f"合并批次输出形状: {out.shape}")</code></pre></div><p><b>合理设置批大小和采用动态批处理能最大化硬件利用率，但需注意延迟与吞吐的权衡。</b>例如，批大小从1增加到8，吞吐量可能提升数倍，但单请求延迟也会增加；在线服务需要根据SLA（服务等级协议）找到平衡点。</p>
  <h3>常见误区</h3>
  <ul>
- <li>量化一定会导致明显的精度下降，实际上PTQ在多数模型上精度损失很小，QAT可以几乎无损。</li>
- <li>剪枝后模型一定变小，非结构化剪枝需要特定硬件支持才能加速，否则只是稀疏存储。</li>
- <li>知识蒸馏只能用于分类任务，实际上蒸馏可用于各种任务，包括生成任务。</li>
+  <li>错误理解：量化一定会导致明显的精度下降。→ 后果：可能因此放弃量化，错失部署加速机会。→ 正确做法：PTQ在多数模型上精度损失很小（通常&lt;1%），QAT可以几乎无损；应先尝试PTQ并评估精度，必要时再用QAT。</li>
+  <li>错误理解：剪枝后模型一定变小、推理一定变快。→ 后果：非结构化剪枝产生稀疏矩阵，若硬件不支持稀疏计算，实际推理速度可能不变甚至变慢。→ 正确做法：根据部署硬件选择剪枝方式；追求通用加速时优先考虑结构化剪枝。</li>
+  <li>错误理解：知识蒸馏只能用于分类任务。→ 后果：限制了蒸馏在生成任务、检测任务等场景的应用。→ 正确做法：蒸馏可用于各种任务，包括生成任务（如用软标签或中间特征蒸馏），只需设计合适的损失函数。</li>
  </ul>
  <h3>自测</h3>
- <details class="quiz"><summary>PTQ和QAT的主要区别是什么？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>PTQ是训练后量化，无需重新训练，简单快速但可能损失精度；QAT是量化感知训练，在训练中模拟量化，精度更高但需要训练资源。</p></div></details>
- <details class="quiz"><summary>ONNX和TensorRT在推理加速中分别扮演什么角色？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>ONNX是一种开放的模型交换格式，实现跨框架兼容；TensorRT是NVIDIA的推理优化器，针对GPU进一步加速，通常将ONNX转换为TensorRT引擎。</p></div></details>
+ <details class="quiz"><summary>PTQ和QAT的主要区别是什么？在什么场景下应该优先选择QAT？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>PTQ是训练后量化，无需重新训练，直接对训练好的模型进行量化，简单快速但可能损失精度；QAT是量化感知训练，在训练过程中模拟量化误差，让模型适应低精度，通常精度更高但需要训练资源。优先选择QAT的场景：当PTQ后精度下降超过可接受阈值（如1%），或模型对量化敏感（如小模型、检测模型）时，应使用QAT来恢复精度。</p></div></details>
+ <details class="quiz"><summary>ONNX和TensorRT在推理加速中分别扮演什么角色？为什么通常需要先导出ONNX再转TensorRT？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>ONNX是一种开放的模型交换格式，实现跨框架兼容，让PyTorch等框架训练的模型能被不同运行时加载；TensorRT是NVIDIA的推理优化器，针对GPU进一步加速。先导出ONNX再转TensorRT是因为TensorRT原生支持ONNX作为输入格式，且ONNX提供了统一的中间表示，方便TensorRT进行层融合、精度校准等优化，同时保持框架无关性。</p></div></details>
+ <details class="quiz"><summary>动态批处理能提高吞吐量，但可能增加延迟。请解释其原因，并说明如何权衡。</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>动态批处理将多个请求合并成一个批次一起推理，GPU的并行计算能力得到更充分利用，因此单位时间内处理的请求数（吞吐量）增加。但合并请求需要等待一个时间窗口（如10ms）以收集足够多的请求，且批次增大后单次推理时间变长，导致每个请求的响应延迟增加。权衡方法：根据服务等级协议（SLA）设定最大等待时间和最大批大小，在吞吐量和延迟之间找到平衡点；例如，对延迟敏感的场景使用较小批大小或较短等待窗口。</p></div></details>
  <h3>动手练习（带参考方案）</h3>
- <details class="fold"><summary>动手练习 · 使用PyTorch定义一个简单的全连接模型，分别进行动态量化和静态量化（PTQ），比较模型大小和推理…</summary><div class="fold-body"><p><b>任务：</b>使用PyTorch定义一个简单的全连接模型，分别进行动态量化和静态量化（PTQ），比较模型大小和推理速度。</p><p><b>参考方案：</b></p>import torch
+ <details class="fold"><summary>练习 · 使用PyTorch定义一个简单的全连接模型（输入100维，隐藏层50维，输出10维），分别进行动态量化和静态量化（PTQ…</summary><div class="fold-body"><p><b>任务：</b>使用PyTorch定义一个简单的全连接模型（输入100维，隐藏层50维，输出10维），分别进行动态量化和静态量化（PTQ），比较模型大小和推理速度。要求：1）打印三种模型（原始、动态量化、静态量化）的大小；2）用1000次推理测量并打印各自的平均推理时间；3）确保静态量化包含校准步骤。</p><p><b>参考方案：</b></p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import torch
 import torch.quantization
 import time
 
@@ -161,7 +165,7 @@ calib_data = torch.randn(100, 100)
 static_quantized(calib_data)
 static_quantized = torch.quantization.convert(static_quantized, inplace=False)
 
-# 比较大小
+# 比较大小（注意：量化后参数以qint8存储，每个参数约1字节）
 def model_size(m):
     return sum(p.numel() for p in m.parameters()) * 4  # 假设FP32
 
@@ -172,25 +176,24 @@ print(f"静态量化模型大小: {model_size(static_quantized)} bytes")
 # 推理速度测试
 input_data = torch.randn(1, 100)
 
-with torch.no_grad():
-    start = time.time()
-    for _ in range(1000):
-        model(input_data)
-    print(f"原始模型推理时间: {time.time() - start:.4f}s")
+def benchmark(m, name):
+    with torch.no_grad():
+        # 预热
+        for _ in range(10):
+            m(input_data)
+        start = time.time()
+        for _ in range(1000):
+            m(input_data)
+        elapsed = time.time() - start
+        print(f"{name}推理时间: {elapsed:.4f}s (平均 {elapsed/1000*1000:.4f}ms/次)")
 
-    start = time.time()
-    for _ in range(1000):
-        dynamic_quantized(input_data)
-    print(f"动态量化推理时间: {time.time() - start:.4f}s")
-
-    start = time.time()
-    for _ in range(1000):
-        static_quantized(input_data)
-    print(f"静态量化推理时间: {time.time() - start:.4f}s")</div></details>
+benchmark(model, "原始模型")
+benchmark(dynamic_quantized, "动态量化模型")
+benchmark(static_quantized, "静态量化模型")</code></pre></div></div></details>
     </div>
   </main>
 </div>
 
-<script src="assets/js/app.js?v=24"></script>
+<script src="assets/js/app.js?v=28"></script>
 </body>
 </html>

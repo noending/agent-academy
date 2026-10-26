@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="LLM术语精通课 第5章。">
 <title>第5章 · LLM术语精通课 | Agent 学院</title>
-<link rel="stylesheet" href="assets/css/style.css?v=22">
+<link rel="stylesheet" href="assets/css/style.css?v=24">
 </head>
 <body data-gen-course='{&quot;skill&quot;:&quot;llm-termlogy&quot;,&quot;title&quot;:&quot;LLM术语精通课&quot;,&quot;topic&quot;:&quot;由课题「LLM术语学习到精通」自动生成。适合AI初学者或需读懂LLM术语与评测的从业者。从基础概念到实战部署，掌握术语、模型评测与硬件评测，能独立分析技术文档。&quot;,&quot;chapters&quot;:[{&quot;no&quot;:1,&quot;title&quot;:&quot;LLM基础概念&quot;,&quot;goal&quot;:&quot;理解LLM基本定义、发展历程与核心能力&quot;,&quot;file&quot;:&quot;llm-termlogy-ch01.html&quot;},{&quot;no&quot;:2,&quot;title&quot;:&quot;核心术语解析&quot;,&quot;goal&quot;:&quot;掌握LLM常见术语如Transformer、注意力机制等&quot;,&quot;file&quot;:&quot;llm-termlogy-ch02.html&quot;},{&quot;no&quot;:3,&quot;title&quot;:&quot;模型评测方法&quot;,&quot;goal&quot;:&quot;学会阅读和解读LLM模型评测报告与基准&quot;,&quot;file&quot;:&quot;llm-termlogy-ch03.html&quot;},{&quot;no&quot;:4,&quot;title&quot;:&quot;硬件评测实战&quot;,&quot;goal&quot;:&quot;能看懂GPU等硬件评测指标并选型&quot;,&quot;file&quot;:&quot;llm-termlogy-ch04.html&quot;},{&quot;no&quot;:5,&quot;title&quot;:&quot;部署与优化实战&quot;,&quot;goal&quot;:&quot;动手部署LLM并优化推理性能&quot;,&quot;file&quot;:&quot;llm-termlogy-ch05.html&quot;}]}' data-chapter="gen-llm-termlogy-ch5">
 
@@ -23,149 +23,128 @@
   <main class="content">
     <div class="content-inner">
 
-      <header class="chapter-head">
-        <div class="kicker">CHAPTER 05 · 生成课程</div>
+                  <header class="chapter-head">
+        <div class="kicker">CHAPTER 05 · 机器初稿 · 待人审</div>
         <h1>部署与优化实战</h1>
+        <p class="lead"><b>本章目标：</b>动手部署LLM并优化推理性能</p>
       </header>
-
-      <p class="lead"><b>本章目标：</b>动手部署LLM并优化推理性能</p>
+<!--flow-v1--><div class="flow">
+        <span class="flow-node">环境准备<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">配好硬件与依赖，跑通基线</small></span><span class="flow-arrow">→</span><span class="flow-node">模型部署<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">选推理框架，服务化上线</small></span><span class="flow-arrow">→</span><span class="flow-node">性能压测<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">测延迟吞吐，找瓶颈</small></span><span class="flow-arrow">→</span><span class="flow-node">推理优化<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">量化缓存并行，逐项提速</small></span><span class="flow-arrow">→</span><span class="flow-node">回归验证<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">对比效果成本，固化配置</small></span>
+        <div class="flow-note">部署不是终点：压测找瓶颈、优化再验证，形成性能闭环。</div>
+      </div><!--/flow-v1-->
  <h3>部署环境搭建：CUDA、PyTorch、Transformers库</h3>
- <p>要动手部署LLM，第一步是把环境搭好。别怕，跟着做就行。</p><p><b>CUDA</b> 是 NVIDIA 的并行计算平台，让 PyTorch 能调用 GPU 加速。你需要先装好显卡驱动，再装 CUDA Toolkit。但更简单的方法是直接装 PyTorch 的 CUDA 版本，它会自带所需的 CUDA 运行时。</p><p><b>PyTorch</b> 是深度学习框架，LLM 推理和训练都靠它。<b>Transformers</b> 是 Hugging Face 的库，提供了大量预训练模型和便捷的 API，几行代码就能加载模型。</p><p>安装命令（假设 CUDA 12.1）：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python"># 安装 PyTorch（CUDA 12.1 版本）
-pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+ <p>把部署 LLM 想象成开一家餐厅：CUDA 是厨房里的燃气管道，PyTorch 是灶台和锅具，Transformers 则是已经备好食材的半成品料理包。没有燃气，灶台点不着；没有灶台，料理包也做不成菜。所以环境搭建的顺序是：先确认燃气（驱动与 CUDA 运行时）可用，再装灶台（PyTorch），最后引入料理包（Transformers）。</p><p>技术细节上，<b>CUDA</b> 是 NVIDIA 的并行计算平台，它让 PyTorch 能把矩阵运算下发给 GPU 执行。你并不一定需要单独安装完整的 CUDA Toolkit——<b>直接安装 PyTorch 的 CUDA 版本时，它会自带所需的 CUDA 运行时库</b>，这能避开大部分版本冲突。真正需要你单独装的是显卡驱动，驱动版本决定了它能支持的最高 CUDA 版本。例如驱动支持 CUDA 12.1，就选 cu121 的 PyTorch 安装包；选错版本，<code>torch.cuda.is_available()</code> 就会返回 False。</p><p><b>PyTorch</b> 是深度学习框架，LLM 的推理与训练都依赖它；<b>Transformers</b> 是 Hugging Face 的库，封装了大量预训练模型和统一 API，几行代码就能完成加载、分词和生成。下面是最小可运行示例：先安装依赖，再验证 GPU 是否可用。预期输出第一行是类似 <code>2.x.x+cu121</code> 的版本号，第二行是 <code>True</code>。</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python"># 安装 PyTorch（CUDA 12.1 版本）与 Transformers
+# pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+# pip install transformers accelerate
 
-# 安装 Transformers 和加速库
-pip install transformers accelerate
-</code></pre></div><p>验证安装：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import torch
-print(torch.__version__)          # 应显示 2.x.x+cu121
-print(torch.cuda.is_available())  # 应显示 True
-</code></pre></div><p>如果 <code>torch.cuda.is_available()</code> 返回 False，检查驱动和 CUDA 版本是否匹配。环境搭好，后面就顺了。</p>
+import torch
+print(torch.__version__)          # 预期：2.x.x+cu121
+print(torch.cuda.is_available())  # 预期：True
+print(torch.cuda.get_device_name(0) if torch.cuda.is_available() else "no gpu")
+</code></pre></div><p>如果第二行输出 False，按「驱动 → CUDA 版本 → PyTorch 安装包」的顺序排查：先用 <code>nvidia-smi</code> 看驱动支持的 CUDA 版本，再确认安装的 PyTorch 是否匹配。环境搭好，后面的量化与推理优化才有稳定的地基。</p>
  <h3>模型量化与剪枝：减少显存占用与加速推理</h3>
- <p>大模型动辄几十 GB 显存，普通显卡跑不动。量化与剪枝是两大压缩技术。</p><p><b>量化 (Quantization)</b>：把模型权重从高精度（如 FP32）转换为低精度（如 INT8、INT4）。<b>精度越低，显存占用越小，推理越快，但可能损失一点准确率。</b>常见方法有训练后量化（PTQ）和量化感知训练（QAT）。Hugging Face 的 <code>bitsandbytes</code> 库支持 8-bit 和 4-bit 量化，一行代码就能加载。</p><p><b>剪枝 (Pruning)</b>：移除模型中不重要的权重（置零或删除），减少计算量。分为非结构化剪枝（单个权重）和结构化剪枝（整个神经元/注意力头）。剪枝后通常需要微调恢复性能。</p><p>最小示例：使用 4-bit 量化加载模型。</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from transformers import AutoModelForCausalLM, AutoTokenizer
+ <p>模型权重就像一本用极细字体印刷的百科全书：信息完整，但占地方、翻得慢。量化相当于把字体换成更粗的版本——大部分内容仍然读得懂，但书变薄了、翻页更快了；剪枝则相当于直接撕掉那些几乎没人查阅的页，书更薄，但撕多了可能丢掉关键内容。两者目标一致：用更少的资源跑同样的任务。</p><p><b>量化 (Quantization)</b> 把权重从高精度（如 FP32、FP16）转换为低精度（如 INT8、INT4）。<b>精度越低，显存占用越小、推理通常越快，但可能损失一点准确率。</b>常见路线有训练后量化（PTQ）和量化感知训练（QAT）。Hugging Face 生态里，<code>bitsandbytes</code> 支持 8-bit 和 4-bit 加载，基本是一行参数的事。以 7B 模型为例，FP16 权重约需 14 GB 显存，INT8 约 7 GB，INT4 约 3.5 GB——这就是「显存减少 50%~75%」说法的来源（具体数值随模型与实现略有差异，待核实）。</p><p><b>剪枝 (Pruning)</b> 移除不重要的权重（置零或删除），分为非结构化剪枝（单个权重）和结构化剪枝（整个神经元或注意力头）。结构化剪枝对硬件更友好，但剪枝后通常需要微调来恢复性能。下面是最小示例：用 4-bit 量化加载模型并查看设备分配。预期输出会打印模型所在设备（如 <code>cuda:0</code>），且显存占用明显低于 FP16 加载。</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python"># pip install bitsandbytes
+from transformers import AutoModelForCausalLM, AutoTokenizer
 import torch
 
-model_name = "meta-llama/Llama-2-7b-chat-hf"  # 需申请权限，可换成其他小模型如 "gpt2"
+model_name = "gpt2"  # 演示用小模型；换成 Llama 等需申请权限
+# 注意：gpt2 的 4-bit 加载在部分 bitsandbytes 版本上可能报错，可改用支持量化的模型（待核实）
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 model = AutoModelForCausalLM.from_pretrained(
     model_name,
-    load_in_4bit=True,                # 4-bit 量化
-    device_map="auto",                # 自动分配设备
+    load_in_4bit=True,        # 4-bit 量化
+    device_map="auto",        # 自动分配设备
     torch_dtype=torch.float16
 )
-print(model.device)  # 查看模型所在设备
-</code></pre></div><p>注意：量化需要安装 <code>bitsandbytes</code>：<code>pip install bitsandbytes</code>。量化后显存占用可减少 50%~75%。</p>
+print(model.device)  # 预期：cuda:0 或 auto 分配到的设备
+</code></pre></div><p>需要提醒的是，量化不是「越狠越好」：4-bit 对多数生成任务影响较小，但在数学推理、代码生成等对数值敏感的任务上，精度损失可能被放大。实践中的做法是先用 4-bit 跑通并测质量，若不达标再退回 8-bit 或 FP16。</p>
  <h3>推理优化：批处理、KV缓存、Flash Attention</h3>
- <p>部署时不仅要跑起来，还要跑得快。三个关键优化技术：</p><p><b>批处理 (Batching)</b>：一次处理多个输入，提高 GPU 利用率。但要注意序列长度对齐，避免 padding 浪费。动态批处理（如 vLLM 的 continuous batching）能进一步提升吞吐。</p><p><b>KV缓存 (KV Cache)</b>：自回归生成时，每次预测新 token 都要重新计算之前所有 token 的 Key/Value 矩阵。KV 缓存把这些中间结果存下来，避免重复计算。<b>没有 KV 缓存，生成速度会慢几倍。</b>但缓存会占用显存，需权衡。</p><p><b>Flash Attention</b>：一种注意力计算优化算法，通过分块计算和重计算，减少显存访问，提升速度。PyTorch 2.0+ 已内置支持，只需在加载模型时设置 <code>attn_implementation="flash_attention_2"</code>（需安装 <code>flash-attn</code>）。</p><p>示例：启用 Flash Attention 并生成文本。</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from transformers import AutoModelForCausalLM, AutoTokenizer
+ <p>模型能跑起来只是及格线，跑得快才是部署的目标。可以把自回归生成想象成写作文：每写一个字，都要回头把前面写过的内容重新读一遍。如果每次都从头读，写 100 个字就要读约 5000 次；如果手边有一份「前文摘要」，每次只读摘要，速度就快得多。KV 缓存就是这份摘要，批处理是同时写多篇作文，Flash Attention 则是更高效的阅读方式。</p><p><b>批处理 (Batching)</b> 一次处理多个输入，提高 GPU 利用率。但简单批处理需要把序列 padding 到同一长度，短序列会浪费算力；动态批处理（如 vLLM 的 continuous batching）能在请求级别动态拼批，显著提升吞吐。<b>KV 缓存 (KV Cache)</b> 把自回归生成中历史 token 的 Key/Value 矩阵存下来，避免重复计算——<b>没有 KV 缓存，生成速度会慢几倍</b>，代价是缓存本身占用显存，序列越长占用越大。<b>Flash Attention</b> 通过分块计算减少显存读写，PyTorch 2.0+ 已内置支持，加载模型时设置 <code>attn_implementation="flash_attention_2"</code> 即可（需安装 <code>flash-attn</code>，且需要 Ampere 架构以上 GPU，如 RTX 30 系、A100）。</p><p>下面的最小示例演示启用 Flash Attention 并生成文本。预期输出是一段以 “The future of AI is” 开头的续写文本；若你的 GPU 不支持，把 <code>attn_implementation</code> 去掉即可回退到默认注意力实现。</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python"># pip install flash-attn --no-build-isolation  # 需要 Ampere 以上 GPU
+from transformers import AutoModelForCausalLM, AutoTokenizer
 import torch
-
-model_name = "gpt2"  # 小模型演示，实际可用 Llama 等
-tokenizer = AutoTokenizer.from_pretrained(model_name)
-model = AutoModelForCausalLM.from_pretrained(
-    model_name,
-    torch_dtype=torch.float16,
-    attn_implementation="flash_attention_2"  # 启用 Flash Attention
-).to("cuda")
-
-input_text = "The future of AI is"
-inputs = tokenizer(input_text, return_tensors="pt").to("cuda")
-
-# 生成时使用 KV 缓存（默认开启）
-outputs = model.generate(**inputs, max_new_tokens=50, use_cache=True)
-print(tokenizer.decode(outputs[0], skip_special_tokens=True))
-</code></pre></div><p>如果 <code>flash_attention_2</code> 报错，可先安装：<code>pip install flash-attn --no-build-isolation</code>。注意：Flash Attention 需要 Ampere 架构以上 GPU（如 RTX 30 系、A100）。</p>
- <h3>实战：使用 Hugging Face 部署一个 LLM 并评测</h3>
- <p>现在我们把前面知识串起来，部署一个 LLM 并做简单评测。</p><p>步骤：1. 加载模型和分词器；2. 编写推理函数；3. 用几个 prompt 测试生成质量；4. 测量推理速度（吞吐量、延迟）。</p><p>完整代码示例（使用 <code>gpt2</code> 避免权限问题，可替换为其他模型）：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from transformers import AutoModelForCausalLM, AutoTokenizer
-import torch
-import time
 
 model_name = "gpt2"
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 model = AutoModelForCausalLM.from_pretrained(
     model_name,
     torch_dtype=torch.float16,
-    device_map="auto"
+    attn_implementation="flash_attention_2"  # 不支持时删掉此行
+).to("cuda")
+
+inputs = tokenizer("The future of AI is", return_tensors="pt").to("cuda")
+outputs = model.generate(**inputs, max_new_tokens=50, use_cache=True)  # KV 缓存默认开启
+print(tokenizer.decode(outputs[0], skip_special_tokens=True))
+</code></pre></div><p>三项技术并不互斥：批处理提升吞吐，KV 缓存降低单请求延迟，Flash Attention 降低注意力层的显存访问。实际部署中，它们常常叠加使用，再配合 vLLM 或 text-generation-inference 这类推理服务框架，才能同时扛住高并发与低延迟。</p>
+ <h3>实战：使用 Hugging Face 部署一个 LLM 并评测</h3>
+ <p>前面三节分别解决了「能跑」「省显存」「跑得快」，这一节把它们串成一条可验收的流水线：加载模型 → 编写推理函数 → 用多个 prompt 测质量 → 测延迟与吞吐。评测就像给餐厅出餐计时：不仅要看一道菜做多久（延迟），还要看一小时能出多少道菜（吞吐）。</p><p>技术细节上，<b>延迟 (Latency)</b> 指生成一个回复的总耗时；<b>吞吐量 (Throughput)</b> 指每秒生成的 token 数，可用「生成 token 数 ÷ 耗时」估算。注意 <code>model.generate</code> 返回的序列包含输入 token，统计新生成 token 数时要减去输入长度，否则吞吐会被高估。下面是一个完整可独立运行的示例，使用 <code>gpt2</code> 避免权限问题，可替换为其他模型。预期输出会为每个 prompt 打印生成文本与延迟，例如 <code>Latency: 0.8s</code> 量级（具体数值取决于硬件）。</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from transformers import AutoModelForCausalLM, AutoTokenizer
+import torch, time
+
+model_name = "gpt2"
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForCausalLM.from_pretrained(
+    model_name, torch_dtype=torch.float16, device_map="auto"
 )
 
 def generate(prompt, max_new_tokens=50):
     inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
     start = time.time()
     outputs = model.generate(
-        **inputs,
-        max_new_tokens=max_new_tokens,
-        do_sample=True,
-        temperature=0.7,
-        use_cache=True  # 启用 KV 缓存
+        **inputs, max_new_tokens=max_new_tokens,
+        do_sample=True, temperature=0.7, use_cache=True
     )
-    end = time.time()
+    latency = time.time() - start
+    new_tokens = outputs.shape[1] - inputs["input_ids"].shape[1]
     text = tokenizer.decode(outputs[0], skip_special_tokens=True)
-    return text, end - start
+    return text, latency, new_tokens / latency  # 文本、延迟、吞吐(token/s)
 
-# 测试多个 prompt
-prompts = [
-    "The capital of France is",
-    "Explain quantum computing in simple terms:",
-    "Write a short poem about AI:"
-]
-
-for p in prompts:
-    output, latency = generate(p)
-    print(f"Prompt: {p}")
-    print(f"Output: {output}")
-    print(f"Latency: {latency:.2f}s\n")
-</code></pre></div><p>评测指标：<b>延迟 (Latency)</b> 指生成一个回复的时间；<b>吞吐量 (Throughput)</b> 指每秒生成的 token 数。你可以调整 <code>max_new_tokens</code> 观察变化。如果显存不足，尝试量化或换更小模型。</p><p>进阶：使用 <code>text-generation-inference</code> 或 <code>vLLM</code> 部署为 API 服务，支持高并发。</p>
+for p in ["The capital of France is", "Explain quantum computing in simple terms:"]:
+    text, latency, tps = generate(p)
+    print(f"Prompt: {p}\nOutput: {text}\nLatency: {latency:.2f}s  Throughput: {tps:.1f} tok/s\n")
+</code></pre></div><p>拿到基线数据后，就可以做对照实验：把 <code>use_cache</code> 设为 False 看延迟变化，把 <code>max_new_tokens</code> 调大看吞吐趋势，或换用量化模型看显存与速度的权衡。如果显存不足，优先尝试量化或换更小模型；如果要面向生产环境提供 API，可进一步使用 vLLM 或 text-generation-inference 部署，它们内置了动态批处理和分页 KV 缓存。</p>
  <h3>常见误区</h3>
  <ul>
- <li>量化一定会显著降低模型准确率——实际上，4-bit 量化对大多数任务影响很小，甚至可忽略。</li>
- <li>KV 缓存会一直占用显存，无法释放——可以通过设置 use_cache=False 关闭，或使用分页注意力（如 vLLM）动态管理。</li>
- <li>Flash Attention 在所有 GPU 上都可用——它需要 Ampere 架构以上（如 RTX 30 系、A100），旧卡不支持。</li>
+  <li>错误理解：量化一定会显著降低模型准确率。→ 后果：因为担心质量而不敢用量化，白白浪费显存和成本，或者在必须量化的场景下过度保守、选了不必要的 8-bit 而非 4-bit。→ 正确做法：4-bit 量化对多数生成任务影响较小，应先用目标任务的评测集实测质量，再决定精度档位；对数值敏感的任务（数学、代码）才需要更谨慎。</li>
+  <li>错误理解：KV 缓存会一直占用显存、无法释放。→ 后果：长序列或多并发场景下显存持续膨胀，最终 OOM，或者误以为只能重启进程解决。→ 正确做法：KV 缓存的生命周期与一次生成请求绑定，请求结束即可释放；也可设置 use_cache=False 关闭，生产环境可用 vLLM 的分页注意力动态管理缓存。</li>
+  <li>错误理解：Flash Attention 在所有 GPU 上都能用。→ 后果：在旧卡上强行设置 attn_implementation="flash_attention_2" 导致加载报错，误以为环境装坏了。→ 正确做法：它需要 Ampere 架构以上 GPU（如 RTX 30 系、A100），旧卡应去掉该参数回退到默认注意力实现。</li>
  </ul>
  <h3>自测</h3>
- <details class="quiz"><summary>KV 缓存的作用是什么？为什么它能加速推理？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>KV 缓存存储了自回归生成过程中之前 token 的 Key 和 Value 矩阵，避免每次生成新 token 时重新计算所有历史 token 的注意力，从而大幅减少计算量，加速推理。</p></div></details>
- <details class="quiz"><summary>模型量化有哪些常见精度？各有什么优缺点？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>常见精度有 FP32（全精度，显存大，速度慢）、FP16/BF16（半精度，平衡）、INT8（8位整数，显存减半，速度提升，精度略降）、INT4（4位整数，显存减至1/4，速度更快，精度损失稍大）。选择取决于硬件和任务对精度的要求。</p></div></details>
+ <details class="quiz"><summary>KV 缓存的作用是什么？为什么它能加速推理？请结合自回归生成的步骤说明。</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>自回归生成每产生一个新 token，都要对之前所有 token 做注意力计算，其中会反复用到历史 token 的 Key 和 Value 矩阵。若不缓存，生成第 n 个 token 时就要重算前 n-1 个 token 的 K/V，总计算量随序列长度呈平方级增长。KV 缓存把这些 K/V 存下来，新 token 只需计算自己的 K/V 并与缓存拼接，历史部分直接复用。因此它把「重复计算」变成「一次计算、多次读取」，显著降低计算量、加速推理；代价是缓存占用显存，序列越长占用越大。</p></div></details>
+ <details class="quiz"><summary>模型量化有哪些常见精度？各有什么优缺点？为什么 4-bit 量化对显存的影响大约是 FP16 的四分之一？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>常见精度有 FP32（全精度，显存大、速度慢）、FP16/BF16（半精度，精度与显存较平衡）、INT8（8 位整数，显存约为 FP16 的一半，速度提升，精度略降）、INT4（4 位整数，显存约为 FP16 的四分之一，速度更快，精度损失稍大）。显存比例来自每个权重占用的比特数：FP16 是 16 bit，INT4 是 4 bit，理论上权重显存就是 1/4；实际还会叠加量化缩放因子等少量开销，所以是「大约」。选择取决于硬件和任务对精度的要求。</p></div></details>
+ <details class="quiz"><summary>在评测推理性能时，为什么统计吞吐量要减去输入 token 数？如果直接用输出序列总长度除以耗时，会得到什么错误结论？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>model.generate 返回的序列包含输入 prompt 的 token 和新生成的 token，而吞吐量衡量的是「每秒生成多少新 token」。若直接用总长度除以耗时，输入越长，被高估得越厉害。例如输入 100 token、生成 50 token、耗时 1 秒，真实吞吐是 50 tok/s，但用总长度算会得到 150 tok/s，虚高 3 倍。这会导致不同 prompt 长度下的对比失真，甚至误判优化是否有效。正确做法是用 outputs.shape[1] 减去输入长度得到新生成 token 数，再除以耗时。</p></div></details>
  <h3>动手练习（带参考方案）</h3>
- <details class="fold"><summary>动手练习 · 使用 Hugging Face Transformers 加载一个预训练语言模型（如 gpt2 或 …</summary><div class="fold-body"><p><b>任务：</b>使用 Hugging Face Transformers 加载一个预训练语言模型（如 gpt2 或 distilgpt2），分别以 FP16 和 8-bit 量化方式加载，比较两者在相同输入下的显存占用和生成速度。记录并分析结果。</p><p><b>参考方案：</b></p>参考代码：
-
-```python
-import torch
+ <details class="fold"><summary>练习 · 使用 Hugging Face Transformers 加载一个预训练语言模型（如 gpt2 或 distilgpt2…</summary><div class="fold-body"><p><b>任务：</b>使用 Hugging Face Transformers 加载一个预训练语言模型（如 gpt2 或 distilgpt2），分别以 FP16 和 8-bit 量化方式加载，在相同输入下测量并比较两者的显存占用与生成速度。要求：记录每种方式的峰值显存（GB）和延迟（秒），并写一段分析说明差异来源。验收标准：代码可独立运行，输出包含两种方式的显存与延迟数值。</p><p><b>参考方案：</b></p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python"># pip install torch transformers bitsandbytes accelerate
+import torch, time
 from transformers import AutoModelForCausalLM, AutoTokenizer
-import time
 
 model_name = "gpt2"
 tokenizer = AutoTokenizer.from_pretrained(model_name)
-
-# FP16 加载
-model_fp16 = AutoModelForCausalLM.from_pretrained(
-    model_name, torch_dtype=torch.float16, device_map="auto"
-)
-
-# 8-bit 量化加载（需安装 bitsandbytes）
-model_8bit = AutoModelForCausalLM.from_pretrained(
-    model_name, load_in_8bit=True, device_map="auto"
-)
-
 prompt = "The future of AI is"
 inputs = tokenizer(prompt, return_tensors="pt").to("cuda")
 
-def benchmark(model):
+def measure(load_kwargs, label):
+    torch.cuda.empty_cache()
+    torch.cuda.reset_peak_memory_stats()
+    model = AutoModelForCausalLM.from_pretrained(model_name, device_map="auto", **load_kwargs)
     start = time.time()
     with torch.no_grad():
-        outputs = model.generate(**inputs, max_new_tokens=50)
-    end = time.time()
-    return end - start, outputs
+        model.generate(**inputs, max_new_tokens=50, use_cache=True)
+    latency = time.time() - start
+    peak = torch.cuda.max_memory_allocated() / 1e9
+    print(f"{label}: latency={latency:.2f}s, peak_memory={peak:.2f}GB")
+    del model
+    torch.cuda.empty_cache()
 
-latency_fp16, _ = benchmark(model_fp16)
-latency_8bit, _ = benchmark(model_8bit)
+measure({"torch_dtype": torch.float16}, "FP16")
+measure({"load_in_8bit": True}, "8-bit")
 
-print(f"FP16 latency: {latency_fp16:.2f}s")
-print(f"8-bit latency: {latency_8bit:.2f}s")
-print(f"FP16 memory: {torch.cuda.memory_allocated()/1e9:.2f} GB")
-# 注意：需分别加载模型测量显存，或使用 torch.cuda.reset_peak_memory_stats()
-```
-
-分析：8-bit 量化通常显存占用更少，速度可能略快或相近，但生成质量可能轻微下降。实际结果取决于硬件和模型。</div></details>
+# 分析：8-bit 每个权重占 8 bit，FP16 占 16 bit，权重显存理论上减半；
+# 延迟差异取决于硬件与 kernel 实现，8-bit 可能略快或相近；
+# 生成质量可能轻微下降，需用任务评测集确认。
+</code></pre></div></div></details>
     </div>
   </main>
 </div>
 
-<script src="assets/js/app.js?v=24"></script>
+<script src="assets/js/app.js?v=28"></script>
 </body>
 </html>

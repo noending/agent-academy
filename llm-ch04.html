@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="LLM训练到部署 第4章。">
 <title>第4章 · LLM训练到部署 | Agent 学院</title>
-<link rel="stylesheet" href="assets/css/style.css?v=22">
+<link rel="stylesheet" href="assets/css/style.css?v=24">
 </head>
 <body data-gen-course='{&quot;skill&quot;:&quot;llm&quot;,&quot;title&quot;:&quot;LLM训练到部署&quot;,&quot;topic&quot;:&quot;由课题「LLM从训练到部署」自动生成。本课程适合对LLM感兴趣的开发者与运维人员，从零开始掌握大语言模型训练、微调、优化与部署全流程，最终能独立完成生产级部署。&quot;,&quot;chapters&quot;:[{&quot;no&quot;:1,&quot;title&quot;:&quot;LLM基础概念&quot;,&quot;goal&quot;:&quot;理解LLM核心概念与工作原理&quot;,&quot;file&quot;:&quot;llm-ch01.html&quot;},{&quot;no&quot;:2,&quot;title&quot;:&quot;数据准备与预处理&quot;,&quot;goal&quot;:&quot;掌握构建高质量训练数据集的方法&quot;,&quot;file&quot;:&quot;llm-ch02.html&quot;},{&quot;no&quot;:3,&quot;title&quot;:&quot;模型训练基础&quot;,&quot;goal&quot;:&quot;能够配置并启动LLM训练任务&quot;,&quot;file&quot;:&quot;llm-ch03.html&quot;},{&quot;no&quot;:4,&quot;title&quot;:&quot;微调与对齐&quot;,&quot;goal&quot;:&quot;使用微调技术适配下游任务&quot;,&quot;file&quot;:&quot;llm-ch04.html&quot;},{&quot;no&quot;:5,&quot;title&quot;:&quot;模型优化与压缩&quot;,&quot;goal&quot;:&quot;优化模型推理速度与资源占用&quot;,&quot;file&quot;:&quot;llm-ch05.html&quot;},{&quot;no&quot;:6,&quot;title&quot;:&quot;部署架构与API&quot;,&quot;goal&quot;:&quot;设计并实现LLM服务API&quot;,&quot;file&quot;:&quot;llm-ch06.html&quot;},{&quot;no&quot;:7,&quot;title&quot;:&quot;实战：训练小型LLM&quot;,&quot;goal&quot;:&quot;完成一个小型LLM的训练与微调&quot;,&quot;file&quot;:&quot;llm-ch07.html&quot;},{&quot;no&quot;:8,&quot;title&quot;:&quot;实战：生产环境部署&quot;,&quot;goal&quot;:&quot;将训练好的LLM部署到生产环境&quot;,&quot;file&quot;:&quot;llm-ch08.html&quot;}]}' data-chapter="gen-llm-ch4">
 
@@ -23,14 +23,17 @@
   <main class="content">
     <div class="content-inner">
 
-      <header class="chapter-head">
-        <div class="kicker">CHAPTER 04 · 生成课程</div>
+                  <header class="chapter-head">
+        <div class="kicker">CHAPTER 04 · 机器初稿 · 待人审</div>
         <h1>微调与对齐</h1>
+        <p class="lead"><b>本章目标：</b>使用微调技术适配下游任务</p>
       </header>
-
-      <p class="lead"><b>本章目标：</b>使用微调技术适配下游任务</p>
+<!--flow-v1--><div class="flow">
+        <span class="flow-node">预训练模型<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">通用能力底座，尚未适配任务</small></span><span class="flow-arrow">→</span><span class="flow-node">微调适配<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">用下游数据调整参数</small></span><span class="flow-arrow">→</span><span class="flow-node">对齐调优<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">让输出符合人类偏好</small></span><span class="flow-arrow">→</span><span class="flow-node">评估反馈<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">检验效果并回补数据</small></span>
+        <div class="flow-note">从通用底座出发，经微调与对齐落地到下游任务，再用评估反馈闭环。</div>
+      </div><!--/flow-v1-->
  <h3>4.1 全参数微调 vs 参数高效微调：为什么需要 LoRA？</h3>
- <p>大家好，欢迎来到第4章。前面我们已经预训练或拿到了一个基础模型，但它可能只会“续写”，不会“听话”。微调就是让模型适配下游任务的关键一步。</p><p>最直接的方法是<b>全参数微调（Full Fine-tuning）</b>：拿预训练权重，在下游数据上继续用较小的学习率训练所有参数。效果通常最好，但代价也最大——一个 7B 模型全量微调，优化器状态 + 梯度 + 参数本身，显存轻松超过 80GB，而且每个任务都要存一份完整权重。</p><p>于是有了<b>参数高效微调（PEFT）</b>，代表就是 <b>LoRA（Low-Rank Adaptation）</b>。它的核心思想非常优雅：<b>冻结原模型权重，只在旁边插入一小对低秩矩阵，训练时只更新这对小矩阵。</b></p><p>具体来说，对于原权重 <code>W ∈ R^{d×k}</code>，LoRA 不直接改 W，而是学习一个增量 <code>ΔW = B·A</code>，其中 <code>A ∈ R^{r×k}</code>，<code>B ∈ R^{d×r}</code>，秩 <code>r</code> 远小于 d、k。前向变成：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">h = Wx + (alpha / r) * B(Ax)</code></pre></div><p>初始化时 A 用高斯随机，B 全零，所以训练开始时 ΔW=0，不破坏原模型。训练完只需要保存 A 和 B，一个 7B 模型的 LoRA 权重可能只有几十 MB。</p><p>下面是一个用 HuggingFace PEFT 库给模型加 LoRA 的最小示例：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from transformers import AutoModelForCausalLM
+ <p>想象你有一本写满通用知识的百科全书，现在要让它专门回答你公司内部的产品问题。最彻底的办法是把整本书重写一遍——这就是<b>全参数微调（Full Fine-tuning）</b>：拿预训练权重，在下游数据上继续用较小的学习率训练所有参数。效果通常最好，但代价也最大。以一个 7B 模型为例，参数本身用 fp16 存储约 14GB，训练时还要保存梯度（约 14GB）和 Adam 优化器状态（通常约为参数量的 2 倍，即约 28GB），再加上激活值，显存轻松超过 80GB。而且每个下游任务都要存一份完整权重，10 个任务就是 10 份 14GB 的副本，管理和部署都极其笨重。</p><p>更聪明的办法是给百科全书贴便签：书本身不动，只在旁边加一小叠注释。这就是<b>参数高效微调（PEFT）</b>，代表方法是 <b>LoRA（Low-Rank Adaptation）</b>。它的核心思想是：<b>冻结原模型权重，只在旁边插入一小对低秩矩阵，训练时只更新这对小矩阵。</b>对于原权重 <code>W ∈ R^{d×k}</code>，LoRA 不直接改 W，而是学习一个增量 <code>ΔW = B·A</code>，其中 <code>A ∈ R^{r×k}</code>，<code>B ∈ R^{d×r}</code>，秩 <code>r</code> 远小于 d、k。前向计算变为：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">h = Wx + (alpha / r) * B(Ax)</code></pre></div><p>这里 <code>alpha / r</code> 是缩放系数，用来控制增量相对于原权重的幅度。初始化时 A 用高斯随机，B 全零，所以训练开始时 ΔW=0，模型行为与原始模型完全一致，不会一上来就破坏预训练知识。训练完只需要保存 A 和 B：一个 7B 模型若 r=8、只加在注意力层，LoRA 权重可能只有几十 MB，而全量权重是 14GB 量级，相差两三个数量级。</p><p>下面是一个用 HuggingFace PEFT 库给模型加 LoRA 的最小可运行示例。输入是一个已加载的因果语言模型，输出是可训练参数统计：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from transformers import AutoModelForCausalLM
 from peft import LoraConfig, get_peft_model
 
 model = AutoModelForCausalLM.from_pretrained("gpt2")
@@ -47,9 +50,9 @@ lora_config = LoraConfig(
 model = get_peft_model(model, lora_config)
 model.print_trainable_parameters()
 # 输出类似: trainable params: 294,912 || all params: 124,734,720 || trainable%: 0.24%
-</code></pre></div><p>可以看到，可训练参数只有 0.24%。<b>LoRA 用极小的训练成本，换来了接近全量微调的效果</b>，这就是它成为当前微调事实标准的原因。</p>
+</code></pre></div><p>运行后你会看到可训练参数只有 0.24% 左右。<b>LoRA 用极小的训练成本，换来了接近全量微调的效果</b>，这就是它成为当前微调事实标准的原因。当然，LoRA 并非万能：当任务与预训练分布差异极大、或需要注入大量新知识时，全参数微调仍可能更优；但在绝大多数下游适配场景中，LoRA 的性价比难以撼动。</p>
  <h3>4.2 QLoRA：把大模型塞进单卡</h3>
- <p>LoRA 已经省了很多，但基座模型本身还是要占显存。一个 7B 模型用 fp16 加载就要约 14GB，加上激活值，单张 24GB 卡还是紧张。于是 <b>QLoRA（Quantized LoRA）</b> 登场了。</p><p>QLoRA 做了三件事：</p><ul><li><b>4-bit 量化基座模型</b>：用 NF4（Normal Float 4）这种信息论上对正态分布权重最优的 4-bit 数据类型加载原模型，显存直接降到约 1/4。</li><li><b>双重量化</b>：对量化常数再量化一次，进一步省显存。</li><li><b>分页优化器</b>：用 NVIDIA 统一内存，避免显存尖峰导致 OOM。</li></ul><p>关键点：<b>基座是 4-bit 冻结的，只有 LoRA 适配器用 bf16 训练</b>。所以梯度精度不受量化影响，效果几乎不掉。</p><p>用 bitsandbytes + PEFT 实现 QLoRA 的最小代码：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import torch
+ <p>LoRA 已经省了很多，但基座模型本身还是要占显存。一个 7B 模型用 fp16 加载就要约 14GB，加上训练时的激活值和临时缓冲，单张 24GB 卡仍然紧张。这就像你虽然只带了一小叠便签，但那本百科全书本身还是得搬进房间——房间不够大就进不去。于是 <b>QLoRA（Quantized LoRA）</b> 登场了：它先把百科全书压缩成缩印本再搬进来。</p><p>QLoRA 做了三件事：<b>4-bit 量化基座模型</b>，用 NF4（Normal Float 4）这种对正态分布权重信息论上较优的 4-bit 数据类型加载原模型，显存直接降到约 1/4；<b>双重量化</b>，对量化常数再量化一次，进一步省显存；<b>分页优化器</b>，借助 NVIDIA 统一内存，在显存尖峰时把部分状态换出，避免 OOM。关键点在于：<b>基座是 4-bit 冻结的，只有 LoRA 适配器用 bf16 训练</b>。所以梯度精度不受量化影响，效果几乎不掉——便签上的字仍然是高清的，只是书本身变成了缩印版。</p><p>用 bitsandbytes + PEFT 实现 QLoRA 的最小代码如下。输入是模型名和量化配置，输出是可训练参数统计：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import torch
 from transformers import AutoModelForCausalLM, BitsAndBytesConfig
 from peft import LoraConfig, get_peft_model
 
@@ -73,14 +76,14 @@ lora_config = LoraConfig(
 )
 model = get_peft_model(model, lora_config)
 model.print_trainable_parameters()
-</code></pre></div><p>这样一张 24GB 的 4090 就能微调 7B 模型，甚至 33B 模型也能在 48GB 卡上跑起来。<b>QLoRA 让“个人开发者微调大模型”从不可能变成了日常。</b></p><p>实践建议：<code>r</code> 一般取 8~64，任务越复杂取越大；<code>target_modules</code> 至少覆盖 q_proj 和 v_proj，追求效果可以加上 k_proj、o_proj 和 MLP 层。</p>
+</code></pre></div><p>这样一张 24GB 的 4090 就能微调 7B 模型，更大模型在 48GB 卡上也有机会跑起来（具体上限取决于序列长度和 batch size，待核实）。<b>QLoRA 让“个人开发者微调大模型”从不可能变成了日常。</b>实践建议：<code>r</code> 一般取 8~64，任务越复杂取越大；<code>target_modules</code> 至少覆盖 q_proj 和 v_proj，追求效果可以加上 k_proj、o_proj 和 MLP 层。注意量化会带来少量精度损失，若任务对数值极其敏感，应做 A/B 对比再决定。</p>
  <h3>4.3 指令微调与 RLHF：让模型“听懂人话”</h3>
- <p>光会续写的模型不是好助手。要让它遵循指令，需要 <b>指令微调（Instruction Tuning）</b>：用大量“指令-回答”对训练，格式通常长这样：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">### Instruction:
+ <p>光会续写的模型不是好助手。你给它“把下面句子翻译成英文”，它可能接着续写出更多中文句子，因为它只学过“预测下一个词”，没学过“执行指令”。要让它遵循指令，需要<b>指令微调（Instruction Tuning）</b>：用大量“指令-回答”对训练，让模型学会看到指令就给出对应回答。格式通常长这样：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">### Instruction:
 把下面的句子翻译成英文。
 ### Input:
 今天天气很好。
 ### Response:
-The weather is nice today.</code></pre></div><p>指令微调让模型学会“看到指令就执行”，这是 ChatGPT 类模型的第一阶段对齐。</p><p>第二阶段是 <b>RLHF（Reinforcement Learning from Human Feedback，基于人类反馈的强化学习）</b>，经典三步：</p><ol><li><b>监督微调（SFT）</b>：用高质量示范数据微调，就是上面的指令微调。</li><li><b>训练奖励模型（RM）</b>：让人类对同一问题的多个回答排序，训练一个模型去预测“人类更喜欢哪个回答”。</li><li><b>PPO 强化学习</b>：用奖励模型当裁判，让语言模型生成更受偏好的回答，同时加 KL 惩罚防止跑偏。</li></ol><p>RLHF 效果很好但工程复杂、不稳定。现在更流行 <b>DPO（Direct Preference Optimization）</b>：跳过奖励模型和 PPO，直接用偏好数据对优化策略，简单又稳定。很多开源模型（如 Zephyr、Llama-3-Instruct）都用 DPO 或类似方法。</p><p>一个用 TRL 做 DPO 的极简片段：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from trl import DPOTrainer, DPOConfig
+The weather is nice today.</code></pre></div><p>指令微调让模型学会“看到指令就执行”，这是 ChatGPT 类模型对齐的第一阶段，通常称为 SFT（监督微调）。但 SFT 只告诉模型“什么是好回答”，没告诉它“两个回答哪个更好”。第二阶段是 <b>RLHF（Reinforcement Learning from Human Feedback，基于人类反馈的强化学习）</b>，经典三步：<b>监督微调（SFT）</b>用高质量示范数据打底；<b>训练奖励模型（RM）</b>让人类对同一问题的多个回答排序，训练一个模型去预测“人类更喜欢哪个回答”；<b>PPO 强化学习</b>用奖励模型当裁判，让语言模型生成更受偏好的回答，同时加 KL 惩罚防止跑偏。类比来说，SFT 是老师示范标准答案，RLHF 是请一位评委给学生的多种解法打分，再让学生朝着高分方向练习。</p><p>RLHF 效果很好但工程复杂、不稳定，PPO 调参 notoriously 困难。现在更流行 <b>DPO（Direct Preference Optimization）</b>：跳过奖励模型和 PPO，直接用偏好数据对优化策略，简单又稳定。很多开源模型（如 Zephyr、Llama-3-Instruct）都用 DPO 或类似方法（具体配方待核实）。一个用 TRL 做 DPO 的极简片段如下，输入是含 prompt/chosen/rejected 的偏好数据集，输出是训练好的模型：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from trl import DPOTrainer, DPOConfig
 
 config = DPOConfig(
     beta=0.1,               # KL 约束强度
@@ -97,9 +100,9 @@ trainer = DPOTrainer(
     tokenizer=tokenizer,
 )
 trainer.train()
-</code></pre></div><p><b>一句话总结：SFT 教模型“怎么做”，RLHF/DPO 教模型“做什么更好”。</b></p>
+</code></pre></div><p><b>一句话总结：SFT 教模型“怎么做”，RLHF/DPO 教模型“做什么更好”。</b>实际项目中，通常先做 SFT 把格式和基本能力教会，再用 DPO 做偏好对齐；跳过 SFT 直接 DPO 往往效果不佳。</p>
  <h3>4.4 如何评估微调效果？</h3>
- <p>训练完不是结束，评估才是决定能不能上线的关键。微调评估分三个层次：</p><ul><li><b>任务指标</b>：分类任务看准确率/F1，生成任务看 ROUGE、BLEU、BERTScore，代码任务看 pass@k。</li><li><b>通用能力</b>：用 MMLU、GSM8K 等基准检查是否“灾难性遗忘”——微调后模型变笨了没有。</li><li><b>人工/模型评估</b>：用 GPT-4 或人工对回答打分，看有用性、安全性、格式遵循度。</li></ul><p>一个常见的坑：只看训练 loss 下降就以为成功了。实际上小数据集上 loss 很快降到 0，但模型可能只是背下了答案，泛化很差。</p><p>推荐做法：</p><ol><li>留出验证集，训练时监控验证 loss。</li><li>用 lm-evaluation-harness 跑标准基准，对比微调前后。</li><li>准备 20~50 条真实业务问题，人工盲评。</li><li>检查输出格式是否稳定（比如 JSON 是否总能解析）。</li></ol><p>下面用 lm-eval 跑一个基准的例子：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python"># 命令行方式
+ <p>训练完不是结束，评估才是决定能不能上线的关键。这就像学生考完试不能只看他作业写完了没有，还要看考试成绩、会不会偏科、答题格式规不规范。微调评估分三个层次：<b>任务指标</b>，分类任务看准确率/F1，生成任务看 ROUGE、BLEU、BERTScore，代码任务看 pass@k；<b>通用能力</b>，用 MMLU、GSM8K 等基准检查是否“灾难性遗忘”——微调后模型变笨了没有；<b>人工/模型评估</b>，用 GPT-4 或人工对回答打分，看有用性、安全性、格式遵循度。</p><p>一个常见的坑：只看训练 loss 下降就以为成功了。实际上小数据集上 loss 很快降到接近 0，但模型可能只是背下了答案，泛化很差。比如你只有 100 条翻译数据，训练 loss 从 2.0 降到 0.1，但换一句没见过的中文，模型可能输出乱码。所以必须留出验证集，并做基线对比。推荐做法：留出验证集，训练时监控验证 loss；用 lm-evaluation-harness 跑标准基准，对比微调前后；准备 20~50 条真实业务问题，人工盲评；检查输出格式是否稳定，比如 JSON 是否总能解析。</p><p>下面用 lm-eval 跑一个基准的例子。输入是合并后的模型路径和任务列表，输出是各任务得分：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python"># 命令行方式
 # lm_eval --model hf \
 #   --model_args pretrained=./my-lora-merged \
 #   --tasks mmlu,gsm8k \
@@ -114,26 +117,28 @@ results = lm_eval.simple_evaluate(
     batch_size=8,
 )
 print(results["results"])
-</code></pre></div><p><b>记住：没有评估的微调等于赌博。</b>每次微调都要有基线对比，才能知道改动到底有没有用。</p>
+</code></pre></div><p><b>记住：没有评估的微调等于赌博。</b>每次微调都要有基线对比，才能知道改动到底有没有用。评估集要尽量贴近真实使用分布，否则分数再高也可能上线翻车。</p>
  <h3>常见误区</h3>
  <ul>
- <li>LoRA 只能用于注意力层，其实也可以加到 MLP、LayerNorm 等模块，target_modules 的选择会显著影响效果。</li>
- <li>QLoRA 的 4-bit 量化会严重损失效果，实际上 NF4 + 双重量化在多数任务上几乎无损，因为 LoRA 适配器仍以 bf16 训练。</li>
- <li>RLHF 一定比 DPO 好，实际上 DPO 在很多场景下效果相当甚至更稳定，且实现简单得多，是当前主流选择。</li>
+  <li>错误理解：LoRA 只能加在注意力层。→ 后果：target_modules 只写 q_proj/v_proj，在需要较强适配的任务上效果受限，误以为 LoRA 本身不行。→ 正确做法：LoRA 也可以加到 MLP、输出投影等模块，target_modules 的选择会显著影响效果，应结合任务做消融对比。</li>
+  <li>错误理解：QLoRA 的 4-bit 量化会严重损失效果。→ 后果：不敢用 QLoRA，白白放弃单卡微调大模型的机会，或用了之后过度怀疑结果。→ 正确做法：NF4 + 双重量化在多数任务上损失很小，因为 LoRA 适配器仍以 bf16 训练；但仍应在自己的任务上做量化前后 A/B 对比，敏感任务谨慎使用。</li>
+  <li>错误理解：RLHF 一定比 DPO 好。→ 后果：盲目上 PPO 导致训练不稳定、调参成本高、项目延期。→ 正确做法：DPO 在很多场景下效果相当甚至更稳定，且实现简单得多，是当前主流选择；应先跑通 SFT + DPO 基线，确有需要再考虑 RLHF。</li>
  </ul>
  <h3>自测</h3>
- <details class="quiz"><summary>LoRA 为什么能大幅减少可训练参数量？它的前向计算是如何进行的？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>LoRA 冻结原权重 W，只训练两个低秩矩阵 A 和 B，用 ΔW = B·A 近似权重更新。前向为 h = Wx + (alpha/r)·B(Ax)。因为 r 远小于原维度，可训练参数从 d×k 降到 r×(d+k)，通常只有原模型的 0.1%~1%。</p></div></details>
- <details class="quiz"><summary>QLoRA 相比 LoRA 多了哪些关键技术？为什么它能在单卡上微调 7B 模型？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>QLoRA 在 LoRA 基础上增加了：4-bit NF4 量化基座模型、双重量化、分页优化器。基座以 4-bit 加载使显存降到约 1/4，而 LoRA 适配器仍用 bf16 训练保证精度，因此 24GB 单卡即可微调 7B 模型。</p></div></details>
+ <details class="quiz"><summary>LoRA 为什么能大幅减少可训练参数量？它的前向计算是如何进行的？请结合维度说明参数量对比。</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>推理过程：原权重 W 是 d×k，全量微调要训练 d×k 个参数。LoRA 冻结 W，只训练 A（r×k）和 B（d×r），参数量为 r×(d+k)。因为 r 远小于 d、k，所以参数量大幅下降。例如 d=k=4096、r=8 时，全量是约 1678 万，LoRA 是 8×(4096+4096)=65536，约为原来的 0.39%。前向为 h = Wx + (alpha/r)·B(Ax)，训练开始时 B 为零，增量 ΔW=0，不破坏原模型。</p></div></details>
+ <details class="quiz"><summary>QLoRA 相比 LoRA 多了哪些关键技术？为什么它能在单卡上微调 7B 模型？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>推理过程：LoRA 只减少了可训练参数，但基座模型仍以 fp16 占约 14GB（7B 模型）。QLoRA 在此基础上增加：4-bit NF4 量化基座，使基座显存降到约 1/4；双重量化，对量化常数再量化，进一步省显存；分页优化器，避免显存尖峰 OOM。同时 LoRA 适配器仍用 bf16 训练，保证梯度精度。因此 24GB 单卡即可容纳 7B 基座加训练开销，实现单卡微调。</p></div></details>
+ <details class="quiz"><summary>微调后训练 loss 降到接近 0，是否说明模型效果好？应该怎样评估？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>推理过程：训练 loss 低只说明模型拟合了训练集，小数据集上很容易背下答案，泛化可能很差。正确评估应分三层：任务指标（准确率/F1/ROUGE/pass@k）、通用能力基准（MMLU、GSM8K 检查灾难性遗忘）、人工或模型盲评（有用性、安全性、格式遵循）。同时要留验证集监控验证 loss，并与微调前基线对比，检查输出格式稳定性。只看训练 loss 等于赌博。</p></div></details>
  <h3>动手练习（带参考方案）</h3>
- <details class="fold"><summary>动手练习 · 使用 HuggingFace 生态，对一个开源小模型（如 gpt2 或 TinyLlama）进行 L…</summary><div class="fold-body"><p><b>任务：</b>使用 HuggingFace 生态，对一个开源小模型（如 gpt2 或 TinyLlama）进行 LoRA 微调，完成一个简单的指令跟随任务（例如：给定中文句子，输出英文翻译）。要求：1) 构造至少 50 条指令-回答数据；2) 配置 LoRA 并训练；3) 保存适配器；4) 加载适配器进行推理，对比微调前后的输出。</p><p><b>参考方案：</b></p>import torch
+ <details class="fold"><summary>练习 · 使用 HuggingFace 生态，对一个开源小模型（如 gpt2 或 TinyLlama）进行 LoRA 微调，完成一…</summary><div class="fold-body"><p><b>任务：</b>使用 HuggingFace 生态，对一个开源小模型（如 gpt2 或 TinyLlama）进行 LoRA 微调，完成一个简单的指令跟随任务（例如：给定中文句子，输出英文翻译）。要求：1) 构造至少 50 条指令-回答数据；2) 配置 LoRA 并训练；3) 保存适配器；4) 加载适配器进行推理，对比微调前后的输出。验收标准：微调后模型在训练集内指令上能输出英文翻译，且适配器文件成功保存到本地目录。</p><p><b>参考方案：</b></p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import torch
 from datasets import Dataset
 from transformers import AutoTokenizer, AutoModelForCausalLM, TrainingArguments, Trainer
 from peft import LoraConfig, get_peft_model, PeftModel
 
-# 1. 构造数据
+# 1. 构造数据（示例 3 条，实际需至少 50 条）
 data = [
     {"instruction": "把下面的句子翻译成英文。", "input": "今天天气很好。", "output": "The weather is nice today."},
     {"instruction": "把下面的句子翻译成英文。", "input": "我喜欢吃苹果。", "output": "I like eating apples."},
+    {"instruction": "把下面的句子翻译成英文。", "input": "他正在读书。", "output": "He is reading a book."},
     # ... 至少 50 条
 ]
 
@@ -196,11 +201,11 @@ print("微调前:", tokenizer.decode(base.generate(**inputs, max_new_tokens=30)[
 # 微调后
 peft_model = PeftModel.from_pretrained(base, "./lora-adapter")
 print("微调后:", tokenizer.decode(peft_model.generate(**inputs, max_new_tokens=30)[0], skip_special_tokens=True))
-</div></details>
+</code></pre></div></div></details>
     </div>
   </main>
 </div>
 
-<script src="assets/js/app.js?v=24"></script>
+<script src="assets/js/app.js?v=28"></script>
 </body>
 </html>

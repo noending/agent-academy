@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="LLM全链路实战 第8章。">
 <title>第8章 · LLM全链路实战 | Agent 学院</title>
-<link rel="stylesheet" href="assets/css/style.css?v=22">
+<link rel="stylesheet" href="assets/css/style.css?v=24">
 </head>
 <body data-gen-course='{&quot;skill&quot;:&quot;llm-deploy&quot;,&quot;title&quot;:&quot;LLM全链路实战&quot;,&quot;topic&quot;:&quot;由课题「LLM 从训练到实际部署」自动生成。适合AI工程师、算法研究员及技术管理者。系统掌握LLM从预训练、微调到部署上线的完整工程链路，涵盖数据、训练、优化、服务化与运维。&quot;,&quot;chapters&quot;:[{&quot;no&quot;:1,&quot;title&quot;:&quot;LLM基础与生态&quot;,&quot;goal&quot;:&quot;理解LLM核心概念、发展历程与主流模型架构&quot;,&quot;file&quot;:&quot;llm-deploy-ch01.html&quot;},{&quot;no&quot;:2,&quot;title&quot;:&quot;数据工程与预处理&quot;,&quot;goal&quot;:&quot;掌握LLM训练数据的收集、清洗、去重与格式化方法&quot;,&quot;file&quot;:&quot;llm-deploy-ch02.html&quot;},{&quot;no&quot;:3,&quot;title&quot;:&quot;预训练与分布式训练&quot;,&quot;goal&quot;:&quot;理解预训练目标、分布式训练策略与优化技巧&quot;,&quot;file&quot;:&quot;llm-deploy-ch03.html&quot;},{&quot;no&quot;:4,&quot;title&quot;:&quot;微调与对齐技术&quot;,&quot;goal&quot;:&quot;掌握全量微调、LoRA、RLHF等微调与对齐方法&quot;,&quot;file&quot;:&quot;llm-deploy-ch04.html&quot;},{&quot;no&quot;:5,&quot;title&quot;:&quot;模型评估与优化&quot;,&quot;goal&quot;:&quot;学会设计评估方案，并进行量化、剪枝与蒸馏优化&quot;,&quot;file&quot;:&quot;llm-deploy-ch05.html&quot;},{&quot;no&quot;:6,&quot;title&quot;:&quot;推理优化与服务化&quot;,&quot;goal&quot;:&quot;掌握推理加速技术，并部署高性能推理服务&quot;,&quot;file&quot;:&quot;llm-deploy-ch06.html&quot;},{&quot;no&quot;:7,&quot;title&quot;:&quot;实战：微调与部署LLM&quot;,&quot;goal&quot;:&quot;完成一个LLM微调、量化并部署为API的完整项目&quot;,&quot;file&quot;:&quot;llm-deploy-ch07.html&quot;},{&quot;no&quot;:8,&quot;title&quot;:&quot;生产环境运维与扩展&quot;,&quot;goal&quot;:&quot;掌握LLM服务的监控、扩缩容、安全与成本优化&quot;,&quot;file&quot;:&quot;llm-deploy-ch08.html&quot;}]}' data-chapter="gen-llm-deploy-ch8">
 
@@ -23,14 +23,17 @@
   <main class="content">
     <div class="content-inner">
 
-      <header class="chapter-head">
-        <div class="kicker">CHAPTER 08 · 生成课程</div>
+                  <header class="chapter-head">
+        <div class="kicker">CHAPTER 08 · 机器初稿 · 待人审</div>
         <h1>生产环境运维与扩展</h1>
+        <p class="lead"><b>本章目标：</b>掌握LLM服务的监控、扩缩容、安全与成本优化</p>
       </header>
-
-      <p class="lead"><b>本章目标：</b>掌握LLM服务的监控、扩缩容、安全与成本优化</p>
+<!--flow-v1--><div class="flow">
+        <span class="flow-node">监控告警<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">盯住延迟、错误率与Token消耗</small></span><span class="flow-arrow">→</span><span class="flow-node">扩缩容<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">按负载弹性调整实例与配额</small></span><span class="flow-arrow">→</span><span class="flow-node">安全防护<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">限流鉴权，隔离敏感数据</small></span><span class="flow-arrow">→</span><span class="flow-node">成本优化<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">缓存、降级与模型分级调度</small></span><span class="flow-arrow">→</span><span class="flow-node">反馈迭代<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">复盘指标，回灌监控与容量</small></span>
+        <div class="flow-note">运维闭环：先可观测，再弹性与安全，最后用成本反馈驱动下一轮扩容与优化。</div>
+      </div><!--/flow-v1-->
  <h3>监控与日志：让LLM服务“看得见”</h3>
- <p>LLM服务上线后，最怕的就是“黑盒”运行——你不知道它是否健康、响应是否变慢、有没有报错。<b>监控（Monitoring）</b>就是给服务装上眼睛和耳朵。对于LLM服务，除了常规的CPU、内存、网络指标，还要关注<b>推理延迟（P99）、每秒查询数（QPS）、Token吞吐量、错误率</b>等业务指标。</p><p>业界标准方案是 <b>Prometheus + Grafana</b>：Prometheus负责采集和存储时序数据，Grafana负责可视化。你需要在服务中暴露一个 <code>/metrics</code> 端点，Prometheus定期拉取（pull）数据。Python生态中，<code>prometheus_client</code> 库可以轻松实现。</p><p>下面是一个最小示例：用FastAPI启动一个LLM推理服务，并暴露Prometheus指标。</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from fastapi import FastAPI, Request
+ <p>想象你开了一家餐厅，厨房里忙得热火朝天，但你在前台完全看不到出菜速度、有没有菜做糊了、客人等了多久——这就是LLM服务“黑盒”运行的状态。监控（Monitoring）就是给厨房装上摄像头和计时器，让你随时知道“哪道菜慢了”“哪个灶台冒烟了”。对于LLM服务，除了常规的CPU、内存、网络指标，更要盯住<b>推理延迟（尤其是P99）、每秒查询数（QPS）、Token吞吐量、错误率</b>这些业务指标，因为它们直接决定用户体验和账单。</p><p>为什么P99比平均延迟更重要？假设100个请求里99个都在0.2秒完成，只有1个卡了10秒，平均延迟只有约0.3秒，看起来很美；但那个卡了10秒的用户已经流失了。<b>P99延迟能暴露长尾问题</b>，而长尾往往来自模型加载、显存不足或队列堆积。业界标准方案是 <b>Prometheus + Grafana</b>：Prometheus负责采集和存储时序数据，Grafana负责可视化。你需要在服务中暴露一个 <code>/metrics</code> 端点，Prometheus定期拉取（pull）数据。Python生态中，<code>prometheus_client</code> 库可以轻松实现。</p><p>下面是一个最小可运行示例：用FastAPI启动一个模拟LLM推理服务，并暴露Prometheus指标。输入是POST请求的prompt，预期输出是JSON响应，同时访问 <code>/metrics</code> 能看到请求计数、延迟直方图和Token总数在增长。</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from fastapi import FastAPI, Request
 from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
 from starlette.responses import Response
 import time
@@ -38,7 +41,7 @@ import random
 
 app = FastAPI()
 
-# 定义指标
+# 定义指标：请求计数、延迟直方图、Token总数
 REQUEST_COUNT = Counter('llm_requests_total', 'Total LLM requests', ['method', 'endpoint', 'status'])
 REQUEST_LATENCY = Histogram('llm_request_latency_seconds', 'LLM request latency', ['endpoint'])
 TOKEN_COUNT = Counter('llm_tokens_total', 'Total tokens generated')
@@ -54,7 +57,7 @@ async def monitor_requests(request: Request, call_next):
 
 @app.post("/generate")
 async def generate(prompt: str):
-    # 模拟LLM推理
+    # 模拟LLM推理：随机延迟0.1~0.5秒，随机生成10~100个Token
     time.sleep(random.uniform(0.1, 0.5))
     tokens = random.randint(10, 100)
     TOKEN_COUNT.inc(tokens)
@@ -63,9 +66,9 @@ async def generate(prompt: str):
 @app.get("/metrics")
 async def metrics():
     return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
-</code></pre></div><p>运行后，访问 <code>http://localhost:8000/metrics</code> 就能看到指标。然后在Prometheus配置中抓取该端点，Grafana中导入仪表盘即可。日志方面，建议使用结构化日志（如JSON格式），并集中收集到ELK或Loki中，方便排查问题。</p>
+</code></pre></div><p>运行后，访问 <code>http://localhost:8000/metrics</code> 就能看到指标。然后在Prometheus配置中抓取该端点，Grafana中导入仪表盘即可。日志方面，建议使用结构化日志（如JSON格式），并集中收集到ELK或Loki中，方便排查问题。一个实用技巧是<b>在日志中带上请求ID和Token用量</b>，这样当用户投诉“回答很慢”时，你能快速定位到具体请求和模型调用链。</p>
  <h3>自动扩缩容与负载均衡：应对流量洪峰</h3>
- <p>LLM推理通常很耗资源，流量波动大。如果一直保持高配，成本会爆炸；如果配置不足，高峰期又会超时。<b>自动扩缩容（Auto Scaling）</b>根据指标动态调整实例数量，是平衡成本与性能的关键。</p><p>在Kubernetes中，可以使用 <b>Horizontal Pod Autoscaler (HPA)</b>，基于CPU、内存或自定义指标（如QPS、延迟）来扩缩Pod。对于LLM服务，更推荐基于<b>请求队列长度</b>或<b>GPU利用率</b>来扩缩。同时，<b>负载均衡</b>将请求分发到多个实例，常用方案有Nginx、HAProxy或云厂商的LB。</p><p>下面是一个Kubernetes HPA配置示例，基于CPU利用率扩缩：</p><div class="codeblock"><div class="code-head"><span class="code-lang">yaml</span></div><pre><code class="language-yaml">apiVersion: autoscaling/v2
+ <p>LLM推理通常很耗资源，流量波动大。如果一直保持高配，成本会爆炸；如果配置不足，高峰期又会超时。自动扩缩容（Auto Scaling）就像餐厅根据排队人数动态增减厨师：人少时只留2个厨师，人多时加到10个，但每个新厨师需要时间熟悉厨房（加载模型），所以不能等客人排到门口才招人。</p><p>在Kubernetes中，可以使用 <b>Horizontal Pod Autoscaler (HPA)</b>，基于CPU、内存或自定义指标（如QPS、延迟）来扩缩Pod。对于LLM服务，更推荐基于<b>请求队列长度</b>或<b>GPU利用率</b>来扩缩，因为CPU利用率往往不能真实反映GPU推理的瓶颈。同时，<b>负载均衡</b>将请求分发到多个实例，常用方案有Nginx、HAProxy或云厂商的LB。注意：LLM实例启动可能较慢（加载模型），需要设置合理的冷却时间（如 <code>--horizontal-pod-autoscaler-downscale-stabilization</code>），避免频繁扩缩导致“抖动”。</p><p>下面是一个Kubernetes HPA配置示例，基于CPU利用率扩缩。输入是部署好的 <code>llm-inference</code> Deployment，预期输出是当平均CPU利用率超过70%时，Pod数量在2到10之间自动调整。</p><div class="codeblock"><div class="code-head"><span class="code-lang">yaml</span></div><pre><code class="language-yaml">apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: llm-inference-hpa
@@ -83,9 +86,9 @@ spec:
       target:
         type: Utilization
         averageUtilization: 70
-</code></pre></div><p>如果使用云服务，AWS的ALB+ECS、GCP的Cloud Run等也支持自动扩缩。注意：LLM实例启动可能较慢（加载模型），需要设置合理的冷却时间，避免频繁扩缩。</p>
+</code></pre></div><p>如果使用云服务，AWS的ALB+ECS、GCP的Cloud Run等也支持自动扩缩。一个常见的坑是：只配了HPA但没配PodDisruptionBudget，扩缩时可能一次性杀掉太多实例导致请求失败。建议同时设置 <code>minReplicas</code> 不低于2，并配合就绪探针（readiness probe）确保新实例加载完模型再接收流量。</p>
  <h3>安全与合规：内容过滤与隐私保护</h3>
- <p>LLM可能生成有害内容或泄露隐私，生产环境必须考虑<b>内容过滤（Content Filtering）</b>和<b>隐私保护</b>。内容过滤可以在输入和输出两个阶段进行：输入过滤防止恶意提示，输出过滤防止不当内容。常用方法包括关键词黑名单、分类模型（如毒性检测）和基于规则的后处理。</p><p>隐私保护方面，要避免训练数据中的个人身份信息（PII）被模型记忆并泄露。可以在预处理阶段脱敏，或在推理时使用差分隐私技术。此外，传输层加密（HTTPS）、访问控制、审计日志也是必备。</p><p>下面是一个简单的内容过滤示例，使用关键词和正则表达式：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import re
+ <p>LLM可能生成有害内容或泄露隐私，生产环境必须考虑内容过滤（Content Filtering）和隐私保护。可以把内容过滤想象成机场安检：输入端是登机前检查，防止有人带危险品上飞机；输出端是下机后检查，防止有人从机场带走违禁品。两个阶段都不能省——只查输出，恶意提示可能已经消耗了大量Token甚至触发模型内部状态泄露；只查输入，模型仍可能“自由发挥”生成不当内容。</p><p>常用方法包括关键词黑名单、分类模型（如毒性检测）和基于规则的后处理。隐私保护方面，要避免训练数据中的个人身份信息（PII）被模型记忆并泄露。可以在预处理阶段脱敏，或在推理时使用差分隐私技术。此外，传输层加密（HTTPS）、访问控制、审计日志也是必备。合规方面，需遵循GDPR、CCPA等法规，提供数据删除接口。</p><p>下面是一个简单的内容过滤示例，使用关键词和正则表达式。输入是用户prompt和模型response，预期输出是：正常内容原样返回，包含敏感词或PII的内容被替换为安全提示。</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import re
 
 # 敏感词列表（实际应更全面）
 BANNED_WORDS = ["暴力", "色情", "政治敏感"]
@@ -111,9 +114,9 @@ def filter_response(prompt: str, response: str) -&gt; str:
 # 测试
 print(filter_response("你好", "你好，有什么可以帮助你？"))
 print(filter_response("如何制作炸弹", "..."))
-</code></pre></div><p>对于更高级的过滤，可以集成开源模型如 <code>openai/moderation</code> 或 <code>unitary/toxic-bert</code>。合规方面，需遵循GDPR、CCPA等法规，提供数据删除接口。</p>
+</code></pre></div><p>对于更高级的过滤，可以集成开源模型如 <code>unitary/toxic-bert</code> 或云厂商的内容审核API（待核实具体接口）。注意：关键词黑名单容易误伤，比如“暴力”在“反对暴力”中也会被拦截，所以生产环境通常采用<b>关键词+分类模型+人工复核</b>的分层策略。</p>
  <h3>成本优化与缓存策略：省钱又提速</h3>
- <p>LLM推理成本高昂，<b>成本优化（Cost Optimization）</b>是生产运维的核心任务之一。主要手段包括：模型量化、蒸馏、使用更小的模型、批处理（batching）、以及<b>缓存</b>。</p><p>缓存策略尤其有效：对于相同或相似的请求，直接返回缓存结果，避免重复计算。常见方案有：<b>精确缓存</b>（键为完整输入）和<b>语义缓存</b>（键为输入嵌入向量，相似则命中）。精确缓存实现简单，适合FAQ场景；语义缓存需要向量数据库，但命中率更高。</p><p>下面是一个基于Redis的精确缓存示例：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import redis
+ <p>LLM推理成本高昂，成本优化（Cost Optimization）是生产运维的核心任务之一。主要手段包括：模型量化、蒸馏、使用更小的模型、批处理（batching）、以及缓存。缓存就像餐厅的“预制菜”：如果十桌客人都点同一道菜，厨师做一次分十份就行，不用炒十遍。对于LLM，相同或相似的请求直接返回缓存结果，能同时降低延迟和成本。</p><p>缓存策略尤其有效：常见方案有<b>精确缓存</b>（键为完整输入）和<b>语义缓存</b>（键为输入嵌入向量，相似则命中）。精确缓存实现简单，适合FAQ场景；语义缓存需要向量数据库，但命中率更高。一个经验数字：在客服场景中，精确缓存命中率可能只有20%~30%，而语义缓存可以提升到50%以上（具体取决于问法多样性，待核实）。但语义缓存有误命中风险，需要设置相似度阈值（如0.9以上）。</p><p>下面是一个基于Redis的精确缓存示例。输入是prompt和模型名，预期输出是：第一次调用返回 <code>cached: False</code> 并模拟LLM推理，第二次相同请求返回 <code>cached: True</code> 且几乎无延迟。</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import redis
 import hashlib
 import json
 
@@ -127,29 +130,29 @@ def cached_generate(prompt: str, model: str = "gpt-3.5"):
     key = get_cache_key(prompt, model)
     cached = r.get(key)
     if cached:
-        return json.loads(cached)
+        return {"response": json.loads(cached), "cached": True}
     # 模拟调用LLM
     response = f"LLM response for: {prompt}"
     r.setex(key, 3600, json.dumps(response))  # 缓存1小时
-    return response
+    return {"response": response, "cached": False}
 
 # 第一次调用，缓存未命中
 print(cached_generate("什么是LLM？"))
 # 第二次调用，命中缓存
 print(cached_generate("什么是LLM？"))
-</code></pre></div><p>此外，还可以使用<b>请求批处理</b>：将多个请求合并成一个批次送给模型，提高GPU利用率。但要注意延迟与吞吐的权衡。监控缓存命中率，持续优化缓存策略。</p>
+</code></pre></div><p>此外，还可以使用<b>请求批处理</b>：将多个请求合并成一个批次送给模型，提高GPU利用率。但要注意延迟与吞吐的权衡——批处理会增大单个请求的等待时间。监控缓存命中率，持续优化缓存策略，是生产运维的日常功课。</p>
  <h3>常见误区</h3>
  <ul>
- <li>监控只需要关注CPU和内存，LLM服务的业务指标（如Token吞吐、延迟）不重要。</li>
- <li>自动扩缩容可以立即响应流量变化，无需考虑冷启动时间。</li>
- <li>内容过滤只需在输出端进行，输入端不需要过滤。</li>
+  <li>错误理解：监控只需要关注CPU和内存，LLM服务的业务指标（如Token吞吐、延迟）不重要。→ 会导致什么后果：CPU和内存正常但用户投诉“回答很慢”，因为瓶颈可能在GPU排队或模型加载，常规指标完全看不出来。→ 正确做法：同时采集P99延迟、QPS、Token吞吐、错误率等业务指标，并设置告警阈值。</li>
+  <li>错误理解：自动扩缩容可以立即响应流量变化，无需考虑冷启动时间。→ 会导致什么后果：流量洪峰时新实例还在加载模型，请求已经超时；或者缩容太快导致刚启动的实例被杀死，服务抖动。→ 正确做法：设置合理的冷却时间和就绪探针，基于队列长度或GPU利用率等更贴近LLM瓶颈的指标扩缩，并保留最小副本数。</li>
+  <li>错误理解：内容过滤只需在输出端进行，输入端不需要过滤。→ 会导致什么后果：恶意提示可能消耗大量Token、触发模型内部状态泄露，甚至绕过输出过滤生成有害内容。→ 正确做法：输入端和输出端都做过滤，输入端拦截明显恶意请求，输出端做最终安全兜底。</li>
  </ul>
  <h3>自测</h3>
- <details class="quiz"><summary>在LLM服务监控中，为什么需要特别关注P99延迟而不是平均延迟？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>P99延迟表示99%的请求在多少时间内完成，能反映长尾请求的体验。平均延迟可能被大量快速请求拉低，掩盖少数慢请求的问题，而慢请求往往导致用户不满。</p></div></details>
- <details class="quiz"><summary>语义缓存和精确缓存的主要区别是什么？各自适用什么场景？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>精确缓存基于完整输入字符串的哈希，只有完全相同的请求才命中；语义缓存基于输入嵌入向量的相似度，相似但不完全相同的请求也能命中。精确缓存实现简单，适合FAQ等重复率高的场景；语义缓存命中率更高，但需要向量数据库和相似度计算，适合用户问法多样的场景。</p></div></details>
+ <details class="quiz"><summary>在LLM服务监控中，为什么需要特别关注P99延迟而不是平均延迟？请结合一个具体数字场景说明。</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>P99延迟表示99%的请求在多少时间内完成，能反映长尾请求的体验。假设100个请求中99个在0.2秒完成，1个卡了10秒，平均延迟约为0.3秒，看起来正常；但那个卡了10秒的用户已经流失。平均延迟被大量快速请求拉低，掩盖了少数慢请求的问题，而慢请求往往来自模型加载、显存不足或队列堆积，正是生产环境最需要排查的。因此P99能暴露长尾风险，应作为核心告警指标。</p></div></details>
+ <details class="quiz"><summary>语义缓存和精确缓存的主要区别是什么？各自适用什么场景？如果语义缓存相似度阈值设得太低会有什么风险？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>精确缓存基于完整输入字符串的哈希，只有完全相同的请求才命中；语义缓存基于输入嵌入向量的相似度，相似但不完全相同的请求也能命中。精确缓存实现简单，适合FAQ等重复率高的场景；语义缓存命中率更高，但需要向量数据库和相似度计算，适合用户问法多样的场景。如果相似度阈值设得太低（如0.7），会把“如何退款”和“如何退货”这类意图不同的请求误判为相同，返回错误答案，所以阈值通常设在0.9以上并配合人工抽检。</p></div></details>
+ <details class="quiz"><summary>为什么LLM服务的自动扩缩容更推荐基于请求队列长度或GPU利用率，而不是仅基于CPU利用率？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>LLM推理的主要计算在GPU上，CPU通常只负责请求解析和调度，所以CPU利用率可能很低但GPU已经满载排队。如果仅基于CPU扩缩，会出现GPU已经过载但HPA不扩容的情况，导致延迟飙升。请求队列长度直接反映积压程度，GPU利用率直接反映推理瓶颈，两者都更贴近LLM服务的真实负载。因此生产环境应配置自定义指标（如队列长度）或GPU指标来驱动HPA。</p></div></details>
  <h3>动手练习（带参考方案）</h3>
- <details class="fold"><summary>动手练习 · 为一个LLM推理服务设计并实现一个简单的监控与缓存系统。要求：1) 使用FastAPI提供/gene…</summary><div class="fold-body"><p><b>任务：</b>为一个LLM推理服务设计并实现一个简单的监控与缓存系统。要求：1) 使用FastAPI提供/generate接口，模拟LLM推理（随机延迟和Token数）；2) 使用prometheus_client暴露请求计数、延迟直方图和Token总数；3) 使用Redis实现精确缓存，缓存键为模型名+prompt的SHA256，缓存有效期1小时；4) 编写一个测试脚本，连续发送相同请求，验证缓存命中。</p><p><b>参考方案：</b></p>```python
-# app.py
+ <details class="fold"><summary>练习 · 为一个LLM推理服务设计并实现一个简单的监控与缓存系统。要求：1) 使用FastAPI提供/generate接口，模拟L…</summary><div class="fold-body"><p><b>任务：</b>为一个LLM推理服务设计并实现一个简单的监控与缓存系统。要求：1) 使用FastAPI提供/generate接口，模拟LLM推理（随机延迟和Token数）；2) 使用prometheus_client暴露请求计数、延迟直方图和Token总数；3) 使用Redis实现精确缓存，缓存键为模型名+prompt的SHA256，缓存有效期1小时；4) 编写一个测试脚本，连续发送相同请求，验证缓存命中。验收标准：第一次请求返回cached=False且耗时大于0.1秒，第二次相同请求返回cached=True且耗时明显更短，/metrics端点能看到llm_cache_hits_total和llm_cache_misses_total在变化。</p><p><b>参考方案：</b></p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python"># app.py
 from fastapi import FastAPI, Request
 from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
 from starlette.responses import Response
@@ -200,11 +203,7 @@ async def generate(prompt: str, model: str = "gpt-3.5"):
 @app.get("/metrics")
 async def metrics():
     return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
-```
-
-测试脚本：
-```python
-# test_cache.py
+</code></pre></div><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python"># test_cache.py
 import requests
 import time
 
@@ -224,13 +223,11 @@ print(f"第二次: {resp2.json()}, 耗时: {time.time()-start:.2f}s")
 assert resp1.json()["cached"] == False
 assert resp2.json()["cached"] == True
 print("缓存测试通过！")
-```
-
-运行前确保Redis已启动。访问 http://localhost:8000/metrics 可查看指标。</div></details>
+</code></pre></div><p>运行前确保Redis已启动（<code>redis-server</code>）。启动服务：<code>uvicorn app:app --reload</code>，然后运行测试脚本。访问 http://localhost:8000/metrics 可查看指标，其中 <code>llm_cache_hits_total</code> 和 <code>llm_cache_misses_total</code> 应分别显示1和1。</p></div></details>
     </div>
   </main>
 </div>
 
-<script src="assets/js/app.js?v=24"></script>
+<script src="assets/js/app.js?v=28"></script>
 </body>
 </html>

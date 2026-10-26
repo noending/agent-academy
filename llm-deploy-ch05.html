@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="LLM全链路实战 第5章。">
 <title>第5章 · LLM全链路实战 | Agent 学院</title>
-<link rel="stylesheet" href="assets/css/style.css?v=22">
+<link rel="stylesheet" href="assets/css/style.css?v=24">
 </head>
 <body data-gen-course='{&quot;skill&quot;:&quot;llm-deploy&quot;,&quot;title&quot;:&quot;LLM全链路实战&quot;,&quot;topic&quot;:&quot;由课题「LLM 从训练到实际部署」自动生成。适合AI工程师、算法研究员及技术管理者。系统掌握LLM从预训练、微调到部署上线的完整工程链路，涵盖数据、训练、优化、服务化与运维。&quot;,&quot;chapters&quot;:[{&quot;no&quot;:1,&quot;title&quot;:&quot;LLM基础与生态&quot;,&quot;goal&quot;:&quot;理解LLM核心概念、发展历程与主流模型架构&quot;,&quot;file&quot;:&quot;llm-deploy-ch01.html&quot;},{&quot;no&quot;:2,&quot;title&quot;:&quot;数据工程与预处理&quot;,&quot;goal&quot;:&quot;掌握LLM训练数据的收集、清洗、去重与格式化方法&quot;,&quot;file&quot;:&quot;llm-deploy-ch02.html&quot;},{&quot;no&quot;:3,&quot;title&quot;:&quot;预训练与分布式训练&quot;,&quot;goal&quot;:&quot;理解预训练目标、分布式训练策略与优化技巧&quot;,&quot;file&quot;:&quot;llm-deploy-ch03.html&quot;},{&quot;no&quot;:4,&quot;title&quot;:&quot;微调与对齐技术&quot;,&quot;goal&quot;:&quot;掌握全量微调、LoRA、RLHF等微调与对齐方法&quot;,&quot;file&quot;:&quot;llm-deploy-ch04.html&quot;},{&quot;no&quot;:5,&quot;title&quot;:&quot;模型评估与优化&quot;,&quot;goal&quot;:&quot;学会设计评估方案，并进行量化、剪枝与蒸馏优化&quot;,&quot;file&quot;:&quot;llm-deploy-ch05.html&quot;},{&quot;no&quot;:6,&quot;title&quot;:&quot;推理优化与服务化&quot;,&quot;goal&quot;:&quot;掌握推理加速技术，并部署高性能推理服务&quot;,&quot;file&quot;:&quot;llm-deploy-ch06.html&quot;},{&quot;no&quot;:7,&quot;title&quot;:&quot;实战：微调与部署LLM&quot;,&quot;goal&quot;:&quot;完成一个LLM微调、量化并部署为API的完整项目&quot;,&quot;file&quot;:&quot;llm-deploy-ch07.html&quot;},{&quot;no&quot;:8,&quot;title&quot;:&quot;生产环境运维与扩展&quot;,&quot;goal&quot;:&quot;掌握LLM服务的监控、扩缩容、安全与成本优化&quot;,&quot;file&quot;:&quot;llm-deploy-ch08.html&quot;}]}' data-chapter="gen-llm-deploy-ch5">
 
@@ -23,14 +23,17 @@
   <main class="content">
     <div class="content-inner">
 
-      <header class="chapter-head">
-        <div class="kicker">CHAPTER 05 · 生成课程</div>
+                  <header class="chapter-head">
+        <div class="kicker">CHAPTER 05 · 机器初稿 · 待人审</div>
         <h1>模型评估与优化</h1>
+        <p class="lead"><b>本章目标：</b>学会设计评估方案，并进行量化、剪枝与蒸馏优化</p>
       </header>
-
-      <p class="lead"><b>本章目标：</b>学会设计评估方案，并进行量化、剪枝与蒸馏优化</p>
+<!--flow-v1--><div class="flow">
+        <span class="flow-node">定评估方案<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">明确指标与数据划分</small></span><span class="flow-arrow">→</span><span class="flow-node">量化评估<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">跑分定位性能瓶颈</small></span><span class="flow-arrow">→</span><span class="flow-node">剪枝瘦身<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">去掉冗余参数降成本</small></span><span class="flow-arrow">→</span><span class="flow-node">蒸馏提效<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">小模型学大模型能力</small></span><span class="flow-arrow">→</span><span class="flow-node">复评迭代<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">回测对比再优化</small></span>
+        <div class="flow-note">先量化找瓶颈，再剪枝蒸馏，复评闭环迭代优化模型。</div>
+      </div><!--/flow-v1-->
  <h3>评估指标：从困惑度到人工评估</h3>
- <p>模型训完了，怎么知道它好不好？最直接的指标是<b>困惑度（Perplexity, PPL）</b>。它衡量模型对文本的“惊讶程度”：PPL 越低，说明模型越能预测下一个词。数学上，PPL 是交叉熵损失的指数：<code>PPL = exp(loss)</code>。比如 loss=2.0，PPL≈7.39，可以粗略理解为模型在每一步平均在 7.39 个词里犹豫。</p><p>但 PPL 只反映语言建模能力，不直接对应任务效果。所以还需要<b>准确率（Accuracy）</b>，比如分类任务、选择题、代码通过率等。对于生成式任务，准确率往往需要人工或模型辅助判断。</p><p>最后是<b>人工评估</b>：让标注员对流畅性、相关性、事实性、安全性打分。人工评估成本高，但最贴近真实体验。实践中常采用“自动指标粗筛 + 人工精评”的组合。</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import torch
+ <p>模型训完了，怎么知道它好不好？先建立一个直觉：把语言模型想象成一个永远在玩“猜下一个词”游戏的考生。如果它总能胸有成竹地押中答案，说明它“懂”这段文本；如果它每次都一脸茫然地在很多候选词之间犹豫，说明它没学好。<b>困惑度（Perplexity, PPL）</b>衡量的正是这种“犹豫程度”：PPL 越低，模型对文本的预测越笃定。数学上，PPL 是交叉熵损失的指数：<code>PPL = exp(loss)</code>。比如 loss=2.0，PPL≈7.39，可以粗略理解为模型在每一步平均在 7.39 个词里犹豫；若 loss 降到 1.0，PPL≈2.72，犹豫范围缩小到不到 3 个词，这就是一个可感知的前后对比。</p><p>但 PPL 只反映语言建模能力，不直接对应任务效果。一个 PPL 很低的模型可能只是擅长复述训练语料里的常见句式，遇到需要推理的选择题照样答错。所以还需要<b>准确率（Accuracy）</b>：分类任务看分类正确率，选择题看选项命中率，代码任务看通过率。对于开放式生成任务，准确率往往无法自动计算，需要人工或模型辅助判断，这时就要引入评分 rubric（评分细则）。</p><p>最后是<b>人工评估</b>：让标注员对流畅性、相关性、事实性、安全性逐项打分。人工评估成本高、主观性强，但最贴近真实用户体验。实践中常采用“自动指标粗筛 + 人工精评”的组合：先用 PPL 和准确率快速筛掉明显不合格的候选，再对 Top 候选做人工打分。<b>关键结论是：没有任何单一指标能代表模型质量，评估方案必须多指标交叉验证。</b></p><p>下面这段代码可以直接运行，输入是一句英文，输出是 GPT-2 在这句话上的 loss 与 PPL。注意运行前需安装 <code>torch</code> 与 <code>transformers</code>，首次运行会下载模型权重。</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import torch
 from transformers import GPT2LMHeadModel, GPT2Tokenizer
 
 model = GPT2LMHeadModel.from_pretrained('gpt2')
@@ -42,9 +45,9 @@ with torch.no_grad():
     outputs = model(**inputs, labels=inputs['input_ids'])
 loss = outputs.loss
 ppl = torch.exp(loss)
-print(f'Loss: {loss.item():.4f}, Perplexity: {ppl.item():.2f}')</code></pre></div><p>运行这段代码，你会得到 GPT-2 在这句话上的困惑度。注意：<b>PPL 必须在同一 tokenizer 和同一数据集上比较才有意义</b>，不同分词器算出的 PPL 不可直接对比。</p>
+print(f'Loss: {loss.item():.4f}, Perplexity: {ppl.item():.2f}')</code></pre></div><p>运行后你会看到类似 <code>Loss: 3.2xxx, Perplexity: 2x.xx</code> 的输出（具体数值随模型版本略有差异）。这里有一个极易踩的坑：<b>PPL 必须在同一 tokenizer 和同一数据集上比较才有意义</b>。同一句话，用词表 5 万的 tokenizer 可能切成 12 个 token，用词表 3 万的 tokenizer 可能切成 15 个 token，每步预测的难度尺度完全不同，算出的 PPL 不可直接对比。</p>
  <h3>基准测试：MMLU、GSM8K、HumanEval</h3>
- <p>光看 PPL 不够，业界用<b>基准测试（Benchmark）</b>来横向对比模型能力。常见的有：</p><ul><li><b>MMLU</b>：57 个学科的多选题，考知识广度，用准确率衡量。</li><li><b>GSM8K</b>：小学数学应用题，考多步推理，看最终答案是否正确。</li><li><b>HumanEval</b>：Python 函数补全，用 pass@k 衡量，即生成 k 个答案至少一个通过测试的概率。</li></ul><p>设计评估方案时要注意：<b>数据污染</b>（训练集混入测试题）会让分数虚高；<b>提示词敏感</b>（few-shot 示例数量、格式）会显著影响结果。所以报告结果时要写清楚评测配置。</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python"># 以 GSM8K 为例，用 few-shot 提示评估准确率（简化版）
+ <p>光看 PPL 不够，因为 PPL 回答不了“这个模型会不会做数学题、会不会写代码”。业界用<b>基准测试（Benchmark）</b>来横向对比模型能力，可以把它理解为给模型准备的一套标准化考卷：同一套题、同一套评分规则，不同模型考出来的分数才有可比性。常见的有三类代表：</p><ul><li><b>MMLU</b>：57 个学科的多选题，考知识广度，用准确率衡量。</li><li><b>GSM8K</b>：小学数学应用题，考多步推理，看最终答案是否正确。</li><li><b>HumanEval</b>：Python 函数补全，用 pass@k 衡量，即生成 k 个答案至少一个通过测试的概率。</li></ul><p>设计评估方案时有两个隐蔽的陷阱。第一是<b>数据污染</b>：如果训练集混入了测试题，模型相当于提前背过答案，分数会虚高，这种分数在真实场景中毫无意义。第二是<b>提示词敏感</b>：few-shot 示例的数量、格式、甚至答案的书写风格都会显著影响结果，同一个模型换一种提示模板，GSM8K 分数可能相差好几个点。所以报告结果时必须写清楚评测配置：几 shot、什么模板、什么解码参数。<b>结论：benchmark 分数不是模型能力的绝对真值，而是“特定配置下的测量值”。</b></p><p>下面是一个 GSM8K 评估的骨架代码。输入是测试集题目，输出是准确率。注意其中 <code>generated</code> 目前是占位符，需要替换成你自己的模型调用；评分逻辑是检查标准答案（<code>####</code> 后面的数字）是否出现在生成文本中。</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python"># 以 GSM8K 为例，用 few-shot 提示评估准确率（简化版）
 from datasets import load_dataset
 
 dataset = load_dataset('gsm8k', 'main', split='test[:20]')
@@ -62,9 +65,9 @@ for ex in dataset:
     if gold in generated:
         correct += 1
 
-print(f'Accuracy: {correct / len(dataset):.2%}')</code></pre></div><p>实际评测中，GSM8K 常用 8-shot，HumanEval 用 pass@1 或 pass@10。<b>不要只看一个 benchmark 的分数就下结论</b>，要结合多个维度。</p>
+print(f'Accuracy: {correct / len(dataset):.2%}')</code></pre></div><p>实际评测中，GSM8K 常用 8-shot，HumanEval 用 pass@1 或 pass@10。注意 <code>gold in generated</code> 这种字符串匹配是粗糙的近似，可能把“答案 42 出现在推理过程里但最终答错”的情况误判为正确，生产环境应做更严格的答案抽取。<b>不要只看一个 benchmark 的分数就下结论</b>，要结合知识、推理、代码等多个维度综合判断。</p>
  <h3>模型量化：GPTQ、AWQ、GGUF</h3>
- <p>模型太大跑不动？<b>量化（Quantization）</b>把 FP16 权重压成 INT8/INT4，显存直接减半甚至更多。主流方案：</p><ul><li><b>GPTQ</b>：逐层量化，用校准数据最小化重构误差，适合 GPU 推理。</li><li><b>AWQ</b>：激活感知权重量化，保护重要通道，精度通常比 GPTQ 略好。</li><li><b>GGUF</b>：llama.cpp 的格式，支持 CPU/GPU 混合推理，适合本地部署。</li></ul><p>量化不是免费的午餐：<b>4-bit 量化通常损失 1~3 个点</b>，但换来的显存和速度提升很划算。选择时先看硬件：GPU 用 GPTQ/AWQ，Mac/CPU 用 GGUF。</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python"># 用 auto-gptq 加载 4-bit 量化模型（需先安装 auto-gptq）
+ <p>模型太大跑不动？先理解量化的直觉：模型权重原本用 FP16 存储，每个数占 16 位；如果改成 INT4，每个数只占 4 位，理论上显存直接降到四分之一。这就像把高清照片压成缩略图——大部分场景下你根本看不出差别，但文件小了一大截。<b>量化（Quantization）</b>做的就是这件事：把 FP16 权重压成 INT8/INT4，显存减半甚至更多。主流方案有三条路线：</p><ul><li><b>GPTQ</b>：逐层量化，用校准数据最小化重构误差，适合 GPU 推理。</li><li><b>AWQ</b>：激活感知权重量化，保护重要通道，精度通常比 GPTQ 略好。</li><li><b>GGUF</b>：llama.cpp 的格式，支持 CPU/GPU 混合推理，适合本地部署。</li></ul><p>量化不是免费的午餐：<b>4-bit 量化通常损失 1~3 个点</b>（具体幅度随模型与任务差异较大，待核实），但换来的显存和速度提升通常很划算。选择时先看硬件：GPU 用 GPTQ/AWQ，Mac/CPU 用 GGUF。下面这段代码演示用 auto-gptq 加载 4-bit 量化模型并生成一句话，输入是一个英文问题，输出是模型续写的文本。运行前需安装 <code>auto-gptq</code> 并有可用的 CUDA 环境。</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python"># 用 auto-gptq 加载 4-bit 量化模型（需先安装 auto-gptq）
 from transformers import AutoTokenizer
 from auto_gptq import AutoGPTQForCausalLM
 
@@ -79,13 +82,13 @@ model = AutoGPTQForCausalLM.from_quantized(
 
 inputs = tokenizer("Explain quantization in one sentence.", return_tensors="pt").to("cuda:0")
 out = model.generate(**inputs, max_new_tokens=50)
-print(tokenizer.decode(out[0], skip_special_tokens=True))</code></pre></div><p>如果要用 GGUF，可以用 llama-cpp-python：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from llama_cpp import Llama
+print(tokenizer.decode(out[0], skip_special_tokens=True))</code></pre></div><p>如果要用 GGUF，可以用 llama-cpp-python，它不需要 GPU，在笔记本上就能跑。输入是一个问答提示，输出是模型续写的回答片段：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from llama_cpp import Llama
 
 llm = Llama(model_path="./llama-2-7b-chat.Q4_K_M.gguf", n_ctx=2048)
 out = llm("Q: What is quantization? A:", max_tokens=64)
-print(out['choices'][0]['text'])</code></pre></div><p><b>量化后一定要重新跑评估</b>，确认精度下降在可接受范围内。</p>
+print(out['choices'][0]['text'])</code></pre></div><p><b>量化后一定要重新跑评估</b>，确认精度下降在可接受范围内。一个实用的做法是：量化前后各跑一遍同一套 benchmark，把差值记录下来，作为是否上线的决策依据。</p>
  <h3>剪枝与知识蒸馏</h3>
- <p>除了量化，还有两条压缩路线：<b>剪枝（Pruning）</b>和<b>知识蒸馏（Knowledge Distillation）</b>。</p><p><b>剪枝</b>是去掉不重要的权重或结构。非结构化剪枝把小的权重置零，但稀疏矩阵在普通硬件上不一定加速；结构化剪枝直接删掉整个注意力头或 FFN 通道，能真正减小模型。剪枝后通常要微调恢复精度。</p><p><b>知识蒸馏</b>是让小的“学生模型”模仿大的“教师模型”。核心是让学生输出的概率分布（软标签）接近教师，而不是只拟合硬标签。损失函数通常是：<code>L = α * CE(student, hard_label) + (1-α) * KL(student_soft, teacher_soft)</code>，其中 soft 是带温度 T 的 softmax。</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import torch
+ <p>除了量化，还有两条压缩路线：<b>剪枝（Pruning）</b>和<b>知识蒸馏（Knowledge Distillation）</b>。先给直觉：剪枝像给一棵树修剪枝叶，去掉对结果贡献小的部分；蒸馏像让一个新手（学生模型）跟着一位老专家（教师模型）学习，新手不仅学专家最终给出的答案，还学专家在犹豫时对各选项的偏好程度。</p><p><b>剪枝</b>是去掉不重要的权重或结构。非结构化剪枝把小的权重置零，但稀疏矩阵在普通硬件上不一定加速，因为硬件仍然按稠密矩阵的方式计算；结构化剪枝直接删掉整个注意力头或 FFN 通道，能真正减小模型体积和计算量。剪枝后通常要微调恢复精度，否则性能会明显下降。</p><p><b>知识蒸馏</b>是让小的“学生模型”模仿大的“教师模型”。核心是让学生输出的概率分布（软标签）接近教师，而不是只拟合硬标签。为什么软标签更有信息量？举个例子：一张猫的图片，硬标签只说“这是猫”，而教师的软标签可能说“80% 是猫、15% 是狗、5% 是狐狸”，这 15% 的狗就告诉学生“猫和狗长得有点像”，这就是所谓的暗知识。损失函数通常是：<code>L = α * CE(student, hard_label) + (1-α) * KL(student_soft, teacher_soft)</code>，其中 soft 是带温度 T 的 softmax。温度 T 越高，概率分布越平滑，暗知识越明显。</p><p>下面这段代码可以直接运行，输入是随机生成的 student/teacher logits 和标签，输出是蒸馏损失值。它演示了软标签 KL 损失与硬标签交叉熵的组合方式，注意 KL 项乘了 <code>T*T</code> 来补偿温度缩放带来的梯度尺度变化。</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import torch
 import torch.nn.functional as F
 
 def distillation_loss(student_logits, teacher_logits, labels, T=2.0, alpha=0.7):
@@ -102,21 +105,20 @@ student_logits = torch.randn(4, 10)
 teacher_logits = torch.randn(4, 10)
 labels = torch.tensor([1, 2, 3, 4])
 loss = distillation_loss(student_logits, teacher_logits, labels)
-print(f'Distillation loss: {loss.item():.4f}')</code></pre></div><p>实践中，蒸馏常和量化、剪枝组合使用：先蒸馏得到小模型，再量化部署。<b>温度 T 一般取 2~5，alpha 取 0.5~0.9</b>，需要根据任务调。</p>
+print(f'Distillation loss: {loss.item():.4f}')
+</code></pre></div><p>实践中，蒸馏常和量化、剪枝组合使用：先蒸馏得到小模型，再量化部署。<b>温度 T 一般取 2~5，alpha 取 0.5~0.9</b>，需要根据任务调。注意 alpha 的语义在不同实现中可能相反（有的代码用 alpha 加权蒸馏项），复现论文时要先确认定义，避免调参方向搞反。</p>
  <h3>常见误区</h3>
  <ul>
- <li>困惑度越低模型效果一定越好——PPL 只反映语言建模能力，不直接对应下游任务准确率，且不同 tokenizer 的 PPL 不可比。</li>
- <li>量化一定会大幅掉点——4-bit 量化在多数任务上只损失 1~3 个点，配合 AWQ/GPTQ 校准可以做到几乎无损。</li>
- <li>知识蒸馏只是让学生拟合教师的硬标签——核心是软标签（概率分布）提供的暗知识，温度 T 和 alpha 的调节很关键。</li>
+  <li>错误理解：困惑度越低模型效果一定越好。→ 后果：可能选出一个 PPL 很低但在下游任务上表现平平的模型，甚至因为 tokenizer 不同而做出错误对比。→ 正确做法：PPL 只作为语言建模能力的参考，必须结合任务准确率和人工评估；且只在同一 tokenizer、同一数据集上比较 PPL。</li>
+  <li>错误理解：量化一定会大幅掉点，所以不敢用。→ 后果：白白放弃显存和速度收益，部署成本居高不下。→ 正确做法：4-bit 量化在多数任务上只损失 1~3 个点（待核实具体幅度），配合 AWQ/GPTQ 校准可以做到接近无损；量化后跑一遍同一套 benchmark 量化前后对比，用数据决定是否上线。</li>
+  <li>错误理解：知识蒸馏只是让学生拟合教师的硬标签。→ 后果：丢掉了软标签里的暗知识，学生模型效果明显不如预期，调参也找不到方向。→ 正确做法：核心是软标签（概率分布）提供的暗知识，用带温度 T 的 softmax 计算 KL 损失，并合理调节 T 与 alpha。</li>
  </ul>
  <h3>自测</h3>
- <details class="quiz"><summary>为什么不同 tokenizer 的模型困惑度不能直接比较？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>因为困惑度是交叉熵的指数，而交叉熵基于 token 级别的概率。不同 tokenizer 把同一段文本切成的 token 数量和粒度不同，导致每步预测的难度和损失尺度不同，因此 PPL 不可直接对比。</p></div></details>
- <details class="quiz"><summary>GPTQ、AWQ、GGUF 三种量化方案分别适合什么场景？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>GPTQ 适合 GPU 推理，精度较好；AWQ 也是 GPU 推理，激活感知，通常精度略优于 GPTQ；GGUF 适合 CPU/GPU 混合或本地部署（llama.cpp），对硬件要求低。</p></div></details>
+ <details class="quiz"><summary>为什么不同 tokenizer 的模型困惑度不能直接比较？请结合 PPL 的计算公式说明推理过程。</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>PPL = exp(交叉熵损失)，而交叉熵是逐 token 计算的负对数概率平均。推理链条是：不同 tokenizer 把同一段文本切成的 token 数量和粒度不同 → 每步预测的难度和损失尺度不同 → 交叉熵的数值基准不同 → 取指数后的 PPL 自然不可比。例如同一句话被切成 12 个 token 和 15 个 token，模型面对的预测任务本身就不同，所以只有在同一 tokenizer、同一数据集上算出的 PPL 才有比较意义。</p></div></details>
+ <details class="quiz"><summary>GPTQ、AWQ、GGUF 三种量化方案分别适合什么场景？如果团队要在 Mac 笔记本上做本地演示，应该选哪个，为什么？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>推理过程：先看三者的定位——GPTQ 是逐层量化、用校准数据最小化重构误差，面向 GPU 推理；AWQ 是激活感知量化、保护重要通道，同样面向 GPU 且精度通常略优；GGUF 是 llama.cpp 的格式，支持 CPU/GPU 混合推理。再对照场景：Mac 笔记本没有 NVIDIA GPU，无法高效运行 GPTQ/AWQ 的 CUDA 内核，而 GGUF 通过 llama.cpp 可以在 CPU 上推理。所以本地演示应选 GGUF，代价是推理速度和大模型支持能力受硬件限制。</p></div></details>
+ <details class="quiz"><summary>在知识蒸馏中，软标签相比硬标签多提供了什么信息？温度 T 起什么作用？如果把 T 设为 1 会怎样？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>推理过程：硬标签只告诉学生“正确答案是哪个”，软标签给出教师对每个类别的概率分布，例如“80% 猫、15% 狗、5% 狐狸”，其中的非最大概率项揭示了类别之间的相似性，这就是暗知识。温度 T 作用在 softmax 上：T 越大分布越平滑，暗知识越明显；T 越小分布越尖锐。若 T=1，softmax 退化为普通形式，分布接近 one-hot，软标签携带的暗知识大幅减少，蒸馏退化为近似硬标签训练，失去蒸馏的核心优势。因此实践中 T 一般取 2~5。</p></div></details>
  <h3>动手练习（带参考方案）</h3>
- <details class="fold"><summary>动手练习 · 使用 HuggingFace 的 transformers 加载一个小型因果语言模型（如 disti…</summary><div class="fold-body"><p><b>任务：</b>使用 HuggingFace 的 transformers 加载一个小型因果语言模型（如 distilgpt2），在 wikitext-2 测试集上计算困惑度；然后使用 bitsandbytes 进行 8-bit 量化加载，再次计算困惑度，对比两者的 PPL 和显存占用。</p><p><b>参考方案：</b></p>参考代码：
-
-```python
-import torch
+ <details class="fold"><summary>练习 · 使用 HuggingFace 的 transformers 加载一个小型因果语言模型（如 distilgpt2），在 w…</summary><div class="fold-body"><p><b>任务：</b>使用 HuggingFace 的 transformers 加载一个小型因果语言模型（如 distilgpt2），在 wikitext-2 测试集上计算困惑度；然后使用 bitsandbytes 进行 8-bit 量化加载，再次计算困惑度，对比两者的 PPL 和显存占用。验收标准：能打印出 FP32 与 8-bit 两个 PPL 数值，并说明 8-bit 的 PPL 上升幅度是否在可接受范围内。</p><p><b>参考方案：</b></p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from datasets import load_dataset
 
@@ -161,13 +163,11 @@ print(f'8-bit PPL: {ppl_8bit:.2f}')
 # 显存对比（需在 GPU 上运行）
 if torch.cuda.is_available():
     print(f'FP32 显存: {torch.cuda.max_memory_allocated() / 1024**2:.1f} MB')
-```
-
-预期结果：8-bit 量化的 PPL 略高于 FP32（通常差距 &lt;0.5），但显存占用减少约一半。注意：bitsandbytes 需要 GPU 环境，CPU 上可用 GGUF 替代。</div></details>
+</code></pre></div><p>预期结果：8-bit 量化的 PPL 略高于 FP32（通常差距小于 0.5，具体随模型与数据而异，待核实），但显存占用减少约一半。注意：bitsandbytes 需要 GPU 环境，CPU 上可用 GGUF 替代；显存对比部分需在 GPU 上运行才有意义。</p></div></details>
     </div>
   </main>
 </div>
 
-<script src="assets/js/app.js?v=24"></script>
+<script src="assets/js/app.js?v=28"></script>
 </body>
 </html>

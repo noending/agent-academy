@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="LLM全链路实战 第7章。">
 <title>第7章 · LLM全链路实战 | Agent 学院</title>
-<link rel="stylesheet" href="assets/css/style.css?v=22">
+<link rel="stylesheet" href="assets/css/style.css?v=24">
 </head>
 <body data-gen-course='{&quot;skill&quot;:&quot;llm-deploy&quot;,&quot;title&quot;:&quot;LLM全链路实战&quot;,&quot;topic&quot;:&quot;由课题「LLM 从训练到实际部署」自动生成。适合AI工程师、算法研究员及技术管理者。系统掌握LLM从预训练、微调到部署上线的完整工程链路，涵盖数据、训练、优化、服务化与运维。&quot;,&quot;chapters&quot;:[{&quot;no&quot;:1,&quot;title&quot;:&quot;LLM基础与生态&quot;,&quot;goal&quot;:&quot;理解LLM核心概念、发展历程与主流模型架构&quot;,&quot;file&quot;:&quot;llm-deploy-ch01.html&quot;},{&quot;no&quot;:2,&quot;title&quot;:&quot;数据工程与预处理&quot;,&quot;goal&quot;:&quot;掌握LLM训练数据的收集、清洗、去重与格式化方法&quot;,&quot;file&quot;:&quot;llm-deploy-ch02.html&quot;},{&quot;no&quot;:3,&quot;title&quot;:&quot;预训练与分布式训练&quot;,&quot;goal&quot;:&quot;理解预训练目标、分布式训练策略与优化技巧&quot;,&quot;file&quot;:&quot;llm-deploy-ch03.html&quot;},{&quot;no&quot;:4,&quot;title&quot;:&quot;微调与对齐技术&quot;,&quot;goal&quot;:&quot;掌握全量微调、LoRA、RLHF等微调与对齐方法&quot;,&quot;file&quot;:&quot;llm-deploy-ch04.html&quot;},{&quot;no&quot;:5,&quot;title&quot;:&quot;模型评估与优化&quot;,&quot;goal&quot;:&quot;学会设计评估方案，并进行量化、剪枝与蒸馏优化&quot;,&quot;file&quot;:&quot;llm-deploy-ch05.html&quot;},{&quot;no&quot;:6,&quot;title&quot;:&quot;推理优化与服务化&quot;,&quot;goal&quot;:&quot;掌握推理加速技术，并部署高性能推理服务&quot;,&quot;file&quot;:&quot;llm-deploy-ch06.html&quot;},{&quot;no&quot;:7,&quot;title&quot;:&quot;实战：微调与部署LLM&quot;,&quot;goal&quot;:&quot;完成一个LLM微调、量化并部署为API的完整项目&quot;,&quot;file&quot;:&quot;llm-deploy-ch07.html&quot;},{&quot;no&quot;:8,&quot;title&quot;:&quot;生产环境运维与扩展&quot;,&quot;goal&quot;:&quot;掌握LLM服务的监控、扩缩容、安全与成本优化&quot;,&quot;file&quot;:&quot;llm-deploy-ch08.html&quot;}]}' data-chapter="gen-llm-deploy-ch7">
 
@@ -23,25 +23,28 @@
   <main class="content">
     <div class="content-inner">
 
-      <header class="chapter-head">
-        <div class="kicker">CHAPTER 07 · 生成课程</div>
+                  <header class="chapter-head">
+        <div class="kicker">CHAPTER 07 · 机器初稿 · 待人审</div>
         <h1>实战：微调与部署LLM</h1>
+        <p class="lead"><b>本章目标：</b>完成一个LLM微调、量化并部署为API的完整项目</p>
       </header>
-
-      <p class="lead"><b>本章目标：</b>完成一个LLM微调、量化并部署为API的完整项目</p>
+<!--flow-v1--><div class="flow">
+        <span class="flow-node">选基座模型<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">按任务与算力挑开源LLM</small></span><span class="flow-arrow">→</span><span class="flow-node">数据准备<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">清洗并构造指令微调集</small></span><span class="flow-arrow">→</span><span class="flow-node">LoRA微调<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">低成本训练适配下游任务</small></span><span class="flow-arrow">→</span><span class="flow-node">量化压缩<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">降精度减显存提速推理</small></span><span class="flow-arrow">→</span><span class="flow-node">部署API<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">封装服务对外提供接口</small></span>
+        <div class="flow-note">从选模型到上线API，走通微调、量化、部署一条完整链路。</div>
+      </div><!--/flow-v1-->
  <h3>项目规划：选择基座模型与数据集</h3>
- <p>做任何LLM项目，第一步永远是<b>明确目标</b>：你要解决什么任务？是让模型学会特定领域的问答，还是遵循某种输出格式？目标决定了基座模型和数据集的选择。</p><p><b>基座模型选择</b>：对于中文场景，推荐从以下模型入手：</p><ul><li><b>Qwen2.5-7B</b>：中文能力强，社区活跃，LoRA微调资料多。</li><li><b>Llama-3.1-8B</b>：英文生态好，工具链成熟。</li><li><b>ChatGLM3-6B</b>：轻量，适合消费级显卡。</li></ul><p>选择时考虑：<b>参数量</b>（7B模型LoRA微调需约16GB显存）、<b>许可证</b>（商用是否允许）、<b>社区支持</b>（是否有现成的微调脚本）。</p><p><b>数据集准备</b>：微调数据通常为指令格式，例如：</p><div class="codeblock"><div class="code-head"><span class="code-lang">json</span></div><pre><code class="language-json">{
+ <p>做任何LLM项目，第一步永远是<b>明确目标</b>：你要解决什么任务？是让模型学会特定领域的问答，还是遵循某种输出格式？目标决定了基座模型和数据集的选择。可以把选型想象成装修前量房：先知道房间多大（显存）、要住几个人（任务复杂度）、预算多少（训练成本），再决定买什么家具（模型规模）。如果跳过这一步直接下载最大的模型，往往会卡在显存不足或训练时间过长上。</p><p><b>基座模型选择</b>：对于中文场景，推荐从以下模型入手：</p><ul><li><b>Qwen2.5-7B</b>：中文能力强，社区活跃，LoRA微调资料多。</li><li><b>Llama-3.1-8B</b>：英文生态好，工具链成熟。</li><li><b>ChatGLM3-6B</b>：轻量，适合消费级显卡。</li></ul><p>选择时考虑三个硬指标：<b>参数量</b>（7B模型LoRA微调需约16GB显存，1.5B模型约6GB即可起步）、<b>许可证</b>（商用是否允许，务必读原始协议而非二手博客）、<b>社区支持</b>（是否有现成的微调脚本和issue讨论）。一个实用的判断法是：先用1.5B~3B的小模型跑通全链路，确认数据格式和训练脚本无误后，再换7B模型放大效果，这样试错成本从数小时降到数十分钟。</p><p><b>数据集准备</b>：微调数据通常为指令格式，例如：</p><div class="codeblock"><div class="code-head"><span class="code-lang">json</span></div><pre><code class="language-json">{
   "instruction": "将以下文本翻译成英文",
   "input": "今天天气真好",
   "output": "The weather is nice today."
-}</code></pre></div><p>数据量建议至少1000条，质量比数量更重要。可以使用开源数据集（如Alpaca、Firefly）或自己标注。</p><p>下面是一个最小示例，展示如何加载数据集并查看格式：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from datasets import load_dataset
+}</code></pre></div><p>数据量建议至少1000条，质量比数量更重要。可以使用开源数据集（如Alpaca、Firefly）或自己标注。这里有一个容易被忽略的细节：<b>训练数据的格式必须与推理时的prompt模板一致</b>。如果训练时用<code>### Instruction:</code>分隔，推理时却直接拼接用户输入，模型会因分布偏移而输出混乱。因此规划阶段就要把模板固定下来，写进配置而不是散落在脚本里。</p><p>下面是一个最小示例，展示如何加载数据集并查看格式。输入是一个公开指令数据集名称，预期输出是第一条样本的字段结构，用来确认字段名与后续格式化函数匹配：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from datasets import load_dataset
 
 # 加载一个开源指令数据集
 dataset = load_dataset("yahma/alpaca-cleaned", split="train")
 print(dataset[0])
 # 输出: {'instruction': '...', 'input': '...', 'output': '...'}</code></pre></div>
  <h3>使用LoRA微调模型</h3>
- <p>LoRA（Low-Rank Adaptation）是一种参数高效微调方法，它<b>冻结原模型参数</b>，只在Transformer层的注意力模块中注入可训练的低秩矩阵。这样可训练参数减少到原来的0.1%~1%，显存需求大幅降低。</p><p>使用Hugging Face的<code>peft</code>库可以轻松实现LoRA微调。关键参数：</p><ul><li><code>r</code>：低秩矩阵的秩，通常8~32。</li><li><code>lora_alpha</code>：缩放因子，一般设为<code>r</code>的2倍。</li><li><code>target_modules</code>：要注入的模块，如<code>["q_proj", "v_proj"]</code>。</li></ul><p>下面是一个完整的微调脚本（以Qwen2.5-7B为例）：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments
+ <p>LoRA（Low-Rank Adaptation）是一种参数高效微调方法，它<b>冻结原模型参数</b>，只在Transformer层的注意力模块中注入可训练的低秩矩阵。直觉上，全量微调像是把整栋楼重新装修，而LoRA只是在关键房间加装可拆卸的隔断——原结构不动，改动量极小却足以改变功能分区。数学上，它把权重更新 ΔW 分解为两个小矩阵的乘积 B·A，其中 B 是 d×r、A 是 r×k，r 远小于 d 和 k，因此可训练参数减少到原来的0.1%~1%，显存需求大幅降低。</p><p>使用Hugging Face的<code>peft</code>库可以轻松实现LoRA微调。关键参数：</p><ul><li><code>r</code>：低秩矩阵的秩，通常8~32。r=8 时一个7B模型的可训练参数约几百万量级，r=32 则翻数倍，表达能力更强但更易过拟合小数据集。</li><li><code>lora_alpha</code>：缩放因子，一般设为<code>r</code>的2倍。实际生效的缩放是 alpha/r，所以 r 和 alpha 同步放大时等效强度不变。</li><li><code>target_modules</code>：要注入的模块，如<code>["q_proj", "v_proj"]</code>。只挂 q/v 是最省参数的起点，效果不足时再扩展到 k_proj、o_proj 和 MLP 层。</li></ul><p>下面是一个完整的微调脚本（以Qwen2.5-7B为例）。输入是基座模型名和1000条Alpaca格式数据，预期输出是保存到<code>./lora_adapter</code>的适配器权重，训练日志中可看到可训练参数占比（通常在1%以下）：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments
 from peft import LoraConfig, get_peft_model
 from trl import SFTTrainer
 from datasets import load_dataset
@@ -87,9 +90,9 @@ trainer = SFTTrainer(
     max_seq_length=512,
 )
 trainer.train()
-model.save_pretrained("./lora_adapter")</code></pre></div><p><b>注意</b>：实际使用时需要将数据集格式化为包含<code>instruction</code>、<code>input</code>、<code>output</code>的文本，例如：<code>### Instruction:\n{instruction}\n### Input:\n{input}\n### Response:\n{output}</code>。</p>
+model.save_pretrained("./lora_adapter")</code></pre></div><p><b>注意</b>：实际使用时需要将数据集格式化为包含<code>instruction</code>、<code>input</code>、<code>output</code>的文本，例如：<code>### Instruction:\n{instruction}\n### Input:\n{input}\n### Response:\n{output}</code>。上面脚本里 <code>dataset_text_field="text"</code> 要求数据集中已存在 <code>text</code> 字段，而 Alpaca 原始数据只有 instruction/input/output 三列，直接运行会报字段缺失——这正是下一节动手练习要补上的格式化步骤。另外，<code>fp16=True</code> 在部分新显卡上可能不稳定，可改用 <code>bf16=True</code>（待核实具体硬件兼容性）。</p>
  <h3>模型量化与导出</h3>
- <p>微调后，为了部署，通常需要将模型量化以减小显存占用和加速推理。常见的量化方法有：</p><ul><li><b>GPTQ</b>：训练后量化，4-bit，精度损失小。</li><li><b>AWQ</b>：激活感知权重量化，适合LLM。</li><li><b>GGUF</b>：llama.cpp使用的格式，适合CPU推理。</li></ul><p>这里以GPTQ为例，使用<code>auto-gptq</code>库进行量化：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from transformers import AutoModelForCausalLM, AutoTokenizer
+ <p>微调后，为了部署，通常需要将模型量化以减小显存占用和加速推理。量化的直觉是：模型权重原本用16位浮点存储，每个数占2字节；改成4位整数后每个数只占0.5字节，7B模型的文件体积从约14GB降到约4GB，显存门槛随之下降。代价是数值精度损失，但LLM的权重分布通常冗余度较高，所以4-bit量化在多数任务上仍可用。常见的量化方法有：</p><ul><li><b>GPTQ</b>：训练后量化，4-bit，精度损失小。</li><li><b>AWQ</b>：激活感知权重量化，适合LLM。</li><li><b>GGUF</b>：llama.cpp使用的格式，适合CPU推理。</li></ul><p>这里以GPTQ为例，使用<code>auto-gptq</code>库进行量化。输入是基座模型名和一小批校准文本，预期输出是<code>./qwen2.5-7b-gptq</code>目录下的4-bit权重与tokenizer。注意校准数据不是随便两句话就行：<b>校准集应来自目标任务分布</b>，通常几十到上百条，否则量化误差会偏大。</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from transformers import AutoModelForCausalLM, AutoTokenizer
 from auto_gptq import AutoGPTQForCausalLM, BaseQuantizeConfig
 
 model_name = "Qwen/Qwen2.5-7B"
@@ -111,19 +114,19 @@ calibration_dataset = ["示例文本1", "示例文本2"]  # 实际需更多
 # 执行量化
 model.quantize(calibration_dataset)
 model.save_quantized("./qwen2.5-7b-gptq")
-tokenizer.save_pretrained("./qwen2.5-7b-gptq")</code></pre></div><p>量化后模型大小约为原模型的1/4，显存需求从~14GB降至~4GB。</p><p>如果使用LoRA微调，也可以将LoRA权重合并到基座模型后再量化：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from peft import PeftModel
+tokenizer.save_pretrained("./qwen2.5-7b-gptq")</code></pre></div><p>量化后模型大小约为原模型的1/4，显存需求从~14GB降至~4GB。这个数字是估算值，实际取决于是否加载KV Cache、batch size和序列长度，长上下文推理时KV Cache本身可能占用数GB。</p><p>如果使用LoRA微调，也可以将LoRA权重合并到基座模型后再量化。合并的意义在于把 B·A 加回原权重，得到一个普通模型，从而兼容不支持动态加载LoRA的推理栈。输入是基座模型和适配器目录，预期输出是<code>./merged_model</code>下的完整权重：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from peft import PeftModel
 
 base_model = AutoModelForCausalLM.from_pretrained("Qwen/Qwen2.5-7B")
 lora_model = PeftModel.from_pretrained(base_model, "./lora_adapter")
 merged_model = lora_model.merge_and_unload()
 merged_model.save_pretrained("./merged_model")</code></pre></div>
  <h3>使用vLLM部署并测试API</h3>
- <p>vLLM是一个高效推理引擎，支持PagedAttention，吞吐量比Hugging Face高数倍。部署API只需几行命令：</p><div class="codeblock"><div class="code-head"><span class="code-lang">bash</span></div><pre><code class="language-bash"># 启动OpenAI兼容的API服务
+ <p>vLLM是一个高效推理引擎，支持PagedAttention，吞吐量比Hugging Face高数倍。PagedAttention的直觉来自操作系统的虚拟内存分页：把KV Cache切成固定大小的块按需分配，避免为每条请求预留最大长度的连续显存，从而显著减少浪费、提升并发。部署API只需几行命令：</p><div class="codeblock"><div class="code-head"><span class="code-lang">bash</span></div><pre><code class="language-bash"># 启动OpenAI兼容的API服务
 python -m vllm.entrypoints.openai.api_server \
     --model ./qwen2.5-7b-gptq \
     --quantization gptq \
     --port 8000 \
-    --host 0.0.0.0</code></pre></div><p>然后就可以像调用OpenAI API一样调用：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import openai
+    --host 0.0.0.0</code></pre></div><p>然后就可以像调用OpenAI API一样调用。输入是一条用户消息，预期输出是模型回复的文本，打印在终端：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import openai
 
 client = openai.OpenAI(base_url="http://localhost:8000/v1", api_key="token-abc123")
 
@@ -133,30 +136,26 @@ response = client.chat.completions.create(
     temperature=0.7,
     max_tokens=100
 )
-print(response.choices[0].message.content)</code></pre></div><p>测试时注意：<b>并发测试</b>可以使用<code>locust</code>或<code>wrk</code>；<b>监控</b>可以查看vLLM的日志和GPU利用率。</p><p>如果使用LoRA适配器，vLLM也支持动态加载：</p><div class="codeblock"><div class="code-head"><span class="code-lang">bash</span></div><pre><code class="language-bash">python -m vllm.entrypoints.openai.api_server \
+print(response.choices[0].message.content)</code></pre></div><p>测试时注意：<b>并发测试</b>可以使用<code>locust</code>或<code>wrk</code>；<b>监控</b>可以查看vLLM的日志和GPU利用率。一个常见的验收标准是：单请求首token延迟低于1秒、并发10路时吞吐明显高于逐条串行调用，否则说明批处理没有生效。</p><p>如果使用LoRA适配器，vLLM也支持动态加载。这样同一个基座可以挂多个适配器，按请求切换，省去为每个任务各存一份完整模型：</p><div class="codeblock"><div class="code-head"><span class="code-lang">bash</span></div><pre><code class="language-bash">python -m vllm.entrypoints.openai.api_server \
     --model Qwen/Qwen2.5-7B \
     --enable-lora \
-    --lora-modules my-lora=./lora_adapter</code></pre></div><p>调用时指定<code>model="my-lora"</code>即可。</p>
+    --lora-modules my-lora=./lora_adapter</code></pre></div><p>调用时指定<code>model="my-lora"</code>即可。注意此时 <code>--model</code> 必须是未量化的基座模型路径，LoRA 与 GPTQ 量化权重同时启用时的兼容性需以所用 vLLM 版本文档为准（待核实）。</p>
  <h3>常见误区</h3>
  <ul>
- <li>LoRA微调后必须合并权重才能部署，实际上vLLM等框架支持直接加载LoRA适配器，无需合并。</li>
- <li>量化一定会显著降低模型精度，实际上4-bit GPTQ/AWQ在多数任务上精度损失很小（&lt;1%），且推理速度更快。</li>
- <li>微调数据越多越好，实际上数据质量比数量更重要，1000条高质量数据可能胜过10万条低质量数据。</li>
+  <li>错误理解：LoRA微调后必须合并权重才能部署。→ 后果：多存一份完整模型、多花一次合并时间，且无法在同一基座上按请求切换多个任务适配器。→ 正确做法：vLLM等框架支持通过 --enable-lora 直接加载适配器，只有推理栈不支持动态LoRA或需要再量化时才合并。</li>
+  <li>错误理解：量化一定会显著降低模型精度。→ 后果：因担心精度而放弃量化，继续用16位权重部署，显存和成本翻数倍。→ 正确做法：4-bit GPTQ/AWQ在多数任务上精度损失很小（&lt;1%），但必须用目标任务样本做量化前后对比评测，而不是只看通用榜单。</li>
+  <li>错误理解：微调数据越多越好。→ 后果：收集大量低质量或格式不一致的数据，训练更久却学到噪声和错误模板。→ 正确做法：优先保证格式统一、答案正确，1000条高质量数据可能胜过10万条低质量数据；扩充数据前先做小规模消融对比。</li>
  </ul>
  <h3>自测</h3>
- <details class="quiz"><summary>LoRA微调中，参数r和lora_alpha分别代表什么？它们如何影响微调效果？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>r是低秩矩阵的秩，控制可训练参数的数量和表达能力，r越大模型容量越大但可能过拟合；lora_alpha是缩放因子，通常设为r的2倍，用于调整LoRA权重对原模型的影响程度。</p></div></details>
- <details class="quiz"><summary>使用vLLM部署模型时，如何支持多个LoRA适配器？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>启动vLLM时添加--enable-lora参数，并通过--lora-modules指定多个适配器，格式为name=path。调用时在请求中指定model为对应的适配器名称即可。</p></div></details>
+ <details class="quiz"><summary>LoRA微调中，参数r和lora_alpha分别代表什么？它们如何影响微调效果？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>推理过程：先看r，它是低秩分解B·A中的中间维度，直接决定新增可训练参数的数量——r从8增到32，参数量约翻4倍，表达能力增强但小数据集上过拟合风险上升。再看lora_alpha，它是缩放因子，实际注入强度约为alpha/r；若只调大alpha而不动r，等效于放大LoRA分支的输出。因此调参时应把alpha与r成比例设置（如r=16、alpha=32），单独改一个会同时改变强度和容量，难以归因。结论：r控容量，alpha控强度，二者需配合调整。</p></div></details>
+ <details class="quiz"><summary>使用vLLM部署模型时，如何支持多个LoRA适配器？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>推理过程：第一步，启动服务时加--enable-lora开启动态加载能力；第二步，用--lora-modules以name=path形式注册一个或多个适配器，例如my-lora=./lora_adapter；第三步，客户端请求时把model字段设为注册名my-lora而非基座名，vLLM据此路由到对应适配器。需要注意--model指向的是基座权重，适配器只是叠加层，所以多个任务共享同一份基座显存。</p></div></details>
+ <details class="quiz"><summary>为什么训练数据的prompt模板必须与推理时一致？不一致会发生什么？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>推理过程：模型在微调时学到的是「看到某种前缀→输出某种格式」的条件分布。若训练用### Instruction:分隔，推理时直接拼接用户输入，模型看到的输入分布与训练时不同，相当于在没见过的格式上做外推，常见表现是复读、答非所问或输出训练模板残留。验证方法：用训练集里的一条样本原样喂给部署后的API，若输出正常而换格式后变差，即可确认是模板不一致。正确做法是把模板写成配置，训练和推理共用同一份。</p></div></details>
  <h3>动手练习（带参考方案）</h3>
- <details class="fold"><summary>动手练习 · 选择一个基座模型（如Qwen2.5-1.5B），使用LoRA微调一个简单的指令跟随任务（例如将中文翻…</summary><div class="fold-body"><p><b>任务：</b>选择一个基座模型（如Qwen2.5-1.5B），使用LoRA微调一个简单的指令跟随任务（例如将中文翻译成英文），然后量化并部署为API，最后用Python脚本测试API。</p><p><b>参考方案：</b></p>1. 数据准备：创建1000条中英翻译对，格式为JSONL。
-2. 微调：使用peft和transformers进行LoRA微调，脚本参考章节内容。
-3. 量化：使用auto-gptq进行4-bit量化。
-4. 部署：使用vLLM启动API服务。
-5. 测试：使用openai库发送请求。
+ <details class="fold"><summary>练习 · 选择一个基座模型（如Qwen2.5-1.5B），使用LoRA微调一个简单的指令跟随任务（例如将中文翻译成英文），然后量化…</summary><div class="fold-body"><p><b>任务：</b>选择一个基座模型（如Qwen2.5-1.5B），使用LoRA微调一个简单的指令跟随任务（例如将中文翻译成英文），然后量化并部署为API，最后用Python脚本测试API。验收标准：① 训练脚本能跑通并保存适配器；② 部署后API对至少3条测试句返回英文翻译；③ 提交训练日志中的可训练参数占比和一条API返回结果。</p><p><b>参考方案：</b></p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python"># ========== 步骤1：数据准备 ==========
+# 创建 translation_data.jsonl，每行一条，字段为 instruction/input/output
+# 示例行：{"instruction": "将以下中文翻译成英文", "input": "你好", "output": "Hello"}
 
-完整代码示例：
-
-```python
-# 微调脚本（简化）
+# ========== 步骤2：微调脚本（保存为 train.py） ==========
 from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments
 from peft import LoraConfig, get_peft_model
 from trl import SFTTrainer
@@ -166,10 +165,21 @@ model_name = "Qwen/Qwen2.5-1.5B"
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 model = AutoModelForCausalLM.from_pretrained(model_name, device_map="auto")
 
-lora_config = LoraConfig(r=8, lora_alpha=16, target_modules=["q_proj", "v_proj"], task_type="CAUSAL_LM")
+lora_config = LoraConfig(r=8, lora_alpha=16,
+                         target_modules=["q_proj", "v_proj"],
+                         task_type="CAUSAL_LM")
 model = get_peft_model(model, lora_config)
+model.print_trainable_parameters()  # 记录可训练参数占比
+
+# 关键：把 instruction/input/output 拼成 text 字段，与推理模板保持一致
+def format_sample(example):
+    text = (f"### Instruction:\n{example['instruction']}\n"
+            f"### Input:\n{example['input']}\n"
+            f"### Response:\n{example['output']}")
+    return {"text": text}
 
 dataset = load_dataset("json", data_files="translation_data.jsonl", split="train")
+dataset = dataset.map(format_sample)
 
 training_args = TrainingArguments(
     output_dir="./lora_output",
@@ -177,36 +187,51 @@ training_args = TrainingArguments(
     num_train_epochs=3,
     learning_rate=2e-4,
     fp16=True,
+    logging_steps=10,
 )
-trainer = SFTTrainer(model=model, args=training_args, train_dataset=dataset, tokenizer=tokenizer, dataset_text_field="text")
+trainer = SFTTrainer(model=model, args=training_args,
+                     train_dataset=dataset, tokenizer=tokenizer,
+                     dataset_text_field="text", max_seq_length=256)
 trainer.train()
 model.save_pretrained("./lora_adapter")
+tokenizer.save_pretrained("./lora_adapter")
 
-# 量化脚本
-from auto_gptq import AutoGPTQForCausalLM, BaseQuantizeConfig
-quantize_config = BaseQuantizeConfig(bits=4, group_size=128)
-model = AutoGPTQForCausalLM.from_pretrained(model_name, quantize_config)
-model.quantize(["示例文本"])
-model.save_quantized("./qwen-1.5b-gptq")
-tokenizer.save_pretrained("./qwen-1.5b-gptq")
+# ========== 步骤3：部署（命令行执行，二选一） ==========
+# 方式A：直接加载LoRA适配器（无需合并、无需量化）
+# python -m vllm.entrypoints.openai.api_server \
+#     --model Qwen/Qwen2.5-1.5B --enable-lora \
+#     --lora-modules my-lora=./lora_adapter --port 8000
+#
+# 方式B：先合并再量化（参考章节「模型量化与导出」），然后
+# python -m vllm.entrypoints.openai.api_server \
+#     --model ./qwen-1.5b-gptq --quantization gptq --port 8000
 
-# 部署命令
-# python -m vllm.entrypoints.openai.api_server --model ./qwen-1.5b-gptq --quantization gptq --port 8000
-
-# 测试脚本
+# ========== 步骤4：测试脚本（保存为 test_api.py） ==========
 import openai
+
 client = openai.OpenAI(base_url="http://localhost:8000/v1", api_key="token-abc123")
-response = client.chat.completions.create(
-    model="qwen-1.5b-gptq",
-    messages=[{"role": "user", "content": "将'你好'翻译成英文"}],
-    max_tokens=50
-)
-print(response.choices[0].message.content)
-```</div></details>
+
+# 与训练时完全一致的模板
+PROMPT = "### Instruction:\n将以下中文翻译成英文\n### Input:\n{}\n### Response:\n"
+
+for zh in ["你好", "今天天气真好", "我喜欢学习人工智能"]:
+    resp = client.chat.completions.create(
+        model="my-lora",  # 方式B部署时改为 qwen-1.5b-gptq
+        messages=[{"role": "user", "content": PROMPT.format(zh)}],
+        temperature=0.0,
+        max_tokens=50,
+    )
+    print(zh, "-&gt;", resp.choices[0].message.content.strip())
+
+# 预期输出示例：
+# 你好 -&gt; Hello
+# 今天天气真好 -&gt; The weather is really nice today.
+# 我喜欢学习人工智能 -&gt; I like learning artificial intelligence.
+</code></pre></div></div></details>
     </div>
   </main>
 </div>
 
-<script src="assets/js/app.js?v=24"></script>
+<script src="assets/js/app.js?v=28"></script>
 </body>
 </html>

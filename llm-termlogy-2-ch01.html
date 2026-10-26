@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="LLM术语与算力实战 第1章。">
 <title>第1章 · LLM术语与算力实战 | Agent 学院</title>
-<link rel="stylesheet" href="assets/css/style.css?v=22">
+<link rel="stylesheet" href="assets/css/style.css?v=24">
 </head>
 <body data-gen-course='{&quot;skill&quot;:&quot;llm-termlogy-2&quot;,&quot;title&quot;:&quot;LLM术语与算力实战&quot;,&quot;topic&quot;:&quot;由课题「LLM术语精通」自动生成。面向有开发基础的学员，系统掌握LLM术语、评测与算力选型。通过6章学习，能读懂模型卡、设计评测、估算显存成本，并完成企业助手选型报告。&quot;,&quot;chapters&quot;:[{&quot;no&quot;:1,&quot;title&quot;:&quot;全景地图与核心术语&quot;,&quot;goal&quot;:&quot;建立LLM知识地图，解释20+高频术语及其关系。&quot;,&quot;file&quot;:&quot;llm-termlogy-2-ch01.html&quot;},{&quot;no&quot;:2,&quot;title&quot;:&quot;模型能力评测与可信度&quot;,&quot;goal&quot;:&quot;能设计小规模评测，识别不公平比较，给出有证据的选型结论。&quot;,&quot;file&quot;:&quot;llm-termlogy-2-ch02.html&quot;},{&quot;no&quot;:3,&quot;title&quot;:&quot;推理性能与成本评测&quot;,&quot;goal&quot;:&quot;能测量TTFT、TPOT、吞吐等指标，计算每次请求成本。&quot;,&quot;file&quot;:&quot;llm-termlogy-2-ch03.html&quot;},{&quot;no&quot;:4,&quot;title&quot;:&quot;硬件参数与算力评估&quot;,&quot;goal&quot;:&quot;读懂硬件规格表，解释显存、带宽、算力对推理的影响。&quot;,&quot;file&quot;:&quot;llm-termlogy-2-ch04.html&quot;},{&quot;no&quot;:5,&quot;title&quot;:&quot;显存估算与部署选型&quot;,&quot;goal&quot;:&quot;能估算模型推理显存，区分装得下、跑得快、满足并发。&quot;,&quot;file&quot;:&quot;llm-termlogy-2-ch05.html&quot;},{&quot;no&quot;:6,&quot;title&quot;:&quot;综合项目：企业助手选型&quot;,&quot;goal&quot;:&quot;完成从需求到选型报告的完整项目，给出有证据的推荐方案。&quot;,&quot;file&quot;:&quot;llm-termlogy-2-ch06.html&quot;}]}' data-chapter="gen-llm-termlogy-2-ch1">
 
@@ -23,14 +23,17 @@
   <main class="content">
     <div class="content-inner">
 
-      <header class="chapter-head">
-        <div class="kicker">CHAPTER 01 · 生成课程</div>
+                  <header class="chapter-head">
+        <div class="kicker">CHAPTER 01 · 机器初稿 · 待人审</div>
         <h1>全景地图与核心术语</h1>
+        <p class="lead"><b>本章目标：</b>建立LLM知识地图，解释20+高频术语及其关系。</p>
       </header>
-
-      <p class="lead"><b>本章目标：</b>建立LLM知识地图，解释20+高频术语及其关系。</p>
+<!--flow-v1--><div class="flow">
+        <span class="flow-node">术语入口<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">先扫20+高频词，建立语感</small></span><span class="flow-arrow">→</span><span class="flow-node">概念分层<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">按模型、训练、推理归类</small></span><span class="flow-arrow">→</span><span class="flow-node">关系连线<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">串起术语间的依赖与流向</small></span><span class="flow-arrow">→</span><span class="flow-node">全景地图<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">合成一张LLM知识地图</small></span><span class="flow-arrow">→</span><span class="flow-node">回查术语<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">用地图反查生词，闭环巩固</small></span>
+        <div class="flow-note">先认词、再分层、后连线，最终用一张地图把术语串成体系。</div>
+      </div><!--/flow-v1-->
  <h3>1.1 从一句话到Token：LLM的输入输出流水线</h3>
- <p>想象你对着一个博学但只会“接龙”的朋友说话：你给他前半句，他根据读过的海量文本，猜下一个词最可能是什么。LLM 本质上就是这样一个超级接龙机器，只不过它把“词”切成了更小的单位——<b>Token（词元）</b>。</p><p>当你输入“我爱吃苹果”，模型并不会直接看到汉字。它先经过 <b>Tokenizer（分词器）</b>，把文本切成 Token 序列，比如 <code>['我', '爱', '吃', '苹果']</code>，每个 Token 再映射成一个整数 ID。这些 ID 进入模型后，会被转换成 <b>Embedding（嵌入）</b>——一串高维浮点数向量，表示这个 Token 的语义。模型内部通过 <b>Transformer（变换器）</b> 和 <b>Attention（注意力机制）</b> 不断计算这些向量之间的关系，最终输出下一个 Token 的概率分布。</p><p>这里有两个关键数字：<b>参数量</b>（模型内部可学习的权重总数，比如 7B 表示 70 亿）和 <b>上下文窗口</b>（模型一次能“看到”的最大 Token 数，比如 8K、128K）。参数量决定模型的“脑容量”，上下文窗口决定它一次能读多长的文章。</p><p>下面是一个最小可运行示例，用 Hugging Face 的 tokenizer 观察分词和 Embedding 维度：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from transformers import AutoTokenizer, AutoModel
+ <p>想象你对着一个博学但只会“接龙”的朋友说话：你给他前半句，他根据读过的海量文本，猜下一个词最可能是什么。LLM 本质上就是这样一个超级接龙机器，只不过它把“词”切成了更小的单位——<b>Token（词元）</b>。这个类比的关键在于：接龙游戏里朋友每次只猜“下一个词”，而 LLM 每次只预测“下一个 Token 的概率分布”，然后从分布中采样出一个 Token，拼回文本，再继续预测下一个。整个生成过程就是这样一个 Token 一个 Token 地滚动向前。</p><p>当你输入“我爱吃苹果”，模型并不会直接看到汉字。它先经过 <b>Tokenizer（分词器）</b>，把文本切成 Token 序列。注意，Token 不等于字，也不等于词：在 bert-base-chinese 这类中文 BERT 分词器下，“我爱吃苹果”会被切成 <code>['[CLS]', '我', '爱', '吃', '苹', '果', '[SEP]']</code>，其中“苹果”被拆成了“苹”和“果”两个 Token；而在一些面向中文优化的分词器里，“苹果”可能就是一个 Token。每个 Token 再映射成一个整数 ID，比如“我”对应 2769（具体数值随词表而定）。这些 ID 进入模型后，会被转换成 <b>Embedding（嵌入）</b>——一串高维浮点数向量，表示这个 Token 的语义。模型内部通过 <b>Transformer（变换器）</b> 和 <b>Attention（注意力机制）</b> 不断计算这些向量之间的关系，最终输出下一个 Token 的概率分布。</p><p>这里有两个关键数字：<b>参数量</b>（模型内部可学习的权重总数，比如 7B 表示 70 亿）和 <b>上下文窗口</b>（模型一次能“看到”的最大 Token 数，比如 8K、128K）。参数量决定模型的“脑容量”，上下文窗口决定它一次能读多长的文章。一个直观的对比：同样一段 2000 字的中文文章，在中文 BERT 分词器下可能产生约 2000 多个 Token（因为很多汉字被单独切分），而在某些子词合并更激进的分词器下可能只有 1000 多个 Token——<b>同样的文字，不同 Tokenizer 得到的 Token 数可能相差近一倍，这直接影响上下文窗口的“实际容量”和 API 计费</b>。</p><p>下面是一个最小可运行示例，用 Hugging Face 的 tokenizer 观察分词和 Embedding 维度。输入是一句中文，预期输出是 Token 列表、Token ID 列表，以及形状为 <code>[1, 序列长度, 768]</code> 的 Embedding：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from transformers import AutoTokenizer, AutoModel
 import torch
 
 model_name = "bert-base-chinese"
@@ -44,9 +47,9 @@ print("Tokens:", tokenizer.convert_ids_to_tokens(inputs["input_ids"][0]))
 
 with torch.no_grad():
     outputs = model(**inputs)
-print("Embedding shape:", outputs.last_hidden_state.shape)  # [batch, seq_len, hidden_dim]</code></pre></div><p>运行后你会看到类似 <code>['[CLS]', '我', '爱', '吃', '苹', '果', '[SEP]']</code> 的 Token 列表，以及形状为 <code>[1, 7, 768]</code> 的 Embedding。这 768 就是<b>隐藏维度</b>，是模型内部表示向量的宽度。</p>
+print("Embedding shape:", outputs.last_hidden_state.shape)  # [batch, seq_len, hidden_dim]</code></pre></div><p>运行后你会看到类似 <code>['[CLS]', '我', '爱', '吃', '苹', '果', '[SEP]']</code> 的 Token 列表，以及形状为 <code>[1, 7, 768]</code> 的 Embedding。这 768 就是<b>隐藏维度</b>，是模型内部表示向量的宽度。注意 <code>[CLS]</code> 和 <code>[SEP]</code> 是 BERT 特有的特殊标记，分别用于句子级表示和句子边界，它们也各占一个 Token 位置——这就是为什么 5 个汉字变成了 7 个 Token。</p>
  <h3>1.2 模型结构术语：Transformer、Attention、Dense与MoE</h3>
- <p>Transformer 是 LLM 的骨架。它由很多<b>层</b>堆叠而成，每一层包含一个 Attention 模块和一个前馈网络。Attention 让每个 Token 都能“看到”序列中其他 Token，并决定关注谁。比如在“苹果很好吃，因为它很甜”中，“它”会高度关注“苹果”。</p><p>传统 Transformer 的前馈网络是 <b>Dense（稠密）</b> 的：每个输入都会激活全部参数。而 <b>MoE（Mixture of Experts，混合专家）</b> 把前馈网络拆成多个“专家”，每次只激活其中一小部分。这样总参数量可以很大，但实际计算量只相当于一个小模型。例如 Mixtral 8x7B 总参数量约 47B，但每次推理只激活约 13B 参数。</p><p>另一个重要概念是<b>位置编码</b>。Attention 本身不知道顺序，所以需要给每个 Token 加上位置信息。早期用正弦函数，现在主流用 RoPE（旋转位置编码），它能让模型更好地外推到更长的上下文。</p><p>下面用 PyTorch 手写一个极简的单头 Attention，帮助理解其计算过程：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import torch
+ <p>Transformer 是 LLM 的骨架。你可以把它想象成一栋有很多层楼的大厦：每一层都包含一个 Attention 模块和一个前馈网络（Feed-Forward Network）。Attention 让每个 Token 都能“看到”序列中其他 Token，并决定关注谁。比如在“苹果很好吃，因为它很甜”中，“它”会高度关注“苹果”——Attention 机制计算的就是这种“谁该看谁”的权重。层数越多，模型能捕捉的抽象层次越高：浅层可能关注词形和局部搭配，深层可能关注语义角色和长距离依赖。</p><p>传统 Transformer 的前馈网络是 <b>Dense（稠密）</b> 的：每个输入都会激活全部参数。而 <b>MoE（Mixture of Experts，混合专家）</b> 把前馈网络拆成多个“专家”，每次只激活其中一小部分。这样总参数量可以很大，但实际计算量只相当于一个小模型。例如 Mixtral 8x7B 总参数量约 47B，但每次推理只激活约 13B 参数。这个数字对比很关键：<b>47B 的总参数量决定了它需要多少显存来存放权重，而 13B 的激活参数量决定了它每次前向计算的实际 FLOPs</b>——这就是 MoE“大容量、低计算”的权衡本质。</p><p>另一个重要概念是<b>位置编码</b>。Attention 本身不知道顺序：如果把“猫追狗”的 Token 打乱顺序输入，纯 Attention 的计算结果对顺序并不敏感。所以需要给每个 Token 加上位置信息。早期用正弦函数，现在主流用 RoPE（旋转位置编码），它通过旋转向量的方式把位置信息编码进 Attention 的点积中，能让模型更好地外推到更长的上下文。RoPE 的具体外推能力随实现和训练策略而异（待核实具体倍数）。</p><p>下面用 PyTorch 手写一个极简的单头 Attention，帮助理解其计算过程。输入是随机生成的 Q、K、V 矩阵，预期输出形状为 <code>[4, 8]</code>，即 4 个 Token 各得到一个 8 维的加权结果：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import torch
 import torch.nn.functional as F
 
 def attention(Q, K, V):
@@ -60,9 +63,9 @@ Q = torch.randn(seq_len, d_k)
 K = torch.randn(seq_len, d_k)
 V = torch.randn(seq_len, d_k)
 out = attention(Q, K, V)
-print("Attention output shape:", out.shape)  # [4, 8]</code></pre></div><p><b>结论：Transformer 通过 Attention 捕捉上下文关系，通过层数堆叠增加表达能力，通过 MoE 在参数量和计算量之间做权衡。</b></p>
+print("Attention output shape:", out.shape)  # [4, 8]</code></pre></div><p><b>结论：Transformer 通过 Attention 捕捉上下文关系，通过层数堆叠增加表达能力，通过 MoE 在参数量和计算量之间做权衡。</b>理解这三者的关系，就能看懂大多数模型结构术语的来龙去脉。</p>
  <h3>1.3 训练与适配术语：从预训练到LoRA</h3>
- <p>LLM 的训练像培养一个学生：先大量阅读（<b>预训练</b>），再专项辅导（<b>SFT</b>），最后根据反馈调整（<b>RLHF/DPO</b>）。</p><ul><li><b>预训练</b>：在海量文本上做“预测下一个 Token”的任务，让模型学会语言规律和世界知识。成本极高，通常只有大公司做。</li><li><b>SFT（Supervised Fine-Tuning，监督微调）</b>：用人工标注的“问题-答案”对，教模型遵循指令。</li><li><b>RLHF（Reinforcement Learning from Human Feedback，人类反馈强化学习）</b>：训练一个奖励模型来模拟人类偏好，再用强化学习优化 LLM。DPO 是它的简化替代，直接用偏好数据优化，不需要奖励模型。</li><li><b>蒸馏</b>：让一个小模型模仿大模型的输出，从而用更低成本获得接近的能力。</li><li><b>微调</b>：在预训练模型上继续训练，适配特定领域。</li><li><b>LoRA（Low-Rank Adaptation，低秩适应）</b>：冻结原模型，只训练两个小矩阵，大幅减少可训练参数量。QLoRA 则在此基础上把原模型量化到 4-bit，进一步降低显存。</li><li><b>量化</b>：把模型权重从 FP16 压缩到 INT8/INT4，减少显存和加速推理，但可能损失精度。</li></ul><p>下面用 PEFT 库演示如何给模型加上 LoRA：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from transformers import AutoModelForCausalLM
+ <p>LLM 的训练像培养一个学生：先大量阅读（<b>预训练</b>），再专项辅导（<b>SFT</b>），最后根据反馈调整（<b>RLHF/DPO</b>）。这个三阶段类比之所以重要，是因为每个阶段的目标和成本差异巨大：预训练是“通识教育”，需要万亿级 Token 和数千张 GPU；SFT 是“岗前培训”，通常几千到几万条高质量问答即可；RLHF/DPO 是“根据用户反馈微调行为”，让模型的回答更符合人类偏好。</p><ul><li><b>预训练</b>：在海量文本上做“预测下一个 Token”的任务，让模型学会语言规律和世界知识。成本极高，通常只有大公司做。</li><li><b>SFT（Supervised Fine-Tuning，监督微调）</b>：用人工标注的“问题-答案”对，教模型遵循指令。</li><li><b>RLHF（Reinforcement Learning from Human Feedback，人类反馈强化学习）</b>：训练一个奖励模型来模拟人类偏好，再用强化学习优化 LLM。DPO 是它的简化替代，直接用偏好数据优化，不需要奖励模型。</li><li><b>蒸馏</b>：让一个小模型模仿大模型的输出，从而用更低成本获得接近的能力。</li><li><b>微调</b>：在预训练模型上继续训练，适配特定领域。</li><li><b>LoRA（Low-Rank Adaptation，低秩适应）</b>：冻结原模型，只训练两个小矩阵，大幅减少可训练参数量。QLoRA 则在此基础上把原模型量化到 4-bit，进一步降低显存。</li><li><b>量化</b>：把模型权重从 FP16 压缩到 INT8/INT4，减少显存和加速推理，但可能损失精度。</li></ul><p>这里有一个非常直观的数字对比：一个 7B 模型的全量微调，需要为全部 70 亿参数保存梯度和优化器状态，显存需求远超单张消费级显卡；而 LoRA 只训练两个低秩矩阵，可训练参数可能只占总量的 0.1%~1%。下面用 PEFT 库演示如何给模型加上 LoRA，输入是一个小模型 gpt2，预期输出会打印可训练参数占比：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from transformers import AutoModelForCausalLM
 from peft import LoraConfig, get_peft_model
 
 model = AutoModelForCausalLM.from_pretrained("gpt2")
@@ -75,9 +78,9 @@ config = LoraConfig(
 )
 model = get_peft_model(model, config)
 model.print_trainable_parameters()
-# 输出类似：trainable params: 294,912 || all params: 124,734,720 || trainable%: 0.24%</code></pre></div><p><b>关键结论：预训练赋予通用能力，SFT/RLHF 对齐人类偏好，LoRA/QLoRA/量化让适配和部署变得平民化。</b></p>
+# 输出类似：trainable params: 294,912 || all params: 124,734,720 || trainable%: 0.24%</code></pre></div><p>注意输出中的 <code>trainable%: 0.24%</code>——不到千分之三的参数被训练，却能显著改变模型在特定任务上的行为。<b>关键结论：预训练赋予通用能力，SFT/RLHF 对齐人类偏好，LoRA/QLoRA/量化让适配和部署变得平民化。</b>但也要记住，LoRA 适合风格和格式适配，不适合注入大量新事实知识——后者更适合 RAG。</p>
  <h3>1.4 应用与推理术语：Prompt、RAG、Agent与KV Cache</h3>
- <p>模型训练好后，怎么用？这涉及应用层和推理层术语。</p><ul><li><b>Prompt（提示词）</b>：你给模型的输入。好的 Prompt 能显著提升效果。</li><li><b>RAG（Retrieval-Augmented Generation，检索增强生成）</b>：先从知识库检索相关文档，再把文档和问题一起交给模型生成答案。适合需要最新或私有知识的场景。</li><li><b>Agent（智能体）</b>：让 LLM 自主规划、调用工具、多步执行任务。工具调用是 Agent 的核心能力，比如调用计算器、搜索 API。</li><li><b>Temperature</b>：控制输出随机性。值越高越随机，越低越确定。Top-p 是另一种采样策略，只从累积概率达到 p 的 Token 中采样。</li><li><b>KV Cache（键值缓存）</b>：自回归生成时，缓存之前 Token 的 Key 和 Value，避免重复计算，大幅加速推理。</li><li><b>Batching（批处理）</b>：同时处理多个请求，提高 GPU 利用率。连续批处理（Continuous Batching）是 vLLM 等推理框架的关键技术。</li></ul><p>下面用 OpenAI API 风格演示 Temperature 和 Top-p 的影响（伪代码，需替换为实际 API）：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python"># 假设使用 openai 库
+ <p>模型训练好后，怎么用？这涉及应用层和推理层术语。可以把应用层想象成“怎么跟模型打交道”，推理层想象成“模型内部怎么跑得快”。两者经常被混为一谈，但关注点完全不同：Prompt、RAG、Agent 解决“给模型什么输入、让它做什么”；KV Cache、Batching 解决“同样的计算怎么不重复做”。</p><ul><li><b>Prompt（提示词）</b>：你给模型的输入。好的 Prompt 能显著提升效果。</li><li><b>RAG（Retrieval-Augmented Generation，检索增强生成）</b>：先从知识库检索相关文档，再把文档和问题一起交给模型生成答案。适合需要最新或私有知识的场景。</li><li><b>Agent（智能体）</b>：让 LLM 自主规划、调用工具、多步执行任务。工具调用是 Agent 的核心能力，比如调用计算器、搜索 API。</li><li><b>Temperature</b>：控制输出随机性。值越高越随机，越低越确定。Top-p 是另一种采样策略，只从累积概率达到 p 的 Token 中采样。</li><li><b>KV Cache（键值缓存）</b>：自回归生成时，缓存之前 Token 的 Key 和 Value，避免重复计算，大幅加速推理。</li><li><b>Batching（批处理）</b>：同时处理多个请求，提高 GPU 利用率。连续批处理（Continuous Batching）是 vLLM 等推理框架的关键技术。</li></ul><p>用一个具体例子理解 KV Cache 的价值：生成第 100 个 Token 时，如果没有缓存，模型需要重新计算前 99 个 Token 的 Key 和 Value；有了 KV Cache，前 99 个 Token 的 K/V 已经存好，只需计算第 100 个 Token 的 K/V 并与缓存做 Attention。<b>这让生成长文本的推理成本从“每步都重算全序列”降到“每步只算新 Token”</b>，是自回归推理加速的基石。代价是缓存本身占用显存，序列越长、批越大，KV Cache 显存开销越高。</p><p>下面用 OpenAI API 风格演示 Temperature 和 Top-p 的影响（伪代码，需替换为实际 API）。输入是同一个 Prompt，预期输出会显示不同参数下的模拟结果，帮助你建立“参数影响输出风格”的直觉：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python"># 假设使用 openai 库
 # import openai
 # openai.api_key = "your-key"
 
@@ -92,18 +95,19 @@ def generate(prompt, temperature=0.7, top_p=0.9):
     return f"模拟输出：temperature={temperature}, top_p={top_p}"
 
 print(generate("写一句诗", temperature=0.2))
-print(generate("写一句诗", temperature=1.2))</code></pre></div><p><b>记住：Prompt 是入口，RAG 补知识，Agent 做执行，KV Cache 和 Batching 是推理加速的两大支柱。</b></p>
+print(generate("写一句诗", temperature=1.2))</code></pre></div><p><b>记住：Prompt 是入口，RAG 补知识，Agent 做执行，KV Cache 和 Batching 是推理加速的两大支柱。</b>把这四组术语放在一张地图上，你就能在讨论 LLM 应用时快速定位问题出在“输入层”“知识层”“执行层”还是“推理层”。</p>
  <h3>常见误区</h3>
  <ul>
- <li>Token 等于字或词：实际上 Token 是子词单元，不同 Tokenizer 切分方式不同，一个汉字可能对应一个或多个 Token。</li>
- <li>参数量越大模型一定越好：参数量只是潜力，训练数据质量、对齐程度、推理配置同样关键，MoE 模型总参数量大但激活参数少。</li>
- <li>微调一定比 RAG 好：微调改变模型权重，适合风格和格式对齐；RAG 适合注入事实知识且可实时更新，两者常结合使用。</li>
+  <li>错误理解：Token 等于字或词。→ 会导致什么后果：估算上下文窗口和 API 成本时严重偏差，比如以为 1000 个汉字就是 1000 个 Token，实际可能更多或更少，导致请求超限或预算算错。→ 正确做法：用目标模型对应的 Tokenizer 实际分词计数，记住不同 Tokenizer 切分方式不同，一个汉字可能对应一个或多个 Token。</li>
+  <li>错误理解：参数量越大模型一定越好。→ 会导致什么后果：选型时只看参数量，忽略训练数据质量、对齐程度和推理配置，可能花大价钱部署一个实际效果并不适合业务的大模型；对 MoE 模型还会误判推理成本。→ 正确做法：参数量只是潜力，要结合训练数据质量、对齐程度、推理配置综合评估；MoE 模型要区分总参数量和激活参数量。</li>
+  <li>错误理解：微调一定比 RAG 好。→ 会导致什么后果：用微调去注入频繁变化的事实知识，导致知识过时、更新成本高，还可能出现幻觉。→ 正确做法：微调改变模型权重，适合风格和格式对齐；RAG 适合注入事实知识且可实时更新，两者常结合使用。</li>
  </ul>
  <h3>自测</h3>
- <details class="quiz"><summary>请解释 Token、Embedding 和参数量三者的区别与联系。</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>Token 是文本切分后的最小单位；Embedding 是把 Token 映射成高维向量；参数量是模型内部所有权重的总数。联系：Token 经过 Embedding 层变成向量，Embedding 层本身也是参数量的一部分，模型通过大量参数处理这些向量。</p></div></details>
- <details class="quiz"><summary>LoRA 和量化在降低显存方面分别起什么作用？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>LoRA 通过冻结原模型、只训练低秩矩阵，减少训练时的可训练参数量和优化器状态显存；量化通过降低权重精度（如 FP16 到 INT4）减少模型存储和推理显存。QLoRA 结合两者，在 4-bit 量化模型上训练 LoRA。</p></div></details>
+ <details class="quiz"><summary>请解释 Token、Embedding 和参数量三者的区别与联系。</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>推理过程：先拆概念——Token 是文本切分后的最小单位，是“文本层”的概念；Embedding 是把 Token 映射成高维向量，是“表示层”的概念；参数量是模型内部所有权重的总数，是“模型容量层”的概念。再找联系：Token 经过 Embedding 层变成向量，而 Embedding 层本身也是参数量的一部分；模型通过大量参数处理这些向量，参数量越大，能学习的表示越丰富。最后用一句话收束：Token 是输入单位，Embedding 是输入到向量的桥梁，参数量是桥梁和后续所有计算的总容量。</p></div></details>
+ <details class="quiz"><summary>LoRA 和量化在降低显存方面分别起什么作用？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>推理过程：先明确两者作用阶段不同。LoRA 作用于训练阶段，通过冻结原模型、只训练低秩矩阵，减少训练时的可训练参数量和优化器状态显存；量化作用于存储和推理阶段，通过降低权重精度（如 FP16 到 INT4）减少模型存储和推理显存。再说明组合效果：QLoRA 结合两者，在 4-bit 量化模型上训练 LoRA，既降低推理显存又降低训练显存。最后提醒边界：量化可能损失精度，LoRA 不改变原模型权重，适合适配而非注入大量新知识。</p></div></details>
+ <details class="quiz"><summary>为什么说 KV Cache 是自回归推理加速的基石？它带来什么代价？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>推理过程：先理解自回归生成的特点——每生成一个新 Token，都要基于之前所有 Token 计算 Attention。如果没有缓存，生成第 N 个 Token 时要重新计算前 N-1 个 Token 的 Key 和 Value，计算量随序列长度平方增长。KV Cache 把之前 Token 的 K/V 存下来，每步只计算新 Token 的 K/V，把重复计算消除。代价是缓存本身占用显存，序列越长、批越大，KV Cache 显存开销越高，这也是长上下文推理需要专门显存管理的原因。</p></div></details>
  <h3>动手练习（带参考方案）</h3>
- <details class="fold"><summary>动手练习 · 使用 Hugging Face transformers 加载一个中文 BERT 模型，对句子“今天…</summary><div class="fold-body"><p><b>任务：</b>使用 Hugging Face transformers 加载一个中文 BERT 模型，对句子“今天天气真好”进行分词，打印 Token 列表、Token ID 和 Embedding 形状。然后修改句子为“今天天气真好，适合出去玩”，观察 Token 数量变化。</p><p><b>参考方案：</b></p>from transformers import AutoTokenizer, AutoModel
+ <details class="fold"><summary>练习 · 使用 Hugging Face transformers 加载一个中文 BERT 模型，对句子“今天天气真好”进行分词，…</summary><div class="fold-body"><p><b>任务：</b>使用 Hugging Face transformers 加载一个中文 BERT 模型，对句子“今天天气真好”进行分词，打印 Token 列表、Token ID 和 Embedding 形状。然后修改句子为“今天天气真好，适合出去玩”，观察 Token 数量变化，并解释为什么 Token 数量的增加不等于汉字数量的增加。</p><p><b>参考方案：</b></p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from transformers import AutoTokenizer, AutoModel
 import torch
 
 model_name = "bert-base-chinese"
@@ -123,11 +127,13 @@ def analyze(text):
 
 analyze("今天天气真好")
 analyze("今天天气真好，适合出去玩")
-# 预期：第二个句子 Token 数量更多，Embedding 的 seq_len 相应增加。</div></details>
+# 预期：第二个句子 Token 数量更多，Embedding 的 seq_len 相应增加。
+# 注意：Token 数不等于汉字数，因为 [CLS]/[SEP] 占位、标点可能单独成 Token、
+# 部分汉字可能被拆成多个子词 Token。</code></pre></div></div></details>
     </div>
   </main>
 </div>
 
-<script src="assets/js/app.js?v=24"></script>
+<script src="assets/js/app.js?v=28"></script>
 </body>
 </html>

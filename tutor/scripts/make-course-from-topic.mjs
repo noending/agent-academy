@@ -13,6 +13,7 @@ import { join, dirname, basename } from "node:path";
 import { fileURLToPath } from "node:url";
 import { completeSimple, getModel } from "@mariozechner/pi-ai";
 import { updateManifest } from "./factory-common.mjs";
+import { esc, escAllow, chapterPageBody, parseJSON, upgradeChapter, structureIssues, gateChapters, generateFlow } from "./quality-align.mjs";
 
 const TUTOR = join(dirname(fileURLToPath(import.meta.url)), "..");
 const SITE = join(TUTOR, "..");
@@ -44,28 +45,8 @@ if (existsSync(join(TUTOR, "packs", SKILL))) {
   rmSync(join(SITE, `full-${SKILL}.html`), { force: true });
 }
 
-const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-// 放行 <b> 强调:先转义再恢复(用于 quiz 答案等富文本)
-const escAllow = (s) => esc(s).replace(/&lt;b&gt;/g, "<b>").replace(/&lt;\/b&gt;/g, "</b>");
-// 放行有限标签的 HTML 净化器(LLM 输出的章节内容只允许结构与强调标签)
-const ALLOWED = ["b", "strong", "i", "em", "code", "pre", "ul", "ol", "li", "table", "thead", "tbody", "tr", "th", "td", "br", "p", "h4", "blockquote"];
-function wrapCodeblocks(html) {
-  return html.replace(/<pre><code class="language-([\w-]+)">([\s\S]*?)<\/code><\/pre>/g,
-    (m, lang, code) => `<div class="codeblock"><div class="code-head"><span class="code-lang">${lang}</span></div><pre><code class="language-${lang}">${code}</code></pre></div>`);
-}
-function sanitizeHTML(s) {
-  let t = String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  for (const tag of ALLOWED) {
-    t = t.replaceAll(`&lt;${tag}&gt;`, `<${tag}>`).replaceAll(`&lt;/${tag}&gt;`, `</${tag}>`);
-  }
-  t = t.replace(/&lt;(pre|code)( class="language-[a-z]+")&gt;/g, "<$1$2>");
-  return t;
-}
-const parseJSON = (s) => {
-  const m = String(s).match(/[[{][\s\S]*[\]}]/);
-  if (!m) throw new Error("输出中找不到 JSON");
-  return JSON.parse(m[0]);
-};
+const NO_ALIGN = args.includes("--no-align"); // 跳过质量对齐 pass(调试用,默认开启)
+// HTML 工具与结构 rubric 见 ./quality-align.mjs(esc/escAllow/sanitizeHTML/parseJSON/upgradeChapter)
 async function llm(system, user, maxTokens = 4000) {
   for (let attempt = 1; attempt <= 2; attempt++) {
     try {
@@ -94,7 +75,7 @@ console.log(`→ Phase A · 规划课程大纲: ${TOPIC}`);
 const PLAN_SYS = `你是顶级课程设计师。为学习课题设计一门 ${N_CH} 章的系统课程(从基础概念到实际落地,由浅入深)。
 输出严格 JSON:
 {"title":"课程名(中文,10字内)","description":"课程简介(80字内:适合谁/学到什么)","chapters":[{"no":1,"title":"章标题(中文)","goal":"学完能做什么(30字内)","outline":["要点1","要点2","要点3","要点4"],"keyTerms":["关键术语(中英对照)"],"questions":["学员学本章时最可能问的3个问题(中文)"]}],"starterQuestions":["学员最可能问的4个问题"]}
-质量基准(对标本平台旗舰课程《Agent 学院》): 每章必须有可运行的最小示例、明确的常见误区、可自测的练习;讲解口语化但技术准确;由浅入深不跳步。
+质量基准(对标本平台旗舰课程《从零开发智能体》): 每章必须有可运行的最小示例、明确的常见误区、可自测的练习;讲解口语化但技术准确;由浅入深不跳步。
 ${FEEDBACK ? `用户对上一版的改进意见(必须逐条落实到本次生成):\n${FEEDBACK}` : ""}
 规则: 章节由浅入深,最后 1-2 章必须是动手实战/部署落地;每章 outline 4 条、questions 恰好 3 个;只输出 JSON。`;
 const planRaw = await llm(PLAN_SYS, `课题: ${TOPIC}\n学习目标: ${GOAL}\n章节数: ${N_CH}`, 5000);
@@ -117,12 +98,33 @@ await pool(plan.chapters, async (ch, idx) => {
     const raw = await llm(CH_SYS,
       `课程: ${plan.title}(${plan.description})\n本章: 第${ch.no}章 ${ch.title}\n本章目标: ${ch.goal}\n本章要点: ${ch.outline.join(";")}\n关键术语: ${(ch.keyTerms || []).join(";")}`, 6000);
     chapterResults[idx] = parseJSON(raw);
+    // Phase B.5 质量对齐:逐章按旗舰基准升级(结构不达标才触发,失败保留初稿不阻塞)
+    if (!NO_ALIGN) {
+      const up = await upgradeChapter(llm, {
+        courseTitle: plan.title,
+        ch: { no: ch.no, title: ch.title, goal: ch.goal, outline: ch.outline },
+        res: chapterResults[idx],
+      });
+      chapterResults[idx] = up.res;
+      console.log(`  ↻ 质量对齐 第${ch.no}章: ${up.before.length}→${up.after.length} 处结构问题${up.changed ? "" : "(" + (up.note || "保留初稿") + ")"}`);
+    }
     console.log(`  ✓ 第${ch.no}章 ${ch.title}`);
   } catch (e) {
     console.log(`  ✗ 第${ch.no}章生成失败: ${e.message}`);
   }
 }, 3);
 const okChapters = plan.chapters.map((ch, i) => ({ ch, res: chapterResults[i] })).filter((x) => x.res);
+
+// Phase B.6 质量门禁预检:生成端不拦草稿,但未达标章节亮红灯——发布端会硬拦
+const gate = gateChapters(okChapters.map(({ ch, res }) => ({
+  no: ch.no, title: ch.title, issues: res ? structureIssues(res) : ["本章内容生成失败"],
+})));
+if (!gate.pass) {
+  console.log(`  ⚠️ 质量门禁预检未过(${gate.clean}/${gate.total} 章达标)——草稿照常产出,发布时会被拦:`);
+  for (const f of gate.failing) console.log(`    第${f.no}章: ${f.issues.join("; ")}`);
+} else {
+  console.log(`  ✓ 质量门禁预检通过(${gate.total}/${gate.total} 章达标)`);
+}
 
 // ---------- Phase C: 组装产物 ----------
 console.log("→ Phase C · 组装教学包与站点草稿…");
@@ -195,27 +197,7 @@ const genMeta = {
 };
 const genMetaAttr = JSON.stringify(genMeta).replace(/'/g, "&#39;").replace(/"/g, "&quot;");
 
-const chapterPageBody = ({ ch, res }) => {
-  const secs = res.sections || [];
-  const misc = res.misconceptions || [];
-  const quiz = res.quiz || [];
-  const ex = res.exercise || { task: "(缺失)", solution: "(缺失)" };
-  return `
-      <header class="chapter-head">
-        <div class="kicker">CHAPTER ${String(ch.no).padStart(2, "0")} · 机器初稿 · 待人审</div>
-        <h1>${esc(ch.title)}</h1>
-        <p class="lead"><b>本章目标：</b>${esc(ch.goal)}</p>
-      </header>
-${secs.map((s) => ` <h3>${esc(s.h3)}</h3>\n ${sanitizeHTML(s.html)}`).join("\n")}
- <h3>常见误区</h3>
- <ul>
-${misc.map((m) => `  <li>${escAllow(m)}</li>`).join("\n")}
- </ul>
- <h3>自测</h3>
-${quiz.map((q) => ` <details class="quiz"><summary>${esc(q.q)}</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>${escAllow(q.a)}</p></div></details>`).join("\n")}
- <h3>动手练习（带参考方案）</h3>
- <details class="fold"><summary>练习 · ${esc(String(ex.task).slice(0, 60))}…</summary><div class="fold-body"><p><b>任务：</b>${escAllow(ex.task)}</p><p><b>参考方案：</b></p>${sanitizeHTML(ex.solution)}</div></details>`;
-};
+// 章节正文模板统一走 ./quality-align.mjs 的 chapterPageBody(含 .codeblock 外壳与质量对齐)
 
 const pageShell = (chapterNo, bodyHtml) => `<!DOCTYPE html>
 <html lang="zh-CN">
@@ -338,8 +320,9 @@ console.log(`✓ 课程首页: full-${SKILL}.html`);
 for (const { ch, res } of okChapters) {
   if (!res) { console.log(`  ⚠ 跳过无内容章节: 第${ch.no}章`); continue; }
   const file = join(SITE, `${SKILL}-ch${String(ch.no).padStart(2, "0")}.html`);
+  if (!res.flow) res.flow = await generateFlow({ callLLM: llm, ch }); // 本章一图流:新生成课程生而带图
   writeFileSync(file, pageShell(ch.no, chapterPageBody({ ch, res })));
-  console.log(`  ✓ 第${ch.no}章 → ${basename(file)}`);
+  console.log(`  ✓ 第${ch.no}章 → ${basename(file)}${res.flow ? "(含一图流)" : "(一图流生成失败,可跑 enrich-gen-course 补)"}`);
 }
 
 updateManifest({
@@ -358,6 +341,7 @@ writeFileSync(join(packDir, "REVIEW.md"), `# 人审清单 · 课题生成课程 
 - 知识库: kb/${SKILL}-kb.json(${chunks.length} 块,全部为模型知识生成)
 - 草稿页: full-${SKILL}.html(站点根,未挂导航)
 - ⚠️ 特别警告: 本课程内容来自模型知识、无外部引用——**每一处事实、数字、代码都需要核实**。有权威素材请改用 M1/M2 管线重新生成。
+- 质量门禁预检(结构 rubric): ${gate.pass ? "✓ 全部章节达标(发布门禁可过)" : "✗ 仅 " + gate.clean + "/" + gate.total + " 章达标——发布会被拦,先跑 node scripts/align-course-quality.mjs --course " + SKILL}
 
 ## 审校要点
 1. [ ] 大纲与章序是否合理

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="LLM训练到部署 第3章。">
 <title>第3章 · LLM训练到部署 | Agent 学院</title>
-<link rel="stylesheet" href="assets/css/style.css?v=22">
+<link rel="stylesheet" href="assets/css/style.css?v=24">
 </head>
 <body data-gen-course='{&quot;skill&quot;:&quot;llm&quot;,&quot;title&quot;:&quot;LLM训练到部署&quot;,&quot;topic&quot;:&quot;由课题「LLM从训练到部署」自动生成。本课程适合对LLM感兴趣的开发者与运维人员，从零开始掌握大语言模型训练、微调、优化与部署全流程，最终能独立完成生产级部署。&quot;,&quot;chapters&quot;:[{&quot;no&quot;:1,&quot;title&quot;:&quot;LLM基础概念&quot;,&quot;goal&quot;:&quot;理解LLM核心概念与工作原理&quot;,&quot;file&quot;:&quot;llm-ch01.html&quot;},{&quot;no&quot;:2,&quot;title&quot;:&quot;数据准备与预处理&quot;,&quot;goal&quot;:&quot;掌握构建高质量训练数据集的方法&quot;,&quot;file&quot;:&quot;llm-ch02.html&quot;},{&quot;no&quot;:3,&quot;title&quot;:&quot;模型训练基础&quot;,&quot;goal&quot;:&quot;能够配置并启动LLM训练任务&quot;,&quot;file&quot;:&quot;llm-ch03.html&quot;},{&quot;no&quot;:4,&quot;title&quot;:&quot;微调与对齐&quot;,&quot;goal&quot;:&quot;使用微调技术适配下游任务&quot;,&quot;file&quot;:&quot;llm-ch04.html&quot;},{&quot;no&quot;:5,&quot;title&quot;:&quot;模型优化与压缩&quot;,&quot;goal&quot;:&quot;优化模型推理速度与资源占用&quot;,&quot;file&quot;:&quot;llm-ch05.html&quot;},{&quot;no&quot;:6,&quot;title&quot;:&quot;部署架构与API&quot;,&quot;goal&quot;:&quot;设计并实现LLM服务API&quot;,&quot;file&quot;:&quot;llm-ch06.html&quot;},{&quot;no&quot;:7,&quot;title&quot;:&quot;实战：训练小型LLM&quot;,&quot;goal&quot;:&quot;完成一个小型LLM的训练与微调&quot;,&quot;file&quot;:&quot;llm-ch07.html&quot;},{&quot;no&quot;:8,&quot;title&quot;:&quot;实战：生产环境部署&quot;,&quot;goal&quot;:&quot;将训练好的LLM部署到生产环境&quot;,&quot;file&quot;:&quot;llm-ch08.html&quot;}]}' data-chapter="gen-llm-ch3">
 
@@ -23,29 +23,39 @@
   <main class="content">
     <div class="content-inner">
 
-      <header class="chapter-head">
-        <div class="kicker">CHAPTER 03 · 生成课程</div>
+                  <header class="chapter-head">
+        <div class="kicker">CHAPTER 03 · 机器初稿 · 待人审</div>
         <h1>模型训练基础</h1>
+        <p class="lead"><b>本章目标：</b>能够配置并启动LLM训练任务</p>
       </header>
-
-      <p class="lead"><b>本章目标：</b>能够配置并启动LLM训练任务</p>
+<!--flow-v1--><div class="flow">
+        <span class="flow-node">数据准备<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">清洗语料并构建训练集</small></span><span class="flow-arrow">→</span><span class="flow-node">模型配置<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">设定结构、超参与并行策略</small></span><span class="flow-arrow">→</span><span class="flow-node">启动训练<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">提交任务并监控损失曲线</small></span><span class="flow-arrow">→</span><span class="flow-node">评估调优<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">验证效果并迭代参数</small></span>
+        <div class="flow-note">从数据到调优的闭环，四步即可配置并启动LLM训练任务。</div>
+      </div><!--/flow-v1-->
  <h3>训练环境搭建：GPU与分布式</h3>
- <p>要训练大语言模型，首先得把环境搭好。核心是<b>GPU</b>和<b>分布式训练</b>。单卡显存有限，模型大了就得用多卡甚至多机。</p><p>先检查你的GPU：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import torch
-print(torch.cuda.is_available())
-print(torch.cuda.device_count())
-print(torch.cuda.get_device_name(0))</code></pre></div><p>分布式训练常用<b>数据并行</b>（Data Parallelism），每个GPU持有完整模型副本，处理不同数据批次，梯度同步。PyTorch提供<code>DistributedDataParallel</code>（DDP）。启动方式：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python"># 单机多卡启动示例（命令行）
-torchrun --nproc_per_node=4 train.py</code></pre></div><p>在代码中初始化进程组：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import torch.distributed as dist
-dist.init_process_group(backend='nccl')
+ <p>把训练大模型想象成盖一栋摩天大楼：单张GPU就像一台小型搅拌机，能处理小工程，但面对千亿参数的大楼，它很快就会“转不动”。这时我们需要多台搅拌机（多卡）甚至多个工地（多机）协同工作，这就是<b>分布式训练</b>的直觉来源。核心矛盾在于：单卡显存有限（例如24GB的RTX 4090），而一个7B参数的模型仅权重就需要约14GB（FP16），加上梯度、优化器状态和激活值，很容易爆显存。因此，环境搭建的第一步是确认硬件能力。</p><p>在代码层面，先用PyTorch检查GPU是否可用、数量与型号。下面这段代码是任何训练脚本的“体检”步骤，预期输出类似<code>True</code>、<code>4</code>、<code>NVIDIA A100-SXM4-40GB</code>。如果<code>is_available()</code>返回<code>False</code>，说明驱动或CUDA安装有问题，后续训练无从谈起。</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import torch
+print(torch.cuda.is_available())          # 预期输出: True
+print(torch.cuda.device_count())          # 预期输出: 4（假设有4张卡）
+print(torch.cuda.get_device_name(0))      # 预期输出: NVIDIA A100-SXM4-40GB</code></pre></div><p>确认硬件后，分布式训练最常用的是<b>数据并行</b>（Data Parallelism）：每张GPU持有一份完整的模型副本，各自处理不同的数据批次，然后通过通信同步梯度。PyTorch的<code>DistributedDataParallel</code>（DDP）是官方推荐实现。启动时用<code>torchrun</code>指定每台机器的进程数，例如单机4卡：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python"># 命令行启动示例：单机4卡
+torchrun --nproc_per_node=4 train.py</code></pre></div><p>在<code>train.py</code>内部，需要初始化进程组、绑定当前进程到对应GPU，并用DDP包装模型。注意<code>LOCAL_RANK</code>由<code>torchrun</code>自动注入，代表当前进程在本机上的GPU编号。下面是最小初始化骨架：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import os
+import torch
+import torch.distributed as dist
+
+dist.init_process_group(backend='nccl')          # NCCL是NVIDIA GPU间通信后端
 local_rank = int(os.environ['LOCAL_RANK'])
 torch.cuda.set_device(local_rank)
-model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[local_rank])</code></pre></div><p><b>关键结论：</b>分布式训练能线性提升吞吐，但要注意学习率随全局批次大小调整。</p>
+model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[local_rank])</code></pre></div><p><b>关键结论：</b>分布式训练能显著提升吞吐，但并非无条件线性加速。当全局批次大小（每卡批次×卡数）变化时，学习率通常需要按比例调整（例如线性缩放规则），否则可能破坏训练稳定性。此外，通信开销、数据加载瓶颈都会影响实际加速比，需要结合监控判断。</p>
  <h3>损失函数与优化器选择</h3>
- <p>语言模型训练通常用<b>交叉熵损失</b>（CrossEntropyLoss），预测下一个token。PyTorch中：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import torch.nn as nn
-criterion = nn.CrossEntropyLoss(ignore_index=-100)  # 忽略padding</code></pre></div><p>优化器首选<b>AdamW</b>，它修正了权重衰减，适合Transformer。学习率常用预热+余弦衰减。</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from transformers import AdamW, get_cosine_schedule_with_warmup
+ <p>语言模型训练的本质是“猜下一个词”。想象你在读一本小说，每读到一个词之前，模型都要根据前文预测这个词是什么。预测得越准，损失越小。这个“准不准”的度量就是<b>交叉熵损失</b>（CrossEntropyLoss）。它衡量的是模型预测的概率分布与真实下一个token之间的差异。在PyTorch中，交叉熵损失内部已经包含了softmax，所以模型输出logits即可，不需要额外加softmax层。</p><p>实际训练中，序列会有padding（填充）部分，这些位置不参与损失计算。通过<code>ignore_index=-100</code>告诉损失函数忽略标签为-100的位置，这是Hugging Face等库的常见约定。下面代码展示了损失函数的定义方式：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import torch.nn as nn
+criterion = nn.CrossEntropyLoss(ignore_index=-100)  # 忽略padding位置</code></pre></div><p>优化器方面，Transformer类模型首选<b>AdamW</b>。标准Adam将权重衰减混入梯度更新，而AdamW将权重衰减与梯度更新解耦，更符合正则化的本意，训练更稳定。学习率策略上，常用“预热+余弦衰减”：训练初期用较小的学习率逐步升高（预热），避免早期梯度剧烈更新；后期余弦式下降，帮助模型收敛到更平坦的极小值。例如，总训练步数10000步，预热1000步，初始学习率5e-5：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from transformers import AdamW, get_cosine_schedule_with_warmup
 optimizer = AdamW(model.parameters(), lr=5e-5, weight_decay=0.01)
-scheduler = get_cosine_schedule_with_warmup(optimizer, num_warmup_steps=1000, num_training_steps=10000)</code></pre></div><p><b>关键结论：</b>损失函数选交叉熵，优化器选AdamW，学习率要预热。</p>
+scheduler = get_cosine_schedule_with_warmup(
+    optimizer,
+    num_warmup_steps=1000,
+    num_training_steps=10000
+)</code></pre></div><p><b>关键结论：</b>损失函数选交叉熵并忽略padding，优化器选AdamW，学习率采用预热加衰减策略。这三者共同决定了训练能否稳定起步。</p>
  <h3>训练循环与检查点保存</h3>
- <p>训练循环是核心，包括前向传播、计算损失、反向传播、优化器更新。每若干步保存<b>检查点</b>（Checkpoint），防止训练中断丢失进度。</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">model.train()
+ <p>训练循环就像工厂的流水线：取一批数据（前向传播）、计算损失、反向传播求梯度、更新参数，周而复始。每一步的顺序很重要，尤其是<code>optimizer.zero_grad()</code>的位置——如果忘记清零梯度，梯度会累加，导致更新方向错误。下面是一个标准的训练循环骨架，包含前向、损失、反向、更新和定期保存检查点。</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">model.train()
 for epoch in range(epochs):
     for step, batch in enumerate(dataloader):
         inputs = batch['input_ids'].to(device)
@@ -59,42 +69,47 @@ for epoch in range(epochs):
         if step % 100 == 0:
             torch.save({
                 'epoch': epoch,
+                'step': step,
                 'model_state_dict': model.state_dict(),
                 'optimizer_state_dict': optimizer.state_dict(),
+                'scheduler_state_dict': scheduler.state_dict(),
                 'loss': loss.item()
-            }, f'checkpoint-{step}.pt')</code></pre></div><p><b>关键结论：</b>定期保存检查点，包含模型、优化器状态和当前步数。</p>
+            }, f'checkpoint-{step}.pt')</code></pre></div><p>为什么检查点要保存优化器状态和调度器状态？因为AdamW内部维护了每个参数的一阶矩和二阶矩估计，学习率调度器也有当前步数。如果只保存模型权重，恢复训练时优化器会“失忆”，学习率也会从头开始，导致训练曲线出现明显跳变。一个完整的检查点应包含：模型参数、优化器状态、调度器状态、当前epoch和step、以及损失值。这样即使训练中断，也能从断点无缝继续。</p><p><b>关键结论：</b>训练循环的顺序是前向→损失→反向→更新→清零；检查点必须保存模型、优化器、调度器和步数，缺一不可。</p>
  <h3>常见训练问题与调试</h3>
- <p>训练中常遇到<b>损失不下降</b>、<b>梯度爆炸</b>、<b>显存不足</b>。调试方法：</p><ul><li>损失不降：检查学习率、数据标签、模型初始化。</li><li>梯度爆炸：使用梯度裁剪<code>torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)</code>。</li><li>显存不足：减小批次大小、使用梯度累积、混合精度训练。</li></ul><p>混合精度训练示例：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from torch.cuda.amp import autocast, GradScaler
+ <p>训练大模型时，问题往往不是“能不能跑”，而是“跑得对不对”。最常见的三类问题是：损失不下降、梯度爆炸、显存不足。损失不下降时，先别急着改模型，按顺序排查：学习率是否过大或过小、数据标签是否正确对齐、模型初始化是否合理。一个实用的技巧是先用一个极小批次（例如2条样本）过拟合，如果损失都降不下去，说明代码有bug，而不是数据不够。</p><p>梯度爆炸表现为损失突然变成NaN或剧烈震荡。此时可以使用梯度裁剪，将梯度的范数限制在阈值内，例如<code>max_norm=1.0</code>。这相当于给梯度“限速”，防止参数更新步子迈得太大。显存不足则可以通过减小批次大小、使用梯度累积（模拟更大批次）、或混合精度训练来缓解。混合精度用FP16计算前向和反向，用FP32维护主权重，既能省显存又能加速。下面是一个混合精度训练的片段：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from torch.cuda.amp import autocast, GradScaler
 scaler = GradScaler()
 with autocast():
     outputs = model(inputs, labels=labels)
     loss = outputs.loss
 scaler.scale(loss).backward()
 scaler.step(optimizer)
-scaler.update()</code></pre></div><p><b>关键结论：</b>梯度裁剪和混合精度是稳定训练的利器。</p>
+scaler.update()</code></pre></div><p>注意，使用混合精度时，梯度裁剪应在<code>scaler.unscale_(optimizer)</code>之后进行，否则裁剪的是被缩放过的梯度，阈值会失真。调试时建议打开日志，记录损失、学习率、梯度范数，形成“训练仪表盘”。<b>关键结论：</b>梯度裁剪和混合精度是稳定训练的利器，但要注意使用顺序和缩放细节。</p>
  <h3>常见误区</h3>
  <ul>
- <li>学习率越大训练越快：过大的学习率会导致损失震荡甚至发散，需要预热和衰减。</li>
- <li>检查点只保存模型权重就够了：恢复训练还需要优化器状态、学习率调度器状态和当前步数。</li>
- <li>分布式训练一定比单卡快：如果通信开销大或批次太小，加速比可能很低，甚至变慢。</li>
+  <li>错误理解：学习率越大训练越快。→ 后果：过大的学习率会导致损失震荡甚至发散，模型无法收敛。→ 正确做法：使用预热（warmup）让学习率从较小值逐步升高，再配合余弦衰减等策略，并根据全局批次大小调整学习率。</li>
+  <li>错误理解：检查点只保存模型权重就够了。→ 后果：恢复训练时优化器状态和调度器状态丢失，学习率重置，训练曲线出现跳变，甚至需要从头训练。→ 正确做法：保存模型参数、优化器状态、调度器状态、当前epoch和step，以及损失值。</li>
+  <li>错误理解：分布式训练一定比单卡快。→ 后果：如果通信开销大或每卡批次太小，加速比可能很低，甚至比单卡还慢。→ 正确做法：监控通信与计算占比，适当增大每卡批次，使用高效的通信后端（如NCCL），并评估实际加速比。</li>
  </ul>
  <h3>自测</h3>
- <details class="quiz"><summary>为什么训练大语言模型通常使用AdamW而不是标准Adam？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>AdamW将权重衰减与梯度更新解耦，更适用于Transformer等模型，能防止过拟合且训练更稳定。</p></div></details>
- <details class="quiz"><summary>保存检查点时除了模型参数，还应该保存什么？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>还应保存优化器状态、学习率调度器状态、当前epoch和step，以便精确恢复训练。</p></div></details>
+ <details class="quiz"><summary>为什么训练大语言模型通常使用AdamW而不是标准Adam？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>标准Adam将权重衰减直接加到梯度上，相当于在梯度更新中混入了正则项，这与自适应学习率的缩放耦合在一起，导致权重衰减的效果不纯粹。AdamW将权重衰减与梯度更新解耦，单独对参数做衰减，更符合正则化的本意。对于Transformer类模型，这种解耦能带来更稳定的训练和更好的泛化，因此成为大语言模型训练的默认选择。</p></div></details>
+ <details class="quiz"><summary>保存检查点时除了模型参数，还应该保存什么？为什么？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>还应保存优化器状态（如AdamW的一阶矩和二阶矩）、学习率调度器状态、当前epoch和step。因为恢复训练时，优化器需要这些状态来继续正确的参数更新，调度器需要当前步数来计算学习率。如果只保存模型权重，优化器会重新初始化，学习率也会从头开始，导致训练曲线出现跳变，甚至影响最终效果。</p></div></details>
+ <details class="quiz"><summary>在混合精度训练中，为什么梯度裁剪要在scaler.unscale_(optimizer)之后进行？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>混合精度训练使用GradScaler对损失进行放大，以避免FP16下梯度下溢。因此反向传播得到的梯度是被放大过的。如果直接对这些梯度做裁剪，裁剪阈值（如1.0）实际上是作用在放大后的梯度上，导致裁剪过猛或失效。正确做法是先调用scaler.unscale_(optimizer)将梯度还原到真实尺度，再进行裁剪，最后调用scaler.step(optimizer)和scaler.update()。</p></div></details>
  <h3>动手练习（带参考方案）</h3>
- <details class="fold"><summary>动手练习 · 编写一个简单的训练循环，使用PyTorch训练一个线性回归模型，要求包含损失函数、优化器、每10步打…</summary><div class="fold-body"><p><b>任务：</b>编写一个简单的训练循环，使用PyTorch训练一个线性回归模型，要求包含损失函数、优化器、每10步打印损失并保存检查点。</p><p><b>参考方案：</b></p>import torch
+ <details class="fold"><summary>练习 · 编写一个完整的训练脚本，使用PyTorch训练一个线性回归模型。要求：1）生成100条带噪声的线性数据；2）使用均方误差…</summary><div class="fold-body"><p><b>任务：</b>编写一个完整的训练脚本，使用PyTorch训练一个线性回归模型。要求：1）生成100条带噪声的线性数据；2）使用均方误差损失和AdamW优化器；3）每10个epoch打印损失并保存检查点（包含模型、优化器状态和epoch）；4）训练100个epoch后，打印最终损失。验收标准：脚本可独立运行，输出损失逐渐下降，并在当前目录生成多个checkpoint文件。</p><p><b>参考方案：</b></p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import torch
 import torch.nn as nn
 import torch.optim as optim
 
-# 数据
+# 1. 生成数据：y = 3x + 2 + 噪声
+torch.manual_seed(42)
 X = torch.randn(100, 1)
 y = 3 * X + 2 + 0.1 * torch.randn(100, 1)
 
-# 模型
+# 2. 定义模型、损失函数和优化器
 model = nn.Linear(1, 1)
 criterion = nn.MSELoss()
 optimizer = optim.AdamW(model.parameters(), lr=0.01)
 
+# 3. 训练循环
 for epoch in range(100):
     model.train()
     optimizer.zero_grad()
@@ -102,6 +117,7 @@ for epoch in range(100):
     loss = criterion(outputs, y)
     loss.backward()
     optimizer.step()
+
     if epoch % 10 == 0:
         print(f'Epoch {epoch}, Loss: {loss.item():.4f}')
         torch.save({
@@ -109,11 +125,13 @@ for epoch in range(100):
             'model_state_dict': model.state_dict(),
             'optimizer_state_dict': optimizer.state_dict(),
             'loss': loss.item()
-        }, f'checkpoint-{epoch}.pt')</div></details>
+        }, f'checkpoint-{epoch}.pt')
+
+print(f'Final Loss: {loss.item():.4f}')</code></pre></div></div></details>
     </div>
   </main>
 </div>
 
-<script src="assets/js/app.js?v=24"></script>
+<script src="assets/js/app.js?v=28"></script>
 </body>
 </html>

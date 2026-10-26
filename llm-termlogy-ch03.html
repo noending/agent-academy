@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="LLM术语精通课 第3章。">
 <title>第3章 · LLM术语精通课 | Agent 学院</title>
-<link rel="stylesheet" href="assets/css/style.css?v=22">
+<link rel="stylesheet" href="assets/css/style.css?v=24">
 </head>
 <body data-gen-course='{&quot;skill&quot;:&quot;llm-termlogy&quot;,&quot;title&quot;:&quot;LLM术语精通课&quot;,&quot;topic&quot;:&quot;由课题「LLM术语学习到精通」自动生成。适合AI初学者或需读懂LLM术语与评测的从业者。从基础概念到实战部署，掌握术语、模型评测与硬件评测，能独立分析技术文档。&quot;,&quot;chapters&quot;:[{&quot;no&quot;:1,&quot;title&quot;:&quot;LLM基础概念&quot;,&quot;goal&quot;:&quot;理解LLM基本定义、发展历程与核心能力&quot;,&quot;file&quot;:&quot;llm-termlogy-ch01.html&quot;},{&quot;no&quot;:2,&quot;title&quot;:&quot;核心术语解析&quot;,&quot;goal&quot;:&quot;掌握LLM常见术语如Transformer、注意力机制等&quot;,&quot;file&quot;:&quot;llm-termlogy-ch02.html&quot;},{&quot;no&quot;:3,&quot;title&quot;:&quot;模型评测方法&quot;,&quot;goal&quot;:&quot;学会阅读和解读LLM模型评测报告与基准&quot;,&quot;file&quot;:&quot;llm-termlogy-ch03.html&quot;},{&quot;no&quot;:4,&quot;title&quot;:&quot;硬件评测实战&quot;,&quot;goal&quot;:&quot;能看懂GPU等硬件评测指标并选型&quot;,&quot;file&quot;:&quot;llm-termlogy-ch04.html&quot;},{&quot;no&quot;:5,&quot;title&quot;:&quot;部署与优化实战&quot;,&quot;goal&quot;:&quot;动手部署LLM并优化推理性能&quot;,&quot;file&quot;:&quot;llm-termlogy-ch05.html&quot;}]}' data-chapter="gen-llm-termlogy-ch3">
 
@@ -23,19 +23,22 @@
   <main class="content">
     <div class="content-inner">
 
-      <header class="chapter-head">
-        <div class="kicker">CHAPTER 03 · 生成课程</div>
+                  <header class="chapter-head">
+        <div class="kicker">CHAPTER 03 · 机器初稿 · 待人审</div>
         <h1>模型评测方法</h1>
+        <p class="lead"><b>本章目标：</b>学会阅读和解读LLM模型评测报告与基准</p>
       </header>
-
-      <p class="lead"><b>本章目标：</b>学会阅读和解读LLM模型评测报告与基准</p>
+<!--flow-v1--><div class="flow">
+        <span class="flow-node">评测报告<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">先看榜单与分数构成</small></span><span class="flow-arrow">→</span><span class="flow-node">基准拆解<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">分清任务类型与指标</small></span><span class="flow-arrow">→</span><span class="flow-node">指标解读<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">准确率之外看局限</small></span><span class="flow-arrow">→</span><span class="flow-node">横向对比<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">同条件比模型差异</small></span><span class="flow-arrow">→</span><span class="flow-node">结论判断<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">结合场景选型决策</small></span>
+        <div class="flow-note">读评测报告要按基准、指标、对比、场景四步走，别只看总分。</div>
+      </div><!--/flow-v1-->
  <h3>常见评测基准：从GLUE到HELM</h3>
- <p>要读懂模型评测报告，首先得认识那些反复出现的基准名字。它们就像考试卷，不同试卷考的能力不一样。</p><ul><li><b>GLUE</b>（General Language Understanding Evaluation）：2018年推出的自然语言理解“高考”，包含9个任务，如情感分析、句子相似度、自然语言推理。它让不同模型有了统一比较标准。</li><li><b>SuperGLUE</b>：GLUE的升级版，任务更难，人类基线更高，用来区分顶尖模型。</li><li><b>MMLU</b>（Massive Multitask Language Understanding）：57个学科的选择题，从数学到法律，测的是模型的知识广度和推理能力，是当前大模型常报的指标。</li><li><b>HELM</b>（Holistic Evaluation of Language Models）：不只测准确率，还测鲁棒性、公平性、效率等，强调全方位评估。</li></ul><p>读报告时，先看它用了哪些基准。<b>基准不同，分数不可直接比较</b>。比如MMLU 80分和GLUE 80分，含义完全不同。</p>
+ <p>想象你拿到一份体检报告，上面有血常规、心电图、胸片等不同项目。每个项目测的是身体的不同系统，你不能因为“血常规得分80”就推断“心脏也健康”。LLM的评测基准也是同样的道理：<b>每个基准都是一张针对特定能力的“考卷”，分数只在同一张考卷内才有意义</b>。读报告的第一步，不是看分数高低，而是先问“它考的是什么”。</p><p>从历史脉络看，2018年的<b>GLUE</b>（General Language Understanding Evaluation）是自然语言理解领域的第一个统一“高考”，包含9个任务，如情感分析（判断影评是正面还是负面）、句子相似度（判断两句话是否同义）、自然语言推理（判断前提能否推出假设）。它让不同模型第一次有了可横向比较的标尺。随着模型能力提升，GLUE的分数逐渐饱和（顶尖模型接近人类基线），于是推出了更难的<b>SuperGLUE</b>，任务更难、人类基线更高，用来区分顶尖模型之间的差距。</p><p>到了大模型时代，<b>MMLU</b>（Massive Multitask Language Understanding）成为最常被引用的指标之一。它包含57个学科的选择题，从高中数学到法律、医学，测的是模型的知识广度和推理能力。例如一道MMLU题可能问“在合同法中，要约在什么情况下失效”，模型需要从四个选项中选出正确答案。而<b>HELM</b>（Holistic Evaluation of Language Models）则跳出了“单一准确率”的思路，它不只测准确率，还测鲁棒性（输入扰动后分数掉多少）、公平性（不同群体上的表现差异）、效率（推理成本）等，强调全方位评估。</p><p>关键结论：<b>基准不同，分数不可直接比较</b>。MMLU 80分和GLUE 80分含义完全不同——前者代表57学科选择题的正确率，后者是9个理解任务的综合分。读报告时，先看它用了哪些基准，再判断这些基准是否覆盖了你关心的能力。</p>
  <h3>评测指标：准确率、困惑度、BLEU、ROUGE、F1</h3>
- <p>指标是分数的计算方式，理解它们才能知道分数代表什么。</p><ul><li><b>准确率（Accuracy）</b>：分类任务中最直观，预测对的样本比例。但类别不平衡时会失真。</li><li><b>困惑度（Perplexity）</b>：语言模型常用，衡量模型对文本的“惊讶程度”。<b>越低越好</b>，表示模型越能预测下一个词。</li><li><b>BLEU</b>：机器翻译常用，比较生成文本和参考文本的n-gram重叠，<b>越高越好</b>，但只关注精确率。</li><li><b>ROUGE</b>：摘要任务常用，关注召回率，看参考文本中有多少被生成文本覆盖。</li><li><b>F1</b>：精确率和召回率的调和平均，适合不平衡分类。</li></ul><p>下面用Python快速算一下BLEU和困惑度，感受一下。</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from nltk.translate.bleu_score import sentence_bleu
+ <p>如果说基准是“考卷”，那么指标就是“阅卷规则”。同一张考卷，用不同的阅卷规则算分，结果可能大相径庭。理解指标，才能知道一个分数到底代表什么。</p><p><b>准确率（Accuracy）</b>是最直观的：预测对的样本比例。但它有个陷阱——类别不平衡时会失真。比如一个二分类任务中99%的样本是负类，模型全部预测为负类也能拿到99%的准确率，但实际上它什么都没学到。这时候就需要<b>F1</b>：它是精确率（预测为正的样本中真正为正的比例）和召回率（真正为正的样本中被预测出来的比例）的调和平均，能更好地反映模型在不平衡数据上的真实表现。</p><p><b>困惑度（Perplexity）</b>是语言模型常用的指标，衡量模型对文本的“惊讶程度”。直觉上，如果模型对下一个词的预测概率越高，困惑度越低，说明模型越“懂”这段文本。<b>越低越好</b>。但要注意：不同词表大小的模型，困惑度不可直接比较，因为词表越大，每个词的概率分母越大，困惑度的基准线就不同。</p><p><b>BLEU</b>用于机器翻译，比较生成文本和参考文本的n-gram重叠，<b>越高越好</b>，但它只关注精确率（生成的词有多少出现在参考中），不关注召回率，也不理解语义。<b>ROUGE</b>用于摘要任务，关注召回率（参考文本中有多少被生成文本覆盖）。两者都是基于表面重叠的指标，现在大模型评测更看重人工评估或更强指标。</p><p>下面用Python快速算一下BLEU和困惑度，感受一下输入与输出。输入是一对参考/候选句子和一组词概率，输出是BLEU分数和困惑度值。</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from nltk.translate.bleu_score import sentence_bleu
 import math
 
-# BLEU示例
+# BLEU示例：候选与参考完全一致
 reference = [['the', 'cat', 'is', 'on', 'the', 'mat']]
 candidate = ['the', 'cat', 'is', 'on', 'the', 'mat']
 print('BLEU:', sentence_bleu(reference, candidate))  # 完全匹配，接近1
@@ -43,9 +46,9 @@ print('BLEU:', sentence_bleu(reference, candidate))  # 完全匹配，接近1
 # 困惑度示例：假设模型对4个词的概率
 probs = [0.8, 0.6, 0.9, 0.7]
 perplexity = math.exp(-sum(math.log(p) for p in probs) / len(probs))
-print('Perplexity:', perplexity)  # 越低越好</code></pre></div><p>注意：BLEU和ROUGE都是基于表面重叠，不理解语义，所以现在大模型评测更看重人工评估或更强指标。</p>
+print('Perplexity:', perplexity)  # 越低越好</code></pre></div><p>运行后你会看到BLEU接近1（完全匹配），困惑度是一个大于1的数值。如果把probs改成[0.1, 0.1, 0.1, 0.1]，困惑度会显著升高，直观体现“模型越不确定，困惑度越高”。</p>
  <h3>评测方法：零样本、少样本、微调评测</h3>
- <p>同一个模型，用不同方式提问，分数可能差很多。评测方法决定了模型“开卷”程度。</p><ul><li><b>零样本（Zero-shot）</b>：不给任何示例，直接问。考验模型的泛化能力。</li><li><b>少样本（Few-shot）</b>：在问题前给几个示例，让模型模仿。通常能提升分数，但示例选择会影响结果。</li><li><b>微调评测（Fine-tuning）</b>：用任务数据训练后再测。分数最高，但不再是“通用能力”的体现。</li></ul><p>读报告时，一定要看它标注的是zero-shot还是few-shot。<b>不同设定下的分数不能直接比</b>。比如某模型MMLU 5-shot 85分，另一个0-shot 80分，不能简单说前者更强。</p><p>下面是一个模拟少样本提示的代码，展示如何构造示例。</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">def build_few_shot_prompt(question, examples):
+ <p>同一个学生，开卷考试和闭卷考试的成绩能直接比吗？显然不能。LLM评测也一样：<b>评测方法决定了模型“开卷”的程度</b>，不同设定下的分数不能直接比较。</p><p><b>零样本（Zero-shot）</b>是不给任何示例，直接问模型。比如直接输入“判断这句话的情感：这部电影太好看了”，考验的是模型的泛化能力。<b>少样本（Few-shot）</b>是在问题前给几个示例，让模型模仿。例如先给两个“Q: 2+2=? A: 4”和“Q: 3+5=? A: 8”的示例，再问“Q: 7+1=? A:”，模型通常能答对。少样本通常能提升分数，但示例的选择和数量会显著影响结果——给3个示例和给5个示例，分数可能差好几个百分点。<b>微调评测（Fine-tuning）</b>是用任务数据训练后再测，分数最高，但这时测的已经不是“通用能力”，而是“针对该任务训练后的能力”。</p><p>读报告时，一定要看它标注的是zero-shot还是few-shot，以及示例数量。比如某模型MMLU 5-shot 85分，另一个0-shot 80分，不能简单说前者更强——5-shot本身就可能带来提升。关键结论：<b>比较模型时，必须保证评测设定一致</b>。</p><p>下面是一个模拟少样本提示的代码，展示如何构造示例。输入是一个问题和示例列表，输出是拼接好的提示字符串。</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">def build_few_shot_prompt(question, examples):
     prompt = ''
     for ex in examples:
         prompt += f"Q: {ex['q']}\nA: {ex['a']}\n"
@@ -56,24 +59,45 @@ examples = [
     {'q': '2+2=?', 'a': '4'},
     {'q': '3+5=?', 'a': '8'}
 ]
-print(build_few_shot_prompt('7+1=?', examples))</code></pre></div>
+print(build_few_shot_prompt('7+1=?', examples))</code></pre></div><p>运行后会输出包含两个示例和最终问题的完整提示。你可以尝试改变examples的数量，观察提示长度和结构的变化——这正是少样本评测中“示例数量影响结果”的直观体现。</p>
  <h3>评测报告解读：如何比较不同模型的性能</h3>
- <p>拿到一份评测报告，不要只看总分。按下面步骤拆解：</p><ol><li><b>看基准和指标</b>：是MMLU还是GLUE？是准确率还是F1？</li><li><b>看评测设定</b>：zero-shot、few-shot还是微调？示例数量多少？</li><li><b>看数据版本</b>：同一基准可能有不同版本，比如MMLU有原始版和精简版。</li><li><b>看对比对象</b>：和谁比？是否同规模、同训练数据？</li><li><b>看细分任务</b>：总分高不代表每个子任务都好，可能偏科。</li></ol><p><b>结论：比较模型时，必须保证基准、指标、评测设定一致，否则分数没有可比性。</b>报告里常说的“SOTA”也要看具体条件。</p><p>例如，某报告说模型A在MMLU上达到90%，但没说是5-shot还是0-shot，也没说是否用了外部工具，这种分数就要谨慎看待。</p>
+ <p>拿到一份评测报告，最危险的做法就是只看总分然后下结论。正确的做法是像侦探一样逐层拆解。下面是一个可操作的检查清单，按顺序过一遍，能避免大多数误读。</p><ol><li><b>看基准和指标</b>：是MMLU还是GLUE？是准确率还是F1？不同基准测的能力不同，不同指标算分方式不同。</li><li><b>看评测设定</b>：zero-shot、few-shot还是微调？示例数量多少？这是最容易被忽略、也最容易造成误比较的一层。</li><li><b>看数据版本</b>：同一基准可能有不同版本，比如MMLU有原始版和精简版，测试集不同，分数不可比。</li><li><b>看对比对象</b>：和谁比？是否同规模、同训练数据？拿一个70B模型和7B模型比分数，本身就不公平。</li><li><b>看细分任务</b>：总分高不代表每个子任务都好，可能偏科。比如某模型MMLU总分高，但数学子项很低，这在报告里可能被总分掩盖。</li></ol><p>举个具体例子：某报告说模型A在MMLU上达到90%，但没说是5-shot还是0-shot，也没说是否用了外部工具。这种分数就要谨慎看待——如果它是5-shot且用了工具，而模型B是0-shot纯模型，那90%和80%的差距可能大部分来自设定差异，而非模型能力本身。</p><p>关键结论：<b>比较模型时，必须保证基准、指标、评测设定一致，否则分数没有可比性</b>。报告里常说的“SOTA”也要看具体条件——是在什么基准、什么设定、什么数据版本下取得的SOTA。</p>
  <h3>常见误区</h3>
  <ul>
- <li>困惑度越低越好，但不同词表大小的模型困惑度不可直接比较。</li>
- <li>BLEU分数高不代表翻译质量一定好，它只衡量n-gram重叠，忽略语义和流畅度。</li>
- <li>零样本分数低不代表模型差，可能只是不擅长该提示格式；少样本分数高也可能因为示例泄露了答案。</li>
+  <li>错误理解：困惑度越低越好，所以可以直接比较不同模型的困惑度。→ 会导致什么后果：不同词表大小的模型困惑度基准线不同，直接比较会得出错误结论，比如误以为词表小的模型更差。→ 正确做法：只在相同词表、相同分词器的模型之间比较困惑度，跨模型比较时应看其他指标或统一分词后重算。</li>
+  <li>错误理解：BLEU分数高就代表翻译质量一定好。→ 会导致什么后果：BLEU只衡量n-gram重叠，忽略语义和流畅度，可能把“词序混乱但关键词齐全”的译文判为高分，导致对模型能力的误判。→ 正确做法：结合人工评估或语义指标（如COMET等，待核实具体版本）综合判断，不单独依赖BLEU下结论。</li>
+  <li>错误理解：零样本分数低就说明模型差，少样本分数高就说明模型强。→ 会导致什么后果：忽略评测设定差异，把提示格式的适应能力误当成模型能力，做出错误的模型选型。→ 正确做法：在相同设定下比较，并注意少样本示例是否泄露了答案或与测试集重叠，必要时查看报告中的设定说明。</li>
  </ul>
  <h3>自测</h3>
- <details class="quiz"><summary>MMLU和GLUE的主要区别是什么？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>MMLU是57个学科的选择题，侧重知识广度和推理；GLUE是9个自然语言理解任务，侧重句子级理解。两者基准不同，分数不可直接比较。</p></div></details>
- <details class="quiz"><summary>为什么说不同评测设定下的分数不能直接比较？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>因为零样本、少样本、微调评测给模型的信息量不同。少样本通常比零样本分数高，微调更高，所以必须看报告标注的设定是否一致。</p></div></details>
+ <details class="quiz"><summary>MMLU和GLUE的主要区别是什么？为什么它们的分数不能直接比较？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>推理过程：先看任务构成——MMLU是57个学科的选择题，测知识广度和推理；GLUE是9个自然语言理解任务（情感分析、句子相似度、自然语言推理等），测句子级理解。再看评分方式——MMLU通常是选择题正确率，GLUE是多个任务的综合分。两者考的能力不同、算分方式不同，所以80分在MMLU和GLUE中代表的含义完全不同，不能直接比较。正确做法是只在同一基准内比较分数。</p></div></details>
+ <details class="quiz"><summary>为什么说不同评测设定下的分数不能直接比较？请举一个具体场景说明。</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>推理过程：评测设定决定了模型获得的信息量。零样本不给示例，少样本给几个示例，微调用任务数据训练。信息量越多，模型通常表现越好。场景：模型A在MMLU 5-shot上85分，模型B在MMLU 0-shot上80分。5-shot本身可能带来提升，所以A的高分不能直接归因于模型能力更强。正确做法是查找B在5-shot下的分数或A在0-shot下的分数，在相同设定下比较；如果无法统一，应说明差异，不能简单下结论。</p></div></details>
+ <details class="quiz"><summary>一个模型在类别不平衡的二分类任务上准确率达到99%，为什么这个分数可能具有误导性？应该看什么指标？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>推理过程：假设负类占99%，模型全部预测为负类，准确率就是99%，但它没有识别出任何正类，实际毫无用处。准确率在不平衡数据上会被多数类主导。应该看F1，因为F1是精确率和召回率的调和平均，能同时反映模型对正类的识别能力。如果精确率和召回率都很低，F1也会很低，从而暴露模型的真实表现。</p></div></details>
  <h3>动手练习（带参考方案）</h3>
- <details class="fold"><summary>动手练习 · 假设你看到两份模型评测报告：模型A在MMLU 5-shot上准确率85%，模型B在MMLU 0-sh…</summary><div class="fold-body"><p><b>任务：</b>假设你看到两份模型评测报告：模型A在MMLU 5-shot上准确率85%，模型B在MMLU 0-shot上准确率80%。请分析能否直接说模型A更强？并给出你的比较建议。</p><p><b>参考方案：</b></p>不能直接说模型A更强，因为评测设定不同：A是5-shot，B是0-shot。少样本通常能提升分数，所以A的高分可能部分来自示例。建议：1) 查找模型B在5-shot下的分数，或模型A在0-shot下的分数，在相同设定下比较；2) 确认MMLU版本和测试集是否一致；3) 查看细分学科表现，避免偏科；4) 如果无法统一设定，应说明差异，不能简单下结论。</div></details>
+ <details class="fold"><summary>练习 · 假设你看到两份模型评测报告：模型A在MMLU 5-shot上准确率85%，模型B在MMLU 0-shot上准确率80%。…</summary><div class="fold-body"><p><b>任务：</b>假设你看到两份模型评测报告：模型A在MMLU 5-shot上准确率85%，模型B在MMLU 0-shot上准确率80%。请分析能否直接说模型A更强？并给出你的比较建议。要求：写一段分析文字，并用Python代码模拟一个简单的比较框架，输出比较结论。</p><p><b>参考方案：</b></p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python"># 比较框架：检查评测设定是否一致，再决定能否直接比较
+model_a = {'name': 'A', 'benchmark': 'MMLU', 'setting': '5-shot', 'score': 85}
+model_b = {'name': 'B', 'benchmark': 'MMLU', 'setting': '0-shot', 'score': 80}
+
+def can_compare(a, b):
+    if a['benchmark'] != b['benchmark']:
+        return False, '基准不同，不可直接比较'
+    if a['setting'] != b['setting']:
+        return False, f"评测设定不同（{a['setting']} vs {b['setting']}），不可直接比较"
+    return True, '基准和设定一致，可以比较'
+
+ok, reason = can_compare(model_a, model_b)
+print(f"能否直接比较: {ok}")
+print(f"原因: {reason}")
+
+if not ok:
+    print('建议: 1) 查找B在5-shot下的分数或A在0-shot下的分数，统一设定后比较；')
+    print('      2) 确认MMLU版本和测试集是否一致；')
+    print('      3) 查看细分学科表现，避免偏科；')
+    print('      4) 如果无法统一设定，应说明差异，不能简单下结论。')
+</code></pre></div><p>运行后会输出“能否直接比较: False”以及原因和建议。这段代码把比较前的检查逻辑固化下来，避免凭直觉下结论。</p></div></details>
     </div>
   </main>
 </div>
 
-<script src="assets/js/app.js?v=24"></script>
+<script src="assets/js/app.js?v=28"></script>
 </body>
 </html>

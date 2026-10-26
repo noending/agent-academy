@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="LLM训练到部署 第8章。">
 <title>第8章 · LLM训练到部署 | Agent 学院</title>
-<link rel="stylesheet" href="assets/css/style.css?v=22">
+<link rel="stylesheet" href="assets/css/style.css?v=24">
 </head>
 <body data-gen-course='{&quot;skill&quot;:&quot;llm&quot;,&quot;title&quot;:&quot;LLM训练到部署&quot;,&quot;topic&quot;:&quot;由课题「LLM从训练到部署」自动生成。本课程适合对LLM感兴趣的开发者与运维人员，从零开始掌握大语言模型训练、微调、优化与部署全流程，最终能独立完成生产级部署。&quot;,&quot;chapters&quot;:[{&quot;no&quot;:1,&quot;title&quot;:&quot;LLM基础概念&quot;,&quot;goal&quot;:&quot;理解LLM核心概念与工作原理&quot;,&quot;file&quot;:&quot;llm-ch01.html&quot;},{&quot;no&quot;:2,&quot;title&quot;:&quot;数据准备与预处理&quot;,&quot;goal&quot;:&quot;掌握构建高质量训练数据集的方法&quot;,&quot;file&quot;:&quot;llm-ch02.html&quot;},{&quot;no&quot;:3,&quot;title&quot;:&quot;模型训练基础&quot;,&quot;goal&quot;:&quot;能够配置并启动LLM训练任务&quot;,&quot;file&quot;:&quot;llm-ch03.html&quot;},{&quot;no&quot;:4,&quot;title&quot;:&quot;微调与对齐&quot;,&quot;goal&quot;:&quot;使用微调技术适配下游任务&quot;,&quot;file&quot;:&quot;llm-ch04.html&quot;},{&quot;no&quot;:5,&quot;title&quot;:&quot;模型优化与压缩&quot;,&quot;goal&quot;:&quot;优化模型推理速度与资源占用&quot;,&quot;file&quot;:&quot;llm-ch05.html&quot;},{&quot;no&quot;:6,&quot;title&quot;:&quot;部署架构与API&quot;,&quot;goal&quot;:&quot;设计并实现LLM服务API&quot;,&quot;file&quot;:&quot;llm-ch06.html&quot;},{&quot;no&quot;:7,&quot;title&quot;:&quot;实战：训练小型LLM&quot;,&quot;goal&quot;:&quot;完成一个小型LLM的训练与微调&quot;,&quot;file&quot;:&quot;llm-ch07.html&quot;},{&quot;no&quot;:8,&quot;title&quot;:&quot;实战：生产环境部署&quot;,&quot;goal&quot;:&quot;将训练好的LLM部署到生产环境&quot;,&quot;file&quot;:&quot;llm-ch08.html&quot;}]}' data-chapter="gen-llm-ch8">
 
@@ -23,14 +23,17 @@
   <main class="content">
     <div class="content-inner">
 
-      <header class="chapter-head">
-        <div class="kicker">CHAPTER 08 · 生成课程</div>
+                  <header class="chapter-head">
+        <div class="kicker">CHAPTER 08 · 机器初稿 · 待人审</div>
         <h1>实战：生产环境部署</h1>
+        <p class="lead"><b>本章目标：</b>将训练好的LLM部署到生产环境</p>
       </header>
-
-      <p class="lead"><b>本章目标：</b>将训练好的LLM部署到生产环境</p>
+<!--flow-v1--><div class="flow">
+        <span class="flow-node">模型导出<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">训练权重转推理格式</small></span><span class="flow-arrow">→</span><span class="flow-node">推理服务<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">高并发低延迟API上线</small></span><span class="flow-arrow">→</span><span class="flow-node">容器编排<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">多副本弹性伸缩部署</small></span><span class="flow-arrow">→</span><span class="flow-node">监控告警<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">指标日志实时反馈</small></span><span class="flow-arrow">→</span><span class="flow-node">迭代回滚<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">异常快速回退再优化</small></span>
+        <div class="flow-note">生产部署是导出、服务、编排、监控、回滚的闭环，监控反馈驱动迭代。</div>
+      </div><!--/flow-v1-->
  <h3>容器化与Kubernetes部署</h3>
- <p>把训练好的LLM部署到生产环境，第一步就是容器化。Docker能把模型、依赖、代码打包成一个镜像，保证在任何环境都能一致运行。对于LLM，镜像通常包含推理框架（如vLLM、TGI）、模型权重和启动脚本。</p><p>一个最小化的Dockerfile示例：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python"># 使用官方Python镜像作为基础
+ <p>想象你训练好的LLM是一个精密仪器，而生产环境是各种不同的实验室。容器化就像给这个仪器配了一个标准化的便携箱：无论搬到哪个实验室，打开箱子就能用，因为箱子里已经装好了所有必需的零件和说明书。Docker镜像就是这个便携箱，它把模型权重、推理框架（如vLLM、TGI）、Python依赖和启动脚本全部打包在一起，保证从开发机到生产集群的行为完全一致。</p><p>具体到LLM，一个典型的镜像会包含：基础Python环境、推理框架、模型权重文件（可能几GB到几十GB）、以及一个HTTP服务入口。下面是一个最小化的Dockerfile示例，它基于<code>python:3.10-slim</code>，安装vLLM和FastAPI，并把本地<code>./model</code>目录复制进镜像。注意<code>COPY</code>指令会把模型权重固化到镜像层中，这意味着镜像体积会很大，生产环境常把权重放在对象存储或PVC中挂载，而不是直接打进镜像（待核实具体最佳实践）。</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python"># 使用官方Python镜像作为基础
 FROM python:3.10-slim
 
 # 安装依赖
@@ -48,7 +51,7 @@ WORKDIR /app
 EXPOSE 8000
 
 # 启动服务
-CMD ["python", "server.py"]</code></pre></div><p>对应的<code>server.py</code>可以这样写：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from vllm import LLM, SamplingParams
+CMD ["python", "server.py"]</code></pre></div><p>对应的<code>server.py</code>用FastAPI暴露一个<code>/generate</code>接口，内部调用vLLM的<code>LLM.generate</code>。这里有一个关键细节：<code>LLM(model="/app/model")</code>在应用启动时加载模型，会占用大量显存，因此这个初始化只应发生一次，而不是每个请求都加载。下面的代码在模块级别创建<code>llm</code>实例，正是为了复用。</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from vllm import LLM, SamplingParams
 from fastapi import FastAPI
 
 app = FastAPI()
@@ -58,8 +61,7 @@ llm = LLM(model="/app/model")
 async def generate(prompt: str):
     sampling_params = SamplingParams(temperature=0.7, max_tokens=100)
     outputs = llm.generate([prompt], sampling_params)
-    return {"text": outputs[0].outputs[0].text}</code></pre></div><p>构建并运行：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">docker build -t llm-server .
-docker run -p 8000:8000 --gpus all llm-server</code></pre></div><p>当需要横向扩展时，Kubernetes（K8s）是首选。你需要定义Deployment和Service。Deployment管理Pod副本，Service提供稳定访问入口。对于GPU资源，需要在Pod中声明<code>nvidia.com/gpu</code>。</p><p>一个简单的Deployment YAML：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">apiVersion: apps/v1
+    return {"text": outputs[0].outputs[0].text}</code></pre></div><p>构建并运行只需两条命令：<code>docker build -t llm-server .</code> 和 <code>docker run -p 8000:8000 --gpus all llm-server</code>。其中<code>--gpus all</code>把宿主机的GPU透传给容器，否则vLLM会因找不到CUDA设备而失败。运行后，向<code>http://localhost:8000/generate</code>发送POST请求，预期返回JSON格式的生成文本。</p><p>当单机扛不住流量时，Kubernetes（K8s）负责横向扩展。你可以把Deployment理解成一个“副本管理员”：它声明“我要2个完全相同的Pod”，K8s就会持续确保这个数量。Service则像一个固定的前台电话，无论后端Pod如何增减，调用方始终拨同一个号码。对于GPU资源，必须在Pod的<code>resources.limits</code>中声明<code>nvidia.com/gpu: 1</code>，并且集群需要安装NVIDIA设备插件，否则调度器不会把Pod放到有GPU的节点上。</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: llm-deployment
@@ -80,12 +82,12 @@ spec:
         - containerPort: 8000
         resources:
           limits:
-            nvidia.com/gpu: 1</code></pre></div><p><b>关键点：</b>容器化保证环境一致性，K8s提供弹性伸缩和高可用。生产环境建议使用Helm管理复杂配置。</p>
+            nvidia.com/gpu: 1</code></pre></div><p><b>关键点：</b>容器化保证环境一致性，K8s提供弹性伸缩和高可用。生产环境建议使用Helm管理复杂配置，因为手写YAML在服务数量增多后极易出错。</p>
  <h3>监控与日志收集</h3>
- <p>部署后，必须监控服务的健康状态和性能指标。常用的监控栈是Prometheus + Grafana。Prometheus负责采集指标，Grafana负责可视化。对于LLM服务，关键指标包括：请求延迟、吞吐量、GPU利用率、显存占用、错误率。</p><p>在FastAPI中暴露Prometheus指标：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from prometheus_fastapi_instrumentator import Instrumentator
+ <p>部署上线只是开始，就像开车上路后必须看仪表盘。监控系统就是LLM服务的仪表盘：它告诉你服务是否健康、快不快、有没有异常。没有监控，你只能等用户投诉才知道服务挂了。常用的监控栈是Prometheus + Grafana：Prometheus负责定期“抓取”指标数据，Grafana负责把数据画成图表和告警面板。</p><p>对于LLM服务，关键指标分为两层。基础设施层包括GPU利用率、显存占用、CPU和内存；应用层包括请求延迟（P50/P95/P99）、吞吐量（tokens/s或QPS）、错误率。为什么两层都要看？举个例子：GPU利用率90%看起来很高，但如果请求延迟也从200ms涨到了2s，说明瓶颈可能在批处理策略或显存不足导致的换页，而不是GPU算力不够。只看一层无法定位问题。</p><p>在FastAPI中暴露Prometheus指标非常轻量，只需引入<code>prometheus_fastapi_instrumentator</code>并调用<code>instrument(app).expose(app)</code>。这样<code>/metrics</code>端点就会输出标准的Prometheus文本格式，Prometheus配置抓取该端点即可。下面的代码片段展示了接入方式，预期效果是访问<code>/metrics</code>能看到<code>http_request_duration_seconds</code>等指标。</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from prometheus_fastapi_instrumentator import Instrumentator
 
 app = FastAPI()
-Instrumentator().instrument(app).expose(app)</code></pre></div><p>这样<code>/metrics</code>端点就会输出指标，Prometheus可以定期抓取。</p><p>日志收集推荐使用ELK（Elasticsearch, Logstash, Kibana）或Loki + Grafana。结构化日志（JSON格式）便于查询。例如：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import logging
+Instrumentator().instrument(app).expose(app)</code></pre></div><p>日志收集推荐使用ELK（Elasticsearch, Logstash, Kibana）或Loki + Grafana。结构化日志（JSON格式）便于查询和聚合。例如，下面的代码使用<code>json_log_formatter</code>把日志输出为JSON，并附带<code>prompt_length</code>和<code>latency_ms</code>字段。这样在Kibana中就可以按<code>latency_ms &gt; 1000</code>过滤慢请求，而不是用正则去解析纯文本日志。</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import logging
 import json_log_formatter
 
 formatter = json_log_formatter.JSONFormatter()
@@ -95,18 +97,18 @@ logger = logging.getLogger(__name__)
 logger.addHandler(handler)
 logger.setLevel(logging.INFO)
 
-logger.info("Request processed", extra={"prompt_length": 10, "latency_ms": 150})</code></pre></div><p><b>关键点：</b>监控要覆盖基础设施（CPU/GPU/内存）和应用层（QPS、延迟、错误）。设置告警规则，如延迟超过阈值或错误率上升时通知。</p>
+logger.info("Request processed", extra={"prompt_length": 10, "latency_ms": 150})</code></pre></div><p><b>关键点：</b>监控要覆盖基础设施（CPU/GPU/内存）和应用层（QPS、延迟、错误）。设置告警规则，如延迟超过阈值或错误率上升时通知。告警阈值应基于历史基线设定，而不是拍脑袋定一个固定值。</p>
  <h3>性能测试与优化</h3>
- <p>性能测试是确保LLM服务满足SLA的关键。常用工具：Locust、wrk、JMeter。测试时关注吞吐量（tokens/s）、延迟（P50、P95、P99）和并发能力。</p><p>一个简单的Locust测试脚本：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from locust import HttpUser, task, between
+ <p>性能测试就像给服务做体检：在真实流量到来之前，先模拟并发用户，看它能不能扛住。常用工具包括Locust、wrk、JMeter。测试时关注三个核心指标：吞吐量（每秒处理的tokens或请求数）、延迟（P50、P95、P99分位数）和并发能力。为什么看P99而不是只看平均值？因为平均值会掩盖长尾请求，而用户体验往往由最慢的那1%决定。</p><p>一个简单的Locust测试脚本如下。它定义了一个<code>LLMUser</code>，每个用户随机等待1到3秒，然后向<code>/generate</code>发送POST请求。运行命令<code>locust -f locustfile.py --host=http://localhost:8000</code>后，打开Locust Web界面即可设置并发用户数并观察实时指标。预期输出包括请求数、失败率、平均响应时间和P95延迟。</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from locust import HttpUser, task, between
 
 class LLMUser(HttpUser):
     wait_time = between(1, 3)
 
     @task
     def generate(self):
-        self.client.post("/generate", json={"prompt": "Hello, how are you?"})</code></pre></div><p>运行：<code>locust -f locustfile.py --host=http://localhost:8000</code></p><p>优化手段包括：</p><ul><li><b>批处理（Batching）</b>：将多个请求合并成一个批次，提高GPU利用率。vLLM支持连续批处理。</li><li><b>量化</b>：使用FP16、INT8或4-bit量化减少显存占用，提升推理速度。</li><li><b>缓存</b>：对常见请求结果进行缓存，减少重复计算。</li><li><b>模型编译</b>：使用TensorRT、ONNX Runtime等加速推理。</li></ul><p>例如，vLLM启动时开启量化：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">llm = LLM(model="/app/model", quantization="awq")</code></pre></div><p><b>关键点：</b>性能优化需要权衡延迟和吞吐，根据业务场景调整批处理大小和量化级别。</p>
+        self.client.post("/generate", json={"prompt": "Hello, how are you?"})</code></pre></div><p>优化手段主要有四类。<b>批处理（Batching）</b>：把多个请求合并成一个批次送进GPU，显著提高GPU利用率，vLLM支持连续批处理（continuous batching）。<b>量化</b>：使用FP16、INT8或4-bit量化减少显存占用，提升推理速度，但可能带来精度损失，需要评估。<b>缓存</b>：对常见请求结果进行缓存，减少重复计算，适合高频固定问题。<b>模型编译</b>：使用TensorRT、ONNX Runtime等加速推理。例如，vLLM启动时开启AWQ量化只需传入<code>quantization="awq"</code>，但前提是模型权重已经过AWQ量化处理，否则会报错（待核实具体版本行为）。</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">llm = LLM(model="/app/model", quantization="awq")</code></pre></div><p><b>关键点：</b>性能优化需要权衡延迟和吞吐，根据业务场景调整批处理大小和量化级别。例如，在线聊天场景更看重低延迟，批处理窗口应设小；离线批量生成场景更看重吞吐，可以增大批处理。</p>
  <h3>安全与权限管理</h3>
- <p>生产环境必须考虑安全。主要方面：API认证、授权、输入验证、模型安全、网络安全。</p><p><b>API认证</b>：使用API Key或JWT。FastAPI中可以通过依赖注入实现：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from fastapi import Depends, HTTPException, status
+ <p>生产环境的安全就像给房子装门锁：没有它，任何人都能进来。LLM服务的安全主要涉及五个方面：API认证、授权、输入验证、模型安全和网络安全。很多团队只做了第一层就上线，结果被刷爆配额或遭遇提示注入攻击。</p><p><b>API认证</b>是第一步。使用API Key或JWT，FastAPI中可以通过依赖注入实现。下面的代码定义了一个<code>verify_api_key</code>依赖，检查请求头<code>X-API-Key</code>是否等于预设密钥，不匹配则返回403。注意示例中硬编码密钥仅用于演示，生产环境应使用密钥管理服务（如Vault）并定期轮换。</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from fastapi import Depends, HTTPException, status
 from fastapi.security import APIKeyHeader
 
 api_key_header = APIKeyHeader(name="X-API-Key")
@@ -117,27 +119,28 @@ async def verify_api_key(api_key: str = Depends(api_key_header)):
 
 @app.post("/generate", dependencies=[Depends(verify_api_key)])
 async def generate(prompt: str):
-    ...</code></pre></div><p><b>授权</b>：不同用户可能有不同配额。可以使用Redis记录使用量，并限制速率。</p><p><b>输入验证</b>：防止提示注入和恶意输入。对输入长度、内容进行过滤。</p><p><b>模型安全</b>：防止模型被窃取。可以通过加密模型文件、限制访问权限。</p><p><b>网络安全</b>：使用HTTPS、网络策略（NetworkPolicy）限制Pod间通信。</p><p><b>关键点：</b>安全要贯穿整个生命周期，从镜像构建到服务暴露，遵循最小权限原则。</p>
+    ...</code></pre></div><p><b>授权</b>解决“谁能用多少”的问题。不同用户可能有不同配额，可以用Redis记录使用量并限制速率。例如，免费用户每分钟10次请求，付费用户每分钟100次。没有授权层，一个恶意用户就能耗尽所有GPU资源。<b>输入验证</b>防止提示注入和恶意输入，应对输入长度、内容进行过滤，比如限制prompt最大长度、拒绝包含特定控制字符的请求。</p><p><b>模型安全</b>防止模型被窃取，可以通过加密模型文件、限制访问权限实现。<b>网络安全</b>使用HTTPS、网络策略（NetworkPolicy）限制Pod间通信，避免攻击者横向移动。<b>关键点：</b>安全要贯穿整个生命周期，从镜像构建到服务暴露，遵循最小权限原则。</p>
  <h3>常见误区</h3>
  <ul>
- <li>容器化后就不需要管理依赖了：实际上，容器内仍需正确安装依赖，且镜像大小和构建时间需要优化。</li>
- <li>监控只需要看GPU利用率：应用层的延迟、错误率、吞吐量同样重要，否则无法定位性能瓶颈。</li>
- <li>性能测试一次就够了：随着模型更新、流量变化，需要持续进行性能测试和优化。</li>
+  <li>错误理解：容器化后就不需要管理依赖了，镜像里什么都有。→ 后果：镜像可能包含过时或有漏洞的依赖，构建时间膨胀，且不同镜像层缓存失效导致重复下载。→ 正确做法：仍然要锁定依赖版本（如requirements.txt或poetry.lock），定期重建镜像并扫描漏洞，使用多阶段构建减小体积。</li>
+  <li>错误理解：监控只需要看GPU利用率，GPU忙就说明服务健康。→ 后果：GPU利用率高但请求延迟飙升时无法定位瓶颈，可能是批处理策略不当或显存换页，最终用户超时。→ 正确做法：同时采集基础设施指标（GPU/CPU/内存）和应用层指标（P95/P99延迟、错误率、QPS），并设置基于基线的告警。</li>
+  <li>错误理解：性能测试做一次就够了，上线前跑一遍就行。→ 后果：模型更新、流量模式变化或依赖升级后，性能可能悄悄退化，直到线上事故才发现。→ 正确做法：把性能测试纳入CI/CD流水线，每次模型或配置变更后自动跑基准测试，并持续对比历史结果。</li>
  </ul>
  <h3>自测</h3>
- <details class="quiz"><summary>在Kubernetes中部署LLM服务时，如何申请GPU资源？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>在Pod的容器资源限制中声明nvidia.com/gpu，例如：resources: limits: nvidia.com/gpu: 1。同时需要集群安装NVIDIA设备插件。</p></div></details>
- <details class="quiz"><summary>列举三种LLM推理性能优化的方法。</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>批处理（Batching）、量化（如FP16/INT8/4-bit）、缓存（结果缓存）、模型编译（TensorRT/ONNX Runtime）等。</p></div></details>
+ <details class="quiz"><summary>在Kubernetes中部署LLM服务时，如何申请GPU资源？如果集群没有安装NVIDIA设备插件会发生什么？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>在Pod的容器资源限制中声明nvidia.com/gpu，例如resources: limits: nvidia.com/gpu: 1。推理过程：K8s调度器需要知道节点上有多少GPU可用，这依赖NVIDIA设备插件把GPU资源上报为可调度资源。如果集群没有安装该插件，节点不会上报nvidia.com/gpu资源，Pod会一直处于Pending状态，因为调度器找不到满足资源请求的节点。因此申请GPU资源的前提是集群已正确安装设备插件。</p></div></details>
+ <details class="quiz"><summary>列举三种LLM推理性能优化的方法，并说明它们分别主要改善延迟还是吞吐。</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>批处理（Batching）：把多个请求合并送进GPU，主要改善吞吐，因为GPU并行处理多个序列，但可能增加单个请求的等待时间。量化（如FP16/INT8/4-bit）：减少显存占用和计算量，通常同时改善延迟和吞吐，但可能带来精度损失。缓存（结果缓存）：对重复请求直接返回结果，主要改善延迟并降低GPU负载。模型编译（TensorRT/ONNX Runtime）：优化计算图，主要改善延迟。推理过程：延迟关注单个请求完成时间，吞吐关注单位时间处理量，不同优化手段的侧重点不同，需要根据业务场景权衡。</p></div></details>
+ <details class="quiz"><summary>为什么监控LLM服务时不能只看GPU利用率？请结合一个具体场景说明。</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>GPU利用率只反映GPU是否忙碌，不反映请求是否及时完成。场景：GPU利用率显示90%，但P99延迟从200ms涨到2s。推理过程：高利用率可能来自低效的批处理策略（如批次过大导致排队）或显存不足引发的换页，此时GPU虽然忙，但有效吞吐并未提升，用户体验恶化。只看GPU利用率会误判为“服务很健康”。正确做法是同时观察应用层指标（P95/P99延迟、错误率、QPS）和基础设施指标，交叉分析才能定位瓶颈。</p></div></details>
  <h3>动手练习（带参考方案）</h3>
- <details class="fold"><summary>动手练习 · 将你微调好的LLM模型使用Docker容器化，并编写一个FastAPI服务提供/generate接口…</summary><div class="fold-body"><p><b>任务：</b>将你微调好的LLM模型使用Docker容器化，并编写一个FastAPI服务提供/generate接口。然后使用Locust进行性能测试，测量在并发10用户下的平均延迟和吞吐量。</p><p><b>参考方案：</b></p>1. 编写Dockerfile：
-FROM python:3.10-slim
-RUN pip install vllm fastapi uvicorn prometheus-fastapi-instrumentator
-COPY ./model /app/model
-COPY server.py /app/server.py
-WORKDIR /app
-EXPOSE 8000
-CMD ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8000"]
+ <details class="fold"><summary>练习 · 将你微调好的LLM模型使用Docker容器化，并编写一个FastAPI服务提供/generate接口。然后使用Locus…</summary><div class="fold-body"><p><b>任务：</b>将你微调好的LLM模型使用Docker容器化，并编写一个FastAPI服务提供/generate接口。然后使用Locust进行性能测试，测量在并发10用户下的平均延迟和吞吐量。验收标准：容器能成功启动并响应/generate请求；Locust报告能给出平均响应时间和RPS。</p><p><b>参考方案：</b></p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python"># 1. Dockerfile
+# FROM python:3.10-slim
+# RUN pip install vllm fastapi uvicorn prometheus-fastapi-instrumentator
+# COPY ./model /app/model
+# COPY server.py /app/server.py
+# WORKDIR /app
+# EXPOSE 8000
+# CMD ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8000"]
 
-2. server.py：
+# 2. server.py
 from fastapi import FastAPI
 from vllm import LLM, SamplingParams
 from prometheus_fastapi_instrumentator import Instrumentator
@@ -152,27 +155,28 @@ async def generate(prompt: str):
     outputs = llm.generate([prompt], sampling_params)
     return {"text": outputs[0].outputs[0].text}
 
-3. 构建并运行：
-docker build -t llm-server .
-docker run -p 8000:8000 --gpus all llm-server
+# 3. 构建并运行（在终端执行）
+# docker build -t llm-server .
+# docker run -p 8000:8000 --gpus all llm-server
 
-4. Locust测试脚本 locustfile.py：
+# 4. Locust测试脚本 locustfile.py
 from locust import HttpUser, task, between
 
 class LLMUser(HttpUser):
     wait_time = between(1, 3)
+
     @task
     def generate(self):
         self.client.post("/generate", json={"prompt": "Hello, how are you?"})
 
-5. 运行Locust：
-locust -f locustfile.py --host=http://localhost:8000 --users 10 --spawn-rate 2 --run-time 1m --headless
+# 5. 运行Locust（在终端执行）
+# locust -f locustfile.py --host=http://localhost:8000 --users 10 --spawn-rate 2 --run-time 1m --headless
 
-6. 查看结果：Locust会输出平均延迟、RPS等指标。</div></details>
+# 6. 查看结果：Locust会输出平均延迟、RPS等指标。</code></pre></div></div></details>
     </div>
   </main>
 </div>
 
-<script src="assets/js/app.js?v=24"></script>
+<script src="assets/js/app.js?v=28"></script>
 </body>
 </html>

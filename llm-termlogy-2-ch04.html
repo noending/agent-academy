@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="LLM术语与算力实战 第4章。">
 <title>第4章 · LLM术语与算力实战 | Agent 学院</title>
-<link rel="stylesheet" href="assets/css/style.css?v=22">
+<link rel="stylesheet" href="assets/css/style.css?v=24">
 </head>
 <body data-gen-course='{&quot;skill&quot;:&quot;llm-termlogy-2&quot;,&quot;title&quot;:&quot;LLM术语与算力实战&quot;,&quot;topic&quot;:&quot;由课题「LLM术语精通」自动生成。面向有开发基础的学员，系统掌握LLM术语、评测与算力选型。通过6章学习，能读懂模型卡、设计评测、估算显存成本，并完成企业助手选型报告。&quot;,&quot;chapters&quot;:[{&quot;no&quot;:1,&quot;title&quot;:&quot;全景地图与核心术语&quot;,&quot;goal&quot;:&quot;建立LLM知识地图，解释20+高频术语及其关系。&quot;,&quot;file&quot;:&quot;llm-termlogy-2-ch01.html&quot;},{&quot;no&quot;:2,&quot;title&quot;:&quot;模型能力评测与可信度&quot;,&quot;goal&quot;:&quot;能设计小规模评测，识别不公平比较，给出有证据的选型结论。&quot;,&quot;file&quot;:&quot;llm-termlogy-2-ch02.html&quot;},{&quot;no&quot;:3,&quot;title&quot;:&quot;推理性能与成本评测&quot;,&quot;goal&quot;:&quot;能测量TTFT、TPOT、吞吐等指标，计算每次请求成本。&quot;,&quot;file&quot;:&quot;llm-termlogy-2-ch03.html&quot;},{&quot;no&quot;:4,&quot;title&quot;:&quot;硬件参数与算力评估&quot;,&quot;goal&quot;:&quot;读懂硬件规格表，解释显存、带宽、算力对推理的影响。&quot;,&quot;file&quot;:&quot;llm-termlogy-2-ch04.html&quot;},{&quot;no&quot;:5,&quot;title&quot;:&quot;显存估算与部署选型&quot;,&quot;goal&quot;:&quot;能估算模型推理显存，区分装得下、跑得快、满足并发。&quot;,&quot;file&quot;:&quot;llm-termlogy-2-ch05.html&quot;},{&quot;no&quot;:6,&quot;title&quot;:&quot;综合项目：企业助手选型&quot;,&quot;goal&quot;:&quot;完成从需求到选型报告的完整项目，给出有证据的推荐方案。&quot;,&quot;file&quot;:&quot;llm-termlogy-2-ch06.html&quot;}]}' data-chapter="gen-llm-termlogy-2-ch4">
 
@@ -23,18 +23,21 @@
   <main class="content">
     <div class="content-inner">
 
-      <header class="chapter-head">
-        <div class="kicker">CHAPTER 04 · 生成课程</div>
+                  <header class="chapter-head">
+        <div class="kicker">CHAPTER 04 · 机器初稿 · 待人审</div>
         <h1>硬件参数与算力评估</h1>
+        <p class="lead"><b>本章目标：</b>读懂硬件规格表，解释显存、带宽、算力对推理的影响。</p>
       </header>
-
-      <p class="lead"><b>本章目标：</b>读懂硬件规格表，解释显存、带宽、算力对推理的影响。</p>
+<!--flow-v1--><div class="flow">
+        <span class="flow-node">读规格表<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">先看显存、带宽、算力三行</small></span><span class="flow-arrow">→</span><span class="flow-node">显存定容量<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">决定模型与KV缓存能否装下</small></span><span class="flow-arrow">→</span><span class="flow-node">带宽定速度<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">决定权重搬运快慢与吞吐</small></span><span class="flow-arrow">→</span><span class="flow-node">算力定上限<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">决定单位时间能算多少</small></span><span class="flow-arrow">→</span><span class="flow-node">综合评估<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">三者取短板，判断推理表现</small></span>
+        <div class="flow-note">硬件评估就是容量、速度、算力三者取短板，缺一不可。</div>
+      </div><!--/flow-v1-->
  <h3>硬件组成：GPU、CPU、内存、存储、互联与网络</h3>
- <p>把一台推理服务器想象成一家餐厅：<b>GPU 是后厨的灶台</b>，负责真正“炒菜”（矩阵乘法）；<b>CPU 是前台和调度员</b>，负责接单、拆解任务、启动 GPU；<b>内存（RAM）是备菜台</b>，存放还没下锅的食材（模型权重、中间数据）；<b>显存（VRAM）是灶台旁边的操作台</b>，离 GPU 最近，放正在炒的菜；<b>存储（SSD/HDD）是仓库</b>，放冷鲜食材（模型文件、日志）；<b>互联（PCIe/NVLink）是传菜通道</b>，决定食材从备菜台到灶台的速度；<b>网络（以太网/InfiniBand）是外卖通道</b>，决定多台机器之间怎么协作。</p><p>不同场景对硬件的需求不同：</p><ul><li><b>消费级 GPU（如 RTX 4090）</b>：显存 24GB 左右，适合个人开发、小模型推理、微调。优点是便宜、功耗低；缺点是显存小、没有 NVLink、多卡通信走 PCIe。</li><li><b>数据中心 GPU（如 A100/H100）</b>：显存 40GB~80GB，支持 NVLink，带宽极高，适合大模型训练和推理。缺点是贵、功耗高、需要专业散热和供电。</li><li><b>Apple Silicon（M 系列）</b>：统一内存架构，CPU 和 GPU 共享内存，内存可达 128GB 甚至 192GB，适合本地跑大模型。缺点是 GPU 算力相对弱，生态不如 CUDA 成熟。</li></ul><p>关键结论：<b>选硬件不是只看 GPU，而是看整个数据通路是否匹配你的任务。</b>如果模型权重放不进显存，再强的算力也发挥不出来；如果互联带宽太低，多卡并行反而会拖慢速度。</p>
+ <p>把一台推理服务器想象成一家餐厅：<b>GPU 是后厨的灶台</b>，负责真正“炒菜”（矩阵乘法）；<b>CPU 是前台和调度员</b>，负责接单、拆解任务、启动 GPU；<b>内存（RAM）是备菜台</b>，存放还没下锅的食材（模型权重、中间数据）；<b>显存（VRAM）是灶台旁边的操作台</b>，离 GPU 最近，放正在炒的菜；<b>存储（SSD/HDD）是仓库</b>，放冷鲜食材（模型文件、日志）；<b>互联（PCIe/NVLink）是传菜通道</b>，决定食材从备菜台到灶台的速度；<b>网络（以太网/InfiniBand）是外卖通道</b>，决定多台机器之间怎么协作。这个类比的关键在于：餐厅出菜速度不取决于灶台火力最猛的那一项，而取决于最慢的那条通道——如果传菜通道堵了，灶台再快也只能干等。</p><p>不同场景对硬件的需求差异很大，选型前先明确任务类型。<b>消费级 GPU（如 RTX 4090）</b>显存 24GB 左右，适合个人开发、小模型推理和微调；优点是便宜、功耗低，缺点是显存小、没有 NVLink，多卡通信只能走 PCIe。<b>数据中心 GPU（如 A100/H100）</b>显存 40GB~80GB，支持 NVLink，带宽极高，适合大模型训练和推理；缺点是贵、功耗高，需要专业散热和供电。<b>Apple Silicon（M 系列）</b>采用统一内存架构，CPU 和 GPU 共享内存，内存可达 128GB 甚至 192GB，适合本地跑大模型；缺点是 GPU 算力相对弱，生态不如 CUDA 成熟。举个例子：同样跑一个 7B 模型，RTX 4090 能轻松装下并快速解码，但换成 70B 模型时，24GB 显存连权重都放不下，此时再强的单卡算力也无济于事。</p><p>关键结论：<b>选硬件不是只看 GPU，而是看整个数据通路是否匹配你的任务。</b>如果模型权重放不进显存，再强的算力也发挥不出来；如果互联带宽太低，多卡并行反而会拖慢速度。因此读规格表时，要同时看显存容量、显存带宽、互联类型和网络带宽，把它们当成一条流水线上的不同工位来评估。</p>
  <h3>关键参数：显存、带宽、算力、互联与功耗</h3>
- <p>读懂硬件规格表，核心看这几个参数：</p><table><tr><th>参数</th><th>含义</th><th>对推理的影响</th></tr><tr><td>显存容量（VRAM）</td><td>GPU 能直接访问的内存大小</td><td>决定模型能不能装下；装不下就要切分或换卡</td></tr><tr><td>显存带宽（Memory Bandwidth）</td><td>每秒能从显存读写多少数据，单位 GB/s</td><td>决定 token 生成速度；带宽越高，解码越快</td></tr><tr><td>计算单元 / Tensor Core</td><td>GPU 里做矩阵乘法的专用硬件</td><td>决定预填充（prefill）阶段的吞吐</td></tr><tr><td>频率</td><td>GPU 核心运行时钟，单位 GHz</td><td>影响单次计算延迟，但不如带宽和核心数关键</td></tr><tr><td>PCIe / NVLink</td><td>GPU 与 CPU、GPU 与 GPU 之间的通信通道</td><td>决定多卡并行效率；NVLink 比 PCIe 快数倍</td></tr><tr><td>功耗（TDP）</td><td>满载时的热设计功耗，单位 W</td><td>决定供电和散热成本；数据中心卡可达 700W</td></tr></table><p>一个具体例子：RTX 4090 有 24GB 显存、约 1008 GB/s 带宽、FP16 算力约 330 TFLOPS。A100 80GB 有 80GB 显存、约 2039 GB/s 带宽、FP16 算力约 312 TFLOPS。虽然两者 FP16 峰值算力接近，但 A100 显存更大、带宽更高，所以能跑更大的模型，且解码速度更快。</p><p>关键结论：<b>推理速度往往受显存带宽限制，而不是峰值算力。</b>因为自回归生成时，每生成一个 token 都要把整个模型权重读一遍，这是典型的“内存带宽瓶颈”场景。</p>
+ <p>读懂硬件规格表，核心是理解每个参数在推理流水线中扮演什么角色。可以把一次推理拆成“装得下”和“跑得快”两个问题：显存容量回答“装不装得下”，显存带宽和算力回答“跑得多快”，互联和功耗则决定“多卡协作和长期运行的成本”。下表把关键参数和它们对推理的影响对应起来：</p><table><tr><th>参数</th><th>含义</th><th>对推理的影响</th></tr><tr><td>显存容量（VRAM）</td><td>GPU 能直接访问的内存大小</td><td>决定模型能不能装下；装不下就要切分或换卡</td></tr><tr><td>显存带宽（Memory Bandwidth）</td><td>每秒能从显存读写多少数据，单位 GB/s</td><td>决定 token 生成速度；带宽越高，解码越快</td></tr><tr><td>计算单元 / Tensor Core</td><td>GPU 里做矩阵乘法的专用硬件</td><td>决定预填充（prefill）阶段的吞吐</td></tr><tr><td>频率</td><td>GPU 核心运行时钟，单位 GHz</td><td>影响单次计算延迟，但不如带宽和核心数关键</td></tr><tr><td>PCIe / NVLink</td><td>GPU 与 CPU、GPU 与 GPU 之间的通信通道</td><td>决定多卡并行效率；NVLink 比 PCIe 快数倍</td></tr><tr><td>功耗（TDP）</td><td>满载时的热设计功耗，单位 W</td><td>决定供电和散热成本；数据中心卡可达 700W</td></tr></table><p>一个具体例子能说明“算力接近但体验不同”：RTX 4090 有 24GB 显存、约 1008 GB/s 带宽、FP16 算力约 330 TFLOPS；A100 80GB 有 80GB 显存、约 2039 GB/s 带宽、FP16 算力约 312 TFLOPS。两者 FP16 峰值算力接近，但 A100 显存更大、带宽约为 4090 的两倍，所以能跑更大的模型，且解码速度更快。假设一个 13B FP16 模型权重约 26GB，4090 的 24GB 显存根本装不下，而 A100 80GB 可以轻松容纳——这就是显存容量的一票否决作用。</p><p>关键结论：<b>推理速度往往受显存带宽限制，而不是峰值算力。</b>因为自回归生成时，每生成一个 token 都要把整个模型权重读一遍，这是典型的“内存带宽瓶颈”场景。用上面的例子估算：13B FP16 权重约 26GB，在 2039 GB/s 带宽下理论最短解码时间约 26/2039 ≈ 0.0128 秒，即约 78 tokens/s；若带宽减半，解码速度也大致减半。实际还会受 KV Cache 和调度开销影响，但量级关系成立。</p>
  <h3>单位与口径：FLOPs、TFLOPS、TOPS、GB 与 GiB、精度</h3>
- <p>硬件规格表里单位很多，容易混淆。先记住几个核心换算：</p><ul><li><b>FLOPs</b>：浮点运算次数，是“工作量”。比如一次矩阵乘法做了多少 FLOPs。</li><li><b>FLOP/s</b>：每秒浮点运算次数，是“速度”。<b>TFLOPS = 10^12 FLOP/s</b>，<b>PFLOPS = 10^15 FLOP/s</b>。</li><li><b>TOPS</b>：每秒万亿次操作，通常用于整数运算（INT8/INT4）。<b>TOPS 和 TFLOPS 不能直接比</b>，因为操作类型和精度不同。</li><li><b>GB vs GiB</b>：GB 是十进制（10^9 字节），GiB 是二进制（2^30 字节）。<b>1 GiB ≈ 1.074 GB</b>。厂商标注的“80GB”通常是十进制，系统里看到的是 GiB，所以会“缩水”。</li><li><b>GB/s vs Gb/s</b>：GB/s 是字节，Gb/s 是比特。<b>1 GB/s = 8 Gb/s</b>。网络带宽常用 Gb/s，显存带宽常用 GB/s。</li></ul><p>精度方面，不同精度占用的显存和算力不同：</p><table><tr><th>精度</th><th>每参数字节</th><th>特点</th></tr><tr><td>FP32</td><td>4</td><td>最精确，训练常用，推理慢</td></tr><tr><td>FP16</td><td>2</td><td>推理常用，范围较小</td></tr><tr><td>BF16</td><td>2</td><td>范围与 FP32 相同，训练/推理都常用</td></tr><tr><td>FP8</td><td>1</td><td>新卡支持，速度快，精度损失可控</td></tr><tr><td>INT8</td><td>1</td><td>量化推理常用，速度快</td></tr><tr><td>INT4</td><td>0.5</td><td>极致压缩，精度损失较大</td></tr></table><p>下面是一个最小示例，计算模型权重占用的显存：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">def vram_for_weights(num_params_billion, bytes_per_param):
+ <p>硬件规格表里单位很多，混淆单位会导致数量级错误。先建立直觉：<b>FLOPs 是“工作量”</b>，比如一次矩阵乘法做了多少次浮点运算；<b>FLOP/s 是“速度”</b>，即每秒能做多少工作量。<b>TFLOPS = 10^12 FLOP/s</b>，<b>PFLOPS = 10^15 FLOP/s</b>。<b>TOPS</b> 是每秒万亿次操作，通常用于整数运算（INT8/INT4），<b>TOPS 和 TFLOPS 不能直接比</b>，因为操作类型和精度不同。存储单位上，<b>GB 是十进制（10^9 字节），GiB 是二进制（2^30 字节），1 GiB ≈ 1.074 GB</b>；厂商标注的“80GB”通常是十进制，系统里看到的是 GiB，所以会“缩水”。带宽单位上，<b>GB/s 是字节，Gb/s 是比特，1 GB/s = 8 Gb/s</b>；网络带宽常用 Gb/s，显存带宽常用 GB/s，换算时别漏掉 8 倍。</p><p>精度直接决定每个参数占多少字节，从而决定显存占用和算力口径。下表列出常见精度：</p><table><tr><th>精度</th><th>每参数字节</th><th>特点</th></tr><tr><td>FP32</td><td>4</td><td>最精确，训练常用，推理慢</td></tr><tr><td>FP16</td><td>2</td><td>推理常用，范围较小</td></tr><tr><td>BF16</td><td>2</td><td>范围与 FP32 相同，训练/推理都常用</td></tr><tr><td>FP8</td><td>1</td><td>新卡支持，速度快，精度损失可控</td></tr><tr><td>INT8</td><td>1</td><td>量化推理常用，速度快</td></tr><tr><td>INT4</td><td>0.5</td><td>极致压缩，精度损失较大</td></tr></table><p>下面是一个最小示例，计算模型权重占用的显存。输入是参数规模和每参数字节数，输出是十进制 GB 下的权重显存；运行后可以看到精度每降一半，显存占用也大约减半：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">def vram_for_weights(num_params_billion, bytes_per_param):
     """计算模型权重占用的显存（GB，十进制）"""
     num_params = num_params_billion * 1e9
     bytes_total = num_params * bytes_per_param
@@ -48,21 +51,23 @@ for name, bpp in [("FP32", 4), ("FP16/BF16", 2), ("INT8", 1), ("INT4", 0.5)]:
 # 7B FP32: 28.00 GB
 # 7B FP16/BF16: 14.00 GB
 # 7B INT8: 7.00 GB
-# 7B INT4: 3.50 GB</code></pre></div><p>关键结论：<b>精度每降一半，显存占用也大约减半，但精度损失需要评测验证。</b>实际推理还要加上 KV Cache、激活值等开销，通常比权重多 10%~30%。</p>
+# 7B INT4: 3.50 GB</code></pre></div><p>关键结论：<b>精度每降一半，显存占用也大约减半，但精度损失需要评测验证。</b>实际推理还要加上 KV Cache、激活值等开销，通常比权重多 10%~30%。另外注意，厂商标称的 80GB 卡在系统里显示约 74.5 GiB（80/1.074），这是单位口径差异，不是硬件缩水。</p>
  <h3>常见误区与实战选型思路</h3>
- <p>这一节把最容易踩的坑集中讲清楚：</p><ul><li><b>只看显存选卡</b>：显存大不代表推理快。如果带宽低，生成 token 会很慢。比如某些大显存但低带宽的卡，跑大模型时吞吐可能不如小显存高带宽的卡。</li><li><b>峰值算力高不等于推理快</b>：推理分预填充和解码两个阶段。预填充吃算力，解码吃带宽。很多场景解码是瓶颈，所以带宽比峰值算力更重要。</li><li><b>不同精度 TOPS 不能直接比</b>：INT8 的 TOPS 和 FP16 的 TFLOPS 不是一回事。比较时要看同一精度下的数据，或者看实际任务吞吐。</li><li><b>多卡显存不能无条件合并</b>：多卡不会自动把显存拼成一块。需要模型并行、张量并行等技术，而且通信开销可能抵消收益。NVLink 比 PCIe 更适合多卡并行。</li><li><b>统一内存不等于全部可用</b>：Apple Silicon 的统一内存虽然大，但系统和其他应用也要占用，实际能给模型的通常只有 70%~80%。</li></ul><p>实战选型可以按这个顺序问自己：</p><ol><li>模型多大？权重 + KV Cache 需要多少显存？</li><li>目标吞吐和延迟是多少？解码阶段带宽够不够？</li><li>单卡装不下，要不要多卡？互联带宽够不够？</li><li>功耗和散热能不能满足？</li><li>预算和生态（CUDA/ROCm/Metal）是否匹配？</li></ol><p>关键结论：<b>硬件选型是“显存容量、带宽、算力、互联、功耗”的联合优化，任何单一指标都不能决定成败。</b></p>
+ <p>这一节把最容易踩的坑集中讲清楚，每个坑都按“错误理解 → 后果 → 正确做法”来拆解。第一个坑是<b>只看显存选卡</b>：显存大不代表推理快，如果带宽低，生成 token 会很慢；某些大显存但低带宽的卡，跑大模型时吞吐可能不如小显存高带宽的卡。正确做法是把显存容量和带宽放在一起看，先确认装得下，再估算解码速度。第二个坑是<b>峰值算力高不等于推理快</b>：推理分预填充和解码两个阶段，预填充吃算力，解码吃带宽；很多场景解码是瓶颈，所以带宽比峰值算力更重要。第三个坑是<b>不同精度 TOPS 不能直接比</b>：INT8 的 TOPS 和 FP16 的 TFLOPS 不是一回事，比较时要看同一精度下的数据，或者看实际任务吞吐。</p><p>还有两个与多卡和统一内存相关的坑。<b>多卡显存不能无条件合并</b>：多卡不会自动把显存拼成一块，需要模型并行、张量并行等技术，而且通信开销可能抵消收益；NVLink 比 PCIe 更适合多卡并行。举个例子，两张 80GB 卡通过 PCIe 互联跑张量并行时，每层都要交换中间结果，如果通信带宽不足，实际吞吐可能远低于理论值。<b>统一内存不等于全部可用</b>：Apple Silicon 的统一内存虽然大，但系统和其他应用也要占用，实际能给模型的通常只有 70%~80%，把 128GB 全部算作可用显存会高估能跑的模型规模。</p><p>实战选型可以按这个顺序问自己：<b>1）模型多大？权重 + KV Cache 需要多少显存？2）目标吞吐和延迟是多少？解码阶段带宽够不够？3）单卡装不下，要不要多卡？互联带宽够不够？4）功耗和散热能不能满足？5）预算和生态（CUDA/ROCm/Metal）是否匹配？</b>关键结论：<b>硬件选型是“显存容量、带宽、算力、互联、功耗”的联合优化，任何单一指标都不能决定成败。</b>按这个顺序逐项排除，比盯着某一个漂亮数字做决定要可靠得多。</p>
  <h3>常见误区</h3>
  <ul>
- <li>只看显存容量选卡，忽略显存带宽和互联能力，导致大模型能装下但生成速度极慢。</li>
- <li>把不同精度的 TOPS 和 TFLOPS 直接比较，误以为 INT8 的 TOPS 高就代表所有任务都更快。</li>
- <li>认为多卡显存会自动合并成一块大显存，实际上需要模型并行且通信开销可能很大。</li>
- <li>把统一内存的全部容量都算作可用显存，忽略系统和应用占用，导致实际能跑的模型比预期小。</li>
+  <li>错误理解：只看显存容量选卡，认为显存越大推理越快。→ 后果：大模型虽然能装下，但显存带宽低导致解码阶段每 token 都要慢速读取全部权重，生成速度极慢，用户体验差。→ 正确做法：先按权重 + KV Cache 估算显存容量确认装得下，再用显存带宽估算解码速度，两者一起评估。</li>
+  <li>错误理解：把不同精度的 TOPS 和 TFLOPS 直接比较，认为 INT8 的 TOPS 高就代表所有任务都更快。→ 后果：选型时被数字误导，实际任务吞吐可能不如预期，因为操作类型和精度不同，峰值数字不可直接换算。→ 正确做法：在同一精度下比较，或直接看目标模型在实际硬件上的吞吐和延迟评测数据。</li>
+  <li>错误理解：认为多卡显存会自动合并成一块大显存，或把统一内存的全部容量都算作可用显存。→ 后果：多卡需要模型并行且通信开销可能很大，PCIe 互联下收益可能被抵消；统一内存被系统和应用占用后实际可用只有 70%~80%，导致实际能跑的模型比预期小。→ 正确做法：多卡场景先确认互联类型（NVLink/PCIe）和并行方案，统一内存按 70%~80% 折算可用容量后再做规划。</li>
  </ul>
  <h3>自测</h3>
- <details class="quiz"><summary>某模型权重为 13B 参数，使用 INT8 量化，权重显存大约是多少？如果显存带宽为 500 GB/s，解码阶段每生成一个 token 大约需要读多少数据？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>13B INT8 权重显存约 13 GB（13e9 * 1 字节 = 13e9 字节 = 13 GB）。解码阶段每生成一个 token 需要读取全部权重，约 13 GB 数据。在 500 GB/s 带宽下，理论最短时间约 13/500 = 0.026 秒，即约 38 tokens/s（不考虑 KV Cache 和开销）。</p></div></details>
- <details class="quiz"><summary>为什么说“峰值算力高不等于推理快”？请从预填充和解码两个阶段解释。</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>推理分两个阶段：预填充阶段一次性处理输入 prompt，计算密集，吃峰值算力；解码阶段逐 token 生成，每步都要读取全部模型权重，是内存带宽瓶颈。如果显存带宽低，即使峰值算力很高，解码速度也会很慢。因此推理速度是算力和带宽共同决定的，很多场景下带宽才是瓶颈。</p></div></details>
+ <details class="quiz"><summary>某模型权重为 13B 参数，使用 INT8 量化，权重显存大约是多少？如果显存带宽为 500 GB/s，解码阶段每生成一个 token 大约需要读多少数据？理论解码速度大约是多少 tokens/s？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>推理过程：INT8 每参数占 1 字节，13B 参数即 13e9 字节，按十进制换算为 13 GB。解码阶段是自回归生成，每生成一个 token 都要把全部模型权重读一遍，所以每 token 约读 13 GB 数据。在 500 GB/s 带宽下，理论最短时间约 13/500 = 0.026 秒，取倒数约 38 tokens/s。这是忽略 KV Cache、调度和计算开销的上界，实际会低于这个值，但量级可用于判断带宽是否是瓶颈。</p></div></details>
+ <details class="quiz"><summary>为什么说“峰值算力高不等于推理快”？请从预填充和解码两个阶段解释，并说明哪个阶段更依赖带宽。</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>推理分两个阶段。预填充阶段一次性处理输入 prompt，大量矩阵乘法可以并行，属于计算密集，主要吃峰值算力。解码阶段逐 token 生成，每步只处理一个 token，但都要读取全部模型权重，计算量相对很小，属于内存带宽瓶颈。因此如果显存带宽低，即使峰值算力很高，解码速度也会很慢。结论是推理速度由算力和带宽共同决定，而在长输出、低并发的典型对话场景中，解码阶段更依赖带宽，带宽往往是真正的瓶颈。</p></div></details>
+ <details class="quiz"><summary>厂商标注一张 GPU 为 80GB，系统里却显示约 74.5GiB。这是硬件缩水吗？请用单位换算解释，并说明这对估算模型能否装下有什么影响。</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>推理过程：GB 是十进制单位，1 GB = 10^9 字节；GiB 是二进制单位，1 GiB = 2^30 字节 ≈ 1.074e9 字节。厂商按十进制标注 80GB，即 80e9 字节；换算成 GiB 为 80/1.074 ≈ 74.5 GiB。所以系统显示约 74.5GiB 是单位口径差异，不是硬件缩水。影响在于：估算模型能否装下时，要统一单位。如果模型权重按十进制算得 70GB，而卡按 GiB 显示 74.5GiB，不能直接相减比较，应把两者都换算到同一单位（例如都换成字节或都换成 GiB）再判断，并留出 KV Cache 和系统占用的余量。</p></div></details>
  <h3>动手练习（带参考方案）</h3>
- <details class="fold"><summary>动手练习 · 假设你要为企业助手选型，候选模型为 70B 参数，使用 FP16 精度。请计算：1）权重显存需求；2…</summary><div class="fold-body"><p><b>任务：</b>假设你要为企业助手选型，候选模型为 70B 参数，使用 FP16 精度。请计算：1）权重显存需求；2）如果使用单张 80GB 显存的 GPU，能否装下？3）如果装不下，至少需要几张 80GB 卡？4）如果使用 INT8 量化，权重显存又是多少？请写一个 Python 函数完成这些计算，并输出结果。</p><p><b>参考方案：</b></p>def vram_for_weights(num_params_billion, bytes_per_param):
+ <details class="fold"><summary>练习 · 假设你要为企业助手选型，候选模型为 70B 参数，使用 FP16 精度。请计算：1）权重显存需求；2）如果使用单张 80…</summary><div class="fold-body"><p><b>任务：</b>假设你要为企业助手选型，候选模型为 70B 参数，使用 FP16 精度。请计算：1）权重显存需求；2）如果使用单张 80GB 显存的 GPU，能否装下？3）如果装不下，至少需要几张 80GB 卡？4）如果使用 INT8 量化，权重显存又是多少？请写一个 Python 函数完成这些计算，并输出结果。验收标准：函数能对任意参数规模和每参数字节数返回权重显存（十进制 GB），并正确输出 70B FP16 为 140GB、单卡装不下、至少 2 张卡、INT8 为 70GB。</p><p><b>参考方案：</b></p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import math
+
+def vram_for_weights(num_params_billion, bytes_per_param):
     """计算模型权重占用的显存（GB，十进制）"""
     num_params = num_params_billion * 1e9
     bytes_total = num_params * bytes_per_param
@@ -70,7 +75,6 @@ for name, bpp in [("FP32", 4), ("FP16/BF16", 2), ("INT8", 1), ("INT4", 0.5)]:
 
 def cards_needed(total_vram_gb, card_vram_gb):
     """计算至少需要几张卡"""
-    import math
     return math.ceil(total_vram_gb / card_vram_gb)
 
 # 70B 模型
@@ -96,11 +100,11 @@ print(f"单张 80GB 卡能否装下: {'能' if int8_vram &lt;= card_vram else '�
 # 单张 80GB 卡能否装下: 能
 
 # 注意：实际还要加上 KV Cache 和激活值，FP16 下 70B 通常需要 2 张 80GB 卡，
-# INT8 下单张 80GB 卡可能刚好，但需要留出余量，建议 2 张或使用更激进的量化。</div></details>
+# INT8 下单张 80GB 卡可能刚好，但需要留出余量，建议 2 张或使用更激进的量化。</code></pre></div></div></details>
     </div>
   </main>
 </div>
 
-<script src="assets/js/app.js?v=24"></script>
+<script src="assets/js/app.js?v=28"></script>
 </body>
 </html>

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="LLM全链路实战 第3章。">
 <title>第3章 · LLM全链路实战 | Agent 学院</title>
-<link rel="stylesheet" href="assets/css/style.css?v=22">
+<link rel="stylesheet" href="assets/css/style.css?v=24">
 </head>
 <body data-gen-course='{&quot;skill&quot;:&quot;llm-deploy&quot;,&quot;title&quot;:&quot;LLM全链路实战&quot;,&quot;topic&quot;:&quot;由课题「LLM 从训练到实际部署」自动生成。适合AI工程师、算法研究员及技术管理者。系统掌握LLM从预训练、微调到部署上线的完整工程链路，涵盖数据、训练、优化、服务化与运维。&quot;,&quot;chapters&quot;:[{&quot;no&quot;:1,&quot;title&quot;:&quot;LLM基础与生态&quot;,&quot;goal&quot;:&quot;理解LLM核心概念、发展历程与主流模型架构&quot;,&quot;file&quot;:&quot;llm-deploy-ch01.html&quot;},{&quot;no&quot;:2,&quot;title&quot;:&quot;数据工程与预处理&quot;,&quot;goal&quot;:&quot;掌握LLM训练数据的收集、清洗、去重与格式化方法&quot;,&quot;file&quot;:&quot;llm-deploy-ch02.html&quot;},{&quot;no&quot;:3,&quot;title&quot;:&quot;预训练与分布式训练&quot;,&quot;goal&quot;:&quot;理解预训练目标、分布式训练策略与优化技巧&quot;,&quot;file&quot;:&quot;llm-deploy-ch03.html&quot;},{&quot;no&quot;:4,&quot;title&quot;:&quot;微调与对齐技术&quot;,&quot;goal&quot;:&quot;掌握全量微调、LoRA、RLHF等微调与对齐方法&quot;,&quot;file&quot;:&quot;llm-deploy-ch04.html&quot;},{&quot;no&quot;:5,&quot;title&quot;:&quot;模型评估与优化&quot;,&quot;goal&quot;:&quot;学会设计评估方案，并进行量化、剪枝与蒸馏优化&quot;,&quot;file&quot;:&quot;llm-deploy-ch05.html&quot;},{&quot;no&quot;:6,&quot;title&quot;:&quot;推理优化与服务化&quot;,&quot;goal&quot;:&quot;掌握推理加速技术，并部署高性能推理服务&quot;,&quot;file&quot;:&quot;llm-deploy-ch06.html&quot;},{&quot;no&quot;:7,&quot;title&quot;:&quot;实战：微调与部署LLM&quot;,&quot;goal&quot;:&quot;完成一个LLM微调、量化并部署为API的完整项目&quot;,&quot;file&quot;:&quot;llm-deploy-ch07.html&quot;},{&quot;no&quot;:8,&quot;title&quot;:&quot;生产环境运维与扩展&quot;,&quot;goal&quot;:&quot;掌握LLM服务的监控、扩缩容、安全与成本优化&quot;,&quot;file&quot;:&quot;llm-deploy-ch08.html&quot;}]}' data-chapter="gen-llm-deploy-ch3">
 
@@ -23,14 +23,17 @@
   <main class="content">
     <div class="content-inner">
 
-      <header class="chapter-head">
-        <div class="kicker">CHAPTER 03 · 生成课程</div>
+                  <header class="chapter-head">
+        <div class="kicker">CHAPTER 03 · 机器初稿 · 待人审</div>
         <h1>预训练与分布式训练</h1>
+        <p class="lead"><b>本章目标：</b>理解预训练目标、分布式训练策略与优化技巧</p>
       </header>
-
-      <p class="lead"><b>本章目标：</b>理解预训练目标、分布式训练策略与优化技巧</p>
+<!--flow-v1--><div class="flow">
+        <span class="flow-node">预训练目标<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">定任务：预测下一词或掩码</small></span><span class="flow-arrow">→</span><span class="flow-node">数据与并行<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">切分数据与模型到多卡</small></span><span class="flow-arrow">→</span><span class="flow-node">分布式策略<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">数据/张量/流水并行组合</small></span><span class="flow-arrow">→</span><span class="flow-node">优化技巧<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">混合精度、梯度累积、通信优化</small></span><span class="flow-arrow">→</span><span class="flow-node">稳定训练<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">监控损失与吞吐，反馈调参</small></span>
+        <div class="flow-note">从预训练目标出发，经并行切分与优化技巧，形成可稳定扩展的训练闭环。</div>
+      </div><!--/flow-v1-->
  <h3>预训练目标：自回归语言建模</h3>
- <p>预训练是LLM获得通用语言能力的基石，而<b>自回归语言建模（Autoregressive Language Modeling）</b>是其中最主流的目标。它的核心思想很简单：给定前文，预测下一个token。形式化地，对于序列 \(x_1, x_2, ..., x_T\)，模型最大化对数似然：</p><p>\[\sum_{t=1}^{T} \log P(x_t | x_1, ..., x_{t-1}; \theta)\]</p><p>训练时，我们通常使用<b>教师强制（teacher forcing）</b>：将真实的前缀作为输入，并行计算所有位置的预测，并与真实的下一个token计算交叉熵损失。这样，一次前向传播就能得到所有位置的损失，效率很高。</p><p>下面是一个最小示例，展示如何用PyTorch实现自回归语言建模的损失计算：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import torch
+ <p>想象你在教一个孩子读书：你指着句子“今天天气真___”，让他猜下一个字。孩子会先看前面的“今天天气真”，再结合经验猜“好”或“热”。自回归语言建模就是让模型做同样的事——<b>给定前文，预测下一个token</b>。这个看似简单的任务，迫使模型学会语法、事实、推理甚至代码逻辑，因为要准确预测下一个词，它必须“理解”上下文。</p><p>形式化地，对于序列 \(x_1, x_2, ..., x_T\)，模型最大化对数似然：\[\sum_{t=1}^{T} \log P(x_t | x_1, ..., x_{t-1}; \theta)\]。训练时使用<b>教师强制（teacher forcing）</b>：把真实的前缀作为输入，并行计算所有位置的预测，再与真实的下一个token计算交叉熵损失。例如序列长度为5，模型一次前向就得到5个位置的预测，分别对应第2到第6个token（若输入是前5个）。这样一次前向传播就能得到所有位置的损失，效率远高于逐词生成。</p><p>下面是一个最小可运行示例，展示如何用PyTorch实现自回归语言建模的损失计算。输入是随机logits和随机标签，预期输出是一个约等于 \(\ln(1000) \approx 6.9\) 的损失值（因为随机猜测1000个词）：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import torch
 import torch.nn as nn
 
 # 假设词表大小为1000，批次大小2，序列长度5
@@ -47,12 +50,12 @@ targets = torch.randint(0, vocab_size, (batch_size, seq_len))
 # 将logits和targets展平，计算交叉熵
 loss_fn = nn.CrossEntropyLoss()
 loss = loss_fn(logits.view(-1, vocab_size), targets.view(-1))
-print(f"Loss: {loss.item():.4f}")
+print(f"Loss: {loss.item():.4f}")  # 预期约6.9
 
 # 注意：实际中，模型输出logits[:, :-1]对应targets[:, 1:]
-# 这里简化演示，假设已经对齐</code></pre></div><p><b>关键点：</b>自回归建模天然适合生成任务，但训练时每个位置只能看到左侧上下文，因此需要因果掩码（causal mask）防止信息泄露。此外，这种目标也常用于零样本和少样本学习。</p>
+# 这里简化演示，假设已经对齐</code></pre></div><p><b>关键点：</b>自回归建模天然适合生成任务，但训练时每个位置只能看到左侧上下文，因此需要<b>因果掩码（causal mask）</b>防止信息泄露。如果没有掩码，模型在预测第t个token时会“偷看”到第t个token本身，训练损失会异常低（例如接近0），但生成时性能崩溃。此外，这种目标也常用于零样本和少样本学习。</p>
  <h3>分布式训练：数据并行、模型并行与流水线并行</h3>
- <p>当模型参数量达到数十亿甚至千亿时，单卡显存无法容纳，训练时间也难以接受。分布式训练成为必选项。主要策略有三类：</p><ul><li><b>数据并行（Data Parallelism）</b>：每张卡持有完整的模型副本，但处理不同的数据批次。梯度通过AllReduce同步。适合模型能单卡放下，但数据量大的场景。PyTorch的DistributedDataParallel（DDP）是标准实现。</li><li><b>模型并行（Model Parallelism）</b>：将模型的不同层或同一层的不同部分拆分到不同设备。例如，将Transformer的注意力头拆分到多卡（张量并行）。适合单层参数过大，单卡放不下的情况。</li><li><b>流水线并行（Pipeline Parallelism）</b>：将模型按层切分成多个阶段，每个阶段放在不同设备上，数据像流水线一样依次通过。为了减少气泡，通常采用微批次（micro-batch）和调度策略（如GPipe、PipeDream）。</li></ul><p>实际训练中，常结合多种并行策略，如3D并行（数据+模型+流水线）。下面是一个使用PyTorch DDP的简单示例：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import torch
+ <p>当模型参数量达到数十亿甚至千亿时，单卡显存无法容纳，训练时间也难以接受。分布式训练成为必选项。你可以把训练想象成搬砖：数据并行是“多请几个工人，每人搬不同的砖，但都拿着同一张图纸”；模型并行是“把一栋楼分成几段，每个工人只负责一段”；流水线并行则是“把搬砖流程分成几道工序，工人像流水线一样接力”。</p><p>具体来说：<b>数据并行（Data Parallelism）</b>中每张卡持有完整的模型副本，但处理不同的数据批次，梯度通过AllReduce同步。适合模型能单卡放下、但数据量大的场景，PyTorch的DistributedDataParallel（DDP）是标准实现。<b>模型并行（Model Parallelism）</b>将模型的不同层或同一层的不同部分拆分到不同设备，例如将Transformer的注意力头拆分到多卡（张量并行），适合单层参数过大、单卡放不下的情况。<b>流水线并行（Pipeline Parallelism）</b>将模型按层切分成多个阶段，每个阶段放在不同设备上，数据像流水线一样依次通过；为了减少气泡，通常采用微批次（micro-batch）和调度策略（如GPipe、PipeDream）。实际训练中常结合多种并行策略，如3D并行（数据+模型+流水线）。</p><p>下面是一个使用PyTorch DDP的简单示例。启动方式为 <code>torchrun --nproc_per_node=2 script.py</code>，每个进程调用 <code>train(rank, world_size)</code>，预期输出两行不同rank的损失值：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import torch
 import torch.distributed as dist
 import torch.nn as nn
 import torch.optim as optim
@@ -84,9 +87,9 @@ def train(rank, world_size):
     cleanup()
 
 # 启动方式：torchrun --nproc_per_node=2 script.py
-# 每个进程调用train(rank, world_size)</code></pre></div><p><b>关键点：</b>数据并行通信开销大，模型并行和流水线并行则更复杂但能突破单卡显存限制。选择策略需权衡模型大小、集群网络和开发成本。</p>
+# 每个进程调用train(rank, world_size)</code></pre></div><p><b>关键点：</b>数据并行通信开销大（每步都要AllReduce梯度），模型并行和流水线并行则更复杂但能突破单卡显存限制。选择策略需权衡模型大小、集群网络和开发成本。例如，一个70B参数模型通常需要张量并行（8卡）+流水线并行（多机）+数据并行（多副本）的组合。</p>
  <h3>混合精度训练与梯度累积</h3>
- <p><b>混合精度训练（Mixed Precision Training）</b>通过结合FP16和FP32来加速训练并减少显存占用。核心思想：前向和反向传播使用FP16计算，但保留一份FP32的模型权重副本用于更新，避免舍入误差累积。同时，使用损失缩放（loss scaling）防止梯度下溢。</p><p>PyTorch提供了torch.cuda.amp自动混合精度：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import torch
+ <p>混合精度训练就像用“草稿纸”和“正式账本”记账：草稿纸（FP16）写得快、占地方小，但容易算错小数；正式账本（FP32）精确但慢。核心思想是：前向和反向传播使用FP16计算，但保留一份FP32的模型权重副本用于更新，避免舍入误差累积。同时，使用损失缩放（loss scaling）防止梯度下溢——把损失放大 \(2^{16}\) 倍再反向传播，让微小梯度落在FP16可表示范围内，更新前再缩回去。</p><p>PyTorch提供了torch.cuda.amp自动混合精度。下面示例中，模型和优化器初始化后，每个批次在autocast下前向，用scaler缩放损失并反向，最后scaler.step和update完成更新。预期输出是正常的损失值，且显存占用比纯FP32降低约30%-50%（待核实具体比例，取决于模型）。</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import torch
 from torch.cuda.amp import autocast, GradScaler
 
 model = torch.nn.Linear(10, 10).cuda()
@@ -100,7 +103,7 @@ for data, target in dataloader:
         loss = loss_fn(output, target)
     scaler.scale(loss).backward()
     scaler.step(optimizer)
-    scaler.update()</code></pre></div><p><b>梯度累积（Gradient Accumulation）</b>是另一种节省显存的技巧：当显存不足以容纳大batch时，可以多次前向/反向传播，累积梯度，再一次性更新。这等价于增大batch size，但不会增加显存峰值。</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">accumulation_steps = 4
+    scaler.update()</code></pre></div><p><b>梯度累积（Gradient Accumulation）</b>是另一种节省显存的技巧：当显存不足以容纳大batch时，可以多次前向/反向传播，累积梯度，再一次性更新。这等价于增大batch size，但不会增加显存峰值。例如，目标batch size为32，但单卡只能放8，就累积4步。注意损失要除以累积步数，保证梯度尺度正确。</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">accumulation_steps = 4
 optimizer.zero_grad()
 for i, (data, target) in enumerate(dataloader):
     output = model(data)
@@ -108,9 +111,9 @@ for i, (data, target) in enumerate(dataloader):
     loss.backward()
     if (i+1) % accumulation_steps == 0:
         optimizer.step()
-        optimizer.zero_grad()</code></pre></div><p><b>关键点：</b>混合精度和梯度累积常结合使用，能显著降低显存需求，但需注意数值稳定性（如梯度裁剪）和超参数调整。</p>
+        optimizer.zero_grad()</code></pre></div><p><b>关键点：</b>混合精度和梯度累积常结合使用，能显著降低显存需求，但需注意数值稳定性（如梯度裁剪）和超参数调整。例如，使用混合精度时，梯度裁剪前需要先调用 <code>scaler.unscale_(optimizer)</code> 把梯度还原到真实尺度，否则裁剪阈值会失效。</p>
  <h3>训练稳定性：学习率调度与梯度裁剪</h3>
- <p>大模型训练容易不稳定，表现为损失尖峰或发散。两个关键技巧是学习率调度和梯度裁剪。</p><p><b>学习率调度：</b>常用预热（warmup）和余弦衰减。预热让学习率从0线性增加到峰值，避免早期梯度噪声导致的不稳定；随后余弦衰减到接近0，帮助模型收敛到更平坦的极小值。</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from torch.optim.lr_scheduler import LambdaLR
+ <p>大模型训练就像在暴风雨中开船：学习率太大，船会翻（损失尖峰或发散）；学习率太小，船走不动（收敛慢）。两个关键技巧是学习率调度和梯度裁剪。学习率调度常用<b>预热（warmup）</b>和<b>余弦衰减</b>：预热让学习率从0线性增加到峰值，避免早期梯度噪声导致的不稳定；随后余弦衰减到接近0，帮助模型收敛到更平坦的极小值。例如，总步数10000，预热1000步，前1000步学习率从0升到峰值，后9000步按余弦曲线下降。</p><p>下面是一个可运行的学习率调度示例，使用LambdaLR。预期输出是前几步学习率逐渐增大，之后逐渐减小：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from torch.optim.lr_scheduler import LambdaLR
 import math
 
 def lr_lambda(step):
@@ -122,18 +125,19 @@ def lr_lambda(step):
         progress = (step - warmup_steps) / (total_steps - warmup_steps)
         return 0.5 * (1 + math.cos(math.pi * progress))
 
-scheduler = LambdaLR(optimizer, lr_lambda)</code></pre></div><p><b>梯度裁剪：</b>将梯度向量的范数限制在一个阈值内，防止梯度爆炸。通常按全局范数裁剪：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)</code></pre></div><p><b>关键点：</b>预热步数通常为总步数的1%-10%，梯度裁剪阈值常设为1.0。这些技巧能显著提升训练稳定性，尤其对于大模型。</p>
+scheduler = LambdaLR(optimizer, lr_lambda)</code></pre></div><p><b>梯度裁剪</b>则是给梯度向量“限速”：将梯度向量的范数限制在一个阈值内，防止梯度爆炸。通常按全局范数裁剪，阈值常设为1.0。例如，某步梯度范数为10.0，裁剪后变为1.0，方向不变。这能显著提升训练稳定性，尤其对于大模型。</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)</code></pre></div><p><b>关键点：</b>预热步数通常为总步数的1%-10%，梯度裁剪阈值常设为1.0。这些技巧能显著提升训练稳定性，尤其对于大模型。但注意，梯度裁剪应在优化器step之前、梯度计算之后调用；若使用混合精度，需先unscale梯度。</p>
  <h3>常见误区</h3>
  <ul>
- <li>自回归语言建模训练时，每个位置可以同时看到左右上下文，因此不需要因果掩码。</li>
- <li>数据并行中，每张卡持有模型的一部分，因此可以训练任意大的模型。</li>
- <li>混合精度训练会降低模型精度，因此不能用于最终部署。</li>
+  <li>错误理解：自回归语言建模训练时，每个位置可以同时看到左右上下文，因此不需要因果掩码。→ 会导致什么后果：模型在训练时“偷看”到未来token，训练损失异常低（例如接近0），但生成时无法获得未来信息，性能崩溃。→ 正确做法：在注意力计算中加入因果掩码，确保第t个位置只能关注前t-1个位置，使训练目标与生成时的自回归特性一致。</li>
+  <li>错误理解：数据并行中，每张卡持有模型的一部分，因此可以训练任意大的模型。→ 会导致什么后果：误以为数据并行能解决显存不足，实际每张卡仍需完整模型副本，模型稍大就会OOM。→ 正确做法：数据并行要求模型能单卡放下；若单卡放不下，需结合模型并行或流水线并行，将模型拆分到多卡。</li>
+  <li>错误理解：混合精度训练会降低模型精度，因此不能用于最终部署。→ 会导致什么后果：放弃使用混合精度，训练变慢、显存占用高，或者错误地认为部署也必须用FP32。→ 正确做法：混合精度训练保留FP32主权重，精度损失通常很小；部署时可根据硬件选择FP16/BF16或FP32，需通过评估验证精度。</li>
  </ul>
  <h3>自测</h3>
- <details class="quiz"><summary>自回归语言建模中，为什么需要因果掩码（causal mask）？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>因果掩码确保模型在预测第t个token时只能看到前t-1个token，防止信息泄露，使训练目标与生成时的自回归特性一致。</p></div></details>
- <details class="quiz"><summary>数据并行和模型并行的主要区别是什么？各自适用什么场景？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>数据并行中每张卡有完整模型副本，处理不同数据批次，通过AllReduce同步梯度，适合模型能单卡放下但数据量大的场景；模型并行将模型拆分到不同设备，适合单卡显存不足以容纳整个模型的情况。</p></div></details>
+ <details class="quiz"><summary>自回归语言建模中，为什么需要因果掩码（causal mask）？请结合训练和生成两个阶段说明。</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>训练时，模型并行计算所有位置的预测，如果不加掩码，第t个位置会通过注意力看到第t个及之后的token，相当于直接看到答案，损失会异常低但学不到真实规律。生成时，模型只能基于已生成的左侧上下文逐词预测，无法获得未来token。因果掩码确保训练时每个位置只能关注前t-1个位置，使训练目标与生成时的自回归特性一致，避免信息泄露。</p></div></details>
+ <details class="quiz"><summary>数据并行和模型并行的主要区别是什么？各自适用什么场景？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>数据并行中每张卡持有完整模型副本，处理不同数据批次，通过AllReduce同步梯度，适合模型能单卡放下但数据量大的场景；模型并行将模型拆分到不同设备，适合单卡显存不足以容纳整个模型的情况。数据并行通信开销主要在梯度同步，模型并行则涉及层间或张量间的通信，实现更复杂。</p></div></details>
+ <details class="quiz"><summary>混合精度训练中，为什么需要损失缩放（loss scaling）？如果不做会怎样？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>FP16的表示范围有限，梯度值很小时容易下溢为0，导致参数无法更新。损失缩放将损失放大（如乘以 \(2^{16}\)），使梯度也相应放大，落在FP16可表示范围内；更新前再缩回去。如果不做损失缩放，小梯度会丢失，训练可能停滞或收敛变差。</p></div></details>
  <h3>动手练习（带参考方案）</h3>
- <details class="fold"><summary>动手练习 · 使用PyTorch实现一个简单的自回归语言模型训练循环，包含混合精度训练和梯度累积。要求：模型为一个…</summary><div class="fold-body"><p><b>任务：</b>使用PyTorch实现一个简单的自回归语言模型训练循环，包含混合精度训练和梯度累积。要求：模型为一个两层LSTM，词表大小1000，嵌入维度128，隐藏层维度256。使用随机生成的数据模拟训练，批次大小32，序列长度20，梯度累积步数4，使用Adam优化器和余弦学习率调度（带预热）。</p><p><b>参考方案：</b></p>import torch
+ <details class="fold"><summary>练习 · 使用PyTorch实现一个简单的自回归语言模型训练循环，包含混合精度训练和梯度累积。要求：模型为一个两层LSTM，词表大…</summary><div class="fold-body"><p><b>任务：</b>使用PyTorch实现一个简单的自回归语言模型训练循环，包含混合精度训练和梯度累积。要求：模型为一个两层LSTM，词表大小1000，嵌入维度128，隐藏层维度256。使用随机生成的数据模拟训练，批次大小32，序列长度20，梯度累积步数4，使用Adam优化器和余弦学习率调度（带预热）。</p><p><b>参考方案：</b></p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.cuda.amp import autocast, GradScaler
@@ -199,11 +203,11 @@ for epoch in range(num_epochs):
             scaler.update()
             optimizer.zero_grad()
             scheduler.step()
-    print(f"Epoch {epoch}, Loss: {loss.item() * accum_steps:.4f}")</div></details>
+    print(f"Epoch {epoch}, Loss: {loss.item() * accum_steps:.4f}")</code></pre></div></div></details>
     </div>
   </main>
 </div>
 
-<script src="assets/js/app.js?v=24"></script>
+<script src="assets/js/app.js?v=28"></script>
 </body>
 </html>

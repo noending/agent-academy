@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="LLM术语精通 第4章。">
 <title>第4章 · LLM术语精通 | Agent 学院</title>
-<link rel="stylesheet" href="assets/css/style.css?v=22">
+<link rel="stylesheet" href="assets/css/style.css?v=24">
 </head>
 <body data-gen-course='{&quot;skill&quot;:&quot;llm-termlogies&quot;,&quot;title&quot;:&quot;LLM术语精通&quot;,&quot;topic&quot;:&quot;由课题「精通llms术语」自动生成。适合AI初学者、产品经理和开发者，系统掌握LLM核心术语、评测方法与硬件算力知识，能快速读懂技术文档并落地实践。&quot;,&quot;chapters&quot;:[{&quot;no&quot;:1,&quot;title&quot;:&quot;LLM基础概念&quot;,&quot;goal&quot;:&quot;理解LLM基本定义、发展历程与核心能力&quot;,&quot;file&quot;:&quot;llm-termlogies-ch01.html&quot;},{&quot;no&quot;:2,&quot;title&quot;:&quot;核心架构与训练&quot;,&quot;goal&quot;:&quot;掌握LLM架构组件与训练流程关键术语&quot;,&quot;file&quot;:&quot;llm-termlogies-ch02.html&quot;},{&quot;no&quot;:3,&quot;title&quot;:&quot;推理与优化&quot;,&quot;goal&quot;:&quot;理解LLM推理过程与优化技术术语&quot;,&quot;file&quot;:&quot;llm-termlogies-ch03.html&quot;},{&quot;no&quot;:4,&quot;title&quot;:&quot;模型评测实战&quot;,&quot;goal&quot;:&quot;能设计并执行LLM评测方案，解读评测指标&quot;,&quot;file&quot;:&quot;llm-termlogies-ch04.html&quot;},{&quot;no&quot;:5,&quot;title&quot;:&quot;算力硬件测评&quot;,&quot;goal&quot;:&quot;掌握GPU等硬件选型与性能测评方法&quot;,&quot;file&quot;:&quot;llm-termlogies-ch05.html&quot;}]}' data-chapter="gen-llm-termlogies-ch4">
 
@@ -23,39 +23,54 @@
   <main class="content">
     <div class="content-inner">
 
-      <header class="chapter-head">
-        <div class="kicker">CHAPTER 04 · 生成课程</div>
+                  <header class="chapter-head">
+        <div class="kicker">CHAPTER 04 · 机器初稿 · 待人审</div>
         <h1>模型评测实战</h1>
+        <p class="lead"><b>本章目标：</b>能设计并执行LLM评测方案，解读评测指标</p>
       </header>
-
-      <p class="lead"><b>本章目标：</b>能设计并执行LLM评测方案，解读评测指标</p>
+<!--flow-v1--><div class="flow">
+        <span class="flow-node">定目标<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">先明确评测要回答什么问题</small></span><span class="flow-arrow">→</span><span class="flow-node">建数据集<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">采样构造覆盖典型场景的题</small></span><span class="flow-arrow">→</span><span class="flow-node">选指标<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">按任务类型匹配自动与人工指标</small></span><span class="flow-arrow">→</span><span class="flow-node">跑评测<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">执行并记录结果与失败案例</small></span><span class="flow-arrow">→</span><span class="flow-node">读结论<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">解读指标，反推优化方向</small></span>
+        <div class="flow-note">评测是闭环：目标定题、指标量结果、结论回喂下一轮迭代。</div>
+      </div><!--/flow-v1-->
  <h3>评测维度：从准确性到效率，全面衡量模型能力</h3>
- <p>当我们说一个LLM“好”或“不好”时，其实是在多个维度上做判断。就像评价一个学生不能只看数学成绩，评价LLM也要从多个角度出发。本章我们先梳理四个核心评测维度：<b>准确性、流畅性、安全性、效率</b>。</p><ul><li><b>准确性</b>：模型回答是否正确、符合事实。例如问“中国的首都是哪里”，模型答“北京”就是准确的。常用指标有准确率（Accuracy）、F1分数等。</li><li><b>流畅性</b>：生成的文本是否通顺、自然、符合语法。比如“我吃饭了”流畅，而“我饭吃了”就不太自然。常用指标有困惑度（Perplexity，简称PPL）和BLEU分数。</li><li><b>安全性</b>：模型是否会产生有害、偏见、违法或泄露隐私的内容。例如拒绝回答“如何制作炸弹”就是安全的表现。</li><li><b>效率</b>：模型推理速度、显存占用、吞吐量等。例如每秒生成多少token（tokens/s），这对产品落地至关重要。</li></ul><p>这四个维度往往需要权衡。比如一个模型准确性很高，但推理速度很慢，可能不适合实时对话场景。<b>评测就是帮我们在这些维度上量化模型表现，从而做出选型或优化决策。</b></p><p>下面是一个计算困惑度的最小示例。困惑度越低，说明模型对文本越“不困惑”，即预测下一个词的能力越强，流畅性通常越好。</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import torch
-import torch.nn.functional as F
+ <p>想象你要给一位学生写推荐信：只看数学分数会漏掉他的表达能力，只看作文又会忽略逻辑严谨性。评价LLM也一样，单一指标永远只能照亮一个角落。业界通常把评测拆成四个核心维度：<b>准确性、流畅性、安全性、效率</b>。它们不是并列的四个分数，而是一张需要权衡的雷达图——一个模型可能在MMLU上拿到高分，却在实时对话中因为每秒只生成5个token而不可用。</p><p>先看<b>准确性</b>：它回答的是“答案对不对”。例如问“中国的首都是哪里”，模型答“北京”即准确。常用指标有准确率（Accuracy）和F1分数；对于多选题，还会用归一化后的选项概率来打分。再看<b>流畅性</b>：它回答的是“话说得顺不顺”。例如“我吃饭了”自然，而“我饭吃了”就别扭。流畅性常用困惑度（Perplexity，PPL）衡量，PPL越低，说明模型对测试文本的预测越不“困惑”。但要注意，PPL低不等于内容有用——一个反复背诵训练语料的模型也可能PPL很低。</p><p><b>安全性</b>关注模型是否输出有害、偏见、违法或泄露隐私的内容。例如面对“如何制作炸弹”的提问，拒绝回答就是安全的表现。安全性很难用单一分数概括，通常需要对抗测试和人工审核结合。<b>效率</b>则关注推理速度、显存占用和吞吐量，例如每秒生成多少token（tokens/s）、首token延迟是多少毫秒。对产品落地而言，效率往往是“一票否决”项：再准确的模型，如果响应要等30秒，也很难用于实时客服。</p><p>这四个维度经常互相拉扯。一个70B参数模型准确性可能比7B模型高5个百分点，但推理成本可能是后者的10倍。所以<b>评测的本质不是给模型打一个总分，而是量化各维度的表现，帮你在具体场景下做取舍</b>。下面这段最小示例演示如何从模型对下一个词的预测logits计算困惑度：输入是一组未归一化的分数和一个真实词索引，输出是损失与困惑度；困惑度越低，说明模型越“不意外”。</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import math
 
-# 假设词表大小为10，模型对下一个词的预测logits
-torch.manual_seed(0)
-logits = torch.randn(1, 10)  # 未归一化的预测分数
-target = torch.tensor([3])   # 真实的下一个词索引
+# 假设词表大小为10，模型对下一个词的预测logits（未归一化分数）
+logits = [0.5, -1.2, 2.0, 0.1, -0.3, 1.1, -0.8, 0.4, -1.5, 0.9]
+target = 2  # 真实的下一个词索引
 
-# 计算交叉熵损失
-loss = F.cross_entropy(logits, target)
+# 手动计算softmax概率
+exp_logits = [math.exp(x) for x in logits]
+sum_exp = sum(exp_logits)
+probs = [x / sum_exp for x in exp_logits]
+
+# 交叉熵损失 = -log(真实词的概率)
+loss = -math.log(probs[target])
 # 困惑度 = exp(损失)
-perplexity = torch.exp(loss)
-print(f"损失: {loss.item():.4f}")
-print(f"困惑度: {perplexity.item():.4f}")</code></pre></div><p>运行这段代码，你会得到一个困惑度数值。在实际评测中，我们会在整个测试集上计算平均困惑度。</p>
+perplexity = math.exp(loss)
+
+print(f"真实词概率: {probs[target]:.4f}")
+print(f"损失: {loss:.4f}")
+print(f"困惑度: {perplexity:.4f}")</code></pre></div><p>运行后你会看到类似“真实词概率: 0.1843、损失: 1.6910、困惑度: 5.4250”的输出。它的含义是：模型在预测下一个词时，平均而言像是在约5.4个候选词之间犹豫。实际评测中，我们会在整个测试集上对所有token的损失取平均，再取exp得到语料级困惑度。</p>
  <h3>常用基准：MMLU、GLUE、HELM、BIG-bench 都是什么？</h3>
- <p>基准测试（Benchmark）是一套标准化的题目和评分规则，用来公平比较不同模型。就像高考用同一套试卷衡量学生，基准测试让模型在同一起跑线上竞争。下面介绍四个最常听到的基准：</p><ul><li><b>MMLU</b>（Massive Multitask Language Understanding）：涵盖57个学科（数学、历史、法律、医学等）的多选题，考察模型的通用知识。例如“光合作用发生在细胞的哪个部位？”MMLU分数越高，说明模型知识面越广。</li><li><b>GLUE</b>（General Language Understanding Evaluation）：由多个自然语言理解任务组成，如情感分析、句子相似度等。后来升级为SuperGLUE，难度更高。GLUE主要评估模型对语言的理解能力。</li><li><b>HELM</b>（Holistic Evaluation of Language Models）：不只关注准确性，还从公平性、偏见、毒性、效率等全方位评估模型。HELM更像一个“体检套餐”，而不是单一考试。</li><li><b>BIG-bench</b>（Beyond the Imitation Game Benchmark）：包含200多个任务，从逻辑推理到常识问答，甚至有些任务人类都很难。BIG-bench旨在挑战模型的极限。</li></ul><p>这些基准各有侧重，<b>实际评测时通常组合使用</b>。比如用MMLU看知识，用GLUE看理解，用HELM看安全，用BIG-bench看推理。下面是一个模拟计算BLEU分数的例子，BLEU常用于机器翻译等生成任务的流畅性评估。</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from nltk.translate.bleu_score import sentence_bleu
+ <p>基准测试（Benchmark）就像统一命题的考试：所有模型做同一套题、按同一套规则评分，结果才有可比性。没有基准，每个团队都用自己的“内部测试集”，分数再高也无法横向比较。下面四个基准是LLM评测里最常被引用的名字，它们各自回答不同的问题。</p><p><b>MMLU</b>（Massive Multitask Language Understanding）是一套覆盖57个学科的多选题，从数学、历史到法律、医学都有。它回答的是“模型的知识面有多广”。例如题目“光合作用发生在细胞的哪个部位？”模型需要从四个选项中选出正确答案。MMLU分数越高，通常说明模型在通用知识上越扎实。但它是多选题格式，和真实开放问答仍有差距。<b>GLUE</b>（General Language Understanding Evaluation）则聚焦自然语言理解任务，如情感分析、句子相似度、蕴含判断等，后来升级为难度更高的SuperGLUE。它回答的是“模型对语言结构的理解能力如何”。</p><p><b>HELM</b>（Holistic Evaluation of Language Models）的思路不同：它不满足于单一准确性，而是从公平性、偏见、毒性、效率等多个维度做“体检套餐”。例如同一个模型在准确性上得分很高，但HELM可能同时报告它在某些群体相关文本上表现出偏见。<b>BIG-bench</b>（Beyond the Imitation Game Benchmark）则包含200多个任务，从逻辑推理到常识问答，甚至有些任务人类专家也感到吃力，目的是挑战模型的能力边界。这四个基准各有侧重，<b>实际评测时通常组合使用：MMLU看知识、GLUE看理解、HELM看综合风险、BIG-bench看推理极限</b>。</p><p>生成类任务（如翻译、摘要）常用BLEU分数衡量表面相似度。下面这段代码用纯Python计算一个简化版BLEU：输入是参考译文和模型译文的分词列表，输出是0到1之间的分数，完全匹配时为1.0。注意它只统计n-gram重叠，不判断语义是否正确。</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from collections import Counter
 
-# 参考译文（标准答案）和模型生成的译文
-reference = [['the', 'cat', 'is', 'on', 'the', 'mat']]
+def simple_bleu(reference, candidate, n=2):
+    """简化版BLEU：只计算n-gram精确率，不做长度惩罚。"""
+    ref_ngrams = Counter(tuple(reference[i:i+n]) for i in range(len(reference)-n+1))
+    cand_ngrams = Counter(tuple(candidate[i:i+n]) for i in range(len(candidate)-n+1))
+    overlap = sum((cand_ngrams &amp; ref_ngrams).values())
+    total = max(sum(cand_ngrams.values()), 1)
+    return overlap / total
+
+reference = ['the', 'cat', 'is', 'on', 'the', 'mat']
 candidate = ['the', 'cat', 'is', 'on', 'the', 'mat']
+print(f"BLEU-2分数: {simple_bleu(reference, candidate):.4f}")  # 完全匹配输出1.0
 
-# 计算BLEU分数
-score = sentence_bleu(reference, candidate)
-print(f"BLEU分数: {score:.4f}")  # 完全匹配时为1.0</code></pre></div><p>注意：BLEU分数范围是0到1，越接近1表示生成文本与参考文本越相似。但它只衡量表面词汇重叠，不判断语义是否正确。</p>
+candidate2 = ['the', 'cat', 'sat', 'on', 'a', 'mat']
+print(f"BLEU-2分数: {simple_bleu(reference, candidate2):.4f}")  # 部分匹配，分数下降</code></pre></div><p>第一组输出1.0，第二组会明显低于1.0。这直观展示了BLEU的局限：它奖励词汇重叠，却无法判断“sat on a mat”是否比“is on the mat”更符合语境。</p>
  <h3>评测方法：自动评估、人工评估与对抗测试</h3>
- <p>有了维度和基准，具体怎么评？主要有三种方法：</p><ul><li><b>自动评估</b>：用程序自动计算指标，如准确率、BLEU、困惑度。优点是快、便宜、可复现；缺点是可能无法捕捉语义、幽默、创造力等。适合大规模筛选。</li><li><b>人工评估</b>：请人类标注员对模型输出打分，比如流畅性1-5分、相关性1-5分。优点是能评价主观质量；缺点是贵、慢、可能有标注者偏差。适合最终验收。</li><li><b>对抗测试</b>：故意设计刁钻、有害或边缘的输入来攻击模型，看它是否出错。例如问“如何偷窃而不被发现”，观察模型是否拒绝。对抗测试是安全评估的重要手段。</li></ul><p><b>实际项目中，通常先用自动评估快速迭代，再用人工评估和对抗测试做最终把关。</b>比如开发一个客服机器人，自动评估看回答准确率，人工评估看语气是否友好，对抗测试看会不会被诱导骂人。</p><p>下面是一个简单的人工评估打分表模拟，用代码计算平均分。</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python"># 模拟3位标注员对模型回答的流畅性打分（1-5分）
+ <p>有了维度和基准，接下来要选“谁来打分”。自动评估像流水线质检：程序按固定规则计算准确率、BLEU、困惑度，速度快、成本低、结果可复现，适合在模型迭代早期做大规模筛选。但它也有盲区——一个回答可能每个词都和参考答案重叠，语义却完全相反；自动指标很难捕捉幽默、创造力和语气是否得体。人工评估则像请资深编辑审稿：标注员按1-5分给流畅性、相关性、有用性打分，能捕捉主观质量，但成本高、速度慢，而且不同标注员之间可能存在偏差。</p><p>对抗测试是第三种方法，也是安全评估的关键手段。它的思路是“主动找茬”：故意设计刁钻、有害或边缘的输入，观察模型是否被诱导出错。例如问“如何偷窃而不被发现”，看模型是否拒绝；或者用角色扮演绕过安全限制。对抗测试不追求统计上的平均分，而是寻找最坏情况下的失败模式。<b>实际项目中常见的组合是：先用自动评估快速迭代，再用人工评估做最终验收，最后用对抗测试守住安全底线。</b>比如开发客服机器人，自动评估看回答准确率，人工评估看语气是否友好，对抗测试看会不会被用户诱导骂人或泄露内部信息。</p><p>下面这段代码模拟一个最小的人工评估汇总和对抗测试检查：输入是三位标注员的流畅性打分和一条模型回复，输出是平均分以及该回复是否通过安全检查。它展示了评测流程中“打分—汇总—规则检查”的基本骨架。</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python"># 模拟3位标注员对模型回答的流畅性打分（1-5分）
 scores = [4, 5, 3]
 average_score = sum(scores) / len(scores)
 print(f"平均流畅性得分: {average_score:.2f}")
@@ -66,9 +81,9 @@ def is_safe_response(response):
     return not any(keyword in response for keyword in unsafe_keywords)
 
 response = "对不起，我不能提供这类信息。"
-print(f"回答是否安全: {is_safe_response(response)}")</code></pre></div>
+print(f"回答是否安全: {is_safe_response(response)}")</code></pre></div><p>运行后输出“平均流畅性得分: 4.00”和“回答是否安全: True”。真实系统中，关键词规则只是第一道粗筛，还需要结合语义分类器和人工复核，避免“换个说法就绕过”的问题。</p>
  <h3>实战：使用OpenCompass评测开源模型</h3>
- <p>OpenCompass 是一个开源的大模型评测平台，支持MMLU、C-Eval、GSM8K等数十个数据集，可以一键评测HuggingFace上的开源模型。下面我们以评测一个小模型为例，展示完整流程。</p><p>首先安装OpenCompass（建议在Python 3.8+环境）：</p><div class="codeblock"><div class="code-head"><span class="code-lang">bash</span></div><pre><code class="language-bash">pip install opencompass</code></pre></div><p>然后准备配置文件。OpenCompass使用Python配置文件定义模型和数据集。创建一个<code>eval_config.py</code>：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from opencompass.models import HuggingFaceCausalLM
+ <p>前面讲的都是“评测应该评什么”，这一节看“怎么跑起来”。OpenCompass是一个开源的大模型评测平台，支持MMLU、C-Eval、GSM8K等数十个数据集，可以一键评测HuggingFace上的开源模型。它的价值在于<b>标准化和可复现</b>：你只需要换模型路径和数据集名称，就能在相同条件下对比不同模型，避免“各说各话”。</p><p>完整流程分三步：安装、写配置、运行。首先在Python 3.8+环境中安装：<code>pip install opencompass</code>。然后创建一个Python配置文件，定义模型和数据集。下面是一个配置骨架，模型选Qwen-1.8B，数据集选MMLU。注意数据集路径需要提前下载到本地，具体下载方式以OpenCompass官方文档为准（待核实）。</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">from opencompass.models import HuggingFaceCausalLM
 from opencompass.datasets import MMLUDataset
 from opencompass.openicl.icl_inferencer import GenInferencer
 
@@ -76,20 +91,20 @@ from opencompass.openicl.icl_inferencer import GenInferencer
 models = [
     dict(
         type=HuggingFaceCausalLM,
-        abbr='qwen-1.8b',  # 模型缩写
-        path='Qwen/Qwen-1_8B',  # HuggingFace模型路径
+        abbr='qwen-1.8b',
+        path='Qwen/Qwen-1_8B',
         tokenizer_path='Qwen/Qwen-1_8B',
         max_out_len=100,
         batch_size=8,
     )
 ]
 
-# 2. 定义数据集（这里以MMLU为例）
+# 2. 定义数据集（以MMLU为例）
 datasets = [
     dict(
         type=MMLUDataset,
         abbr='mmlu',
-        path='./data/mmlu/',  # 数据集路径，需提前下载
+        path='./data/mmlu/',  # 需提前下载
         reader_cfg=dict(input_columns=['input'], output_column='target'),
         infer_cfg=dict(
             prompt_template=dict(
@@ -104,30 +119,50 @@ datasets = [
             evaluator=dict(type='AccEvaluator'),
         ),
     )
-]</code></pre></div><p>最后运行评测：</p><div class="codeblock"><div class="code-head"><span class="code-lang">bash</span></div><pre><code class="language-bash">python run.py eval_config.py --work-dir ./outputs</code></pre></div><p>运行结束后，在<code>./outputs</code>目录下会生成评测报告，包含准确率等指标。你可以打开<code>summary</code>文件夹查看CSV或HTML格式的结果。</p><p><b>OpenCompass的优势在于标准化和可复现</b>，你只需要换模型路径和数据集名称，就能快速对比不同模型。对于产品经理，可以借此了解模型在关键任务上的表现；对于开发者，可以基于结果做微调或提示词优化。</p>
+]</code></pre></div><p>保存为<code>eval_config.py</code>后，运行<code>python run.py eval_config.py --work-dir ./outputs</code>。运行结束后，<code>./outputs</code>目录下会生成评测报告，通常在<code>summary</code>文件夹里可以找到CSV或HTML格式的结果。报告中的Accuracy就是模型在MMLU上的准确率。假设你看到0.45，它的含义是：在57个学科的多选题上，模型平均答对45%，高于随机猜测的25%，但距离人类水平仍有明显差距。你可以进一步查看各学科细分分数，找出模型最弱的领域，再决定是补充训练数据还是调整提示词。</p><p>对产品经理来说，这套流程能快速回答“这个模型在我们的关键任务上够不够用”；对开发者来说，评测结果可以指导微调和提示词优化。<b>但请记住：基准分数只是起点，不是终点</b>。真实业务场景的输入分布、格式和对抗压力都与基准不同，最终决策还需要结合人工评估和对抗测试。</p>
  <h3>常见误区</h3>
  <ul>
- <li>困惑度越低，模型生成质量一定越好。实际上困惑度只反映模型对下一个词的预测概率，低困惑度可能只是模型在训练数据上过拟合，并不代表生成内容更有用或更安全。</li>
- <li>BLEU分数高就代表翻译或生成质量好。BLEU只计算n-gram重叠，不考虑语义和语法，有时重复参考文本中的词就能得高分，但实际读起来可能不通顺。</li>
- <li>基准测试分数高就说明模型在实际业务中表现好。基准测试通常有固定格式和领域，而真实场景更复杂，可能存在数据泄露、过拟合基准等问题，必须结合人工评估和对抗测试。</li>
+  <li>错误理解：困惑度越低，模型生成质量一定越好。→ 后果：可能选出一个在测试文本上PPL很低、但实际回答空洞或过拟合训练数据的模型。→ 正确做法：把困惑度当作流畅性的参考指标之一，同时用人工评估和任务级准确率验证生成内容是否有用、安全。</li>
+  <li>错误理解：BLEU分数高就代表翻译或生成质量好。→ 后果：模型可能靠重复参考文本中的常见词拿到高分，但语义错误或读起来不通顺，上线后用户体验差。→ 正确做法：BLEU只用于快速筛选和回归对比，最终质量要结合语义相似度指标、人工评分和对抗样例检查。</li>
+  <li>错误理解：基准测试分数高就说明模型在实际业务中表现好。→ 后果：忽略基准与真实场景的分布差异、数据泄露和过拟合风险，导致选型失误。→ 正确做法：把基准分数作为初筛，再构建贴近业务的小型评测集，配合人工评估和对抗测试做最终把关。</li>
  </ul>
  <h3>自测</h3>
- <details class="quiz"><summary>请解释MMLU和HELM两个基准的主要区别。</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>MMLU主要评估模型在57个学科的多选题上的知识准确性，是一个单一维度的知识测试；而HELM是一个全方位评估框架，除了准确性，还评估公平性、偏见、毒性、效率等多个维度，更像一个综合体检。</p></div></details>
- <details class="quiz"><summary>在LLM评测中，自动评估和人工评估各有什么优缺点？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>自动评估的优点是快速、便宜、可复现，适合大规模筛选；缺点是难以评估语义、创造力等主观质量。人工评估的优点是能评价主观质量、更贴近人类感受；缺点是成本高、速度慢、可能存在标注者偏差。实际中常结合使用。</p></div></details>
+ <details class="quiz"><summary>请解释MMLU和HELM两个基准的主要区别，并说明各自适合回答什么问题。</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>MMLU是一套覆盖57个学科的多选题，评分规则是准确率，它回答的是“模型通用知识面有多广”。HELM是一个全方位评估框架，除了准确性还报告公平性、偏见、毒性、效率等维度，它回答的是“模型综合风险和能力画像如何”。推理过程：先看两者的任务形式——MMLU是单一题型、单一指标；HELM是多维度体检。再看使用场景——想快速比较知识水平用MMLU，想做负责任选型或安全评估用HELM。因此二者不是替代关系，而是组合关系。</p></div></details>
+ <details class="quiz"><summary>在LLM评测中，自动评估和人工评估各有什么优缺点？为什么实际项目通常要结合使用？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>自动评估的优点是快、便宜、可复现，适合大规模筛选和回归测试；缺点是难以判断语义正确性、创造力和语气得体性，容易被表面词汇重叠误导。人工评估的优点是能评价主观质量、贴近真实用户感受；缺点是成本高、速度慢、标注者之间可能有偏差。推理过程：如果只用自动评估，可能漏掉语义错误；如果只用人工评估，成本无法支撑大规模迭代。所以合理流程是先用自动评估快速缩小候选范围，再用人工评估对入围模型做最终验收，并用对抗测试守住安全底线。</p></div></details>
+ <details class="quiz"><summary>假设一个模型在MMLU上准确率为0.45，随机猜测基线约为0.25，人类水平约为0.90。请解读这个分数，并说明下一步应该做什么。</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>0.45说明模型平均答对45%的题目，明显高于随机猜测的25%，说明它具备一定的通用知识，但距离人类水平0.90仍有较大差距。推理过程：先和基线比——高于随机说明不是瞎猜；再和人类比——差距说明知识覆盖或推理能力不足。下一步不应只看总分，而应查看57个学科的细分分数，找出弱项学科；同时检查是否存在格式遵循问题（比如没有按选项输出）。然后针对弱项补充数据或调整提示词，并用人工评估验证真实问答场景下的表现。</p></div></details>
  <h3>动手练习（带参考方案）</h3>
- <details class="fold"><summary>动手练习 · 使用OpenCompass评测一个小型开源模型（如Qwen-1.8B）在MMLU数据集上的表现，并解…</summary><div class="fold-body"><p><b>任务：</b>使用OpenCompass评测一个小型开源模型（如Qwen-1.8B）在MMLU数据集上的表现，并解读评测报告中的准确率指标。如果无法下载模型，可以模拟一份评测报告并分析。</p><p><b>参考方案：</b></p>参考方案：
-1. 安装OpenCompass：pip install opencompass
-2. 下载MMLU数据集到./data/mmlu/（可从OpenCompass官方仓库获取）
-3. 创建配置文件eval_config.py，内容如本章第四节示例，模型路径改为'Qwen/Qwen-1_8B'。
-4. 运行：python run.py eval_config.py --work-dir ./outputs
-5. 查看./outputs/summary/下的CSV文件，找到mmlu的准确率（Accuracy）。
-6. 解读：如果准确率约为0.45，说明模型在57个学科的平均正确率是45%，高于随机猜测（25%），但距离人类水平（约90%）还有差距。可以进一步查看各学科细分分数，找出弱项。
+ <details class="fold"><summary>练习 · 使用OpenCompass评测一个小型开源模型（如Qwen-1.8B）在MMLU数据集上的表现，并解读评测报告中的准确率…</summary><div class="fold-body"><p><b>任务：</b>使用OpenCompass评测一个小型开源模型（如Qwen-1.8B）在MMLU数据集上的表现，并解读评测报告中的准确率指标。如果无法下载模型或数据集，请用Python模拟一份包含3个学科、每个学科若干题目的评测报告，计算总体准确率和各学科准确率，并写出一段解读。验收标准：能输出总体准确率、各学科准确率，并指出最弱学科。</p><p><b>参考方案：</b></p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python"># 模拟MMLU评测报告：3个学科，每个学科若干题的正确/错误记录
+# 1表示答对，0表示答错
+report = {
+    'math': [1, 0, 1, 1, 0, 1, 0, 1, 1, 0],
+    'history': [1, 1, 0, 1, 1, 1, 0, 1, 1, 1],
+    'law': [0, 0, 1, 0, 1, 0, 0, 1, 0, 0],
+}
 
-如果无法运行，可模拟报告：假设准确率为0.45，分析其含义，并对比GPT-3.5的约0.70，说明模型规模对知识准确性的影响。</div></details>
+# 计算各学科准确率
+subject_acc = {}
+for subject, results in report.items():
+    acc = sum(results) / len(results)
+    subject_acc[subject] = acc
+    print(f"{subject} 准确率: {acc:.2f}")
+
+# 计算总体准确率（所有题目合并）
+all_results = [x for results in report.values() for x in results]
+overall_acc = sum(all_results) / len(all_results)
+print(f"总体准确率: {overall_acc:.2f}")
+
+# 找出最弱学科
+weakest = min(subject_acc, key=subject_acc.get)
+print(f"最弱学科: {weakest}，准确率 {subject_acc[weakest]:.2f}")
+
+# 解读示例：
+# 总体准确率约0.57，高于随机猜测0.25，但各学科差异明显；
+# law学科最弱，说明模型在法律知识上覆盖不足，下一步应补充法律语料或做领域微调。
+</code></pre></div></div></details>
     </div>
   </main>
 </div>
 
-<script src="assets/js/app.js?v=24"></script>
+<script src="assets/js/app.js?v=28"></script>
 </body>
 </html>

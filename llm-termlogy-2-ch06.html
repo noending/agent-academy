@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="LLM术语与算力实战 第6章。">
 <title>第6章 · LLM术语与算力实战 | Agent 学院</title>
-<link rel="stylesheet" href="assets/css/style.css?v=22">
+<link rel="stylesheet" href="assets/css/style.css?v=24">
 </head>
 <body data-gen-course='{&quot;skill&quot;:&quot;llm-termlogy-2&quot;,&quot;title&quot;:&quot;LLM术语与算力实战&quot;,&quot;topic&quot;:&quot;由课题「LLM术语精通」自动生成。面向有开发基础的学员，系统掌握LLM术语、评测与算力选型。通过6章学习，能读懂模型卡、设计评测、估算显存成本，并完成企业助手选型报告。&quot;,&quot;chapters&quot;:[{&quot;no&quot;:1,&quot;title&quot;:&quot;全景地图与核心术语&quot;,&quot;goal&quot;:&quot;建立LLM知识地图，解释20+高频术语及其关系。&quot;,&quot;file&quot;:&quot;llm-termlogy-2-ch01.html&quot;},{&quot;no&quot;:2,&quot;title&quot;:&quot;模型能力评测与可信度&quot;,&quot;goal&quot;:&quot;能设计小规模评测，识别不公平比较，给出有证据的选型结论。&quot;,&quot;file&quot;:&quot;llm-termlogy-2-ch02.html&quot;},{&quot;no&quot;:3,&quot;title&quot;:&quot;推理性能与成本评测&quot;,&quot;goal&quot;:&quot;能测量TTFT、TPOT、吞吐等指标，计算每次请求成本。&quot;,&quot;file&quot;:&quot;llm-termlogy-2-ch03.html&quot;},{&quot;no&quot;:4,&quot;title&quot;:&quot;硬件参数与算力评估&quot;,&quot;goal&quot;:&quot;读懂硬件规格表，解释显存、带宽、算力对推理的影响。&quot;,&quot;file&quot;:&quot;llm-termlogy-2-ch04.html&quot;},{&quot;no&quot;:5,&quot;title&quot;:&quot;显存估算与部署选型&quot;,&quot;goal&quot;:&quot;能估算模型推理显存，区分装得下、跑得快、满足并发。&quot;,&quot;file&quot;:&quot;llm-termlogy-2-ch05.html&quot;},{&quot;no&quot;:6,&quot;title&quot;:&quot;综合项目：企业助手选型&quot;,&quot;goal&quot;:&quot;完成从需求到选型报告的完整项目，给出有证据的推荐方案。&quot;,&quot;file&quot;:&quot;llm-termlogy-2-ch06.html&quot;}]}' data-chapter="gen-llm-termlogy-2-ch6">
 
@@ -23,18 +23,21 @@
   <main class="content">
     <div class="content-inner">
 
-      <header class="chapter-head">
-        <div class="kicker">CHAPTER 06 · 生成课程</div>
+                  <header class="chapter-head">
+        <div class="kicker">CHAPTER 06 · 机器初稿 · 待人审</div>
         <h1>综合项目：企业助手选型</h1>
+        <p class="lead"><b>本章目标：</b>完成从需求到选型报告的完整项目，给出有证据的推荐方案。</p>
       </header>
-
-      <p class="lead"><b>本章目标：</b>完成从需求到选型报告的完整项目，给出有证据的推荐方案。</p>
+<!--flow-v1--><div class="flow">
+        <span class="flow-node">需求梳理<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">明确企业场景与约束条件</small></span><span class="flow-arrow">→</span><span class="flow-node">方案调研<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">收集候选助手与能力数据</small></span><span class="flow-arrow">→</span><span class="flow-node">评测对比<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">按统一指标实测打分</small></span><span class="flow-arrow">→</span><span class="flow-node">证据汇总<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">整理数据支撑推荐结论</small></span><span class="flow-arrow">→</span><span class="flow-node">选型报告<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">输出有据可查的推荐方案</small></span>
+        <div class="flow-note">本章走通从需求到选型报告的完整链路，每一步都用证据说话。</div>
+      </div><!--/flow-v1-->
  <h3>从需求到验收标准：把业务语言翻译成可测量的指标</h3>
- <p>选型不是“哪个模型跑分高就选哪个”，而是“哪个模型最匹配业务约束”。先做需求翻译：把业务方的模糊诉求（“要准、要快、要便宜”）变成可测量的验收标准（Acceptance Criteria）。</p><p>以企业知识库问答 + 订单分析助手为例，业务约束通常有三类：<b>效果</b>（回答正确率、结构化字段准确率）、<b>性能</b>（P95 延迟、吞吐）、<b>成本</b>（每千次调用成本、TCO）。</p><p>把约束写成 SLO（Service Level Objective），例如：知识库问答答案正确率 ≥ 90%，订单字段提取 F1 ≥ 0.95，P95 延迟 ≤ 3s，单次调用成本 ≤ 0.01 元。这些数字就是后续评测的标尺。</p><p>关键结论：<b>没有验收标准的选型是主观偏好，有验收标准的选型才是工程决策。</b></p>
+ <p>想象你要装修房子，设计师问你“想要什么风格”，你说“要好看、要实用、要便宜”。设计师如果直接开工，最后大概率双方都不满意。选型也是一样：业务方说“要准、要快、要便宜”，这不是需求，这是愿望。工程决策的第一步，是把愿望翻译成可测量的数字。</p><p>具体怎么做？以“企业知识库问答 + 订单分析助手”为例，把模糊诉求拆成三类可测量约束：<b>效果</b>（知识库问答答案正确率、订单字段提取的 F1）、<b>性能</b>（P95 延迟、QPS 吞吐）、<b>成本</b>（每千次调用成本、月度 TCO）。每一类都要落到一个数字上，比如“知识库问答答案正确率 ≥ 90%”“订单字段提取 F1 ≥ 0.95”“P95 延迟 ≤ 3s”“单次调用成本 ≤ 0.01 元”。</p><p>这些数字合起来就是 SLO（Service Level Objective，服务等级目标）。注意 SLO 不是拍脑袋写的，它来自业务后果：如果订单字段提取 F1 只有 0.90，意味着每 100 单有 10 单需要人工复核，按每天 5000 单算就是 500 次人工介入，这才是业务方真正在意的成本。所以写 SLO 时要追问一句“达不到会怎样”，把后果反推成阈值。</p><p>关键结论：<b>没有验收标准的选型是主观偏好，有验收标准的选型才是工程决策。</b>验收标准一旦写死，后面所有评测、对比、报告都有了统一的标尺，争论也会从“我觉得 A 好”变成“A 在哪个指标上没达标”。</p>
  <h3>准备脱敏测试数据：让评测可复现、可对比</h3>
- <p>评测数据必须脱敏（Anonymized Data）：替换真实姓名、手机号、订单号，但保留分布特征（长度、格式、噪声）。数据要覆盖五类任务：</p><ul><li>订单信息提取：从自然语言中抽取结构化字段</li><li>结构化输出：要求模型返回 JSON</li><li>知识库问答：基于给定文档回答</li><li>异常解释：解释订单异常原因</li><li>受控工具调用：调用查询接口并传参</li></ul><p>每类准备 30~50 条，标注标准答案。下面是一个最小可运行的数据构造与评测示例：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import json, re
+ <p>验收标准是尺子，测试数据就是被量的东西。如果每次评测用的数据都不一样，结果就无法对比，选型就退化成“这次跑出来好像还行”。所以评测数据必须固定、可复现，同时必须脱敏（Anonymized Data）：替换真实姓名、手机号、订单号，但保留分布特征——文本长度、字段格式、噪声程度都要和真实流量一致。</p><p>为什么保留分布这么重要？举个反例：如果你把测试样本都换成“客户A买了1台X100，订单号ORD-0001”这种规整短句，模型在评测里能拿 0.98 的 F1，但真实流量里有“麻烦帮我看下上周那个加急的、要五块 H100 的单子，单号好像是 ORD 开头尾号 1002”这种口语化长句，上线后 F1 可能掉到 0.85。评测数据失真，评测结论就无法外推。</p><p>数据要覆盖五类任务，每类 30~50 条并标注标准答案：订单信息提取、结构化 JSON 输出、知识库问答、异常解释、受控工具调用。下面是一个最小可运行示例，输入是两条脱敏样本，输出是每条样本的字段级准确率：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import json, re
 
-# 脱敏后的测试样本
+# 脱敏后的测试样本（姓名/单号已替换，但保留句式与长度分布）
 test_cases = [
     {"input": "客户张三买了2台A100，订单号ORD-1001，要求3天内发货",
      "expected": {"customer": "张三", "quantity": 2, "product": "A100", "order_id": "ORD-1001"}},
@@ -43,7 +46,7 @@ test_cases = [
 ]
 
 def extract(text):
-    # 模拟模型输出（真实场景替换为 API 调用）
+    # 这里用正则模拟模型输出；真实场景替换为 API 调用
     return {
         "customer": re.search(r"客户?(\w+?)(?:买|下单)", text).group(1),
         "quantity": int(re.search(r"(\d+)(?:台|块)", text).group(1)),
@@ -52,15 +55,17 @@ def extract(text):
     }
 
 def score(pred, gold):
+    # 字段级准确率：预测字段与标准答案完全一致的占比
     correct = sum(1 for k in gold if pred.get(k) == gold[k])
     return correct / len(gold)
 
 for case in test_cases:
     pred = extract(case["input"])
     print(case["input"][:20], "-&gt;", score(pred, case["expected"]))
-</code></pre></div><p>关键结论：<b>脱敏数据既要保护隐私，又要保留真实分布，否则评测结果无法外推。</b></p>
+# 预期输出：两条样本均打印 1.0（四个字段全部命中）
+</code></pre></div><p>这段代码的价值不在于正则写得多好，而在于它把“评测”变成了一个可重复执行的函数：换模型只换 <code>extract</code>，数据、打分逻辑、输出格式都不变，结果天然可对比。</p><p>关键结论：<b>脱敏数据既要保护隐私，又要保留真实分布，否则评测结果无法外推。</b>建议把测试集版本化（如 <code>eval_v1.jsonl</code>），每次选型对比都引用同一版本。</p>
  <h3>比较模型与性能成本：设计评测并估算部署资源</h3>
- <p>评测要同时测四件事：效果、延迟、吞吐、成本。效果用准确率/F1；延迟看 P50/P95；吞吐看 QPS；成本按 token 计费或按 GPU 小时折算。</p><p>部署资源估算公式：<b>显存 ≈ 参数量 × 精度字节数 × 1.2（KV Cache 与开销）</b>。例如 7B 模型 FP16 约 14GB，INT8 约 7GB，INT4 约 3.5GB。并发高时 KV Cache 会显著增加显存。</p><p>下面是一个评测脚本骨架，输出效果与延迟：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import time, statistics
+ <p>有了尺子和数据，接下来是“怎么量”。很多团队只测单条请求的延迟，这就像只测空载汽车油耗——一上高速堵车就完全不是那个数。真实评测要同时测四件事：<b>效果</b>（准确率/F1）、<b>延迟</b>（P50/P95，而不是平均值）、<b>吞吐</b>（QPS）、<b>成本</b>（按 token 计费或按 GPU 小时折算）。为什么强调 P95？因为平均值会掩盖长尾：100 次请求里 95 次 1 秒、5 次 10 秒，平均值约 1.45 秒看起来很美，但那 5 次才是用户投诉的来源。</p><p>如果考虑自建部署，还要估算显存。经验公式是：<b>显存 ≈ 参数量 × 精度字节数 × 1.2（框架与激活开销）</b>，高并发时再单独加 KV Cache。例如 7B 模型 FP16 约 14GB，INT8 约 7GB，INT4 约 3.5GB；13B 模型 INT8 约 13GB，乘 1.2 后约 15.6GB，单张 24GB 卡放得下，但并发上来后 KV Cache 会继续吃显存，可能就需要多卡或量化（具体数值随框架与上下文长度变化，待核实）。</p><p>下面是一个评测脚本骨架，输入是模型调用函数和测试集，输出效果与延迟分位数：</p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import time, statistics
 
 def evaluate(model_fn, cases):
     scores, latencies = [], []
@@ -69,41 +74,103 @@ def evaluate(model_fn, cases):
         pred = model_fn(c["input"])
         latencies.append(time.time() - t0)
         scores.append(score(pred, c["expected"]))
+    latencies.sort()
     return {
         "accuracy": sum(scores) / len(scores),
         "p50_latency": statistics.median(latencies),
-        "p95_latency": sorted(latencies)[int(len(latencies) * 0.95) - 1],
+        "p95_latency": latencies[int(len(latencies) * 0.95) - 1],
     }
 
-# 假设 model_fn 是某个模型的调用封装
-# result = evaluate(model_fn, test_cases)
-# print(result)
-</code></pre></div><p>成本估算示例：若模型每千 token 收费 0.002 元，平均每次请求 500 token，则单次成本 0.001 元；日调用 10 万次，日成本 100 元，月成本约 3000 元。自建部署则按 GPU 小时费 × 24 × 30 折算 TCO。</p><p>关键结论：<b>选型要算 TCO，不只看单价；延迟和吞吐必须用真实并发压测，不能只看单条测试。</b></p>
+# 用法：result = evaluate(model_fn, test_cases); print(result)
+# 预期输出形如 {'accuracy': 0.94, 'p50_latency': 0.8, 'p95_latency': 2.3}
+</code></pre></div><p>成本要算 TCO 而不是单价。API 场景：若每千 token 收费 0.002 元，平均每次请求 500 token，则单次 0.001 元；日调用 10 万次，日成本 100 元，月成本约 3000 元。自建场景：按 GPU 小时费 × 24 × 30 折算，再加上运维人力、重试与缓存带来的额外调用、GPU 折旧。一个常见陷阱是只比 API 单价，忽略了失败重试：如果工具调用失败率 5%，实际调用量就多 5%，成本同步上浮。</p><p>关键结论：<b>选型要算 TCO，不只看单价；延迟和吞吐必须用真实并发压测，不能只看单条测试。</b></p>
  <h3>撰写选型报告：结构、证据与适用边界</h3>
- <p>选型报告（Selection Report）要让决策者一眼看懂“为什么选它、什么情况下不选它”。推荐结构：</p><ol><li>业务约束与验收标准</li><li>评测方法与脱敏数据说明</li><li>效果结果（表格对比）</li><li>性能结果（延迟/吞吐）</li><li>成本估算与 TCO</li><li>硬件需求</li><li>推荐方案</li><li>适用边界（Applicability Boundary）</li><li>待验证风险（Risks to Validate）</li></ol><p>效果对比表示例：</p><table><tr><th>模型</th><th>提取 F1</th><th>问答准确率</th><th>P95 延迟</th><th>单次成本</th></tr><tr><td>模型A</td><td>0.96</td><td>0.91</td><td>2.1s</td><td>0.001元</td></tr><tr><td>模型B</td><td>0.93</td><td>0.88</td><td>1.2s</td><td>0.0005元</td></tr></table><p>推荐方案要写清适用边界：例如“模型A 适合高准确率场景，模型B 适合高并发低成本场景”。待验证风险包括：长尾订单格式、工具调用失败率、数据漂移。</p><p>关键结论：<b>报告的价值在于证据链完整、边界清晰、风险可追踪，而不是给出一个绝对答案。</b></p>
+ <p>选型报告不是“我推荐 A”的一句话，而是一条完整的证据链：从业务约束出发，经过评测方法和数据，到结果、成本、硬件，最后落到推荐和边界。决策者读报告时脑子里只有三个问题——“为什么选它”“什么情况下不选它”“还有什么没验证”。报告结构就要直接回答这三问。</p><p>推荐结构九段：业务约束与验收标准、评测方法与脱敏数据说明、效果结果（表格对比）、性能结果（延迟/吞吐）、成本估算与 TCO、硬件需求、推荐方案、适用边界（Applicability Boundary）、待验证风险（Risks to Validate）。其中效果对比表是核心证据，示例如下：</p><table><thead><tr><th>模型</th><th>提取 F1</th><th>问答准确率</th><th>P95 延迟</th><th>单次成本</th></tr></thead><tbody><tr><td>模型A</td><td>0.96</td><td>0.91</td><td>2.1s</td><td>0.001元</td></tr><tr><td>模型B</td><td>0.93</td><td>0.88</td><td>1.2s</td><td>0.0005元</td></tr></tbody></table><p>看这张表怎么下结论？如果验收标准是“提取 F1 ≥ 0.95 且问答准确率 ≥ 0.90”，模型B 两项都不达标，直接出局，哪怕它更便宜更快；模型A 两项都过线，但 P95 2.1s 距离 3s 阈值只剩 0.9s 余量，这就是要在报告里写明的风险点。如果业务是“高并发、可接受人工复核”，那模型B 反而可能更合适——<b>同一个表，在不同验收标准下会得出不同推荐，这正是报告必须写清约束的原因。</b></p><p>适用边界要写成可操作的句子，例如“模型A 适合高准确率、中低并发场景；当 QPS 超过 X 或长尾订单格式占比超过 Y% 时需重新评测”（X、Y 需用压测数据填充，待核实）。待验证风险至少覆盖：长尾订单格式、工具调用失败率、数据漂移。每条风险要写清验证方式和触发条件，而不是只列名词。</p><p>关键结论：<b>报告的价值在于证据链完整、边界清晰、风险可追踪，而不是给出一个绝对答案。</b></p>
  <h3>常见误区</h3>
  <ul>
- <li>只看模型跑分（如 MMLU）就做选型，忽略业务验收标准和真实数据分布。</li>
- <li>用未脱敏的真实数据做评测，导致隐私泄露且结果无法复现。</li>
- <li>只算 API 单价，忽略 TCO（含重试、缓存、运维、GPU 折旧）和并发下的延迟劣化。</li>
+  <li>错误理解：只看模型跑分（如 MMLU）就做选型，认为分数高的模型一定更适合业务。→ 后果：跑分高但业务数据分布不同，上线后订单提取 F1 可能从评测的 0.95 掉到 0.85，人工复核量翻倍，选型结论被推翻。→ 正确做法：先写业务验收标准（SLO），再用与真实流量同分布的脱敏数据做任务级评测，跑分只作为初筛参考。</li>
+  <li>错误理解：用未脱敏的真实数据做评测，觉得“真实才准”。→ 后果：姓名、手机号、订单号进入评测日志和第三方 API，造成隐私泄露；且数据一旦需要清理或替换，历史结果无法复现，前后对比失效。→ 正确做法：评测前统一脱敏，替换 PII 但保留长度、格式、噪声分布，并把测试集版本化固定下来。</li>
+  <li>错误理解：只算 API 单价，忽略 TCO 和并发下的延迟劣化。→ 后果：单价 0.0005 元的模型看似便宜，但加上 5% 失败重试、缓存未命中、运维人力和 GPU 折旧后，实际月成本可能反超；单条测试 1.2s 的模型在 50 并发下 P95 可能劣化到 5s，直接违反 SLO。→ 正确做法：按 TCO 口径估算（含重试、缓存、运维、折旧），并用真实并发压测测 P95 和 QPS。</li>
  </ul>
  <h3>自测</h3>
- <details class="quiz"><summary>为什么选型报告必须包含“适用边界”和“待验证风险”？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>因为任何模型都有能力边界，明确边界能防止误用；待验证风险提示后续 PoC 需要重点验证的假设，保证决策可追踪、可迭代。</p></div></details>
- <details class="quiz"><summary>估算 13B 模型 INT8 部署显存时，除了参数量还要考虑什么？</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>还要考虑 KV Cache（随并发和上下文长度增长）、框架开销、激活值等，通常按参数量 × 精度字节 × 1.2~1.5 估算，高并发时需单独计算 KV Cache。</p></div></details>
+ <details class="quiz"><summary>某团队用 100 条规整短句评测两个模型，模型A 提取 F1=0.97、模型B F1=0.94，于是选了 A。上线一个月后 A 的人工复核率反而高于 B。请分析可能原因，并说明评测设计上应如何改进。</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>推理过程：第一步，评测数据是“规整短句”，与真实流量的口语化长句分布不一致，F1 高只说明模型在简单分布上强，不能外推到真实流量。第二步，两个模型在长尾格式（口语化、多字段混杂、噪声）上的表现可能反转，A 可能在长尾上更差，导致人工复核率更高。第三步，改进方向：按真实流量分布构造脱敏测试集，显式加入长尾样本并单独统计长尾子集 F1；同时把“人工复核率”作为业务侧验收指标纳入评测，而不是只看整体 F1。结论：评测数据的分布代表性比样本数量更关键。</p></div></details>
+ <details class="quiz"><summary>估算 13B 模型 INT8 部署显存时，为什么不能只算 13GB？请给出估算思路，并说明什么情况下单张 24GB 卡可能不够。</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>推理过程：第一步，参数量 × 精度字节 = 13B × 1 字节 ≈ 13GB，这是权重本身。第二步，运行时还有框架开销、激活值，经验上乘 1.2 左右，约 15.6GB。第三步，高并发或长上下文时 KV Cache 会显著增长，它随并发数和上下文长度线性上升，这部分要单独估算。第四步，当 15.6GB 加上 KV Cache 和其他开销超过 24GB 时，单卡就不够，需要多卡、降低并发或进一步量化。注意具体系数随框架和上下文长度变化，应以实测为准（待核实）。</p></div></details>
+ <details class="quiz"><summary>选型报告里“适用边界”和“待验证风险”看起来都是“说缺点”，为什么反而必须写？请结合决策场景说明。</summary><div class="quiz-body"><p><span class="ans-label">答案：</span>推理过程：第一步，任何模型都有能力边界，报告如果不写，决策者会默认“什么场景都能用”，一旦遇到长尾订单或高并发就误用，故障成本远高于选型成本。第二步，适用边界把“什么时候该重新评测”变成可执行条件，让后续团队知道触发点。第三步，待验证风险列出尚未被评测覆盖的假设（如工具调用失败率、数据漂移），并给出验证方式，使决策可追踪、可迭代。第四步，从决策角度看，一份只讲优点的报告无法支撑风险审批，写明边界和风险反而提升报告可信度。结论：边界和风险不是减分项，而是证据链完整性的组成部分。</p></div></details>
  <h3>动手练习（带参考方案）</h3>
- <details class="fold"><summary>动手练习 · 为“企业知识库问答 + 订单分析助手”设计一份选型报告大纲，包含：业务约束、验收标准、脱敏数据设计、…</summary><div class="fold-body"><p><b>任务：</b>为“企业知识库问答 + 订单分析助手”设计一份选型报告大纲，包含：业务约束、验收标准、脱敏数据设计、评测指标、成本估算公式、推荐方案与适用边界。</p><p><b>参考方案：</b></p>大纲示例：
-1. 业务约束：知识库问答准确率≥90%，订单提取F1≥0.95，P95≤3s，单次成本≤0.01元。
-2. 验收标准：定义各任务通过阈值。
-3. 脱敏数据：每类30条，替换PII，保留格式分布。
-4. 评测指标：准确率/F1、P50/P95延迟、QPS、单次成本。
-5. 成本估算：API按token计费；自建按GPU小时×24×30 + 运维。
-6. 推荐方案：模型A（高准确）或模型B（低成本），附对比表。
-7. 适用边界：模型A适合高准确场景，模型B适合高并发场景。
-8. 待验证风险：长尾格式、工具调用失败率、数据漂移。</div></details>
+ <details class="fold"><summary>练习 · 为“企业知识库问答 + 订单分析助手”写一个可运行的最小选型评测脚本：构造 4 条脱敏测试样本（覆盖订单提取与结构化输出…</summary><div class="fold-body"><p><b>任务：</b>为“企业知识库问答 + 订单分析助手”写一个可运行的最小选型评测脚本：构造 4 条脱敏测试样本（覆盖订单提取与结构化输出两类任务），实现两个模拟模型（模型A 准确但慢、模型B 快但偶有字段错误），输出每个模型的字段级准确率、P50/P95 延迟和单次成本估算，并据此给出推荐结论。验收标准：脚本可直接运行，输出包含两个模型的 accuracy、p50、p95、cost 四项，且推荐结论与验收标准（accuracy ≥ 0.9 且 p95 ≤ 3s）一致。</p><p><b>参考方案：</b></p><div class="codeblock"><div class="code-head"><span class="code-lang">python</span></div><pre><code class="language-python">import time, statistics, json
+
+# 1) 脱敏测试样本：覆盖订单提取与结构化输出
+test_cases = [
+    {"input": "客户张三买了2台A100，订单号ORD-1001",
+     "expected": {"customer": "张三", "quantity": 2, "product": "A100", "order_id": "ORD-1001"}},
+    {"input": "李四下单5块H100，订单号ORD-1002",
+     "expected": {"customer": "李四", "quantity": 5, "product": "H100", "order_id": "ORD-1002"}},
+    {"input": "王五采购1台A100，订单号ORD-1003",
+     "expected": {"customer": "王五", "quantity": 1, "product": "A100", "order_id": "ORD-1003"}},
+    {"input": "赵六下单3块H100，订单号ORD-1004",
+     "expected": {"customer": "赵六", "quantity": 3, "product": "H100", "order_id": "ORD-1004"}},
+]
+
+def parse(text):
+    # 简易解析，模拟模型抽取结构化字段
+    import re
+    return {
+        "customer": re.search(r"客户?(\w+?)(?:买|下单|采购)", text).group(1),
+        "quantity": int(re.search(r"(\d+)(?:台|块)", text).group(1)),
+        "product": re.search(r"(A100|H100)", text).group(1),
+        "order_id": re.search(r"ORD-\d+", text).group(0),
+    }
+
+def model_a(text):
+    # 模型A：准确但慢（模拟 0.05s 延迟）
+    time.sleep(0.05)
+    return parse(text)
+
+def model_b(text):
+    # 模型B：快但偶有字段错误（模拟 0.01s 延迟，第2条样本数量错）
+    time.sleep(0.01)
+    pred = parse(text)
+    if "ORD-1002" in text:
+        pred["quantity"] = 4  # 模拟抽取错误
+    return pred
+
+def score(pred, gold):
+    correct = sum(1 for k in gold if pred.get(k) == gold[k])
+    return correct / len(gold)
+
+def evaluate(model_fn, cases, cost_per_call):
+    scores, latencies = [], []
+    for c in cases:
+        t0 = time.time()
+        pred = model_fn(c["input"])
+        latencies.append(time.time() - t0)
+        scores.append(score(pred, c["expected"]))
+    latencies.sort()
+    return {
+        "accuracy": round(sum(scores) / len(scores), 3),
+        "p50": round(statistics.median(latencies), 3),
+        "p95": round(latencies[int(len(latencies) * 0.95) - 1], 3),
+        "cost": cost_per_call,
+    }
+
+results = {
+    "模型A": evaluate(model_a, test_cases, 0.001),
+    "模型B": evaluate(model_b, test_cases, 0.0005),
+}
+print(json.dumps(results, ensure_ascii=False, indent=2))
+
+# 2) 按验收标准推荐：accuracy &gt;= 0.9 且 p95 &lt;= 3s
+for name, r in results.items():
+    ok = r["accuracy"] &gt;= 0.9 and r["p95"] &lt;= 3.0
+    print(name, "达标" if ok else "不达标")
+
+# 预期输出：模型A accuracy=1.0、模型B accuracy≈0.938（1条样本错1个字段）
+# 两者 p95 均远小于 3s，均达标；若业务要求零字段错误，则推荐模型A
+</code></pre></div></div></details>
     </div>
   </main>
 </div>
 
-<script src="assets/js/app.js?v=24"></script>
+<script src="assets/js/app.js?v=28"></script>
 </body>
 </html>
