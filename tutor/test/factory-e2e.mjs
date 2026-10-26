@@ -10,6 +10,7 @@ import { spawn, spawnSync, execFileSync } from "node:child_process";
 import { readFileSync, existsSync, rmSync, readdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { removeFromManifest } from "../scripts/factory-common.mjs";
 
 const TUTOR = join(dirname(fileURLToPath(import.meta.url)), "..");
 const SITE = join(TUTOR, "..");
@@ -143,7 +144,7 @@ console.log("\n── M3 课题 → 整门课(真实 API)──");
 console.log("\n── 清理 e2e 产物 ──");
 for (const p of [
   join(SITE, "full-e2e-paper.html"), join(SITE, "drafts/e2e-paper"),
-  join(SITE, "full-e2e-topic.html"),
+  join(SITE, "full-e2e-topic.html"), join(SITE, "drafts/e2e-topic"),
   join(TUTOR, "packs/e2e-repo"), join(TUTOR, "kb/e2e-repo-kb.json"),
   join(TUTOR, "packs/e2e-topic"), join(TUTOR, "kb/e2e-topic-kb.json"),
   join(TUTOR, "kb/tmp-paper-extract.json"),
@@ -151,7 +152,9 @@ for (const p of [
 for (const f of readdirSync(SITE)) {
   if (/^e2e-topic-ch\d+\.html$/.test(f)) rmSync(join(SITE, f), { force: true });
 }
-console.log("✓ e2e 产物已清理");
+// manifest 条目同样要摘除——只删文件会留下 404 卡(曾反复残留的根因)
+for (const s of ["e2e-paper", "e2e-repo", "e2e-topic"]) removeFromManifest(s);
+console.log("✓ e2e 产物已清理(含 manifest 条目)");
 
 const siteCheck = spawnSync("node", [join(SITE, "scripts", "check-site.mjs")], { encoding: "utf8", cwd: SITE });
 check("站点检查器全绿(清理后)", siteCheck.status === 0, siteCheck.status !== 0 ? siteCheck.stdout.slice(-300) : "");

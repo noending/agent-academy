@@ -36,6 +36,14 @@ struct ChapterMeta: Identifiable {
     var label: String { appendix ? "附录 · \(title)" : "第 \(no) 章 · \(title)" }
 }
 
+/// 阅读进度(读学生档案 mastered/misconceptions 统计;考后 record_progress 落盘)
+struct ReadingProgress {
+    let testedChapters: Int   // 已检验通过的正章数(mastered 带 chapter 的去重数,附录不计)
+    let totalChapters: Int    // 当前书正章总数
+    let masteredCount: Int    // 掌握概念总数
+    let openMisconceptions: Int // 待纠正误解数
+}
+
 /// 教学包元数据(课程菜单 + 预置问题来源)
 struct PackMeta {
     let name: String
@@ -160,6 +168,9 @@ final class TutorModel: ObservableObject {
     @Published private(set) var packs: [PackMeta] = []
     @Published private(set) var currentPack: PackMeta?
     @Published private(set) var readingChapter: ChapterMeta? // 读书包:正在读的章(作为下一条消息的上下文)
+    @Published private(set) var readingProgress: ReadingProgress? // 读书包:阅读进度(档案统计)
+
+    static let studentId = "liam" // 引擎 --student 参数(与 CLI 会话共用档案)
 
     private var pageDirty = false // 页面变化后还没上报过
 
@@ -236,6 +247,24 @@ final class TutorModel: ObservableObject {
             if let page = p.book?.page, page == file { return p.name }
         }
         return nil
+    }
+
+    /// 读书包:读学生档案统计阅读进度(引擎每轮落盘;考后 record_progress / 切包 / 开面板时刷新)
+    func refreshReadingProgress() {
+        guard let meta = currentPack, meta.isBook else { readingProgress = nil; return }
+        let total = meta.chapters.filter { !$0.appendix }.count
+        let file = TutorModel.dataDir().appendingPathComponent("students/\(TutorModel.studentId)@\(meta.name).json")
+        guard let data = try? Data(contentsOf: file),
+              let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            readingProgress = ReadingProgress(testedChapters: 0, totalChapters: total, masteredCount: 0, openMisconceptions: 0)
+            return
+        }
+        let mastered = obj["mastered"] as? [[String: Any]] ?? []
+        let tested = Set(mastered.compactMap { $0["chapter"] as? Int }.filter { $0 < 100 }).count
+        let open = (obj["misconceptions"] as? [[String: Any]] ?? [])
+            .filter { !(($0["resolved"] as? Bool) ?? false) }.count
+        readingProgress = ReadingProgress(testedChapters: tested, totalChapters: total,
+                                          masteredCount: mastered.count, openMisconceptions: open)
     }
 
     /// 预置问题分层:读书包按「选章/未选章」给陪读问题;生成课用课程自带问题;agent-dev 用页面映射
@@ -381,6 +410,7 @@ final class TutorModel: ObservableObject {
         switch obj["type"] as? String {
         case "hello":
             requestGreeting() // 引擎就绪,导师主动开场(档案 + 当前页面驱动)
+            refreshReadingProgress()
         case "delta":
             let t = obj["text"] as? String ?? ""
             if let last = messages.indices.last, !messages[last].isUser {
@@ -396,6 +426,9 @@ final class TutorModel: ObservableObject {
             statusText = "\(labels[name] ?? name)…"
         case "tool_end":
             statusText = nil
+            if let name = obj["name"] as? String, name == "record_progress" || name == "record_misconception" {
+                refreshReadingProgress() // 考后记录落盘,进度条即时刷新
+            }
         case "turn_end":
             totalCost += obj["cost"] as? Double ?? 0
         case "ready":
@@ -544,40 +577,55 @@ struct TutorPanel: View {
         }
     }
 
-    /// 读书模式条:选「正在读」的章(作为上下文上报,导师回答贴合该章)+ 读完考考我
+    /// 读书模式条:选「正在读」的章(作为上下文上报,导师回答贴合该章)+ 读完考考我 + 阅读进度
     private var readingBar: some View {
-        HStack(spacing: 8) {
-            Image(systemName: "book.fill").font(.caption).foregroundStyle(.purple)
-            Menu {
-                Button("导读页 · 未选章") { model.selectReadingChapter(nil) }
-                ForEach(model.currentPack?.chapters ?? []) { ch in
-                    Button(ch.label) { model.selectReadingChapter(ch) }
+        VStack(spacing: 5) {
+            HStack(spacing: 8) {
+                Image(systemName: "book.fill").font(.caption).foregroundStyle(.purple)
+                Menu {
+                    Button("导读页 · 未选章") { model.selectReadingChapter(nil) }
+                    ForEach(model.currentPack?.chapters ?? []) { ch in
+                        Button(ch.label) { model.selectReadingChapter(ch) }
+                    }
+                } label: {
+                    HStack(spacing: 4) {
+                        Text(model.readingChapter?.label ?? "正在读:选章节")
+                            .font(.caption).lineLimit(1)
+                        Image(systemName: "chevron.down").font(.system(size: 8)).foregroundStyle(.secondary)
+                    }
                 }
-            } label: {
-                HStack(spacing: 4) {
-                    Text(model.readingChapter?.label ?? "正在读:选章节")
-                        .font(.caption).lineLimit(1)
-                    Image(systemName: "chevron.down").font(.system(size: 8)).foregroundStyle(.secondary)
+                .menuStyle(.borderlessButton)
+                .fixedSize()
+                .help("告诉导师你在读哪一章(回答会贴合该章并标注出处)")
+                Spacer()
+                Button {
+                    if let ch = model.readingChapter {
+                        model.send("我刚读完\(ch.label),考考我对这章的理解")
+                    }
+                } label: {
+                    Label("考考我", systemImage: "checkmark.seal")
+                        .font(.caption)
                 }
+                .buttonStyle(.borderless)
+                .disabled(model.readingChapter == nil || model.thinking || model.failureReason != nil)
+                .help("读完当前章,让导师出题检验(答对会记入学习档案)")
             }
-            .menuStyle(.borderlessButton)
-            .fixedSize()
-            .help("告诉导师你在读哪一章(回答会贴合该章并标注出处)")
-            Spacer()
-            Button {
-                if let ch = model.readingChapter {
-                    model.send("我刚读完\(ch.label),考考我对这章的理解")
+            if let p = model.readingProgress {
+                HStack(spacing: 6) {
+                    Text("已检验 \(p.testedChapters)/\(p.totalChapters) 章 · 掌握概念 \(p.masteredCount) · 待纠正误解 \(p.openMisconceptions)")
+                        .font(.caption2).foregroundStyle(.secondary)
+                    Spacer()
+                    ProgressView(value: Double(p.testedChapters), total: Double(max(p.totalChapters, 1)))
+                        .frame(width: 90)
+                        .tint(.purple)
                 }
-            } label: {
-                Label("考考我", systemImage: "checkmark.seal")
-                    .font(.caption)
+                .padding(.horizontal, 2)
+                .help("「考考我」答对一章,进度 +1;数据来自学习档案(按书隔离)")
             }
-            .buttonStyle(.borderless)
-            .disabled(model.readingChapter == nil || model.thinking || model.failureReason != nil)
-            .help("读完当前章,让导师出题检验(答对会记入学习档案)")
         }
         .padding(.horizontal, 12).padding(.vertical, 6)
         .background(Color.purple.opacity(0.05))
+        .onAppear { model.refreshReadingProgress() }
     }
 
     private var header: some View {

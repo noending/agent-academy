@@ -22,7 +22,7 @@
       "slug": "agentic-design-patterns-2",
       "title": "Agentic Design Patterns 实战课程",
       "pack": "agentic-design-patterns-2",
-      "review": "packs/agentic-design-patterns-2/REVIEW.md",
+      "review": null,
       "page": null,
       "chapters": [
         {
@@ -130,7 +130,7 @@
       "slug": "agentic-design-patterns",
       "title": "Agentic Design Patterns 实战课程",
       "pack": "agentic-design-patterns",
-      "review": "packs/agentic-design-patterns/REVIEW.md",
+      "review": null,
       "page": null,
       "chapters": [
         {
@@ -327,7 +327,7 @@
       ],
       "generated": true,
       "generatedAt": "2026-10-06T13:49:54.627Z",
-      "review": "tutor/llm-termlogy-2/REVIEW.md"
+      "review": null
     },
     {
       "kind": "topic",
@@ -434,7 +434,7 @@
       ],
       "generated": true,
       "generatedAt": "2026-10-06T12:45:02.081Z",
-      "review": "tutor/llm-deploy/REVIEW.md"
+      "review": null
     },
     {
       "kind": "repo",
@@ -533,7 +533,7 @@
       ],
       "generated": false,
       "generatedAt": "2026-10-06T12:45:02.080Z",
-      "review": "tutor/llm-course/REVIEW.md"
+      "review": null
     },
     {
       "kind": "topic",
@@ -608,7 +608,7 @@
       ],
       "generated": true,
       "generatedAt": "2026-10-06T13:59:32.121Z",
-      "review": "tutor/llm/REVIEW.md"
+      "review": null
     },
     {
       "kind": "topic",
@@ -682,7 +682,7 @@
       ],
       "generated": true,
       "generatedAt": "2026-10-06T13:59:32.122Z",
-      "review": "tutor/llm-termlogies/REVIEW.md"
+      "review": null
     },
     {
       "kind": "topic",
@@ -756,8 +756,8 @@
       ],
       "generated": true,
       "generatedAt": "2026-10-06T13:59:32.122Z",
-      "review": "tutor/llm-termlogy/REVIEW.md"
+      "review": null
     }
   ],
-  "updatedAt": "2026-10-25T10:32:25.335Z"
+  "updatedAt": "2026-10-26T03:33:41.102Z"
 }

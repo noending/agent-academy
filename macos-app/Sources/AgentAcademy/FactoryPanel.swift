@@ -182,29 +182,30 @@ final class FactoryModel: ObservableObject {
 
     /// 表单完整性:实时校验(按钮可用性与内联提示共用)
     func formState() -> (ok: Bool, hint: String?) {
+        let valid: Bool
         switch kind {
         case .paper:
             if pdfPath.isEmpty { return (false, "先选择论文 PDF") }
             if paperTitle.isEmpty { return (false, "填写论文英文标题") }
             if !FactoryModel.validSlug(paperSlug) { return (false, "slug 只能是小写字母/数字/连字符") }
-            return (true, nil)
+            valid = true
         case .repo:
             if !repoInput.contains("/") { return (false, "仓库格式:owner/name") }
             if !FactoryModel.validSlug(repoSlug) { return (false, "slug 只能是小写字母/数字/连字符") }
-            return (true, nil)
+            valid = true
         case .topic:
             if topicText.isEmpty { return (false, "先填写课题") }
             if !FactoryModel.validSlug(topicSlug) { return (false, "slug 只能是小写字母/数字/连字符") }
-            return (true, nil)
+            valid = true
         }
         // slug 冲突提示(不阻断:自动加后缀或原地重生成)
-        if FactoryModel.validSlug(currentSlug) && slugExists(currentSlug) {
+        if valid && FactoryModel.validSlug(currentSlug) && slugExists(currentSlug) {
             if kind == .topic && !feedbackText.isEmpty {
                 return (true, "同名课程已存在:将按改进意见原地重新生成")
             }
             return (true, "同名课程已存在:开始后将自动改用新 slug(\(nextAvailableSlug()))")
         }
-        return (true, nil)
+        return (valid, nil)
     }
 
     /// 人审清单路径(完成态按钮用)

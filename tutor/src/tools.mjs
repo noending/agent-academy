@@ -42,21 +42,24 @@ export function buildTools({ index, profile, root, packName = "agent-dev" }) {
   const record_progress = makeTool(
     "record_progress",
     "记掌握",
-    `当学生真正展示了理解(能自己解释、举对例子、预测行为),调用此工具记录。注意:学生"听懂了"不算,必须有展示理解的证据。topic 填课程概念名(如"Agent Loop"),evidence 写学生说了什么/做对了什么。`,
+    `当学生真正展示了理解(能自己解释、举对例子、预测行为),调用此工具记录。注意:学生"听懂了"不算,必须有展示理解的证据。topic 填课程概念名(如"Agent Loop"),evidence 写学生说了什么/做对了什么。读书类课程必须带 chapter(该概念属于第几章),面板用它展示阅读进度。`,
     Type.Object({
       topic: Type.String({ description: "概念名,如 Agent Loop、RAG" }),
       evidence: Type.String({ description: "学生展示理解的具体证据" }),
+      chapter: Type.Optional(Type.Number({ description: "读书类课程:该概念所属章号(如 5 = 第 5 章;附录用 100+ 编号)" })),
     }),
     async (_id, params) => {
       const dup = profile.mastered.find((m) => m.topic === params.topic);
       if (dup) {
         dup.evidence = params.evidence;
         dup.date = new Date().toISOString().slice(0, 10);
+        if (params.chapter != null) dup.chapter = params.chapter;
       } else
         profile.mastered.push({
           topic: params.topic,
           evidence: params.evidence,
           date: new Date().toISOString().slice(0, 10),
+          ...(params.chapter != null ? { chapter: params.chapter } : {}),
         });
       // 对应的误解若已解决,标记 resolved
       for (const m of profile.misconceptions) {
