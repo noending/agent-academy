@@ -29,7 +29,7 @@
         <p class="lead">
           Chapter 14: Knowledge Retrieval (RAG) · 《Agentic Design Patterns》 · Antonio Gulli · 2025
           <br>讲RAG如何让LLM接入外部实时与私有数据，并介绍GraphRAG与Agentic RAG。
-          <br><a class="chip" href="book-gulli-patterns.html">← 返回导读</a> <a class="chip" href="papers/pdf/gulli-agentic-design-patterns.pdf">原书 PDF</a> <a class="chip" href="book-gulli-patterns-ch13.html">上一章:第13章</a> <a class="chip" href="book-gulli-patterns-ch15.html">下一章:第15章</a>
+          <br><a class="chip" href="book-gulli-patterns.html">← 返回导读</a> <a class="chip" href="papers/pdf/gulli-agentic-design-patterns.pdf#page=211">原书 PDF · 第211页起</a> <a class="chip" href="book-gulli-patterns-ch13.html">上一章:第13章</a> <a class="chip" href="book-gulli-patterns-ch15.html">下一章:第15章</a>
         </p>
       </header>
 
@@ -219,7 +219,7 @@
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>from google.adk.tools import google_search
+        <pre><code class="language-python">from google.adk.tools import google_search
 from google.adk.agents import Agent</code></pre>
       </div>
 <div class="seg">
@@ -249,7 +249,7 @@ from google.adk.agents import Agent</code></pre>
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>import os
+        <pre><code class="language-python">import os
 import requests
 from typing import List, Dict, Any, TypedDict
 from langchain_community.document_loaders import TextLoader</code></pre>
@@ -257,7 +257,7 @@ from langchain_community.document_loaders import TextLoader</code></pre>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>from langchain_core.documents import Document
+        <pre><code class="language-python">from langchain_core.documents import Document
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_community.embeddings import OpenAIEmbeddings
@@ -276,7 +276,7 @@ from weaviate.embedded import EmbeddedOptions</code></pre>
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># Load environment variables (e.g., OPENAI_API_KEY)
+        <pre><code class="language-python"># Load environment variables (e.g., OPENAI_API_KEY)
 dotenv.load_dotenv()
 # Set your OpenAI API key (ensure it's loaded from .env or set here)
 # os.environ["OPENAI_API_KEY"] = "YOUR_OPENAI_API_KEY"</code></pre>
@@ -288,7 +288,7 @@ dotenv.load_dotenv()
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>with open("state_of_the_union.txt", "w") as f:
+        <pre><code class="language-python">with open("state_of_the_union.txt", "w") as f:
 f.write(res.text)</code></pre>
       </div>
 
@@ -300,7 +300,7 @@ documents = loader.load()</code></pre>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># Chunk documents
+        <pre><code class="language-python"># Chunk documents
 text_splitter = CharacterTextSplitter(chunk_size=500,
 chunk_overlap=50)
 chunks = text_splitter.split_documents(documents)</code></pre>
@@ -322,13 +322,13 @@ vectorstore = Weaviate.from_documents(
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># Define the retriever
+        <pre><code class="language-python"># Define the retriever
 retriever = vectorstore.as_retriever()</code></pre>
       </div>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># Initialize LLM
+        <pre><code class="language-python"># Initialize LLM
 llm = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0)</code></pre>
       </div>
 <div class="seg">
@@ -338,7 +338,7 @@ llm = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0)</code></pre>
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># --- 3. Define the Nodes (Functions) --
+        <pre><code class="language-python"># --- 3. Define the Nodes (Functions) --
 def retrieve_documents_node(state: RAGGraphState) -&gt; RAGGraphState:
 """Retrieves documents based on the user's question."""
 question = state["question"]
@@ -353,19 +353,19 @@ return {"documents": documents, "question": question,
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># Format the context from the documents
+        <pre><code class="language-python"># Format the context from the documents
 context = "\n\n".join([doc.page_content for doc in documents])</code></pre>
       </div>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># Create the RAG chain
+        <pre><code class="language-python"># Create the RAG chain
 rag_chain = prompt | llm | StrOutputParser()</code></pre>
       </div>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># Invoke the chain
+        <pre><code class="language-python"># Invoke the chain
 generation = rag_chain.invoke({"context": context, "question":
 question})
 return {"question": question, "documents": documents,
@@ -374,13 +374,13 @@ return {"question": question, "documents": documents,
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># --- 4. Build the LangGraph Graph --
+        <pre><code class="language-python"># --- 4. Build the LangGraph Graph --
 workflow = StateGraph(RAGGraphState)</code></pre>
       </div>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># Add nodes
+        <pre><code class="language-python"># Add nodes
 workflow.add_node("retrieve", retrieve_documents_node)</code></pre>
       </div>
 <div class="seg">
@@ -390,26 +390,26 @@ workflow.add_node("retrieve", retrieve_documents_node)</code></pre>
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># Set the entry point
+        <pre><code class="language-python"># Set the entry point
 workflow.set_entry_point("retrieve")</code></pre>
       </div>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># Add edges (transitions)
+        <pre><code class="language-python"># Add edges (transitions)
 workflow.add_edge("retrieve", "generate")
 workflow.add_edge("generate", END)</code></pre>
       </div>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># Compile the graph
+        <pre><code class="language-python"># Compile the graph
 app = workflow.compile()</code></pre>
       </div>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># --- 5. Run the RAG Application -- if __name__ == "__main__":
+        <pre><code class="language-python"># --- 5. Run the RAG Application -- if __name__ == "__main__":
 print("\n--- Running RAG Query ---")
 query = "What did the president say about Justice Breyer"
 inputs = {"question": query}
@@ -419,7 +419,7 @@ print(s)</code></pre>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>print("\n--- Running another RAG Query ---")
+        <pre><code class="language-python">print("\n--- Running another RAG Query ---")
 query_2 = "What did the president say about the economy?"
 inputs_2 = {"question": query_2}
 for s in app.stream(inputs_2):
@@ -487,6 +487,6 @@ print(s)</code></pre>
   </main>
 </div>
 
-<script src="assets/js/app.js?v=28"></script>
+<script src="assets/js/app.js?v=29"></script>
 </body>
 </html>

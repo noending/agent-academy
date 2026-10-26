@@ -29,7 +29,7 @@
         <p class="lead">
           Chapter 5: Tool Use (Function Calling) · 《Agentic Design Patterns》 · Antonio Gulli · 2025
           <br>讲智能体如何通过函数调用调用外部API、数据库与代码，突破LLM静态知识限制。
-          <br><a class="chip" href="book-gulli-patterns.html">← 返回导读</a> <a class="chip" href="papers/pdf/gulli-agentic-design-patterns.pdf">原书 PDF</a> <a class="chip" href="book-gulli-patterns-ch4.html">上一章:第4章</a> <a class="chip" href="book-gulli-patterns-ch6.html">下一章:第6章</a>
+          <br><a class="chip" href="book-gulli-patterns.html">← 返回导读</a> <a class="chip" href="papers/pdf/gulli-agentic-design-patterns.pdf#page=77">原书 PDF · 第77页起</a> <a class="chip" href="book-gulli-patterns-ch4.html">上一章:第4章</a> <a class="chip" href="book-gulli-patterns-ch6.html">下一章:第6章</a>
         </p>
       </header>
 
@@ -143,7 +143,7 @@ Hands-On Code Example (LangChain)</code></pre>
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>import os, getpass
+        <pre><code class="language-python">import os, getpass
 import asyncio
 import nest_asyncio
 from typing import List
@@ -153,7 +153,7 @@ import logging</code></pre>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>from langchain_google_genai import ChatGoogleGenerativeAI
+        <pre><code class="language-python">from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.tools import tool as langchain_tool
 from langchain.agents import create_tool_calling_agent, AgentExecutor</code></pre>
@@ -161,7 +161,7 @@ from langchain.agents import create_tool_calling_agent, AgentExecutor</code></pr
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># UNCOMMENT
+        <pre><code class="language-python"># UNCOMMENT
 # Prompt the user securely and set API keys as an environment
 variables
 os.environ["GOOGLE_API_KEY"] = getpass.getpass("Enter your Google API
@@ -172,7 +172,7 @@ key: ")</code></pre>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>try:
+        <pre><code class="language-python">try:
 # A model with function/tool calling capabilities is required.
 llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash",
 temperature=0)
@@ -196,7 +196,7 @@ llm = None</code></pre>
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>"capital of france": "The capital of France is Paris.",
+        <pre><code class="language-python">"capital of france": "The capital of France is Paris.",
 "population of earth": "The estimated population of Earth is
 around 8 billion people.",
 "tallest mountain": "Mount Everest is the tallest mountain
@@ -216,7 +216,7 @@ return result</code></pre>
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># --- Create a Tool-Calling Agent --if llm:
+        <pre><code class="language-python"># --- Create a Tool-Calling Agent --if llm:
 # This prompt template requires an `agent_scratchpad` placeholder
 for the agent's internal steps.
 agent_prompt = ChatPromptTemplate.from_messages([
@@ -228,7 +228,7 @@ agent_prompt = ChatPromptTemplate.from_messages([
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># Create the agent, binding the LLM, tools, and prompt together.
+        <pre><code class="language-python"># Create the agent, binding the LLM, tools, and prompt together.
 agent = create_tool_calling_agent(llm, tools, agent_prompt)</code></pre>
       </div>
 <div class="seg">
@@ -238,7 +238,7 @@ agent = create_tool_calling_agent(llm, tools, agent_prompt)</code></pre>
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>async def run_agent_with_tool(query: str):
+        <pre><code class="language-python">async def run_agent_with_tool(query: str):
 """Invokes the agent executor with a query and prints the final
 response."""
 print(f"\n--- 🏃 Running Agent with Query: '{query}' ---")
@@ -271,7 +271,7 @@ asyncio.run(main())</code></pre>
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">javascript</span></div>
-        <pre><code>This code provides a practical example of how to implement function calling (Tools)
+        <pre><code class="language-javascript">This code provides a practical example of how to implement function calling (Tools)
 within the CrewAI framework. It sets up a simple scenario where an agent is equipped
 with a tool to look up information. The example specifically demonstrates fetching a
 simulated stock price using this agent and tool.</code></pre>
@@ -283,7 +283,7 @@ simulated stock price using this agent and tool.</code></pre>
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>import os
+        <pre><code class="language-python">import os
 from crewai import Agent, Task, Crew
 from crewai.tools import tool
 import logging</code></pre>
@@ -300,7 +300,7 @@ import logging</code></pre>
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>if price is not None:
+        <pre><code class="language-python">if price is not None:
 return price
 else:
 # Raising a specific error is better than returning a string.
@@ -326,7 +326,7 @@ raise ValueError(f"Simulated price for ticker
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># Using a __name__ == "__main__": block is a standard Python best
+        <pre><code class="language-python"># Using a __name__ == "__main__": block is a standard Python best
 practice.
 def main():
 """Main function to run the crew."""
@@ -340,26 +340,26 @@ return</code></pre>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>print("\n## Starting the Financial Crew...")
+        <pre><code class="language-python">print("\n## Starting the Financial Crew...")
 print("---------------------------------")</code></pre>
       </div>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># The kickoff method starts the execution.
+        <pre><code class="language-python"># The kickoff method starts the execution.
 result = financial_crew.kickoff()</code></pre>
       </div>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>print("\n---------------------------------")
+        <pre><code class="language-python">print("\n---------------------------------")
 print("## Crew execution finished.")
 print("\nFinal Result:\n", result)</code></pre>
       </div>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>if __name__ == "__main__":
+        <pre><code class="language-python">if __name__ == "__main__":
 main()</code></pre>
       </div>
 <div class="seg">
@@ -379,7 +379,7 @@ main()</code></pre>
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>from google.adk.agents import Agent
+        <pre><code class="language-python">from google.adk.agents import Agent
 from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
 from google.adk.tools import google_search
@@ -430,7 +430,7 @@ new_message=content)</code></pre>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>for event in events:
+        <pre><code class="language-python">for event in events:
 if event.is_final_response():
 final_response = event.content.parts[0].text
 print("Agent Response: ", final_response)</code></pre>
@@ -457,7 +457,7 @@ print("Agent Response: ", final_response)</code></pre>
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>import os, getpass
+        <pre><code class="language-python">import os, getpass
 import asyncio
 import nest_asyncio
 from typing import List
@@ -489,13 +489,13 @@ code_agent = LlmAgent(
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># Agent Interaction (Async)
+        <pre><code class="language-python"># Agent Interaction (Async)
 async def call_agent_async(query):</code></pre>
       </div>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># Session and Runner
+        <pre><code class="language-python"># Session and Runner
 session_service = InMemorySessionService()</code></pre>
       </div>
 
@@ -509,7 +509,7 @@ session_service=session_service)</code></pre>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>content = types.Content(role='user',
+        <pre><code class="language-python">content = types.Content(role='user',
 parts=[types.Part(text=query)])
 print(f"\n--- Running Query: {query} ---")
 final_response_text = "No final text response captured."
@@ -522,7 +522,7 @@ print(f"Event ID: {event.id}, Author: {event.author}")</code></pre>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># --- Check for specific parts FIRST -- # has_specific_part = False
+        <pre><code class="language-python"># --- Check for specific parts FIRST -- # has_specific_part = False
 if event.content and event.content.parts and
 event.is_final_response():
 for part in event.content.parts: # Iterate through all
@@ -547,7 +547,7 @@ want the final response logic below</code></pre>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># --- Check for final response AFTER specific parts -- text_parts = [part.text for part in event.content.parts
+        <pre><code class="language-python"># --- Check for final response AFTER specific parts -- text_parts = [part.text for part in event.content.parts
 if part.text]
 final_result = "".join(text_parts)
 print(f"==&gt; Final Agent Response: {final_result}")</code></pre>
@@ -555,7 +555,7 @@ print(f"==&gt; Final Agent Response: {final_result}")</code></pre>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>except Exception as e:
+        <pre><code class="language-python">except Exception as e:
 print(f"ERROR during agent run: {e}")</code></pre>
       </div>
 <div class="seg">
@@ -565,7 +565,7 @@ print(f"ERROR during agent run: {e}")</code></pre>
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># Main async function to run the examples
+        <pre><code class="language-python"># Main async function to run the examples
 async def main():
 await call_agent_async("Calculate the value of (5 + 7) * 3")
 await call_agent_async("What is 10 factorial?")</code></pre>
@@ -573,7 +573,7 @@ await call_agent_async("What is 10 factorial?")</code></pre>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># Execute the main async function
+        <pre><code class="language-python"># Execute the main async function
 try:
 nest_asyncio.apply()
 asyncio.run(main())
@@ -612,7 +612,7 @@ raise e # Re-raise other runtime errors</code></pre>
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>import asyncio
+        <pre><code class="language-python">import asyncio
 from google.genai import types
 from google.adk import agents
 from google.adk.runners import Runner
@@ -626,7 +626,7 @@ import os</code></pre>
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># --- Agent Definition (Updated with the newer model from the guide)
+        <pre><code class="language-python"># --- Agent Definition (Updated with the newer model from the guide)
 -- vsearch_agent = agents.VSearchAgent(
 name="q2_strategy_vsearch_agent",
 description="Answers questions about Q2 strategy documents using
@@ -643,7 +643,7 @@ model_parameters={"temperature": 0.0}</code></pre>
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># --- Agent Invocation Logic --async def call_vsearch_agent_async(query: str):
+        <pre><code class="language-python"># --- Agent Invocation Logic --async def call_vsearch_agent_async(query: str):
 """Initializes a session and streams the agent's response."""
 print(f"User: {query}")
 print("Agent: ", end="", flush=True)</code></pre>
@@ -651,7 +651,7 @@ print("Agent: ", end="", flush=True)</code></pre>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>try:
+        <pre><code class="language-python">try:
 # Construct the message content correctly
 content = types.Content(role='user',
 parts=[types.Part(text=query)])</code></pre>
@@ -671,7 +671,7 @@ async for event in runner.run_async(
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># Process the final response and its associated metadata
+        <pre><code class="language-python"># Process the final response and its associated metadata
 if event.is_final_response():
 print() # Newline after the streaming response
 if event.grounding_metadata:
@@ -685,20 +685,20 @@ print("-" * 30)</code></pre>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>except Exception as e:
+        <pre><code class="language-python">except Exception as e:
 print(f"\nAn error occurred: {e}")
 print("Please ensure your datastore ID is correct and that the</code></pre>
       </div>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>service account has the necessary permissions.")
+        <pre><code class="language-python">service account has the necessary permissions.")
 print("-" * 30)</code></pre>
       </div>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># --- Run Example -- async def run_vsearch_example():
+        <pre><code class="language-python"># --- Run Example -- async def run_vsearch_example():
 # Replace with a question relevant to YOUR datastore content
 await call_vsearch_agent_async("Summarize the main points about
 the Q2 strategy document.")
@@ -708,7 +708,7 @@ mentioned for lab X?")</code></pre>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># --- Execution -- if __name__ == "__main__":
+        <pre><code class="language-python"># --- Execution -- if __name__ == "__main__":
 if not DATASTORE_ID:
 print("Error: DATASTORE_ID environment variable is not set.")
 else:
@@ -789,6 +789,6 @@ raise e</code></pre>
   </main>
 </div>
 
-<script src="assets/js/app.js?v=28"></script>
+<script src="assets/js/app.js?v=29"></script>
 </body>
 </html>

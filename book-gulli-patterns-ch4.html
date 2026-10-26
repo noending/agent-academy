@@ -29,7 +29,7 @@
         <p class="lead">
           Chapter 4: Reflection · 《Agentic Design Patterns》 · Antonio Gulli · 2025
           <br>让智能体评估自身输出并迭代改进，以提升质量与准确性。
-          <br><a class="chip" href="book-gulli-patterns.html">← 返回导读</a> <a class="chip" href="papers/pdf/gulli-agentic-design-patterns.pdf">原书 PDF</a> <a class="chip" href="book-gulli-patterns-ch3.html">上一章:第3章</a> <a class="chip" href="book-gulli-patterns-ch5.html">下一章:第5章</a>
+          <br><a class="chip" href="book-gulli-patterns.html">← 返回导读</a> <a class="chip" href="papers/pdf/gulli-agentic-design-patterns.pdf#page=63">原书 PDF · 第63页起</a> <a class="chip" href="book-gulli-patterns-ch3.html">上一章:第3章</a> <a class="chip" href="book-gulli-patterns-ch5.html">下一章:第5章</a>
         </p>
       </header>
 
@@ -157,7 +157,7 @@ Reflection 模式概述
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>import os
+        <pre><code class="language-python">import os
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
@@ -166,13 +166,13 @@ from langchain_core.messages import SystemMessage, HumanMessage</code></pre>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># --- Configuration -- # Load environment variables from .env file (for OPENAI_API_KEY)
+        <pre><code class="language-python"># --- Configuration -- # Load environment variables from .env file (for OPENAI_API_KEY)
 load_dotenv()</code></pre>
       </div>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># Check if the API key is set
+        <pre><code class="language-python"># Check if the API key is set
 if not os.getenv("OPENAI_API_KEY"):
 raise ValueError("OPENAI_API_KEY not found in .env file. Please
 add it.")</code></pre>
@@ -209,7 +209,7 @@ message_history = [HumanMessage(content=task_prompt)]</div>
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>for i in range(max_iterations):
+        <pre><code class="language-python">for i in range(max_iterations):
 print("\n" + "="*25 + f" REFLECTION LOOP: ITERATION {i + 1} "
 + "="*25)</code></pre>
       </div>
@@ -233,7 +233,7 @@ else:
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>print("\n--- Generated Code (v" + str(i + 1) + ") ---\n" +
+        <pre><code class="language-python">print("\n--- Generated Code (v" + str(i + 1) + ") ---\n" +
 current_code)
 message_history.append(response) # Add the generated code to
 history</code></pre>
@@ -265,7 +265,7 @@ critique = critique_response.content</code></pre>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># --- 3. STOPPING CONDITION -- if "CODE_IS_PERFECT" in critique:
+        <pre><code class="language-python"># --- 3. STOPPING CONDITION -- if "CODE_IS_PERFECT" in critique:
 print("\n--- Critique ---\nNo further critiques found. The
 code is satisfactory.")
 break</code></pre>
@@ -277,14 +277,14 @@ break</code></pre>
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>print("\n" + "="*30 + " FINAL RESULT " + "="*30)
+        <pre><code class="language-python">print("\n" + "="*30 + " FINAL RESULT " + "="*30)
 print("\nFinal refined code after the reflection process:\n")
 print(current_code)</code></pre>
       </div>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>if __name__ == "__main__":
+        <pre><code class="language-python">if __name__ == "__main__":
 run_reflection_loop()</code></pre>
       </div>
 <div class="seg">
@@ -386,6 +386,6 @@ run_reflection_loop()</code></pre>
   </main>
 </div>
 
-<script src="assets/js/app.js?v=28"></script>
+<script src="assets/js/app.js?v=29"></script>
 </body>
 </html>

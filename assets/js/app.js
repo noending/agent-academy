@@ -4,30 +4,37 @@
    ============================================================ */
 "use strict";
 
-/* ---------- 站点导航表 ---------- */
+/* ---------- 站点导航表（大类 → 课程 → 章节 三级结构） ----------
+   侧边栏由 renderSidebar 组装：学习路径(置顶) → 主课程[Agent 学院主课 / LLM 基础速成 / 动态生成课程]
+   → 论文与书 → 实训与拓展 → 管理。
+   NAV 仍保留 10 章的扁平顺序：键盘翻章、章节页脚翻页、进度口径都依赖它；
+   check-site 校验 NAV 中 no:"\d+" 必须恒为 10（课程条目不要用 no: 字面量）。
+   生成课程清单来自 courses-manifest.json（内容工厂维护），不在本表内。 */
 const NAV = [
-  { id: "index", file: "index.html", icon: "目", title: "学习路径", group: "开始" },
-  { id: "basics", file: "llm-basics.html", icon: "基", title: "LLM 基础速成", group: "开始" },
-  { id: "ch1", file: "01-agent-basics.html", no: "01", title: "Agent 基础认知", group: "第一部分 · 亲手造一个 Agent" },
-  { id: "ch2", file: "02-first-agent.html", no: "02", title: "动手写第一个 Agent", group: "第一部分 · 亲手造一个 Agent" },
-  { id: "ch3", file: "03-prompt-engineering.html", no: "03", title: "Prompt 工程与上下文设计", group: "第一部分 · 亲手造一个 Agent" },
-  { id: "ch4", file: "04-knowledge-base.html", no: "04", title: "知识库与 RAG 全链路", group: "第二部分 · 接入知识与记忆" },
-  { id: "ch5", file: "05-agent-patterns.html", no: "05", title: "Agent 工程进阶", group: "第二部分 · 接入知识与记忆" },
-  { id: "ch6", file: "06-ontology.html", no: "06", title: "深入理解 Ontology", group: "第三部分 · 两大核心概念" },
-  { id: "ch7", file: "07-harness.html", no: "07", title: "深入理解 Harness", group: "第三部分 · 两大核心概念" },
-  { id: "ch8", file: "08-ship-it.html", no: "08", title: "调试、评估与上线", group: "第四部分 · 上线与毕业" },
-  { id: "ch9", file: "09-capstone.html", no: "09", title: "综合实战项目", group: "第四部分 · 上线与毕业" },
-  { id: "ch10", file: "10-design-patterns.html", no: "10", title: "智能体设计模式", group: "第五部分 · 模式与拓展" },
-  { id: "fde", file: "fde.html", icon: "职", title: "FDE 能力地图", group: "第五部分 · 模式与拓展" },
-  { id: "briefs", file: "briefs.html", icon: "实", title: "企业简报库", group: "实训 · 企业简报" },
-  { id: "courses", file: "courses.html", icon: "管", title: "课程管理", group: "附录" },
-  { id: "papers", file: "papers.html", icon: "论", title: "论文精读", group: "附录" },
-  { id: "translations", file: "translations.html", icon: "译", title: "中文精读版", group: "附录" },
-  { id: "books", file: "books.html", icon: "书", title: "读书导读", group: "附录" },
-  { id: "full", file: "full-react.html", icon: "全", title: "全文翻译（8 篇）", group: "附录" },
-  { id: "res", file: "resources.html", icon: "索", title: "资源与术语表", group: "附录" },
+  { id: "index", file: "index.html", icon: "目", title: "学习路径" },
+  { id: "basics", file: "llm-basics.html", icon: "基", title: "LLM 基础速成", cat: "main" },
+  { id: "ch1", file: "01-agent-basics.html", no: "01", title: "Agent 基础认知", cat: "main", group: "一 亲手造一个 Agent" },
+  { id: "ch2", file: "02-first-agent.html", no: "02", title: "动手写第一个 Agent", cat: "main", group: "一 亲手造一个 Agent" },
+  { id: "ch3", file: "03-prompt-engineering.html", no: "03", title: "Prompt 工程与上下文设计", cat: "main", group: "一 亲手造一个 Agent" },
+  { id: "ch4", file: "04-knowledge-base.html", no: "04", title: "知识库与 RAG 全链路", cat: "main", group: "二 接入知识与记忆" },
+  { id: "ch5", file: "05-agent-patterns.html", no: "05", title: "Agent 工程进阶", cat: "main", group: "二 接入知识与记忆" },
+  { id: "ch6", file: "06-ontology.html", no: "06", title: "深入理解 Ontology", cat: "main", group: "三 两大核心概念" },
+  { id: "ch7", file: "07-harness.html", no: "07", title: "深入理解 Harness", cat: "main", group: "三 两大核心概念" },
+  { id: "ch8", file: "08-ship-it.html", no: "08", title: "调试、评估与上线", cat: "main", group: "四 上线与毕业" },
+  { id: "ch9", file: "09-capstone.html", no: "09", title: "综合实战项目", cat: "main", group: "四 上线与毕业" },
+  { id: "ch10", file: "10-design-patterns.html", no: "10", title: "智能体设计模式", cat: "main", group: "五 模式与拓展" },
+  { id: "papers", file: "papers.html", icon: "论", title: "论文精读", cat: "reading" },
+  { id: "translations", file: "translations.html", icon: "译", title: "中文精读版", cat: "reading" },
+  { id: "full", file: "full-react.html", icon: "全", title: "8 篇全文翻译", cat: "reading" },
+  { id: "books", file: "books.html", icon: "书", title: "读书导读", cat: "reading" },
+  { id: "briefs", file: "briefs.html", icon: "实", title: "企业简报库", cat: "practice" },
+  { id: "fde", file: "fde.html", icon: "职", title: "FDE 能力地图", cat: "practice" },
+  { id: "res", file: "resources.html", icon: "索", title: "资源与术语表", cat: "practice" },
+  { id: "courses", file: "courses.html", icon: "管", title: "课程管理 · 全部课程", cat: "manage" },
 ];
 const CHAPTER_IDS = ["ch1", "ch2", "ch3", "ch4", "ch5", "ch6", "ch7", "ch8", "ch9", "ch10"];
+/* 大类清单：id → 标题（NAV 条目用 cat 字段归属） */
+const CATS = { main: "主课程", reading: "论文与书", practice: "实训与拓展", manage: "管理" };
 
 /* ---------- localStorage 安全封装 ---------- */
 const store = {
@@ -91,53 +98,202 @@ function updateProgressPill(gen) {
     pill.innerHTML = `进度 <b>${Progress.count()}/${CHAPTER_IDS.length}</b> 章`;
   }
 }
-function renderGenSidebar(aside, gen) {
-  const cur = document.body.getAttribute("data-chapter") || "";
-  const done = (no) => Progress.isDone(genChapterKey(gen.skill, no));
-  const count = gen.chapters.filter((c) => done(c.no)).length;
-  const homeActive = cur === `gen-${gen.skill}-home` ? " active" : "";
-  let html = `<div class="side-group">课程 · ${escHTML(gen.title)}</div><nav class="side-nav">`;
-  html += `<a href="full-${escHTML(gen.skill)}.html" class="${homeActive.trim()}"><span class="no">首</span><span>课程首页</span></a>`;
-  for (const c of gen.chapters) {
-    const active = cur === `gen-${gen.skill}-ch${c.no}` ? " active" : "";
-    const mark = done(c.no) ? `<span class="done-mark">✓</span>` : "";
-    html += `<a href="${escHTML(c.file)}" class="${active.trim()}"><span class="no">${String(c.no).padStart(2, "0")}</span><span>${escHTML(c.title)}</span>${mark}</a>`;
-  }
-  html += `</nav><div class="side-meta">本课程进度:<b style="color:var(--accent)">${count} / ${gen.chapters.length} 章</b><br><a href="courses.html" style="color:var(--text-2)">← 课程管理</a></div>`;
-  aside.innerHTML = html;
+/* ---------- 折叠状态（localStorage 持久化；当前所在的课程/大类默认展开，主课程大类默认展开） ---------- */
+function foldData() { return store.get("nav-fold", {}); }
+function foldGet(key, defOpen) {
+  const folds = foldData();
+  return key in folds ? folds[key] : defOpen;
+}
+/* 绑定 data-fold 折叠按钮：其下一个兄弟节点即折叠面板。
+   必须按容器作用域绑定——异步填充的课程盒若全文档重绑，会给静态按钮挂双监听（点击净零）。 */
+function bindFolds(root) {
+  (root || document).querySelectorAll("[data-fold]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const key = btn.getAttribute("data-fold");
+      const nowOpen = !btn.classList.contains("open");
+      const folds = foldData(); folds[key] = nowOpen; store.set("nav-fold", folds);
+      btn.classList.toggle("open", nowOpen);
+      btn.setAttribute("aria-expanded", String(nowOpen));
+      const panel = btn.nextElementSibling;
+      if (panel) panel.classList.toggle("folded", !nowOpen);
+    });
+  });
 }
 
+/* ---------- 课程定义：主课来自 NAV，生成课程来自 courses-manifest.json ----------
+   编号索引：主课程大类下每门课按展示顺序获得固定两位编号（01 主课、02 速成、03+ 生成课程），
+   行尾类型标区分 非课题课程（速成/书），课题课程默认无标。 */
+function mainCourseDef() {
+  return {
+    key: "course:agent-dev", slug: "agent-dev", kind: "main", page: "index.html",
+    title: "从零开发智能体", desc: "站点旗舰主课 · 10 章 · 配交互实验室与论文精读",
+    chapters: NAV.filter(n => n.no).map(n => ({ no: n.no, title: n.title, file: n.file, id: n.id, part: n.group })),
+  };
+}
+function primerDef() {
+  const b = NAV.find(n => n.id === "basics");
+  return { key: "course:basics", slug: "basics", kind: "primer", page: b.file, title: b.title, desc: "主课先修速成", chapters: null };
+}
+function genCourseDefs(manifest) {
+  return manifest.filter(c => c.page).map(c => ({
+    key: "course:" + c.slug, slug: c.slug, kind: c.kind,
+    page: c.page, title: c.title, desc: c.description || ("课程 " + c.slug),
+    chapters: (c.chapters || []).map(ch => ({
+      no: String(ch.no).padStart(2, "0"), title: ch.title,
+      file: ch.file || `${c.slug}-ch${String(ch.no).padStart(2, "0")}.html`,
+    })),
+  }));
+}
+/* file:// 兜底：manifest fetch 失败时至少能渲染当前生成课程 */
+function currentGenDef(gen) {
+  return {
+    key: "course:" + gen.skill, slug: gen.skill, kind: "topic",
+    page: `full-${gen.skill}.html`, title: gen.title, desc: gen.topic || ("课程 " + gen.skill),
+    chapters: gen.chapters.map(c => ({ no: String(c.no).padStart(2, "0"), title: c.title, file: c.file })),
+  };
+}
+function courseActive(def, cur) {
+  if (def.kind === "main") return CHAPTER_IDS.includes(cur);
+  if (def.slug === "basics") return cur === "basics";
+  return cur.startsWith("gen-" + def.slug + "-");
+}
+
+function catHead(catId, open, hasActive, cnt) {
+  const title = CATS[catId];
+  return `<button type="button" class="side-group${open ? " open" : ""}${hasActive ? " has-active" : ""}" data-fold="cat:${catId}" title="${escHTML(title)}" aria-expanded="${open}">` +
+    `<span class="g-title">${escHTML(title)}</span>` +
+    (cnt ? `<span class="g-cnt">${cnt}</span>` : "") +
+    `<span class="g-chev">▾</span></button>`;
+}
+
+/* 课程块：有章节 → 可展开行 + 章节面板；无章节 → 单页直链行。
+   idx = 主课程大类下的课程编号（01 起），行尾类型标：书/速成，课题课程显示章数。 */
+function courseBlock(def, cur, idx) {
+  const active = courseActive(def, cur);
+  const icon = `<span class="no">${String(idx).padStart(2, "0")}</span>`;
+  const title = `<span class="c-title">${escHTML(def.title)}</span>`;
+  const tag = def.kind === "book" ? "书" : def.kind === "primer" ? "速成" : "";
+  if (!def.chapters || !def.chapters.length) {
+    return `<a class="course-row solo${active ? " active" : ""}" href="${escHTML(def.page)}" title="${escHTML(def.desc || def.title)}">` +
+      `<span class="g-chev none"></span>${icon}${title}${tag ? `<span class="ch-cnt">${tag}</span>` : ""}</a>`;
+  }
+  const open = foldGet(def.key, active);
+  let rows = "";
+  if (def.kind !== "main") {
+    const homeCur = cur === `gen-${def.slug}-home` || cur === `gen-${def.slug}-chhome`;
+    rows += `<a href="${escHTML(def.page)}" class="${homeCur ? "active" : ""}"><span class="no">首</span><span>课程首页</span></a>`;
+  }
+  let lastPart = null;
+  for (const ch of def.chapters) {
+    if (def.kind === "main") {
+      if (ch.part !== lastPart) { rows += `<div class="side-part">${escHTML(ch.part)}</div>`; lastPart = ch.part; }
+      const done = Progress.isDone(ch.id) ? `<span class="done-mark">✓</span>` : "";
+      rows += `<a href="${escHTML(ch.file)}" class="${ch.id === cur ? "active" : ""}"><span class="no">${ch.no}</span><span>${escHTML(ch.title)}</span>${done}</a>`;
+    } else {
+      const no = parseInt(ch.no, 10);
+      const done = Progress.isDone(genChapterKey(def.slug, no)) ? `<span class="done-mark">✓</span>` : "";
+      rows += `<a href="${escHTML(ch.file)}" class="${cur === `gen-${def.slug}-ch${no}` ? "active" : ""}"><span class="no">${ch.no}</span><span>${escHTML(ch.title)}</span>${done}</a>`;
+    }
+  }
+  return `<button type="button" class="course-row${open ? " open" : ""}${active ? " active" : ""}" data-fold="${def.key}" title="${escHTML(def.desc || def.title)}" aria-expanded="${open}">` +
+      `<span class="g-chev">▸</span>${icon}${title}<span class="ch-cnt">${tag || def.chapters.length + "章"}</span></button>` +
+    `<nav class="course-chs${open ? "" : " folded"}">${rows}</nav>`;
+}
+
+/* ---------- 生成课程清单（courses-manifest.json 驱动） ---------- */
+let _manifestCache = null;
+async function fetchManifest() {
+  if (_manifestCache) return _manifestCache;
+  try {
+    const res = await fetch("courses-manifest.json", { cache: "no-store" });
+    if (!res.ok) throw new Error(res.status);
+    _manifestCache = (await res.json()).courses || [];
+  } catch (e) { _manifestCache = []; }
+  return _manifestCache;
+}
+async function loadCoursesBox(gen, cur) {
+  const box = document.getElementById("side-courses");
+  if (!box) return;
+  let defs = genCourseDefs(await fetchManifest());
+  if (!box.isConnected) return;   // 等待期间侧边栏被重渲染 → 丢弃本次
+  if (gen && !defs.some(d => d.slug === gen.skill)) defs = defs.concat([currentGenDef(gen)]);
+  if (!defs.length) { box.remove(); return; }
+  box.innerHTML = defs.map((d, i) => courseBlock(d, cur, i + 3)).join("");
+  bindFolds(box);
+}
+
+/* ---------- 侧边栏：学习路径 + 四大类（主课程含全部课程，课程可展开章节） ---------- */
 function renderSidebar() {
   const aside = document.getElementById("sidebar");
   if (!aside) return;
   const gen = genCourseInfo();
-  if (gen) { renderGenSidebar(aside, gen); updateProgressPill(gen); return; }
+  updateProgressPill(gen);
   const cur = document.body.getAttribute("data-chapter") || "index";
-  let html = "";
-  let lastGroup = null;
-  let navOpen = false;
-  for (const item of NAV) {
-    if (item.group !== lastGroup) {
-      if (navOpen) html += `</nav>`;
-      html += `<div class="side-group">${item.group}</div><nav class="side-nav">`;
-      lastGroup = item.group;
-      navOpen = true;
-    }
-    const active = item.id === cur ? " active" : "";
-    const no = item.no ? `<span class="no">${item.no}</span>` : `<span class="no">${item.icon || "·"}</span>`;
-    const done = (item.no && Progress.isDone(item.id)) ? `<span class="done-mark">✓</span>` : "";
-    html += `<a href="${item.file}" class="${active.trim()}">${no}<span>${item.title}</span>${done}</a>`;
-  }
-  if (navOpen) html += `</nav>`;
-  const doneCount = Progress.count();
-  html += `<div class="side-meta">
-    学习进度：<b style="color:var(--accent)">${doneCount} / ${CHAPTER_IDS.length} 章</b><br>
-    进度保存在浏览器本地，<br>随时中断、随时继续。
-  </div>`;
-  aside.innerHTML = html;
+  const curItem = NAV.find(n => n.id === cur);
+  const activeCat = gen ? "main" : (curItem ? curItem.cat : null);
 
-  const pill = document.getElementById("progress-pill");
-  if (pill) pill.innerHTML = `进度 <b>${doneCount}/${CHAPTER_IDS.length}</b> 章`;
+  const linkHtml = (item) =>
+    `<a href="${item.file}" class="${item.id === cur ? "active" : ""}"><span class="no">${item.icon || "·"}</span><span>${item.title}</span></a>`;
+
+  let html = `<a class="course-row solo${cur === "index" ? " active" : ""}" href="index.html">` +
+    `<span class="g-chev none"></span><span class="no">目</span><span class="c-title">学习路径</span></a>`;
+
+  // 大类一：主课程（默认展开；课程清单里的动态部分异步填充）
+  const mainOpen = foldGet("cat:main", true);
+  html += catHead("main", mainOpen, activeCat === "main", "") +
+    `<div class="cat-body${mainOpen ? "" : " folded"}">` +
+    courseBlock(mainCourseDef(), cur, 1) +
+    courseBlock(primerDef(), cur, 2) +
+    `<div id="side-courses"></div></div>`;
+
+  // 其余大类：静态页面清单
+  for (const catId of ["reading", "practice", "manage"]) {
+    const items = NAV.filter(n => n.cat === catId);
+    const open = foldGet("cat:" + catId, catId === activeCat);
+    html += catHead(catId, open, catId === activeCat, items.length) +
+      `<div class="cat-body${open ? "" : " folded"}"><nav class="side-nav">${items.map(linkHtml).join("")}</nav></div>`;
+  }
+
+  const genDone = gen ? gen.chapters.filter(c => Progress.isDone(genChapterKey(gen.skill, c.no))).length : 0;
+  html += gen
+    ? `<div class="side-meta">本课程进度：<b style="color:var(--accent)">${genDone} / ${gen.chapters.length} 章</b><br><a href="courses.html">课程管理</a> · <a href="index.html">主课学习路径</a></div>`
+    : `<div class="side-meta">学习进度：<b style="color:var(--accent)">${Progress.count()} / ${CHAPTER_IDS.length} 章</b><br>进度保存在浏览器本地，随时中断、随时继续。<br><a href="academy://switch-pack/agent-dev" title="在 Agent 学院 App 的导师面板中学习">🎓 导师学习(App)</a></div>`;
+  aside.innerHTML = html;
+  bindFolds(aside);
+  loadCoursesBox(gen, cur);
+}
+
+/* ---------- 顶栏面包屑：首页 › 大类 › 课程 › 当前页 ---------- */
+function initBreadcrumb() {
+  const bar = document.querySelector(".topbar");
+  if (!bar) return;
+  const brand = bar.querySelector(".brand");
+  const spacer = bar.querySelector(".spacer");
+  if (!brand || !spacer) return;
+  const cur = document.body.getAttribute("data-chapter") || "index";
+  if (cur === "index") return;
+  const gen = genCourseInfo();
+  const segs = [`<a href="index.html">首页</a>`];
+  if (gen) {
+    segs.push(escHTML(CATS.main));
+    segs.push(`<a href="full-${escHTML(gen.skill)}.html">${escHTML(gen.title)}</a>`);
+    const m = cur.match(/-ch(\d+)$/);
+    if (m) {
+      const ch = gen.chapters.find(c => String(c.no) === m[1]);
+      segs.push(escHTML(ch ? `${String(ch.no).padStart(2, "0")} ${ch.title}` : "章节"));
+    } else {
+      segs.push(`课程首页`);
+    }
+  } else {
+    const curItem = NAV.find(n => n.id === cur);
+    if (!curItem) return;
+    if (curItem.cat) segs.push(escHTML(CATS[curItem.cat]));
+    segs.push(escHTML(curItem.title));
+  }
+  const nav = document.createElement("nav");
+  nav.className = "crumbs";
+  nav.innerHTML = segs.join(`<span class="sep">›</span>`);
+  spacer.parentNode.insertBefore(nav, spacer);
 }
 
 function initHamburger() {
@@ -390,7 +546,7 @@ function initGenChapterFooter(gen) {
   footer.querySelector("#mark-done").addEventListener("click", () => {
     const nowDone = Progress.toggle(key);
     footer.querySelector("#mark-done").textContent = nowDone ? "✓ 已标记学完（点击取消）" : "☐ 标记本章已学完";
-    renderGenSidebar(document.getElementById("sidebar"), gen);
+    renderSidebar();
     updateProgressPill(gen);
   });
 }
@@ -435,7 +591,7 @@ function markIndexCards() {
 
 document.addEventListener("DOMContentLoaded", () => {
   // 单步容错:任一初始化抛错只影响自身,不拖垮后面的完成按钮/目录等关键功能
-  [initTheme, renderSidebar, initHamburger, initCodeBlocks, initLite, initToc, initChapterFooter, markIndexCards]
+  [initTheme, renderSidebar, initBreadcrumb, initHamburger, initCodeBlocks, initLite, initToc, initChapterFooter, markIndexCards]
     .forEach(fn => { try { fn(); } catch (e) { console.error("[init]", fn.name, e); } });
 });
 
@@ -562,7 +718,7 @@ document.addEventListener("DOMContentLoaded", () => {
   async function build() {
     try {
       const idx = [];
-      for (const item of NAV) {
+      const indexPage = async (item) => {
         const res = await fetch(item.file);
         if (!res.ok) throw new Error("fetch fail");
         const doc = new DOMParser().parseFromString(await res.text(), "text/html");
@@ -570,7 +726,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const heads = [...main.querySelectorAll("h2, h3")];
         if (!heads.length) {
           idx.push({ page: item.file, title: item.title, id: "", heading: item.title, text: (main.innerText || "").replace(/\s+/g, " ").slice(0, 400) });
-          continue;
+          return;
         }
         heads.forEach((h, i) => {
           if (!h.id) h.id = "sec-i" + i;
@@ -579,7 +735,22 @@ document.addEventListener("DOMContentLoaded", () => {
           idx.push({ page: item.file, title: item.title, id: h.id, heading: h.innerText.trim(), text: txt.replace(/\s+/g, " ").slice(0, 400) });
         });
         idx.push({ page: item.file, title: item.title, id: "", heading: item.title, text: "页面入口 · " + item.title });
-      }
+      };
+      for (const item of NAV) await indexPage(item);
+      // 书籍章节与生成课程章节(courses-manifest 动态维护,不在 NAV;单页失败不阻断)
+      try {
+        const mf = await (await fetch("courses-manifest.json", { cache: "no-store" })).json();
+        const extra = [];
+        for (const c of mf.courses || []) {
+          if (c.kind === "book") {
+            if (c.page) extra.push({ file: c.page, title: "读书 · " + c.title });
+            for (const f of c.chapterPages || []) extra.push({ file: f, title: "读书 · " + c.title });
+          } else if (c.page) {
+            for (const ch of c.chapters || []) if (ch.file) extra.push({ file: ch.file, title: (c.title || c.slug) + " · 第" + ch.no + "章" });
+          }
+        }
+        for (const item of extra) { try { await indexPage(item); } catch { /* 跳过坏页 */ } }
+      } catch { /* 清单不可用:只搜 NAV */ }
       return idx;
     } catch (e) { failed = true; return null; }
   }

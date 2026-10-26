@@ -29,7 +29,7 @@
         <p class="lead">
           Chapter 1: Prompt Chaining · 《Agentic Design Patterns》 · Antonio Gulli · 2025
           <br>把复杂任务拆成顺序子任务，前一步输出作为后一步输入，提升可靠性与可控性。
-          <br><a class="chip" href="book-gulli-patterns.html">← 返回导读</a> <a class="chip" href="papers/pdf/gulli-agentic-design-patterns.pdf">原书 PDF</a>  <a class="chip" href="book-gulli-patterns-ch2.html">下一章:第2章</a>
+          <br><a class="chip" href="book-gulli-patterns.html">← 返回导读</a> <a class="chip" href="papers/pdf/gulli-agentic-design-patterns.pdf#page=21">原书 PDF · 第21页起</a>  <a class="chip" href="book-gulli-patterns-ch2.html">下一章:第2章</a>
         </p>
       </header>
 
@@ -210,7 +210,7 @@
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>import os
+        <pre><code class="language-python">import os
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser</code></pre>
@@ -223,19 +223,19 @@ from langchain_core.output_parsers import StrOutputParser</code></pre>
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># load_dotenv()
+        <pre><code class="language-python"># load_dotenv()
 # Make sure your OPENAI_API_KEY is set in the .env file</code></pre>
       </div>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># Initialize the Language Model (using ChatOpenAI is recommended)
+        <pre><code class="language-python"># Initialize the Language Model (using ChatOpenAI is recommended)
 llm = ChatOpenAI(temperature=0)</code></pre>
       </div>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># --- Prompt 1: Extract Information -- prompt_extract = ChatPromptTemplate.from_template(
+        <pre><code class="language-python"># --- Prompt 1: Extract Information -- prompt_extract = ChatPromptTemplate.from_template(
 "Extract the technical specifications from the following
 text:\n\n{text_input}"
 )</code></pre>
@@ -243,7 +243,7 @@ text:\n\n{text_input}"
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># --- Prompt 2: Transform to JSON -- prompt_transform = ChatPromptTemplate.from_template(
+        <pre><code class="language-python"># --- Prompt 2: Transform to JSON -- prompt_transform = ChatPromptTemplate.from_template(
 "Transform the following specifications into a JSON object with
 'cpu', 'memory', and 'storage' as keys:\n\n{specifications}"
 )</code></pre>
@@ -255,19 +255,19 @@ text:\n\n{text_input}"
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># --- Run the Chain -- input_text = "The new laptop model features a 3.5 GHz octa-core
+        <pre><code class="language-python"># --- Run the Chain -- input_text = "The new laptop model features a 3.5 GHz octa-core
 processor, 16GB of RAM, and a 1TB NVMe SSD."</code></pre>
       </div>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># Execute the chain with the input text dictionary.
+        <pre><code class="language-python"># Execute the chain with the input text dictionary.
 final_result = full_chain.invoke({"text_input": input_text})</code></pre>
       </div>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>print("\n--- Final JSON Output ---")
+        <pre><code class="language-python">print("\n--- Final JSON Output ---")
 print(final_result)</code></pre>
       </div>
 <div class="seg">
@@ -347,6 +347,6 @@ print(final_result)</code></pre>
   </main>
 </div>
 
-<script src="assets/js/app.js?v=28"></script>
+<script src="assets/js/app.js?v=29"></script>
 </body>
 </html>

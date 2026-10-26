@@ -29,7 +29,7 @@
         <p class="lead">
           Chapter 11: Goal Setting and Monitoring · 《Agentic Design Patterns》 · Antonio Gulli · 2025
           <br>为智能体设定可衡量目标并持续监控进度，使其从被动反应转为主动达成目标。
-          <br><a class="chip" href="book-gulli-patterns.html">← 返回导读</a> <a class="chip" href="papers/pdf/gulli-agentic-design-patterns.pdf">原书 PDF</a> <a class="chip" href="book-gulli-patterns-ch10.html">上一章:第10章</a> <a class="chip" href="book-gulli-patterns-ch12.html">下一章:第12章</a>
+          <br><a class="chip" href="book-gulli-patterns.html">← 返回导读</a> <a class="chip" href="papers/pdf/gulli-agentic-design-patterns.pdf#page=181">原书 PDF · 第181页起</a> <a class="chip" href="book-gulli-patterns-ch10.html">上一章:第10章</a> <a class="chip" href="book-gulli-patterns-ch12.html">下一章:第12章</a>
         </p>
       </header>
 
@@ -120,7 +120,7 @@
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>import os
+        <pre><code class="language-python">import os
 import random
 import re
 from pathlib import Path
@@ -133,7 +133,7 @@ from langchain_openai import ChatOpenAI</code></pre>
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># 🔐 Load environment variables
+        <pre><code class="language-python"># 🔐 Load environment variables
 _ = load_dotenv(find_dotenv())
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 if not OPENAI_API_KEY:
@@ -166,7 +166,7 @@ def generate_prompt(
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>Your goals are:
+        <pre><code class="language-python">Your goals are:
 {chr(10).join(f"- {g.strip()}" for g in goals)}
 """
 if previous_code:
@@ -193,7 +193,7 @@ return base_prompt</code></pre>
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>Here are the goals:
+        <pre><code class="language-python">Here are the goals:
 {chr(10).join(f"- {g.strip()}" for g in goals)}</code></pre>
       </div>
 <div class="seg">
@@ -211,7 +211,7 @@ return response == "true"</code></pre>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>def clean_code_block(code: str) -&gt; str:
+        <pre><code class="language-python">def clean_code_block(code: str) -&gt; str:
 lines = code.strip().splitlines()
 if lines and lines[0].strip().startswith("```"):
 lines = lines[1:]
@@ -226,7 +226,7 @@ return "\n".join(lines).strip()</code></pre>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>def add_comment_header(code: str, use_case: str) -&gt; str:
+        <pre><code class="language-python">def add_comment_header(code: str, use_case: str) -&gt; str:
 comment = f"# This Python program implements the following use
 case:\n# {use_case.strip()}\n"
 return comment + "\n" + code</code></pre>
@@ -234,14 +234,14 @@ return comment + "\n" + code</code></pre>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>def to_snake_case(text: str) -&gt; str:
+        <pre><code class="language-python">def to_snake_case(text: str) -&gt; str:
 text = re.sub(r"[^a-zA-Z0-9 ]", "", text)
 return re.sub(r"\s+", "_", text.strip().lower())</code></pre>
       </div>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>def save_code_to_file(code: str, use_case: str) -&gt; str:
+        <pre><code class="language-python">def save_code_to_file(code: str, use_case: str) -&gt; str:
 print("💾 Saving final code to file...")</code></pre>
       </div>
 <div class="seg">
@@ -258,19 +258,19 @@ filepath = Path.cwd() / filename</code></pre>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>with open(filepath, "w") as f:
+        <pre><code class="language-python">with open(filepath, "w") as f:
 f.write(code)</code></pre>
       </div>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>print(f"✅ Code saved to: {filepath}")
+        <pre><code class="language-python">print(f"✅ Code saved to: {filepath}")
 return str(filepath)</code></pre>
       </div>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># --- Main Agent Function --
+        <pre><code class="language-python"># --- Main Agent Function --
 def run_code_agent(use_case: str, goals_input: str, max_iterations:
 int = 5) -&gt; str:
 goals = [g.strip() for g in goals_input.split(",")]</code></pre>
@@ -278,7 +278,7 @@ goals = [g.strip() for g in goals_input.split(",")]</code></pre>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>print(f"\n🎯 Use Case: {use_case}")
+        <pre><code class="language-python">print(f"\n🎯 Use Case: {use_case}")
 print("🎯 Goals:")
 for g in goals:
 print(f" - {g}")</code></pre>
@@ -290,7 +290,7 @@ print(f" - {g}")</code></pre>
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>for i in range(max_iterations):
+        <pre><code class="language-python">for i in range(max_iterations):
 print(f"\n=== 🔁 Iteration {i + 1} of {max_iterations} ===")
 prompt = generate_prompt(use_case, goals, previous_code,
 feedback if isinstance(feedback, str) else feedback.content)</code></pre>
@@ -298,7 +298,7 @@ feedback if isinstance(feedback, str) else feedback.content)</code></pre>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>print("🚧 Generating code...")
+        <pre><code class="language-python">print("🚧 Generating code...")
 code_response = llm.invoke(prompt)
 raw_code = code_response.content.strip()
 code = clean_code_block(raw_code)
@@ -308,7 +308,7 @@ print("\n🧾 Generated Code:\n" + "-" * 50 + f"\n{code}\n" +
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>print("\n📤 Submitting code for feedback review...")
+        <pre><code class="language-python">print("\n📤 Submitting code for feedback review...")
 feedback = get_code_feedback(code, goals)
 feedback_text = feedback.content.strip()
 print("\n📥 Feedback Received:\n" + "-" * 50 +
@@ -317,7 +317,7 @@ f"\n{feedback_text}\n" + "-" * 50)</code></pre>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>if goals_met(feedback_text, goals):
+        <pre><code class="language-python">if goals_met(feedback_text, goals):
 print("✅ LLM confirms goals are met. Stopping
 iteration.")
 break</code></pre>
@@ -325,7 +325,7 @@ break</code></pre>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>print("🛠 Goals not fully met. Preparing for next
+        <pre><code class="language-python">print("🛠 Goals not fully met. Preparing for next
 iteration...")
 previous_code = code</code></pre>
       </div>
@@ -338,7 +338,7 @@ return save_code_to_file(final_code, use_case)</code></pre>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># --- CLI Test Run --
+        <pre><code class="language-python"># --- CLI Test Run --
 if __name__ == "__main__":
 print("\n🧠 Welcome to the AI Code Generation Agent")</code></pre>
       </div>
@@ -439,6 +439,6 @@ run_code_agent(use_case_input, goals_input)
   </main>
 </div>
 
-<script src="assets/js/app.js?v=28"></script>
+<script src="assets/js/app.js?v=29"></script>
 </body>
 </html>

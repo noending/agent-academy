@@ -29,7 +29,7 @@
         <p class="lead">
           Chapter 20: Prioritization · 《Agentic Design Patterns》 · Antonio Gulli · 2025
           <br>讲智能体如何在多任务、资源受限时按紧迫性、重要性与依赖关系排序并动态调整。
-          <br><a class="chip" href="book-gulli-patterns.html">← 返回导读</a> <a class="chip" href="papers/pdf/gulli-agentic-design-patterns.pdf">原书 PDF</a> <a class="chip" href="book-gulli-patterns-ch19.html">上一章:第19章</a> <a class="chip" href="book-gulli-patterns-ch21.html">下一章:第21章</a>
+          <br><a class="chip" href="book-gulli-patterns.html">← 返回导读</a> <a class="chip" href="papers/pdf/gulli-agentic-design-patterns.pdf#page=323">原书 PDF · 第323页起</a> <a class="chip" href="book-gulli-patterns-ch19.html">上一章:第19章</a> <a class="chip" href="book-gulli-patterns-ch21.html">下一章:第21章</a>
         </p>
       </header>
 
@@ -106,20 +106,20 @@
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>import os
+        <pre><code class="language-python">import os
 import asyncio
 from typing import List, Optional, Dict, Type</code></pre>
       </div>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>from dotenv import load_dotenv
+        <pre><code class="language-python">from dotenv import load_dotenv
 from pydantic import BaseModel, Field</code></pre>
       </div>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>from langchain_core.prompts import ChatPromptTemplate
+        <pre><code class="language-python">from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.tools import Tool
 from langchain_openai import ChatOpenAI
 from langchain.agents import AgentExecutor, create_react_agent
@@ -128,7 +128,7 @@ from langchain.memory import ConversationBufferMemory</code></pre>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># --- 0. Configuration and Setup -- # Loads the OPENAI_API_KEY from the .env file.
+        <pre><code class="language-python"># --- 0. Configuration and Setup -- # Loads the OPENAI_API_KEY from the .env file.
 load_dotenv()</code></pre>
       </div>
 <div class="seg">
@@ -138,7 +138,7 @@ load_dotenv()</code></pre>
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># --- 1. Task Management System --
+        <pre><code class="language-python"># --- 1. Task Management System --
 class Task(BaseModel):
 """Represents a single task in the system."""
 id: str
@@ -149,7 +149,7 @@ assigned_to: Optional[str] = None # Name of the worker</code></pre>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>class SuperSimpleTaskManager:
+        <pre><code class="language-python">class SuperSimpleTaskManager:
 """An efficient and robust in-memory task manager."""
 def __init__(self):
 # Use a dictionary for O(1) lookups, updates, and deletions.
@@ -159,7 +159,7 @@ self.next_task_id = 1</code></pre>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>def create_task(self, description: str) -&gt; Task:
+        <pre><code class="language-python">def create_task(self, description: str) -&gt; Task:
 """Creates and stores a new task."""
 task_id = f"TASK-{self.next_task_id:03d}"
 new_task = Task(id=task_id, description=description)
@@ -169,13 +169,13 @@ self.next_task_id += 1</code></pre>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>print(f"DEBUG: Task created - {task_id}: {description}")
+        <pre><code class="language-python">print(f"DEBUG: Task created - {task_id}: {description}")
 return new_task</code></pre>
       </div>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>def update_task(self, task_id: str, **kwargs) -&gt; Optional[Task]:
+        <pre><code class="language-python">def update_task(self, task_id: str, **kwargs) -&gt; Optional[Task]:
 """Safely updates a task using Pydantic's model_copy."""
 task = self.tasks.get(task_id)
 if task:
@@ -190,13 +190,13 @@ return updated_task</code></pre>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>print(f"DEBUG: Task {task_id} not found for update.")
+        <pre><code class="language-python">print(f"DEBUG: Task {task_id} not found for update.")
 return None</code></pre>
       </div>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>def list_all_tasks(self) -&gt; str:
+        <pre><code class="language-python">def list_all_tasks(self) -&gt; str:
 """Lists all tasks currently in the system."""
 if not self.tasks:
 return "No tasks in the system."</code></pre>
@@ -204,7 +204,7 @@ return "No tasks in the system."</code></pre>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>task_strings = []
+        <pre><code class="language-python">task_strings = []
 for task in self.tasks.values():
 task_strings.append(
 f"ID: {task.id}, Desc: '{task.description}', "
@@ -220,7 +220,7 @@ return "Current Tasks:\n" + "\n".join(task_strings)</code></pre>
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># --- 2. Tools for the Project Manager Agent --
+        <pre><code class="language-python"># --- 2. Tools for the Project Manager Agent --
 # Use Pydantic models for tool arguments for better validation and
 clarity.
 class CreateTaskArgs(BaseModel):
@@ -230,7 +230,7 @@ the task.")</code></pre>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>class PriorityArgs(BaseModel):
+        <pre><code class="language-python">class PriorityArgs(BaseModel):
 task_id: str = Field(description="The ID of the task to update,
 e.g., 'TASK-001'.")
 priority: str = Field(description="The priority to set. Must be
@@ -239,7 +239,7 @@ one of: 'P0', 'P1', 'P2'.")</code></pre>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>class AssignWorkerArgs(BaseModel):
+        <pre><code class="language-python">class AssignWorkerArgs(BaseModel):
 task_id: str = Field(description="The ID of the task to update,
 e.g., 'TASK-001'.")
 worker_name: str = Field(description="The name of the worker to
@@ -248,7 +248,7 @@ assign the task to.")</code></pre>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>def create_new_task_tool(description: str) -&gt; str:
+        <pre><code class="language-python">def create_new_task_tool(description: str) -&gt; str:
 """Creates a new project task with the given description."""
 task = task_manager.create_task(description)
 return f"Created task {task.id}: '{task.description}'."</code></pre>
@@ -256,7 +256,7 @@ return f"Created task {task.id}: '{task.description}'."</code></pre>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>def assign_priority_to_task_tool(task_id: str, priority: str) -&gt; str:
+        <pre><code class="language-python">def assign_priority_to_task_tool(task_id: str, priority: str) -&gt; str:
 """Assigns a priority (P0, P1, P2) to a given task ID."""
 if priority not in ["P0", "P1", "P2"]:
 return "Invalid priority. Must be P0, P1, or P2."
@@ -267,7 +267,7 @@ else f"Task {task_id} not found."</code></pre>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>def assign_task_to_worker_tool(task_id: str, worker_name: str) -&gt;
+        <pre><code class="language-python">def assign_task_to_worker_tool(task_id: str, worker_name: str) -&gt;
 str:
 """Assigns a task to a specific worker."""
 task = task_manager.update_task(task_id, assigned_to=worker_name)
@@ -345,14 +345,14 @@ pm_agent_executor = AgentExecutor(
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># --- 4. Simple Interaction Flow --
+        <pre><code class="language-python"># --- 4. Simple Interaction Flow --
 async def run_simulation():
 print("--- Project Manager Simulation ---")</code></pre>
       </div>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># Scenario 1: Handle a new, urgent feature request
+        <pre><code class="language-python"># Scenario 1: Handle a new, urgent feature request
 print("\n[User Request] I need a new login system implemented
 ASAP. It should be assigned to Worker B.")
 await pm_agent_executor.ainvoke({"input": "Create a task to
@@ -366,7 +366,7 @@ Worker B."})</code></pre>
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># Scenario 2: Handle a less urgent content update with fewer
+        <pre><code class="language-python"># Scenario 2: Handle a less urgent content update with fewer
 details
 print("[User Request] We need to review the marketing website
 content.")
@@ -380,7 +380,7 @@ Review marketing website content."})</code></pre>
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># Run the simulation
+        <pre><code class="language-python"># Run the simulation
 if __name__ == "__main__":
 asyncio.run(run_simulation())</code></pre>
       </div>
@@ -451,6 +451,6 @@ asyncio.run(run_simulation())</code></pre>
   </main>
 </div>
 
-<script src="assets/js/app.js?v=28"></script>
+<script src="assets/js/app.js?v=29"></script>
 </body>
 </html>

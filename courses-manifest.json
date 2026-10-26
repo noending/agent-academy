@@ -4,18 +4,48 @@
       "kind": "book",
       "slug": "gulli-patterns",
       "title": "Agentic Design Patterns",
-      "description": "读书导读：21个可落地模式，系统构建可靠智能体",
+      "description": "读书导读:21个可落地模式，系统构建可靠智能体",
       "page": "book-gulli-patterns.html",
       "pack": "gulli-patterns",
       "review": "drafts/gulli-patterns/REVIEW.md",
       "generated": true,
-      "generatedAt": "2026-10-25T10:26:53.083Z",
+      "generatedAt": "2026-10-26T15:52:22.319Z",
       "authors": "Antonio Gulli · 2025",
       "pages": "458",
       "pdf": "papers/pdf/gulli-agentic-design-patterns.pdf",
       "quickChapters": "1,4,5,7",
       "approved": true,
-      "published": true
+      "published": true,
+      "chapterPages": [
+        "book-gulli-patterns-ch1.html",
+        "book-gulli-patterns-ch2.html",
+        "book-gulli-patterns-ch3.html",
+        "book-gulli-patterns-ch4.html",
+        "book-gulli-patterns-ch5.html",
+        "book-gulli-patterns-ch6.html",
+        "book-gulli-patterns-ch7.html",
+        "book-gulli-patterns-ch8.html",
+        "book-gulli-patterns-ch9.html",
+        "book-gulli-patterns-ch10.html",
+        "book-gulli-patterns-ch11.html",
+        "book-gulli-patterns-ch12.html",
+        "book-gulli-patterns-ch13.html",
+        "book-gulli-patterns-ch14.html",
+        "book-gulli-patterns-ch15.html",
+        "book-gulli-patterns-ch16.html",
+        "book-gulli-patterns-ch17.html",
+        "book-gulli-patterns-ch18.html",
+        "book-gulli-patterns-ch19.html",
+        "book-gulli-patterns-ch20.html",
+        "book-gulli-patterns-ch21.html",
+        "book-gulli-patterns-ch100.html",
+        "book-gulli-patterns-ch101.html",
+        "book-gulli-patterns-ch102.html",
+        "book-gulli-patterns-ch103.html",
+        "book-gulli-patterns-ch104.html",
+        "book-gulli-patterns-ch105.html",
+        "book-gulli-patterns-ch106.html"
+      ]
     },
     {
       "kind": "repo",
@@ -759,5 +789,5 @@
       "review": null
     }
   ],
-  "updatedAt": "2026-10-26T03:33:41.102Z"
+  "updatedAt": "2026-10-26T15:52:22.319Z"
 }

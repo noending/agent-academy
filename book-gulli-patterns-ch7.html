@@ -29,7 +29,7 @@
         <p class="lead">
           Chapter 7: Multi-Agent Collaboration · 《Agentic Design Patterns》 · Antonio Gulli · 2025
           <br>把复杂任务拆给多个专业化智能体，靠通信协议与协作结构协同完成。
-          <br><a class="chip" href="book-gulli-patterns.html">← 返回导读</a> <a class="chip" href="papers/pdf/gulli-agentic-design-patterns.pdf">原书 PDF</a> <a class="chip" href="book-gulli-patterns-ch6.html">上一章:第6章</a> <a class="chip" href="book-gulli-patterns-ch8.html">下一章:第8章</a>
+          <br><a class="chip" href="book-gulli-patterns.html">← 返回导读</a> <a class="chip" href="papers/pdf/gulli-agentic-design-patterns.pdf#page=111">原书 PDF · 第111页起</a> <a class="chip" href="book-gulli-patterns-ch6.html">上一章:第6章</a> <a class="chip" href="book-gulli-patterns-ch8.html">下一章:第8章</a>
         </p>
       </header>
 
@@ -186,7 +186,7 @@ Hands-On code (Crew AI)</code></pre>
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>import os
+        <pre><code class="language-python">import os
 from dotenv import load_dotenv
 from crewai import Agent, Task, Crew, Process
 from langchain_google_genai import ChatGoogleGenerativeAI</code></pre>
@@ -194,7 +194,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI</code></pre>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>def setup_environment():
+        <pre><code class="language-python">def setup_environment():
 """Loads environment variables and checks for the required API
 key."""
 load_dotenv()
@@ -219,7 +219,7 @@ your .env file.")</code></pre>
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># Execute the Crew
+        <pre><code class="language-python"># Execute the Crew
 print("## Running the blog creation crew with Gemini 2.0 Flash...
 ##")
 try:
@@ -233,7 +233,7 @@ print(f"\nAn unexpected error occurred: {e}")</code></pre>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>if __name__ == "__main__":
+        <pre><code class="language-python">if __name__ == "__main__":
 main()</code></pre>
       </div>
 <div class="seg">
@@ -248,7 +248,7 @@ main()</code></pre>
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>from google.adk.agents import LlmAgent, BaseAgent
+        <pre><code class="language-python">from google.adk.agents import LlmAgent, BaseAgent
 from google.adk.agents.invocation_context import InvocationContext
 from google.adk.events import Event
 from typing import AsyncGenerator</code></pre>
@@ -290,7 +290,7 @@ coordinator = LlmAgent(
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>relationships.
+        <pre><code class="language-python">relationships.
 # These assertions will pass if checked after initialization.
 assert greeter.parent_agent == coordinator
 assert task_doer.parent_agent == coordinator</code></pre>
@@ -307,7 +307,7 @@ assert task_doer.parent_agent == coordinator</code></pre>
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>import asyncio
+        <pre><code class="language-python">import asyncio
 from typing import AsyncGenerator
 from google.adk.agents import LoopAgent, LlmAgent, BaseAgent
 from google.adk.events import Event, EventActions
@@ -320,7 +320,7 @@ from google.adk.agents.invocation_context import InvocationContext</code></pre>
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>async def _run_async_impl(
+        <pre><code class="language-python">async def _run_async_impl(
 self, context: InvocationContext
 ) -&gt; AsyncGenerator[Event, None]:
 """Checks state and yields an event to either continue or stop
@@ -361,7 +361,7 @@ process_step = LlmAgent(
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># This agent's output will be saved to session.state["data"]
+        <pre><code class="language-python"># This agent's output will be saved to session.state["data"]
 step1 = Agent(name="Step1_Fetch", output_key="data")</code></pre>
       </div>
 <div class="seg">
@@ -406,7 +406,7 @@ pipeline = SequentialAgent(
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>from google.adk.agents import LlmAgent
+        <pre><code class="language-python">from google.adk.agents import LlmAgent
 from google.adk.tools import agent_tool
 from google.genai import types</code></pre>
       </div>
@@ -482,6 +482,6 @@ def generate_image(prompt: str) -&gt; dict:
   </main>
 </div>
 
-<script src="assets/js/app.js?v=28"></script>
+<script src="assets/js/app.js?v=29"></script>
 </body>
 </html>

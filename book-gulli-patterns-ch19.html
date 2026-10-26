@@ -29,7 +29,7 @@
         <p class="lead">
           Chapter 19: Evaluation and Monitoring · 《Agentic Design Patterns》 · Antonio Gulli · 2025
           <br>讲如何系统度量智能体的效果、效率与合规性，并建立反馈闭环持续监控。
-          <br><a class="chip" href="book-gulli-patterns.html">← 返回导读</a> <a class="chip" href="papers/pdf/gulli-agentic-design-patterns.pdf">原书 PDF</a> <a class="chip" href="book-gulli-patterns-ch18.html">上一章:第18章</a> <a class="chip" href="book-gulli-patterns-ch20.html">下一章:第20章</a>
+          <br><a class="chip" href="book-gulli-patterns.html">← 返回导读</a> <a class="chip" href="papers/pdf/gulli-agentic-design-patterns.pdf#page=304">原书 PDF · 第304页起</a> <a class="chip" href="book-gulli-patterns-ch18.html">上一章:第18章</a> <a class="chip" href="book-gulli-patterns-ch20.html">下一章:第20章</a>
         </p>
       </header>
 
@@ -113,7 +113,7 @@
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>def evaluate_response_accuracy(agent_output: str, expected_output:
+        <pre><code class="language-python">def evaluate_response_accuracy(agent_output: str, expected_output:
 str) -&gt; float:
 """Calculates a simple accuracy score for agent responses."""
 # This is a very basic exact match; real-world would use more
@@ -159,7 +159,7 @@ Python 函数 `evaluate_response_accuracy` 通过去除首尾空白后，对 AI 
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>def record_interaction(self, prompt: str, response: str):
+        <pre><code class="language-python">def record_interaction(self, prompt: str, response: str):
 # In a real scenario, use LLM API's token counter or a
 tokenizer
 input_tokens = len(prompt.split()) # Placeholder
@@ -172,13 +172,13 @@ Output tokens={output_tokens}")</code></pre>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>def get_total_tokens(self):
+        <pre><code class="language-python">def get_total_tokens(self):
 return self.total_input_tokens, self.total_output_tokens</code></pre>
       </div>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># Example usage
+        <pre><code class="language-python"># Example usage
 monitor = LLMInteractionMonitor()
 monitor.record_interaction("What is the capital of France?", "The
 capital of France is Paris.")</code></pre>
@@ -186,7 +186,7 @@ capital of France is Paris.")</code></pre>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>monitor.record_interaction("Tell me a joke.", "Why don't scientists
+        <pre><code class="language-python">monitor.record_interaction("Tell me a joke.", "Why don't scientists
 trust atoms? Because they make up everything!")
 input_t, output_t = monitor.get_total_tokens()
 print(f"Total input tokens: {input_t}, Total output tokens:
@@ -204,7 +204,7 @@ print(f"Total input tokens: {input_t}, Total output tokens:
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>import google.generativeai as genai
+        <pre><code class="language-python">import google.generativeai as genai
 import os
 import json
 import logging
@@ -217,7 +217,7 @@ from typing import Optional</code></pre>
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># Set your API key as an environment variable to run this script
+        <pre><code class="language-python"># Set your API key as an environment variable to run this script
 # For example, in your terminal: export
 GOOGLE_API_KEY='your_key_here'
 try:
@@ -243,14 +243,14 @@ set.")</code></pre>
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>class LLMJudgeForLegalSurvey:
+        <pre><code class="language-python">class LLMJudgeForLegalSurvey:
 """A class to evaluate legal survey questions using a generative
 AI model."""</code></pre>
       </div>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>def __init__(self, model_name: str = 'gemini-1.5-flash-latest',
+        <pre><code class="language-python">def __init__(self, model_name: str = 'gemini-1.5-flash-latest',
 temperature: float = 0.2):
 """
 Initializes the LLM Judge.</code></pre>
@@ -262,7 +262,7 @@ Initializes the LLM Judge.</code></pre>
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>def _generate_prompt(self, survey_question: str) -&gt; str:
+        <pre><code class="language-python">def _generate_prompt(self, survey_question: str) -&gt; str:
 """Constructs the full prompt for the LLM judge."""
 return f"{LEGAL_SURVEY_RUBRIC}\n\n---\n**LEGAL SURVEY QUESTION
 TO EVALUATE:**\n{survey_question}\n---"</code></pre>
@@ -294,7 +294,7 @@ try:
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>except json.JSONDecodeError:
+        <pre><code class="language-python">except json.JSONDecodeError:
 logging.error(f"Failed to decode LLM response as JSON. Raw
 response: {response.text}")
 return None
@@ -306,7 +306,7 @@ return None</code></pre>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># --- Example Usage --if __name__ == "__main__":
+        <pre><code class="language-python"># --- Example Usage --if __name__ == "__main__":
 judge = LLMJudgeForLegalSurvey()</code></pre>
       </div>
 <div class="seg">
@@ -316,7 +316,7 @@ judge = LLMJudgeForLegalSurvey()</code></pre>
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># --- Biased/Poor Example -- biased_legal_survey_question = """
+        <pre><code class="language-python"># --- Biased/Poor Example -- biased_legal_survey_question = """
 Don't you agree that overly restrictive data privacy laws like the
 FADP are hindering essential technological innovation and economic
 growth in Switzerland?
@@ -331,7 +331,7 @@ print(json.dumps(judgment_biased, indent=2))</code></pre>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># --- Ambiguous/Vague Example -- vague_legal_survey_question = """
+        <pre><code class="language-python"># --- Ambiguous/Vague Example -- vague_legal_survey_question = """
 What are your thoughts on legal tech?
 """
 print("\n--- Evaluating Vague Legal Survey Question ---")
@@ -492,6 +492,6 @@ print(json.dumps(judgment_vague, indent=2))</code></pre>
   </main>
 </div>
 
-<script src="assets/js/app.js?v=28"></script>
+<script src="assets/js/app.js?v=29"></script>
 </body>
 </html>

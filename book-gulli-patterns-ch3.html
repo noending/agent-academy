@@ -29,7 +29,7 @@
         <p class="lead">
           Chapter 3: Parallelization · 《Agentic Design Patterns》 · Antonio Gulli · 2025
           <br>讲解如何并发执行无依赖的LLM调用、工具与子代理，以缩短任务总耗时。
-          <br><a class="chip" href="book-gulli-patterns.html">← 返回导读</a> <a class="chip" href="papers/pdf/gulli-agentic-design-patterns.pdf">原书 PDF</a> <a class="chip" href="book-gulli-patterns-ch2.html">上一章:第2章</a> <a class="chip" href="book-gulli-patterns-ch4.html">下一章:第4章</a>
+          <br><a class="chip" href="book-gulli-patterns.html">← 返回导读</a> <a class="chip" href="papers/pdf/gulli-agentic-design-patterns.pdf#page=48">原书 PDF · 第48页起</a> <a class="chip" href="book-gulli-patterns-ch2.html">上一章:第2章</a> <a class="chip" href="book-gulli-patterns-ch4.html">下一章:第4章</a>
         </p>
       </header>
 
@@ -133,14 +133,14 @@
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>import os
+        <pre><code class="language-python">import os
 import asyncio
 from typing import Optional</code></pre>
       </div>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>from langchain_openai import ChatOpenAI
+        <pre><code class="language-python">from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import Runnable, RunnableParallel,
@@ -149,7 +149,7 @@ RunnablePassthrough</code></pre>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># --- Configuration -- # Ensure your API key environment variable is set (e.g.,
+        <pre><code class="language-python"># --- Configuration -- # Ensure your API key environment variable is set (e.g.,
 OPENAI_API_KEY)
 try:
 llm: Optional[ChatOpenAI] = ChatOpenAI(model="gpt-4o-mini",
@@ -158,7 +158,7 @@ temperature=0.7)</code></pre>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>except Exception as e:
+        <pre><code class="language-python">except Exception as e:
 print(f"Error initializing language model: {e}")
 llm = None</code></pre>
       </div>
@@ -228,7 +228,7 @@ async def run_parallel_example(topic: str) -&gt; None:
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>print(f"\n--- Running Parallel LangChain Example for Topic:
+        <pre><code class="language-python">print(f"\n--- Running Parallel LangChain Example for Topic:
 '{topic}' ---")
 try:
 # The input to `ainvoke` is the single 'topic' string,
@@ -276,7 +276,7 @@ print(f"\nAn error occurred during chain execution: {e}")</code></pre>
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>from google.adk.agents import LlmAgent, ParallelAgent,
+        <pre><code class="language-python">from google.adk.agents import LlmAgent, ParallelAgent,
 SequentialAgent
 from google.adk.tools import google_search
 GEMINI_MODEL="gemini-2.0-flash"</code></pre>
@@ -385,6 +385,6 @@ GEMINI_MODEL="gemini-2.0-flash"</code></pre>
   </main>
 </div>
 
-<script src="assets/js/app.js?v=28"></script>
+<script src="assets/js/app.js?v=29"></script>
 </body>
 </html>

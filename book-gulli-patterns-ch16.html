@@ -29,7 +29,7 @@
         <p class="lead">
           Chapter 16: Resource-Aware · 《Agentic Design Patterns》 · Antonio Gulli · 2025
           <br>讲智能体如何在预算、延迟与算力约束下动态分配模型与工具资源。
-          <br><a class="chip" href="book-gulli-patterns.html">← 返回导读</a> <a class="chip" href="papers/pdf/gulli-agentic-design-patterns.pdf">原书 PDF</a> <a class="chip" href="book-gulli-patterns-ch15.html">上一章:第15章</a> <a class="chip" href="book-gulli-patterns-ch17.html">下一章:第17章</a>
+          <br><a class="chip" href="book-gulli-patterns.html">← 返回导读</a> <a class="chip" href="papers/pdf/gulli-agentic-design-patterns.pdf#page=244">原书 PDF · 第244页起</a> <a class="chip" href="book-gulli-patterns-ch15.html">上一章:第15章</a> <a class="chip" href="book-gulli-patterns-ch17.html">下一章:第17章</a>
         </p>
       </header>
 
@@ -128,7 +128,7 @@
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>from google.adk.agents import Agent, BaseAgent
+        <pre><code class="language-python">from google.adk.agents import Agent, BaseAgent
 from google.adk.events import Event
 from google.adk.agents.invocation_context import InvocationContext
 import asyncio</code></pre>
@@ -140,7 +140,7 @@ import asyncio</code></pre>
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>if query_length &lt; 20: # Example threshold for simplicity vs.
+        <pre><code class="language-python">if query_length &lt; 20: # Example threshold for simplicity vs.
 complexity
 print(f"Routing to Gemini Flash Agent for short query
 (length: {query_length})")
@@ -192,7 +192,7 @@ processed: {response}")</code></pre>
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>The code is under the MIT license and available on Github:
+        <pre><code class="language-python">The code is under the MIT license and available on Github:
 (https://github.com/mahtabsyed/21-Agentic-Patterns/blob/main/16_Resource_Aware_
 Opt_LLM_Reflection_v2.ipynb)</code></pre>
       </div>
@@ -203,7 +203,7 @@ Opt_LLM_Reflection_v2.ipynb)</code></pre>
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>import os
+        <pre><code class="language-python">import os
 import requests
 import json
 from dotenv import load_dotenv
@@ -212,7 +212,7 @@ from openai import OpenAI</code></pre>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># Load environment variables
+        <pre><code class="language-python"># Load environment variables
 load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 GOOGLE_CUSTOM_SEARCH_API_KEY =
@@ -226,7 +226,7 @@ GOOGLE_CSE_ID = os.getenv("GOOGLE_CSE_ID")</code></pre>
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># --- Step 1: Classify the Prompt --def classify_prompt(prompt: str) -&gt; dict:
+        <pre><code class="language-python"># --- Step 1: Classify the Prompt --def classify_prompt(prompt: str) -&gt; dict:
 system_message = {
 "role": "system",
 "content": (
@@ -260,7 +260,7 @@ return json.loads(reply)</code></pre>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># --- Step 2: Google Search --def google_search(query: str, num_results=1) -&gt; list:
+        <pre><code class="language-python"># --- Step 2: Google Search --def google_search(query: str, num_results=1) -&gt; list:
 url = "https://www.googleapis.com/customsearch/v1"
 params = {
 "key": GOOGLE_CUSTOM_SEARCH_API_KEY,
@@ -272,7 +272,7 @@ params = {
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>try:
+        <pre><code class="language-python">try:
 response = requests.get(url, params=params)
 response.raise_for_status()
 results = response.json()</code></pre>
@@ -280,7 +280,7 @@ results = response.json()</code></pre>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>if "items" in results and results["items"]:
+        <pre><code class="language-python">if "items" in results and results["items"]:
 return [
 {
 "title": item.get("title"),
@@ -327,7 +327,7 @@ def generate_response(prompt: str, classification: str, search_results=None) -&g
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># --- Step 4: Combined Router -- def handle_prompt(prompt: str) -&gt; dict:
+        <pre><code class="language-python"># --- Step 4: Combined Router -- def handle_prompt(prompt: str) -&gt; dict:
 classification_result = classify_prompt(prompt)
 # Remove or comment out the next line to avoid duplicate printing
 # print("\n🔍 Classification Result:", classification_result)
@@ -336,7 +336,7 @@ classification = classification_result["classification"]</code></pre>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>search_results = None
+        <pre><code class="language-python">search_results = None
 if classification == "internet_search":
 search_results = google_search(prompt)
 # print("\n🔍 Search Results:", search_results)</code></pre>
@@ -348,7 +348,7 @@ search_results = google_search(prompt)
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>result = handle_prompt(test_prompt)
+        <pre><code class="language-python">result = handle_prompt(test_prompt)
 print("🔍 Classification:", result["classification"])
 print("🧠 Model Used:", result["model"])
 print("🧠 Response:\n", result["response"])</code></pre>
@@ -465,6 +465,6 @@ models from different providers (ChatGPT, Gemini, Claude) (see Fig. 1)</code></p
   </main>
 </div>
 
-<script src="assets/js/app.js?v=28"></script>
+<script src="assets/js/app.js?v=29"></script>
 </body>
 </html>

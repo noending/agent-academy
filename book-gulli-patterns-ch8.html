@@ -29,7 +29,7 @@
         <p class="lead">
           Chapter 8: Memory Management · 《Agentic Design Patterns》 · Antonio Gulli · 2025
           <br>讲智能体如何用短期上下文与长期持久存储管理记忆，并给出ADK与LangChain实现。
-          <br><a class="chip" href="book-gulli-patterns.html">← 返回导读</a> <a class="chip" href="papers/pdf/gulli-agentic-design-patterns.pdf">原书 PDF</a> <a class="chip" href="book-gulli-patterns-ch7.html">上一章:第7章</a> <a class="chip" href="book-gulli-patterns-ch9.html">下一章:第9章</a>
+          <br><a class="chip" href="book-gulli-patterns.html">← 返回导读</a> <a class="chip" href="papers/pdf/gulli-agentic-design-patterns.pdf#page=130">原书 PDF · 第130页起</a> <a class="chip" href="book-gulli-patterns-ch7.html">上一章:第7章</a> <a class="chip" href="book-gulli-patterns-ch9.html">下一章:第9章</a>
         </p>
       </header>
 
@@ -208,7 +208,7 @@ session_service = VertexAiSessionService(project=PROJECT_ID, location=LOCATION)
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># Import necessary classes from the Google Agent Developer Kit
+        <pre><code class="language-python"># Import necessary classes from the Google Agent Developer Kit
 (ADK)
 from google.adk.agents import LlmAgent
 from google.adk.sessions import InMemorySessionService, Session
@@ -243,7 +243,7 @@ print(f"Initial state: {session.state}")</div>
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># --- Run the Agent -- user_message = Content(parts=[Part(text="Hello")])
+        <pre><code class="language-python"># --- Run the Agent -- user_message = Content(parts=[Part(text="Hello")])
 print("\n--- Running the agent ---")
 for event in runner.run(
 user_id=user_id,
@@ -260,7 +260,7 @@ print("Agent responded.")</code></pre>
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>processing all events.
+        <pre><code class="language-python">processing all events.
 updated_session = session_service.get_session(app_name, user_id,
 session_id)
 print(f"\nState after agent run: {updated_session.state}")</code></pre>
@@ -272,7 +272,7 @@ print(f"\nState after agent run: {updated_session.state}")</code></pre>
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>import time
+        <pre><code class="language-python">import time
 from google.adk.tools.tool_context import ToolContext
 from google.adk.sessions import InMemorySessionService</code></pre>
       </div>
@@ -297,7 +297,7 @@ def log_user_login(tool_context: ToolContext) -&gt; dict:
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># Get current values or defaults, then update the state.
+        <pre><code class="language-python"># Get current values or defaults, then update the state.
 # This is much cleaner and co-locates the logic.
 login_count = state.get("user:login_count", 0) + 1
 state["user:login_count"] = login_count
@@ -312,7 +312,7 @@ state["temp:validation_needed"] = True</code></pre>
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>return {
+        <pre><code class="language-python">return {
 "status": "success",
 "message": f"User login tracked. Total logins:
 {login_count}."
@@ -346,13 +346,13 @@ mock_context = ToolContext(
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># 3. Execute the tool
+        <pre><code class="language-python"># 3. Execute the tool
 log_user_login(mock_context)</code></pre>
       </div>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># 4. Check the updated state
+        <pre><code class="language-python"># 4. Check the updated state
 updated_session = session_service.get_session(app_name, user_id,
 session_id)
 print(f"State after tool execution: {updated_session.state}")</code></pre>
@@ -411,20 +411,20 @@ print(f"State after tool execution: {updated_session.state}")</code></pre>
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># Initialize the history object
+        <pre><code class="language-python"># Initialize the history object
 history = ChatMessageHistory()</code></pre>
       </div>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># Add user and AI messages
+        <pre><code class="language-python"># Add user and AI messages
 history.add_user_message("I'm heading to New York next week.")
 history.add_ai_message("Great! It's a fantastic city.")</code></pre>
       </div>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># Access the list of messages
+        <pre><code class="language-python"># Access the list of messages
 print(history.messages)</code></pre>
       </div>
 <div class="seg">
@@ -434,20 +434,20 @@ print(history.messages)</code></pre>
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># Initialize memory
+        <pre><code class="language-python"># Initialize memory
 memory = ConversationBufferMemory()</code></pre>
       </div>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># Save a conversation turn
+        <pre><code class="language-python"># Save a conversation turn
 memory.save_context({"input": "What's the weather like?"}, {"output":
 "It's sunny today."})</code></pre>
       </div>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># Load the memory as a string
+        <pre><code class="language-python"># Load the memory as a string
 print(memory.load_memory_variables({}))</code></pre>
       </div>
 <div class="seg">
@@ -457,7 +457,7 @@ print(memory.load_memory_variables({}))</code></pre>
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>from langchain_openai import OpenAI
+        <pre><code class="language-python">from langchain_openai import OpenAI
 from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
 from langchain.memory import ConversationBufferMemory</code></pre>
@@ -475,13 +475,13 @@ memory = ConversationBufferMemory(memory_key="history")</div>
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># 3. Build the Chain
+        <pre><code class="language-python"># 3. Build the Chain
 conversation = LLMChain(llm=llm, prompt=prompt, memory=memory)</code></pre>
       </div>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># 4. Run the Conversation
+        <pre><code class="language-python"># 4. Run the Conversation
 response = conversation.predict(question="I want to book a flight.")
 print(response)
 response = conversation.predict(question="My name is Sam, by the
@@ -497,7 +497,7 @@ print(response)</code></pre>
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>from langchain_openai import ChatOpenAI
+        <pre><code class="language-python">from langchain_openai import ChatOpenAI
 from langchain.chains import LLMChain
 from langchain.memory import ConversationBufferMemory
 from langchain_core.prompts import (
@@ -519,7 +519,7 @@ prompt = ChatPromptTemplate(
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># 2. Configure Memory
+        <pre><code class="language-python"># 2. Configure Memory
 # return_messages=True is essential for chat models
 memory = ConversationBufferMemory(memory_key="chat_history",
 return_messages=True)</code></pre>
@@ -527,13 +527,13 @@ return_messages=True)</code></pre>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># 3. Build the Chain
+        <pre><code class="language-python"># 3. Build the Chain
 conversation = LLMChain(llm=llm, prompt=prompt, memory=memory)</code></pre>
       </div>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># 4. Run the Conversation
+        <pre><code class="language-python"># 4. Run the Conversation
 response = conversation.predict(question="Hi, I'm Jane.")
 print(response)
 response = conversation.predict(question="Do you remember my name?")
@@ -556,7 +556,7 @@ print(response)</code></pre>
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># Node that updates the agent's instructions
+        <pre><code class="language-python"># Node that updates the agent's instructions
 def update_instructions(state: State, store: BaseStore):
 namespace = ("instructions",)
 # Get the current instructions from the store
@@ -576,14 +576,14 @@ new_instructions = output['new_instructions']</div>
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># Save the updated instructions back to the store
+        <pre><code class="language-python"># Save the updated instructions back to the store
 store.put(("agent_instructions",), "agent_a", {"instructions":
 new_instructions})</code></pre>
       </div>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># Node that uses the instructions to generate a response
+        <pre><code class="language-python"># Node that uses the instructions to generate a response
 def call_model(state: State, store: BaseStore):
 namespace = ("agent_instructions", )
 # Retrieve the latest instructions from the store
@@ -600,7 +600,7 @@ from langgraph.store.memory import InMemoryStore</div>
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># A placeholder for a real embedding function
+        <pre><code class="language-python"># A placeholder for a real embedding function
 def embed(texts: list[str]) -&gt; list[list[float]]:
 # In a real application, use a proper embedding model
 return [[1.0, 2.0] for _ in texts]</code></pre>
@@ -631,7 +631,7 @@ store.put(
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># 2. Get the memory by its namespace and key
+        <pre><code class="language-python"># 2. Get the memory by its namespace and key
 item = store.get(namespace, "a-memory")
 print("Retrieved Item:", item)</code></pre>
       </div>
@@ -711,6 +711,6 @@ Vertex Memory Bank 是 Vertex AI Agent Engine 中的一项托管服务，为智�
   </main>
 </div>
 
-<script src="assets/js/app.js?v=28"></script>
+<script src="assets/js/app.js?v=29"></script>
 </body>
 </html>

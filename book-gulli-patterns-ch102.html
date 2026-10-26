@@ -29,7 +29,7 @@
         <p class="lead">
           Appendix C - Quick overview of Agentic: Appendix C · 《Agentic Design Patterns》 · Antonio Gulli · 2025
           <br>横向对比LangChain、LangGraph、ADK、CrewAI等框架的抽象层级与选型依据。
-          <br><a class="chip" href="book-gulli-patterns.html">← 返回导读</a> <a class="chip" href="papers/pdf/gulli-agentic-design-patterns.pdf">原书 PDF</a> <a class="chip" href="book-gulli-patterns-ch101.html">上一章:第101章</a> <a class="chip" href="book-gulli-patterns-ch103.html">下一章:第103章</a>
+          <br><a class="chip" href="book-gulli-patterns.html">← 返回导读</a> <a class="chip" href="papers/pdf/gulli-agentic-design-patterns.pdf#page=383">原书 PDF · 第383页起</a> <a class="chip" href="book-gulli-patterns-ch101.html">上一章:第101章</a> <a class="chip" href="book-gulli-patterns-ch103.html">下一章:第103章</a>
         </p>
       </header>
 
@@ -88,7 +88,7 @@ Graph)</code></pre>
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># Nodes
+        <pre><code class="language-python"># Nodes
 def call_llm_1(state: State):
 """First LLM call to generate initial joke"""</code></pre>
       </div>
@@ -101,7 +101,7 @@ return {"joke": msg.content}</code></pre>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>def call_llm_2(state: State):
+        <pre><code class="language-python">def call_llm_2(state: State):
 """Second LLM call to generate story"""</code></pre>
       </div>
 
@@ -113,7 +113,7 @@ return {"story": msg.content}</code></pre>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>def call_llm_3(state: State):
+        <pre><code class="language-python">def call_llm_3(state: State):
 """Third LLM call to generate poem"""</code></pre>
       </div>
 
@@ -125,7 +125,7 @@ return {"poem": msg.content}</code></pre>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>def aggregator(state: State):
+        <pre><code class="language-python">def aggregator(state: State):
 """Combine the joke and story into a single output"""</code></pre>
       </div>
 
@@ -141,13 +141,13 @@ return {"combined_output": combined}</code></pre>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># Build workflow
+        <pre><code class="language-python"># Build workflow
 parallel_builder = StateGraph(State)</code></pre>
       </div>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># Add nodes
+        <pre><code class="language-python"># Add nodes
 parallel_builder.add_node("call_llm_1", call_llm_1)
 parallel_builder.add_node("call_llm_2", call_llm_2)
 parallel_builder.add_node("call_llm_3", call_llm_3)
@@ -156,7 +156,7 @@ parallel_builder.add_node("aggregator", aggregator)</code></pre>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># Add edges to connect nodes
+        <pre><code class="language-python"># Add edges to connect nodes
 parallel_builder.add_edge(START, "call_llm_1")
 parallel_builder.add_edge(START, "call_llm_2")
 parallel_builder.add_edge(START, "call_llm_3")
@@ -169,13 +169,13 @@ parallel_workflow = parallel_builder.compile()</code></pre>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># Show workflow
+        <pre><code class="language-python"># Show workflow
 display(Image(parallel_workflow.get_graph().draw_mermaid_png()))</code></pre>
       </div>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># Invoke
+        <pre><code class="language-python"># Invoke
 state = parallel_workflow.invoke({"topic": "cats"})
 print(state["combined_output"])</code></pre>
       </div>
@@ -201,7 +201,7 @@ print(state["combined_output"])</code></pre>
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>from google.adk.agents import LlmAgent
+        <pre><code class="language-python">from google.adk.agents import LlmAgent
 from google.adk.tools import google_Search</code></pre>
       </div>
 <div class="seg">
@@ -285,6 +285,6 @@ from google.adk.tools import google_Search</code></pre>
   </main>
 </div>
 
-<script src="assets/js/app.js?v=28"></script>
+<script src="assets/js/app.js?v=29"></script>
 </body>
 </html>

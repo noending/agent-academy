@@ -29,7 +29,7 @@
         <p class="lead">
           Chapter 18: Guardrails/Safety Patterns · 《Agentic Design Patterns》 · Antonio Gulli · 2025
           <br>讲如何用多层护栏让智能体安全、合规、可信地运行。
-          <br><a class="chip" href="book-gulli-patterns.html">← 返回导读</a> <a class="chip" href="papers/pdf/gulli-agentic-design-patterns.pdf">原书 PDF</a> <a class="chip" href="book-gulli-patterns-ch17.html">上一章:第17章</a> <a class="chip" href="book-gulli-patterns-ch19.html">下一章:第19章</a>
+          <br><a class="chip" href="book-gulli-patterns.html">← 返回导读</a> <a class="chip" href="papers/pdf/gulli-agentic-design-patterns.pdf#page=284">原书 PDF · 第284页起</a> <a class="chip" href="book-gulli-patterns-ch17.html">上一章:第17章</a> <a class="chip" href="book-gulli-patterns-ch19.html">下一章:第19章</a>
         </p>
       </header>
 
@@ -121,7 +121,7 @@
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>import os
+        <pre><code class="language-python">import os
 import json
 import logging
 from typing import Tuple, Any, List</code></pre>
@@ -129,7 +129,7 @@ from typing import Tuple, Any, List</code></pre>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>from crewai import Agent, Task, Crew, Process, LLM
+        <pre><code class="language-python">from crewai import Agent, Task, Crew, Process, LLM
 from pydantic import BaseModel, Field, ValidationError
 from crewai.tasks.task_output import TaskOutput
 from crewai.crews.crew_output import CrewOutput</code></pre>
@@ -141,7 +141,7 @@ from crewai.crews.crew_output import CrewOutput</code></pre>
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># For demonstration, we'll assume GOOGLE_API_KEY is set in your
+        <pre><code class="language-python"># For demonstration, we'll assume GOOGLE_API_KEY is set in your
 environment
 if not os.environ.get("GOOGLE_API_KEY"):
 logging.error("GOOGLE_API_KEY environment variable not set. Please
@@ -190,7 +190,7 @@ logging.info("GOOGLE_API_KEY environment variable is set.")</code></pre>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># --- Structured Output Definition for Guardrail --class PolicyEvaluation(BaseModel):
+        <pre><code class="language-python"># --- Structured Output Definition for Guardrail --class PolicyEvaluation(BaseModel):
 """Pydantic model for the policy enforcer's structured output."""
 compliance_status: str = Field(description="The compliance status:
 'compliant' or 'non-compliant'.")
@@ -215,7 +215,7 @@ def validate_policy_evaluation(output: Any) -&gt; Tuple[bool, Any]:
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>to parse.")
+        <pre><code class="language-python">to parse.")
 # Clean up potential markdown code blocks from the LLM's
 output
 if output.startswith("```json") and
@@ -227,7 +227,7 @@ output = output[len("```"): -len("```")].strip()</code></pre>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>data = json.loads(output)
+        <pre><code class="language-python">data = json.loads(output)
 evaluation = PolicyEvaluation.model_validate(data)
 else:
 return False, f"Unexpected output type received by
@@ -236,7 +236,7 @@ guardrail: {type(output)}"</code></pre>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># Perform logical checks on the validated data.
+        <pre><code class="language-python"># Perform logical checks on the validated data.
 if evaluation.compliance_status not in ["compliant",
 "non-compliant"]:
 return False, "Compliance status must be 'compliant' or
@@ -249,14 +249,14 @@ return False, "Triggered policies must be a list."</code></pre>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>logging.info("Guardrail PASSED for policy evaluation.")
+        <pre><code class="language-python">logging.info("Guardrail PASSED for policy evaluation.")
 # If valid, return True and the parsed evaluation object.
 return True, evaluation</code></pre>
       </div>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>except (json.JSONDecodeError, ValidationError) as e:
+        <pre><code class="language-python">except (json.JSONDecodeError, ValidationError) as e:
 logging.error(f"Guardrail FAILED: Output failed validation:
 {e}. Raw output: {output}")
 return False, f"Output failed validation: {e}"
@@ -297,7 +297,7 @@ evaluate_input_task = Task(
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>if evaluation_result:
+        <pre><code class="language-python">if evaluation_result:
 if evaluation_result.compliance_status == "non-compliant":
 logging.warning(f"Input deemed NON-COMPLIANT:
 {evaluation_result.evaluation_summary}. Triggered policies:
@@ -317,7 +317,7 @@ format.", []</code></pre>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>except Exception as e:
+        <pre><code class="language-python">except Exception as e:
 logging.error(f"An error occurred during CrewAI guardrail
 execution: {e}")
 return False, f"An internal error occurred during policy
@@ -326,7 +326,7 @@ check: {e}", []</code></pre>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>def print_test_case_result(test_number: int, user_input: str,
+        <pre><code class="language-python">def print_test_case_result(test_number: int, user_input: str,
 is_compliant: bool, message: str, triggered_policies: List[str]):
 """Formats and prints the result of a single test case."""
 print("=" * 60)
@@ -341,7 +341,7 @@ print("-" * 60)</code></pre>
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>print("✅ RESULT: COMPLIANT")
+        <pre><code class="language-python">print("✅ RESULT: COMPLIANT")
 print(f" Summary: {message}")
 print(" Action: Primary AI can safely proceed with this
 input.")
@@ -359,7 +359,7 @@ print("=" * 60 + "\n")</code></pre>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>if __name__ == "__main__":
+        <pre><code class="language-python">if __name__ == "__main__":
 print("--- CrewAI LLM-based Content Policy Enforcer Example ---")
 print("This example uses a CrewAI agent to pre-screen user inputs
 against defined safety policies.\n")</code></pre>
@@ -387,7 +387,7 @@ Compliant
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>for i, test_input in enumerate(test_cases):
+        <pre><code class="language-python">for i, test_input in enumerate(test_cases):
 is_compliant, message, triggered_policies =
 run_guardrail_crew(test_input)
 print_test_case_result(i + 1, test_input, is_compliant,
@@ -445,7 +445,7 @@ message, triggered_policies)</code></pre>
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>from google.adk.agents import Agent # Correct import
+        <pre><code class="language-python">from google.adk.agents import Agent # Correct import
 from google.adk.tools.base_tool import BaseTool
 from google.adk.tools.tool_context import ToolContext
 from typing import Optional, Dict, Any</code></pre>
@@ -457,14 +457,14 @@ from typing import Optional, Dict, Any</code></pre>
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># Access state correctly through tool_context
+        <pre><code class="language-python"># Access state correctly through tool_context
 expected_user_id = tool_context.state.get("session_user_id")
 actual_user_id_in_args = args.get("user_id_param")</code></pre>
       </div>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>if actual_user_id_in_args and actual_user_id_in_args !=
+        <pre><code class="language-python">if actual_user_id_in_args and actual_user_id_in_args !=
 expected_user_id:
 print(f"Validation Failed: User ID mismatch for tool
 '{tool.name}'.")
@@ -478,7 +478,7 @@ failed for security reasons."
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># Allow tool execution to proceed
+        <pre><code class="language-python"># Allow tool execution to proceed
 print(f"Callback validation passed for tool '{tool.name}'.")
 return None</code></pre>
       </div>
@@ -608,6 +608,6 @@ root_agent = Agent( # 使用文档中记录的 Agent 类
   </main>
 </div>
 
-<script src="assets/js/app.js?v=28"></script>
+<script src="assets/js/app.js?v=29"></script>
 </body>
 </html>

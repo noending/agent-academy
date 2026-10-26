@@ -205,9 +205,10 @@ ${figs.map((f) => `        <figure style="margin:0;text-align:center">
   const bodyHtml = blocks.map((b) => {
     if (b.type === "code") {
       const lang = codeLang(b.text);
+      const langCls = ["python", "javascript", "bash", "json"].includes(lang) ? ` class="language-${lang}"` : "";
       return `<div class="codeblock">
         <div class="code-head"><span class="code-lang">${lang}</span></div>
-        <pre><code>${esc(b.text)}</code></pre>
+        <pre><code${langCls}>${esc(b.text)}</code></pre>
       </div>`;
     }
     const r = results.get(b);

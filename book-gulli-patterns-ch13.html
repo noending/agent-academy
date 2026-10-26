@@ -29,7 +29,7 @@
         <p class="lead">
           Chapter 13: Human-in-the-Loop · 《Agentic Design Patterns》 · Antonio Gulli · 2025
           <br>讲如何把人类判断、监督与反馈嵌入智能体工作流，以应对高风险与模糊场景。
-          <br><a class="chip" href="book-gulli-patterns.html">← 返回导读</a> <a class="chip" href="papers/pdf/gulli-agentic-design-patterns.pdf">原书 PDF</a> <a class="chip" href="book-gulli-patterns-ch12.html">上一章:第12章</a> <a class="chip" href="book-gulli-patterns-ch14.html">下一章:第14章</a>
+          <br><a class="chip" href="book-gulli-patterns.html">← 返回导读</a> <a class="chip" href="papers/pdf/gulli-agentic-design-patterns.pdf#page=202">原书 PDF · 第202页起</a> <a class="chip" href="book-gulli-patterns-ch12.html">上一章:第12章</a> <a class="chip" href="book-gulli-patterns-ch14.html">下一章:第14章</a>
         </p>
       </header>
 
@@ -161,7 +161,7 @@
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>from google.adk.agents import Agent
+        <pre><code class="language-python">from google.adk.agents import Agent
 from google.adk.tools.tool_context import ToolContext
 from google.adk.callbacks import CallbackContext
 from google.adk.models.llm import LlmRequest
@@ -171,7 +171,7 @@ from typing import Optional</code></pre>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># Placeholder for tools (replace with actual implementations if
+        <pre><code class="language-python"># Placeholder for tools (replace with actual implementations if
 needed)
 def troubleshoot_issue(issue: str) -&gt; dict:
 return {"status": "success", "report": f"Troubleshooting steps for
@@ -180,13 +180,13 @@ return {"status": "success", "report": f"Troubleshooting steps for
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>def create_ticket(issue_type: str, details: str) -&gt; dict:
+        <pre><code class="language-python">def create_ticket(issue_type: str, details: str) -&gt; dict:
 return {"status": "success", "ticket_id": "TICKET123"}</code></pre>
       </div>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>def escalate_to_human(issue_type: str) -&gt; dict:
+        <pre><code class="language-python">def escalate_to_human(issue_type: str) -&gt; dict:
 # This would typically transfer to a human queue in a real system
 return {"status": "success", "message": f"Escalated {issue_type}
 to a human specialist."}</code></pre>
@@ -198,7 +198,7 @@ to a human specialist."}</code></pre>
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>def personalization_callback(
+        <pre><code class="language-python">def personalization_callback(
 callback_context: CallbackContext, llm_request: LlmRequest
 ) -&gt; Optional[LlmRequest]:
 """Adds personalization information to the LLM request."""
@@ -212,7 +212,7 @@ recent_purchases = customer_info.get("recent_purchases", [])</code></pre>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>personalization_note = (
+        <pre><code class="language-python">personalization_note = (
 f"\nIMPORTANT PERSONALIZATION:\n"
 f"Customer Name: {customer_name}\n"
 f"Customer Tier: {customer_tier}\n"
@@ -224,7 +224,7 @@ personalization_note += f"Recent Purchases: {',
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>if llm_request.contents:
+        <pre><code class="language-python">if llm_request.contents:
 # Add as a system message before the first content
 system_content = types.Content(
 role="system",
@@ -290,6 +290,6 @@ return None # Return None to continue with the modified request</code></pre>
   </main>
 </div>
 
-<script src="assets/js/app.js?v=28"></script>
+<script src="assets/js/app.js?v=29"></script>
 </body>
 </html>

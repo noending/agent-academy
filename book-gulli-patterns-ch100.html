@@ -29,7 +29,7 @@
         <p class="lead">
           Appendix A: Advanced Prompting · 《Agentic Design Patterns》 · Antonio Gulli · 2025
           <br>系统讲解从基础到进阶的提示工程技术，把提示重构为构建可靠智能体的工程实践。
-          <br><a class="chip" href="book-gulli-patterns.html">← 返回导读</a> <a class="chip" href="papers/pdf/gulli-agentic-design-patterns.pdf">原书 PDF</a> <a class="chip" href="book-gulli-patterns-ch21.html">上一章:第21章</a> <a class="chip" href="book-gulli-patterns-ch101.html">下一章:第101章</a>
+          <br><a class="chip" href="book-gulli-patterns.html">← 返回导读</a> <a class="chip" href="papers/pdf/gulli-agentic-design-patterns.pdf#page=347">原书 PDF · 第347页起</a> <a class="chip" href="book-gulli-patterns-ch21.html">上一章:第21章</a> <a class="chip" href="book-gulli-patterns-ch101.html">下一章:第101章</a>
         </p>
       </header>
 
@@ -219,14 +219,14 @@
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>from pydantic import BaseModel, EmailStr, Field, ValidationError
+        <pre><code class="language-python">from pydantic import BaseModel, EmailStr, Field, ValidationError
 from typing import List, Optional
 from datetime import date</code></pre>
       </div>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># --- Pydantic Model Definition (from above) -- class User(BaseModel):
+        <pre><code class="language-python"># --- Pydantic Model Definition (from above) -- class User(BaseModel):
 name: str = Field(..., description="The full name of the user.")
 email: EmailStr = Field(..., description="The user's email
 address.")
@@ -238,7 +238,7 @@ list of the user's interests.")</code></pre>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># --- Hypothetical LLM Output -- llm_output_json = """
+        <pre><code class="language-python"># --- Hypothetical LLM Output -- llm_output_json = """
 {
 "name": "Alice Wonderland",
 "email": "alice.w@example.com",
@@ -266,7 +266,7 @@ try:
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># Now you can work with a clean, type-safe Python object.
+        <pre><code class="language-python"># Now you can work with a clean, type-safe Python object.
 print("Successfully created User object!")
 print(f"Name: {user_object.name}")
 print(f"Email: {user_object.email}")
@@ -280,7 +280,7 @@ print(f"First Interest: {user_object.interests[0]}")</code></pre>
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>except ValidationError as e:
+        <pre><code class="language-python">except ValidationError as e:
 # If the JSON is malformed or the data doesn't match the model's
 types,
 # Pydantic will raise a ValidationError.
@@ -394,7 +394,7 @@ print(e)</code></pre>
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>○ Expected Model Output (Function Call):
+        <pre><code class="language-python">○ Expected Model Output (Function Call):
 {
 "tool_code": "get_current_weather",
 "tool_name": "get_current_weather",
@@ -621,6 +621,6 @@ Retrieval Augmented Generation (RAG)</code></pre>
   </main>
 </div>
 
-<script src="assets/js/app.js?v=28"></script>
+<script src="assets/js/app.js?v=29"></script>
 </body>
 </html>

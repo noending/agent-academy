@@ -29,7 +29,7 @@
         <p class="lead">
           Chapter 10: Model Context Protocol · 《Agentic Design Patterns》 · Antonio Gulli · 2025
           <br>介绍MCP这一开放标准，用客户端-服务器架构统一LLM与外部工具、数据源的连接方式。
-          <br><a class="chip" href="book-gulli-patterns.html">← 返回导读</a> <a class="chip" href="papers/pdf/gulli-agentic-design-patterns.pdf">原书 PDF</a> <a class="chip" href="book-gulli-patterns-ch9.html">上一章:第9章</a> <a class="chip" href="book-gulli-patterns-ch11.html">下一章:第11章</a>
+          <br><a class="chip" href="book-gulli-patterns.html">← 返回导读</a> <a class="chip" href="papers/pdf/gulli-agentic-design-patterns.pdf#page=165">原书 PDF · 第165页起</a> <a class="chip" href="book-gulli-patterns-ch9.html">上一章:第9章</a> <a class="chip" href="book-gulli-patterns-ch11.html">下一章:第11章</a>
         </p>
       </header>
 
@@ -196,7 +196,7 @@
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>import os
+        <pre><code class="language-python">import os
 from google.adk.agents import LlmAgent
 from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset,
 StdioServerParameters</code></pre>
@@ -208,7 +208,7 @@ StdioServerParameters</code></pre>
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># Ensure the target directory exists before the agent needs it.
+        <pre><code class="language-python"># Ensure the target directory exists before the agent needs it.
 os.makedirs(TARGET_FOLDER_PATH, exist_ok=True)</code></pre>
       </div>
 <div class="seg">
@@ -228,7 +228,7 @@ os.makedirs(TARGET_FOLDER_PATH, exist_ok=True)</code></pre>
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># ./adk_agent_samples/mcp_agent/__init__.py
+        <pre><code class="language-python"># ./adk_agent_samples/mcp_agent/__init__.py
 from . import agent</code></pre>
       </div>
 <div class="seg">
@@ -289,7 +289,7 @@ server_params={
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># Initialize the FastMCP server.
+        <pre><code class="language-python"># Initialize the FastMCP server.
 mcp_server = FastMCP()</code></pre>
       </div>
 <div class="seg">
@@ -338,7 +338,7 @@ if __name__ == "__main__":
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code># ./adk_agent_samples/fastmcp_client_agent/agent.py
+        <pre><code class="language-python"># ./adk_agent_samples/fastmcp_client_agent/agent.py
 import os
 from google.adk.agents import LlmAgent
 from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset,
@@ -423,6 +423,6 @@ root_agent = LlmAgent(
   </main>
 </div>
 
-<script src="assets/js/app.js?v=28"></script>
+<script src="assets/js/app.js?v=29"></script>
 </body>
 </html>

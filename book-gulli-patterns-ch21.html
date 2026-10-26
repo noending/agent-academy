@@ -29,7 +29,7 @@
         <p class="lead">
           Chapter 21: Exploration and Discovery · 《Agentic Design Patterns》 · Antonio Gulli · 2025
           <br>让智能体主动探索未知、生成新假设，而非只在预设空间内优化。
-          <br><a class="chip" href="book-gulli-patterns.html">← 返回导读</a> <a class="chip" href="papers/pdf/gulli-agentic-design-patterns.pdf">原书 PDF</a> <a class="chip" href="book-gulli-patterns-ch20.html">上一章:第20章</a> <a class="chip" href="book-gulli-patterns-ch100.html">下一章:第100章</a>
+          <br><a class="chip" href="book-gulli-patterns.html">← 返回导读</a> <a class="chip" href="papers/pdf/gulli-agentic-design-patterns.pdf#page=333">原书 PDF · 第333页起</a> <a class="chip" href="book-gulli-patterns-ch20.html">上一章:第20章</a> <a class="chip" href="book-gulli-patterns-ch100.html">下一章:第100章</a>
         </p>
       </header>
 
@@ -165,7 +165,7 @@
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>class ReviewersAgent:
+        <pre><code class="language-python">class ReviewersAgent:
 def __init__(self, model="gpt-4o-mini", notes=None,
 openai_api_key=None):
 if notes is None: self.notes = []
@@ -176,7 +176,7 @@ self.openai_api_key = openai_api_key</code></pre>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>def inference(self, plan, report):
+        <pre><code class="language-python">def inference(self, plan, report):
 reviewer_1 = "You are a harsh but fair reviewer and expect
 good experiments that lead to insights for the research topic."
 review_1 = get_score(outlined_plan=plan, latex=report,
@@ -200,7 +200,7 @@ openai_api_key=self.openai_api_key)</code></pre>
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>def get_score(outlined_plan, latex, reward_model_llm,
+        <pre><code class="language-python">def get_score(outlined_plan, latex, reward_model_llm,
 reviewer_type=None, attempts=3, openai_api_key=None):
 e = str()
 for _attempt in range(attempts):
@@ -248,7 +248,7 @@ following: Accept, Reject.</code></pre>
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>class ProfessorAgent(BaseAgent):
+        <pre><code class="language-python">class ProfessorAgent(BaseAgent):
 def __init__(self, model="gpt4omini", notes=None, max_steps=100,
 openai_api_key=None):
 super().__init__(model, notes, max_steps, openai_api_key)
@@ -257,7 +257,7 @@ self.phases = ["report writing"]</code></pre>
 
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>def generate_readme(self):
+        <pre><code class="language-python">def generate_readme(self):
 sys_prompt = f"""You are {self.role_description()} \n Here is
 the written paper \n{self.report}. Task instructions: Your goal is to
 integrate all of the knowledge, code, reports, and notes provided to
@@ -278,7 +278,7 @@ return model_resp.replace("```markdown", "")</code></pre>
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>class PostdocAgent(BaseAgent):
+        <pre><code class="language-python">class PostdocAgent(BaseAgent):
 def __init__(self, model="gpt4omini", notes=None, max_steps=100,
 openai_api_key=None):
 super().__init__(model, notes, max_steps, openai_api_key)
@@ -291,7 +291,7 @@ self.phases = ["plan formulation", "results interpretation"]</code></pre>
       </div>
 <div class="codeblock">
         <div class="code-head"><span class="code-lang">python</span></div>
-        <pre><code>f"Previous Results: {self.prev_exp_results}\n"
+        <pre><code class="language-python">f"Previous Results: {self.prev_exp_results}\n"
 f"Previous Interpretation of results:
 {self.prev_interpretation}\n"
 f"Previous Report: {self.prev_report}\n"
@@ -391,6 +391,6 @@ return ""</code></pre>
   </main>
 </div>
 
-<script src="assets/js/app.js?v=28"></script>
+<script src="assets/js/app.js?v=29"></script>
 </body>
 </html>
