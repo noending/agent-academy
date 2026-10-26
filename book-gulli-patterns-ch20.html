@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Agentic Design Patterns 第 20 章 优先级排序 Prioritization 中英对照翻译。">
+<title>第 20 章 · 优先级排序 Prioritization | Agentic Design Patterns | Agent 学院</title>
+<link rel="stylesheet" href="assets/css/style.css?v=24">
+</head>
+<body data-chapter="books">
+
+<header class="topbar">
+  <button class="icon-btn hamburger" id="hamburger" title="打开导航">☰</button>
+  <a class="brand" href="index.html"><span class="logo">学</span> Agent 学院 <small>从零开发智能体 · Ontology · Harness</small></a>
+  <span class="spacer"></span>
+  <span class="progress-pill" id="progress-pill">读书</span>
+  <button class="icon-btn" id="theme-btn">🌙</button>
+</header>
+
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <main class="content">
+    <div class="content-inner">
+
+      <header class="chapter-head">
+        <div class="kicker">读书 · Agentic Design Patterns · 中英对照</div>
+        <h1>第 20 章 · 优先级排序 Prioritization</h1>
+        <p class="lead">
+          Chapter 20: Prioritization · 《Agentic Design Patterns》 · Antonio Gulli · 2025
+          <br>讲智能体如何在多任务、资源受限时按紧迫性、重要性与依赖关系排序并动态调整。
+          <br><a class="chip" href="book-gulli-patterns.html">← 返回导读</a> <a class="chip" href="papers/pdf/gulli-agentic-design-patterns.pdf">原书 PDF</a> <a class="chip" href="book-gulli-patterns-ch19.html">上一章:第19章</a> <a class="chip" href="book-gulli-patterns-ch21.html">下一章:第21章</a>
+        </p>
+      </header>
+
+      <div class="callout key"><div class="co-title">本章要点</div><p>① 定义准则：紧迫性、重要性、依赖、资源与成本收益  ① 任务评估可用简单规则或LLM打分推理  ① 调度选择决定下一步动作或任务序列  ① 动态重优先级化让智能体实时调整焦点</p></div>
+<h2>本章划线句</h2>
+<details class="qn"><summary>本章划线句(逐字校验)</summary>
+        <div class="qn-body">
+        <div class="qn-en">"The prioritization pattern addresses this issue by enabling agents to assess and rank tasks, objectives, or actions based on their significance, urgency, dependencies, and established criteria."</div>
+        <div class="qn-zh"><b>为什么值得划线:</b>一句话概括该模式的定义与核心维度。</div>
+        </div>
+      </details>
+<details class="qn"><summary>本章划线句(逐字校验)</summary>
+        <div class="qn-body">
+        <div class="qn-en">"A key feature of this agentic behavior is dynamic re-prioritization, which grants the agent the autonomy to adapt its focus in real-time as conditions change."</div>
+        <div class="qn-zh"><b>为什么值得划线:</b>点出智能体区别于脚本的关键能力。</div>
+        </div>
+      </details>
+<details class="qn"><summary>本章划线句(逐字校验)</summary>
+        <div class="qn-body">
+        <div class="qn-en">"This ability to self-manage its workflow is what separates a true agentic system from a simple automated script."</div>
+        <div class="qn-zh"><b>为什么值得划线:</b>强调自主管理工作流是智能体本质。</div>
+        </div>
+      </details>
+<h2>正文(英中对照)</h2>
+<div class="seg">
+        <div class="seg-en">"In complex, dynamic environments, Agents frequently encounter numerous potential actions, conflicting goals, and limited resources. Without a defined process for determining the subsequent action, the agents may experience reduced efficiency, operational delays, or failures to achieve key objectives. The prioritization pattern addresses this issue by enabling agents to assess and rank tasks, objectives, or actions based on their significance, urgency, dependencies, and established criteria. This ensures the agents concentrate efforts on the most critical tasks, resulting in enhanced effectiveness and goal alignment. Prioritization Pattern Overview
+Agents employ prioritization to effectively manage tasks, goals, and sub-goals, guiding subsequent actions. This process facilitates informed decision-making when addressing multiple demands, prioritizing vital or urgent activities over less critical ones. It is particularly relevant in real-world scenarios where resources are constrained, time is limited, and objectives may conflict."</div>
+        <div class="seg-zh">在复杂、动态的环境中，Agent（智能体）经常面临大量潜在动作、相互冲突的目标以及有限资源。如果没有一个明确的过程来决定后续动作，Agent 可能会效率下降、运行延迟，或无法实现关键目标。<b>优先级排序模式（Prioritization Pattern）</b>通过让 Agent 依据重要性、紧迫性、依赖关系和既定标准来评估并排序任务、目标或动作，从而解决这一问题。这确保 Agent 将精力集中在最关键的任务上，从而提升有效性并与目标保持一致。优先级排序模式概述
+Agent 利用优先级排序来有效管理任务、目标和子目标，指导后续动作。该过程有助于在应对多重需求时做出明智决策，将重要或紧急的活动置于不太关键的活动之前。在资源受限、时间有限且目标可能冲突的现实场景中，这一点尤为重要。</div>
+        <div class="seg-note"><b>导读注:</b><b>优先级排序模式</b>让 Agent 在资源与时间受限时聚焦最关键任务。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"The fundamental aspects of agent prioritization typically involve several elements. First, criteria definition establishes the rules or metrics for task evaluation. These may include urgency (time sensitivity of the task), importance (impact on the primary objective), dependencies (whether the task is a prerequisite for others), resource availability (readiness of necessary tools or information), cost/benefit analysis (effort versus expected outcome), and user preferences for personalized agents. Second, task evaluation involves assessing each potential task against these defined criteria, utilizing methods ranging from simple rules to complex scoring or reasoning by LLMs. Third, scheduling or selection logic refers to the algorithm that, based on the evaluations, selects the optimal next action or task sequence, potentially utilizing a queue or an advanced planning component. Finally, dynamic re-prioritization allows the agent to modify priorities as circumstances change, such as the emergence of a new critical event or an approaching deadline, ensuring agent adaptability and responsiveness."</div>
+        <div class="seg-zh">Agent 优先级排序的基本方面通常涉及若干要素。首先，<b>标准定义</b>建立任务评估的规则或指标。这些可能包括紧迫性（任务的时间敏感性）、重要性（对主要目标的影响）、依赖关系（任务是否为其他任务的前提条件）、资源可用性（必要工具或信息的就绪程度）、成本/收益分析（投入与预期结果之比），以及个性化 agent 的用户偏好。其次，<b>任务评估</b>涉及依据这些既定标准评估每个潜在任务，所用方法从简单规则到复杂评分或由 LLM 进行推理不等。第三，<b>调度或选择逻辑</b>指基于评估结果选择最优下一动作或任务序列的算法，可能利用队列或高级规划组件。最后，<b>动态重新优先级排序</b>允许 agent 在情况变化时修改优先级，例如出现新的关键事件或截止日期临近，从而确保 agent 的适应性与响应能力。</div>
+        <div class="seg-note"><b>导读注:</b>拆解 agent 优先级排序四要素，<b>动态重排</b>是适应性的关键。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"Prioritization can occur at various levels: selecting an overarching objective (high-level goal prioritization), ordering steps within a plan (sub-task prioritization), or choosing the next immediate action from available options (action selection). Effective prioritization enables agents to exhibit more intelligent, efficient, and robust behavior,
+especially in complex, multi-objective environments. This mirrors human team organization, where managers prioritize tasks by considering input from all members. Practical Applications &amp; Use Cases
+In various real-world applications, AI agents demonstrate a sophisticated use of prioritization to make timely and effective decisions."</div>
+        <div class="seg-zh">优先级排序可以发生在多个层面：选择总体目标（高层目标优先级排序）、在计划内排列步骤顺序（子任务优先级排序），或从可用选项中挑选下一个即时行动（行动选择）。有效的优先级排序使智能体（agent）能够展现出更智能、高效且稳健的行为，尤其是在复杂的多目标环境中。这映射了人类团队的组织方式——管理者通过综合所有成员的输入来为任务排定优先级。实际应用与用例
+在各种现实世界应用中，AI 智能体展示了如何精细运用优先级排序来做出及时而有效的决策。</div>
+        <div class="seg-note"><b>导读注:</b>揭示优先级排序的三个层面，并类比人类团队管理，<b>多目标环境</b>是关键。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"● Automated Customer Support: Agents prioritize urgent requests, like system outage reports, over routine matters, such as password resets. They may also give preferential treatment to high-value customers. ● Cloud Computing: AI manages and schedules resources by prioritizing allocation to critical applications during peak demand, while relegating less urgent batch jobs to off-peak hours to optimize costs. ● Autonomous Driving Systems: Continuously prioritize actions to ensure safety and efficiency. For example, braking to avoid a collision takes precedence over maintaining lane discipline or optimizing fuel efficiency. ● Financial Trading: Bots prioritize trades by analyzing factors like market conditions, risk tolerance, profit margins, and real-time news, enabling prompt execution of high-priority transactions. ● Project Management: AI agents prioritize tasks on a project board based on deadlines, dependencies, team availability, and strategic importance. ● Cybersecurity: Agents monitoring network traffic prioritize alerts by assessing threat severity, potential impact, and asset criticality, ensuring immediate responses to the most dangerous threats. ● Personal Assistant AIs: Utilize prioritization to manage daily lives, organizing calendar events, reminders, and notifications according to user-defined importance, upcoming deadlines, and current context."</div>
+        <div class="seg-zh">● 自动化客户支持（Automated Customer Support）：智能体（Agent）优先处理紧急请求，如系统故障报告，而非密码重置等常规事务。它们也可能对高价值客户给予优先待遇。● 云计算（Cloud Computing）：AI 通过优先将资源分配给高峰需求期间的关键应用来管理和调度资源，同时将不太紧急的批处理作业推迟到非高峰时段以优化成本。● 自动驾驶系统（Autonomous Driving Systems）：持续对行动进行优先级排序以确保安全与效率。例如，为避免碰撞而刹车优先于保持车道纪律或优化燃油效率。● 金融交易（Financial Trading）：机器人通过分析市场状况、风险承受能力、利润率和实时新闻等因素来确定交易优先级，从而实现高优先级交易的快速执行。● 项目管理（Project Management）：AI 智能体根据截止日期、依赖关系、团队可用性和战略重要性对项目看板上的任务进行优先级排序。● 网络安全（Cybersecurity）：监控网络流量的智能体通过评估威胁严重性、潜在影响和资产关键性来对警报进行优先级排序，确保对最危险的威胁立即响应。● 个人助理 AI（Personal Assistant AIs）：利用优先级排序来管理日常生活，根据用户定义的重要性、即将到来的截止日期和当前上下文来组织日历事件、提醒和通知。</div>
+        <div class="seg-note"><b>导读注:</b>展示<b>优先级排序</b>如何贯穿客服、云资源、自动驾驶到个人助理等多个 AI 应用场景。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"These examples collectively illustrate how the ability to prioritize is fundamental to the enhanced performance and decision-making capabilities of AI agents across a wide spectrum of situations. Hands-On Code Example
+The following demonstrates the development of a Project Manager AI agent using LangChain. This agent facilitates the creation, prioritization, and assignment of tasks
+to team members, illustrating the application of large language models with bespoke tools for automated project management.
+import os import asyncio from typing import List, Optional, Dict, Type
+from dotenv import load_dotenv from pydantic import BaseModel, Field
+from langchain_core.prompts import ChatPromptTemplate from langchain_core.tools import Tool from langchain_openai import ChatOpenAI from langchain.agents import AgentExecutor, create_react_agent from langchain.memory import ConversationBufferMemory
+# --- 0. Configuration and Setup -- # Loads the OPENAI_API_KEY from the .env file. load_dotenv()
+# The ChatOpenAI client automatically picks up the API key from the environment. llm = ChatOpenAI(temperature=0.5, model="gpt-4o-mini")"</div>
+        <div class="seg-zh">这些示例共同说明了<b>优先级排序能力</b>如何成为 AI agent（智能体）在广泛情境中提升性能与决策能力的根本所在。动手代码示例
+以下演示了使用 LangChain 开发一个 Project Manager AI agent（项目经理智能体）的过程。该 agent 便于任务的创建、优先级排序以及向团队成员分配任务，展示了将大型语言模型（LLM）与定制工具结合用于自动化项目管理的应用。
+import os import asyncio from typing import List, Optional, Dict, Type
+from dotenv import load_dotenv from pydantic import BaseModel, Field
+from langchain_core.prompts import ChatPromptTemplate from langchain_core.tools import Tool from langchain_openai import ChatOpenAI from langchain.agents import AgentExecutor, create_react_agent from langchain.memory import ConversationBufferMemory
+# --- 0. Configuration and Setup -- # Loads the OPENAI_API_KEY from the .env file. load_dotenv()
+# The ChatOpenAI client automatically picks up the API key from the environment. llm = ChatOpenAI(temperature=0.5, model="gpt-4o-mini")</div>
+        <div class="seg-note"><b>导读注:</b>强调<b>优先级排序</b>是 agent 性能关键，并给出 LangChain 项目经理 agent 的完整代码示例。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"# --- 1. Task Management System -- class Task(BaseModel): """Represents a single task in the system.""" id: str description: str priority: Optional[str] = None # P0, P1, P2 assigned_to: Optional[str] = None # Name of the worker
+class SuperSimpleTaskManager: """An efficient and robust in-memory task manager.""" def __init__(self): # Use a dictionary for O(1) lookups, updates, and deletions. self.tasks: Dict[str, Task] = {} self.next_task_id = 1
+def create_task(self, description: str) -&gt; Task: """Creates and stores a new task.""" task_id = f"TASK-{self.next_task_id:03d}" new_task = Task(id=task_id, description=description) self.tasks[task_id] = new_task self.next_task_id += 1
+print(f"DEBUG: Task created - {task_id}: {description}") return new_task
+def update_task(self, task_id: str, **kwargs) -&gt; Optional[Task]: """Safely updates a task using Pydantic's model_copy.""" task = self.tasks.get(task_id) if task: # Use model_copy for type-safe updates. update_data = {k: v for k, v in kwargs.items() if v is not None} updated_task = task.model_copy(update=update_data) self.tasks[task_id] = updated_task print(f"DEBUG: Task {task_id} updated with {update_data}") return updated_task"</div>
+        <div class="seg-zh"># --- 1. 任务管理系统 --
+class Task(BaseModel):
+    """表示系统中的单个任务。"""
+    id: str
+    description: str
+    priority: Optional[str] = None  # P0、P1、P2
+    assigned_to: Optional[str] = None  # 执行者姓名
+
+class SuperSimpleTaskManager:
+    """一个高效且健壮的内存任务管理器。"""
+    def __init__(self):
+        # 使用字典实现 O(1) 的查找、更新和删除。
+        self.tasks: Dict[str, Task] = {}
+        self.next_task_id = 1
+
+    def create_task(self, description: str) -&gt; Task:
+        """创建并存储一个新任务。"""
+        task_id = f"TASK-{self.next_task_id:03d}"
+        new_task = Task(id=task_id, description=description)
+        self.tasks[task_id] = new_task
+        self.next_task_id += 1
+
+        print(f"DEBUG: Task created - {task_id}: {description}")
+        return new_task
+
+    def update_task(self, task_id: str, **kwargs) -&gt; Optional[Task]:
+        """使用 Pydantic 的 model_copy 安全地更新任务。"""
+        task = self.tasks.get(task_id)
+        if task:
+            # 使用 model_copy 进行类型安全的更新。
+            update_data = {k: v for k, v in kwargs.items() if v is not None}
+            updated_task = task.model_copy(update=update_data)
+            self.tasks[task_id] = updated_task
+            print(f"DEBUG: Task {task_id} updated with {update_data}")
+            return updated_task</div>
+        <div class="seg-note"><b>导读注:</b><b>用字典实现 O(1) 操作</b>，并借 Pydantic 的 model_copy 做类型安全更新。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"print(f"DEBUG: Task {task_id} not found for update.") return None
+def list_all_tasks(self) -&gt; str: """Lists all tasks currently in the system.""" if not self.tasks: return "No tasks in the system."
+task_strings = [] for task in self.tasks.values(): task_strings.append( f"ID: {task.id}, Desc: '{task.description}', " f"Priority: {task.priority or 'N/A'}, " f"Assigned To: {task.assigned_to or 'N/A'}" ) return "Current Tasks:\n" + "\n".join(task_strings)
+# --- 2. Tools for the Project Manager Agent -- # Use Pydantic models for tool arguments for better validation and clarity. class CreateTaskArgs(BaseModel): description: str = Field(description="A detailed description of the task.")
+class PriorityArgs(BaseModel): task_id: str = Field(description="The ID of the task to update, e.g., 'TASK-001'.") priority: str = Field(description="The priority to set. Must be one of: 'P0', 'P1', 'P2'.")
+class AssignWorkerArgs(BaseModel): task_id: str = Field(description="The ID of the task to update, e.g., 'TASK-001'.") worker_name: str = Field(description="The name of the worker to assign the task to.")"</div>
+        <div class="seg-zh">print(f"DEBUG: Task {task_id} not found for update.") return None
+def list_all_tasks(self) -&gt; str: """列出系统中当前的所有任务。""" if not self.tasks: return "No tasks in the system."
+
+task_strings = [] for task in self.tasks.values(): task_strings.append( f"ID: {task.id}, Desc: '{task.description}', " f"Priority: {task.priority or 'N/A'}, " f"Assigned To: {task.assigned_to or 'N/A'}" ) return "Current Tasks:\n" + "\n".join(task_strings)
+# --- 2. 用于项目经理 Agent（Project Manager Agent）的工具 -- # 为工具参数使用 Pydantic 模型，以获得更好的校验与清晰度。 class CreateTaskArgs(BaseModel): description: str = Field(description="任务的详细描述。")
+class PriorityArgs(BaseModel): task_id: str = Field(description="要更新的任务 ID，例如 'TASK-001'。") priority: str = Field(description="要设置的优先级。必须是以下之一：'P0'、'P1'、'P2'。")
+class AssignWorkerArgs(BaseModel): task_id: str = Field(description="要更新的任务 ID，例如 'TASK-001'。") worker_name: str = Field(description="要分配任务给的工作人员的名称。")</div>
+        <div class="seg-note"><b>导读注:</b><b>Pydantic 模型</b>为工具参数提供校验与清晰度，是 Agent 工具定义的关键实践。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"def create_new_task_tool(description: str) -&gt; str: """Creates a new project task with the given description.""" task = task_manager.create_task(description) return f"Created task {task.id}: '{task.description}'."
+def assign_priority_to_task_tool(task_id: str, priority: str) -&gt; str: """Assigns a priority (P0, P1, P2) to a given task ID.""" if priority not in ["P0", "P1", "P2"]: return "Invalid priority. Must be P0, P1, or P2." task = task_manager.update_task(task_id, priority=priority) return f"Assigned priority {priority} to task {task.id}." if task else f"Task {task_id} not found."
+def assign_task_to_worker_tool(task_id: str, worker_name: str) -&gt; str: """Assigns a task to a specific worker.""" task = task_manager.update_task(task_id, assigned_to=worker_name) return f"Assigned task {task.id} to {worker_name}." if task else f"Task {task_id} not found."
+# All tools the PM agent can use pm_tools = [ Tool( name="create_new_task", func=create_new_task_tool, description="Use this first to create a new task and get its ID.", args_schema=CreateTaskArgs ), Tool( name="assign_priority_to_task", func=assign_priority_to_task_tool, description="Use this to assign a priority to a task after it has been created.", args_schema=PriorityArgs ), Tool( name="assign_task_to_worker", func=assign_task_to_worker_tool, description="Use this to assign a task to a specific worker"</div>
+        <div class="seg-zh">def create_new_task_tool(description: str) -&gt; str: """使用给定描述创建一个新的项目任务。""" task = task_manager.create_task(description) return f"Created task {task.id}: '{task.description}'."
+def assign_priority_to_task_tool(task_id: str, priority: str) -&gt; str: """为给定任务 ID 分配优先级（P0、P1、P2）。""" if priority not in ["P0", "P1", "P2"]: return "Invalid priority. Must be P0, P1, or P2." task = task_manager.update_task(task_id, priority=priority) return f"Assigned priority {priority} to task {task.id}." if task else f"Task {task_id} not found."
+def assign_task_to_worker_tool(task_id: str, worker_name: str) -&gt; str: """将任务分配给特定工作人员。""" task = task_manager.update_task(task_id, assigned_to=worker_name) return f"Assigned task {task.id} to {worker_name}." if task else f"Task {task_id} not found."
+# PM agent 可使用的所有工具 pm_tools = [ Tool( name="create_new_task", func=create_new_task_tool, description="请先使用此工具创建新任务并获取其 ID。", args_schema=CreateTaskArgs ), Tool( name="assign_priority_to_task", func=assign_priority_to_task_tool, description="在任务创建后，使用此工具为任务分配优先级。", args_schema=PriorityArgs ), Tool( name="assign_task_to_worker", func=assign_task_to_worker_tool, description="使用此工具将任务分配给特定工作人员</div>
+        <div class="seg-note"><b>导读注:</b>展示 PM agent 的三个工具定义，<b>工具描述引导调用顺序</b>。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"after it has been created.", args_schema=AssignWorkerArgs ), Tool( name="list_all_tasks", func=task_manager.list_all_tasks, description="Use this to list all current tasks and their status." ), ]
+# --- 3. Project Manager Agent Definition -- pm_prompt_template = ChatPromptTemplate.from_messages([ ("system", """You are a focused Project Manager LLM agent. Your goal is to manage project tasks efficiently.
+When you receive a new task request, follow these steps: 1. First, create the task with the given description using the `create_new_task` tool. You must do this first to get a `task_id`. 2. Next, analyze the user's request to see if a priority or an assignee is mentioned. - If a priority is mentioned (e.g., "urgent", "ASAP", "critical"), map it to P0. Use `assign_priority_to_task`. - If a worker is mentioned, use `assign_task_to_worker`. 3. If any information (priority, assignee) is missing, you must make a reasonable default assignment (e.g., assign P1 priority and assign to 'Worker A'). 4. Once the task is fully processed, use `list_all_tasks` to show the final state."</div>
+        <div class="seg-zh">在它被创建之后。", args_schema=AssignWorkerArgs ), Tool( name="list_all_tasks", func=task_manager.list_all_tasks, description="使用此工具列出所有当前任务及其状态。" ), ]
+# --- 3. 项目经理 Agent 定义 -- pm_prompt_template = ChatPromptTemplate.from_messages([ ("system", """你是一个专注的项目经理 LLM agent。你的目标是高效地管理项目任务。
+当你收到新的任务请求时，请遵循以下步骤：1. 首先，使用 `create_new_task` 工具根据给定描述创建任务。你必须先执行此操作以获得 `task_id`。2. 接下来，分析用户的请求，查看是否提及优先级或指派对象。- 如果提及优先级（例如 "urgent"、"ASAP"、"critical"），将其映射为 P0。使用 `assign_priority_to_task`。- 如果提及工作者，使用 `assign_task_to_worker`。3. 如果任何信息（优先级、指派对象）缺失，你必须做出合理的默认分配（例如，分配 P1 优先级并指派给 'Worker A'）。4. 任务完全处理后，使用 `list_all_tasks` 显示最终状态。</div>
+        <div class="seg-note"><b>导读注:</b>展示项目经理 Agent 的提示词模板，强调<b>先建任务再分配</b>的流程与默认兜底策略。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"Available workers: 'Worker A', 'Worker B', 'Review Team' Priority levels: P0 (highest), P1 (medium), P2 (lowest) """), ("placeholder", "{chat_history}"), ("human", "{input}"), ("placeholder", "{agent_scratchpad}") ])
+# Create the agent executor pm_agent = create_react_agent(llm, pm_tools, pm_prompt_template) pm_agent_executor = AgentExecutor( agent=pm_agent, tools=pm_tools, verbose=True, handle_parsing_errors=True, memory=ConversationBufferMemory(memory_key="chat_history",
+# --- 4. Simple Interaction Flow -- async def run_simulation(): print("--- Project Manager Simulation ---")
+# Scenario 1: Handle a new, urgent feature request print("\n[User Request] I need a new login system implemented ASAP. It should be assigned to Worker B.") await pm_agent_executor.ainvoke({"input": "Create a task to implement a new login system. It's urgent and should be assigned to Worker B."})
+# Scenario 2: Handle a less urgent content update with fewer details print("[User Request] We need to review the marketing website content.") await pm_agent_executor.ainvoke({"input": "Manage a new task: Review marketing website content."})"</div>
+        <div class="seg-zh">可用工作人员（Available workers）：'Worker A'、'Worker B'、'Review Team' 优先级（Priority levels）：P0（最高）、P1（中）、P2（最低） """), ("placeholder", "{chat_history}"), ("human", "{input}"), ("placeholder", "{agent_scratchpad}") ])
+# 创建代理执行器（agent executor） pm_agent = create_react_agent(llm, pm_tools, pm_prompt_template) pm_agent_executor = AgentExecutor( agent=pm_agent, tools=pm_tools, verbose=True, handle_parsing_errors=True, memory=ConversationBufferMemory(memory_key="chat_history",
+# --- 4. 简单交互流程（Simple Interaction Flow）-- async def run_simulation(): print("--- 项目经理模拟（Project Manager Simulation）---")
+# 场景 1：处理一个新的紧急功能请求 print("\n[用户请求] 我需要尽快实现一个新的登录系统。应将其分配给 Worker B。") await pm_agent_executor.ainvoke({"input": "创建一个任务来实现新的登录系统。它很紧急，应分配给 Worker B。"})
+# 场景 2：处理一个不太紧急、细节较少的内容更新 print("[用户请求] 我们需要审查营销网站内容。") await pm_agent_executor.ainvoke({"input": "管理一个新任务：审查营销网站内容。"})</div>
+        <div class="seg-note"><b>导读注:</b>展示<b>ReAct 代理</b>如何按优先级与人员分配任务，并处理紧急与常规请求。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"# Run the simulation if __name__ == "__main__": asyncio.run(run_simulation())
+This code implements a simple task management system using Python and LangChain, designed to simulate a project manager agent powered by a large language model.
+The system employs a SuperSimpleTaskManager class to efficiently manage tasks within memory, utilizing a dictionary structure for rapid data retrieval. Each task is represented by a Task Pydantic model, which encompasses attributes such as a unique identifier, a descriptive text, an optional priority level (P0, P1, P2), and an optional assignee designation.Memory usage varies based on task type, the number of workers, and other contributing factors. The task manager provides methods for task creation, task modification, and retrieval of all tasks.
+The agent interacts with the task manager via a defined set of Tools. These tools facilitate the creation of new tasks, the assignment of priorities to tasks, the allocation of tasks to personnel, and the listing of all tasks. Each tool is encapsulated to enable interaction with an instance of the SuperSimpleTaskManager. Pydantic models are utilized to delineate the requisite arguments for the tools, thereby ensuring data validation."</div>
+        <div class="seg-zh"># 运行模拟
+if __name__ == "__main__":
+    asyncio.run(run_simulation())
+这段代码使用 Python 和 LangChain 实现了一个简单的任务管理系统，旨在模拟一个由大语言模型（Large Language Model, LLM）驱动的项目经理 agent。
+该系统采用 SuperSimpleTaskManager 类来高效管理内存中的任务，利用字典结构实现快速数据检索。每个任务由一个 Task Pydantic 模型表示，该模型包含唯一标识符、描述性文本、可选优先级（P0、P1、P2）以及可选指派人等属性。内存使用量因任务类型、worker 数量及其他因素而异。任务管理器提供任务创建、任务修改以及检索所有任务的方法。
+agent 通过一组已定义的 Tools 与任务管理器交互。这些工具支持创建新任务、为任务分配优先级、将任务分配给人员以及列出所有任务。每个工具都经过封装，以便与 SuperSimpleTaskManager 实例进行交互。Pydantic 模型用于界定工具所需的参数，从而确保数据验证。</div>
+        <div class="seg-note"><b>导读注:</b>展示如何用 LangChain 工具封装内存任务管理器，<b>Pydantic 模型保障参数校验</b>。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"An AgentExecutor is configured with the language model, the toolset, and a conversation memory component to maintain contextual continuity. A specific ChatPromptTemplate is defined to direct the agent's behavior in its project management role. The prompt instructs the agent to initiate by creating a task, subsequently assigning priority and personnel as specified, and concluding with a comprehensive task list. Default assignments, such as P1 priority and 'Worker A', are stipulated within the prompt for instances where information is absent.
+The code incorporates a simulation function (run_simulation) of asynchronous nature to demonstrate the agent's operational capacity. The simulation executes two distinct scenarios: the management of an urgent task with designated personnel, and the management of a less urgent task with minimal input. The agent's actions and logical processes are outputted to the console due to the activation of verbose=True within the AgentExecutor. At a Glance"</div>
+        <div class="seg-zh">AgentExecutor 配置了语言模型、工具集和对话记忆组件，以保持上下文连续性。定义了一个特定的 ChatPromptTemplate 来指导 agent 在其项目管理角色中的行为。该 prompt 指示 agent 首先创建任务，随后按指定分配优先级和人员，最后以一份全面的任务列表收尾。对于信息缺失的情况，prompt 中规定了默认分配，例如 P1 优先级和 'Worker A'。代码包含一个异步性质的模拟函数（run_simulation），用于演示 agent 的操作能力。该模拟执行两个不同场景：管理一项有指定人员的紧急任务，以及管理一项输入极少的非紧急任务。由于 AgentExecutor 中启用了 verbose=True，agent 的动作和逻辑过程会输出到控制台。</div>
+        <div class="seg-note"><b>导读注:</b>展示如何用 prompt 约束 agent 的项目管理流程，并<b>异步模拟两种任务场景</b>验证其行为。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"What: AI agents operating in complex environments face a multitude of potential actions, conflicting goals, and finite resources. Without a clear method to determine their next move, these agents risk becoming inefficient and ineffective. This can lead to significant operational delays or a complete failure to accomplish primary objectives. The core challenge is to manage this overwhelming number of choices to ensure the agent acts purposefully and logically.
+Why: The Prioritization pattern provides a standardized solution for this problem by enabling agents to rank tasks and goals. This is achieved by establishing clear criteria such as urgency, importance, dependencies, and resource cost. The agent then evaluates each potential action against these criteria to determine the most critical and timely course of action. This Agentic capability allows the system to dynamically adapt to changing circumstances and manage constrained resources effectively. By focusing on the highest-priority items, the agent's behavior becomes more intelligent, robust, and aligned with its strategic goals."</div>
+        <div class="seg-zh">是什么：在复杂环境中运行的 AI agent（智能体）面临大量潜在动作、相互冲突的目标和有限资源。如果没有明确方法来确定下一步行动，这些 agent 就有可能变得低效甚至无效。这可能导致严重的运行延迟，或完全无法完成主要目标。核心挑战在于管理这种数量压倒性的选择，以确保 agent 有目的且合乎逻辑地行动。
+
+为什么：Prioritization（优先级排序）模式通过让 agent 对任务和目标进行排序，为这一问题提供了标准化解决方案。这是通过建立明确标准来实现的，例如紧迫性、重要性、依赖关系和资源成本。随后，agent 会根据这些标准评估每个潜在动作，以确定最关键且最及时的 action（行动）方案。这种 Agentic（智能体式）能力使系统能够动态适应变化的环境，并有效管理受限资源。通过聚焦最高优先级的项目，agent 的行为会变得更智能、更稳健，并与其战略目标保持一致。</div>
+        <div class="seg-note"><b>导读注:</b>核心是<b>Prioritization 模式</b>：用紧迫性、重要性等标准排序动作，避免 agent 在复杂环境中低效或失控。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"Rule of thumb: Use the Prioritization pattern when an Agentic system must autonomously manage multiple, often conflicting, tasks or goals under resource constraints to operate effectively in a dynamic environment.
+● Prioritization enables AI agents to function effectively in complex, multi-faceted environments. ● Agents utilize established criteria such as urgency, importance, and dependencies to evaluate and rank tasks. ● Dynamic re-prioritization allows agents to adjust their operational focus in response to real-time changes. ● Prioritization occurs at various levels, encompassing overarching strategic objectives and immediate tactical decisions. 9
+● Effective prioritization results in increased efficiency and improved operational robustness of AI agents. Conclusions
+In conclusion, the prioritization pattern is a cornerstone of effective agentic AI, equipping systems to navigate the complexities of dynamic environments with purpose and intelligence. It allows an agent to autonomously evaluate a multitude of conflicting tasks and goals, making reasoned decisions about where to focus its limited resources. This agentic capability moves beyond simple task execution, enabling the system to act as a proactive, strategic decision-maker. By weighing criteria such as urgency, importance, and dependencies, the agent demonstrates a sophisticated, human-like reasoning process."</div>
+        <div class="seg-zh">经验法则：当 Agentic 系统必须在资源约束下自主管理多个（往往相互冲突的）任务或目标，以在动态环境中有效运行时，就应使用 Prioritization（优先级排序）模式。
+● <b>Prioritization 使 AI agent 能够在复杂、多层面的环境中有效运作。</b> ● Agent 利用既定标准（如紧迫性、重要性和依赖关系）来评估任务并排序。 ● <b>动态重新排序使 agent 能够根据实时变化调整其运营重点。</b> ● Prioritization 发生在多个层级，既涵盖总体战略目标，也包括即时战术决策。9
+● <b>有效的优先级排序可提升 AI agent 的效率并增强其运行稳健性。</b> 结论
+总之，<b>Prioritization 模式是有效 agentic AI 的基石</b>，使系统能够以目的性和智能应对动态环境的复杂性。它让 agent 自主评估众多相互冲突的任务与目标，就有限资源的投放重点做出有理有据的决策。这种 agentic 能力超越了简单的任务执行，使系统能够充当主动的战略决策者。通过权衡紧迫性、重要性和依赖关系等标准，agent 展现出一种复杂的、类人的推理过程。</div>
+        <div class="seg-note"><b>导读注:</b>点出<b>优先级排序是 agentic AI 的基石</b>，让 agent 自主权衡冲突目标。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"A key feature of this agentic behavior is dynamic re-prioritization, which grants the agent the autonomy to adapt its focus in real-time as conditions change. As demonstrated in the code example, the agent interprets ambiguous requests, autonomously selects and uses the appropriate tools, and logically sequences its actions to fulfill its objectives. This ability to self-manage its workflow is what separates a true agentic system from a simple automated script. Ultimately, mastering prioritization is fundamental for creating robust and intelligent agents that can operate effectively and reliably in any complex, real-world scenario. References
+1. Examining the Security of Artificial Intelligence in Project Management: A Case Study of AI-driven Project Scheduling and Resource Allocation in Information Systems Projects ; https://www.irejournals.com/paper-details/1706160 2. AI-Driven Decision Support Systems in Agile Software Project Management: Enhancing Risk Mitigation and Resource Allocation; https://www.mdpi.com/2079-8954/13/3/208"</div>
+        <div class="seg-zh">这种智能体行为的一个关键特征是<b>动态重新排定优先级（dynamic re-prioritization）</b>，它赋予智能体在条件变化时实时调整其关注点的自主权。正如代码示例所示，智能体能够解读模糊的请求，自主选择并使用合适的工具，并对其动作进行逻辑排序以实现其目标。这种自我管理工作流的能力，正是真正的智能体系统与简单自动化脚本的区别所在。归根结底，<b>掌握优先级排序是构建稳健且智能的智能体的基础</b>，使其能够在任何复杂的真实场景中有效且可靠地运行。参考文献
+1. Examining the Security of Artificial Intelligence in Project Management: A Case Study of AI-driven Project Scheduling and Resource Allocation in Information Systems Projects ; https://www.irejournals.com/paper-details/1706160 2. AI-Driven Decision Support Systems in Agile Software Project Management: Enhancing Risk Mitigation and Resource Allocation; https://www.mdpi.com/2079-8954/13/3/208</div>
+        <div class="seg-note"><b>导读注:</b><b>动态重新排定优先级</b>是区分真正智能体与自动化脚本的关键能力。</div>
+      </div>
+
+      <div class="callout info" style="margin-top:24px">
+        <div class="co-title">来源与用途</div>
+        <p style="margin-bottom:0">《Agentic Design Patterns》,Antonio Gulli · 2025 · <a href="papers/pdf/gulli-agentic-design-patterns.pdf" target="_blank" rel="noopener">原书 PDF</a>。本页为学习用途的对照整理,版权归原作者;有问题到读书导师处提问,答案只引用书中原文并标注章节。</p>
+      </div>
+
+      <p class="pager" style="margin-top:18px">
+        <a class="chip" href="book-gulli-patterns-ch19.html">← 第19章 · 评估与监控 Evaluation and Monitoring</a>
+        <a class="chip" href="book-gulli-patterns.html">导读</a>
+        <a class="chip" href="book-gulli-patterns-ch21.html">第21章 · 探索与发现 Exploration and Discovery →</a>
+      </p>
+
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/app.js?v=28"></script>
+</body>
+</html>

@@ -26,7 +26,8 @@ const CHAPTER_CHAR_CAP = 100_000; // 单章喂给 LLM 的上限(超出截尾)
 // ---------- 参数 ----------
 const args = process.argv.slice(2);
 const argOf = (k) => { const i = args.indexOf(k); return i >= 0 ? args[i + 1] : null; };
-const KB = resolve(argOf("--kb") || "");
+const KB = argOf("--kb") ? resolve(argOf("--kb")) : null;
+const CARDS = argOf("--cards") ? resolve(argOf("--cards")) : null; // 复跑模式:从持久化卡片重渲染,跳过全部 LLM 阶段
 const CTX = argOf("--ctx") ? resolve(argOf("--ctx")) : null;
 const SLUG = argOf("--slug") || "book-draft";
 const TITLE = argOf("--title") || "Untitled Book";
@@ -35,8 +36,8 @@ const PDF_LINK = argOf("--pdf-link") || "";
 const PACK = argOf("--pack") || SLUG; // 读书导师包名(packs/<pack>),默认与 slug 同名
 const NAME = argOf("--name") || `${TITLE}(机器导读初稿)`;
 
-if (!KB || !existsSync(KB)) { console.error("✗ --kb 不存在"); process.exit(1); }
-if (!KEY) { console.error("✗ 缺少 DEEPSEEK_API_KEY"); process.exit(1); }
+if (!CARDS && (!KB || !existsSync(KB))) { console.error("✗ --kb 不存在(或用 --cards 复跑模式)"); process.exit(1); }
+if (!CARDS && !KEY) { console.error("✗ 缺少 DEEPSEEK_API_KEY(或用 --cards 复跑模式)"); process.exit(1); }
 
 const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 const escAllowB = (s) => esc(s).replace(/&lt;b&gt;/g, "<b>").replace(/&lt;\/b&gt;/g, "</b>");
@@ -71,23 +72,29 @@ async function pool(items, worker, n = CONCURRENCY) {
   }));
 }
 
-// ---------- 载入 kb + ctx ----------
-const kb = JSON.parse(readFileSync(KB, "utf8"));
+// ---------- 载入:--cards 复跑模式(跳过 LLM)或 kb 全跑 ----------
+const persist = CARDS ? JSON.parse(readFileSync(CARDS, "utf8")) : null;
+if (persist) console.log(`→ 复跑模式:从 ${CARDS} 重渲染(跳过分章摘要与全书综合)`);
+const kb = persist ? { chunks: [], meta: { source: persist.meta.source || "" } } : JSON.parse(readFileSync(KB, "utf8"));
 const ctxMap = new Map();
 if (CTX && existsSync(CTX)) {
   for (const c of JSON.parse(readFileSync(CTX, "utf8")).chunks || []) ctxMap.set(c.id, c.context || "");
 }
-const PAGES = (kb.meta?.source || "").match(/(\d+)\s*页/)?.[1] || "";
+const PAGES = persist?.meta.pages || (kb.meta?.source || "").match(/(\d+)\s*页/)?.[1] || "";
 
 // 按章分组(章号 >=100 视为附录),保留块的完整章标题
 const chapters = new Map();
-for (const c of kb.chunks) {
-  if (!chapters.has(c.chapter)) chapters.set(c.chapter, { no: c.chapter, title: c.title.split(": ")[0] + ": " + (c.title.split(": ")[1] || c.chapterTitle), chunks: [], chars: 0, appendix: c.chapter >= 100 });
-  const ch = chapters.get(c.chapter);
-  ch.chunks.push(c); ch.chars += c.chars;
+if (persist) {
+  for (const c of persist.chapters) chapters.set(c.no, { no: c.no, title: c.titleEn, chunks: [], chars: 0, appendix: c.appendix });
+} else {
+  for (const c of kb.chunks) {
+    if (!chapters.has(c.chapter)) chapters.set(c.chapter, { no: c.chapter, title: c.title.split(": ")[0] + ": " + (c.title.split(": ")[1] || c.chapterTitle), chunks: [], chars: 0, appendix: c.chapter >= 100 });
+    const ch = chapters.get(c.chapter);
+    ch.chunks.push(c); ch.chars += c.chars;
+  }
 }
 const chList = [...chapters.values()].sort((a, b) => a.no - b.no);
-console.log(`→ 书:${TITLE} · ${kb.chunks.length} 块 / ${chList.length} 章(含附录 ${chList.filter((c) => c.appendix).length})`);
+console.log(`→ 书:${TITLE} · ${persist ? persist.meta.chunks : kb.chunks.length} 块 / ${chList.length} 章(含附录 ${chList.filter((c) => c.appendix).length})`);
 
 // ---------- Stage A(map):分章摘要 ----------
 const CHAP_SYS = `你是书籍导读助手。下面给你某一章的全部文本块(每块以 [块id] 开头)。输出严格 JSON,不要任何其他文字:
@@ -100,7 +107,14 @@ const CHAP_SYS = `你是书籍导读助手。下面给你某一章的全部文�
 console.log("→ Stage A:分章摘要…");
 const cards = new Map(); // no -> {…, quotes:[{q,why,verified}]}
 let dropped = 0, verifiedCount = 0;
-await pool(chList, async (ch) => {
+if (persist) {
+  // 复跑模式:卡片与金句来自持久化,不重算
+  for (const c of persist.chapters) {
+    cards.set(c.no, c);
+    for (const q of c.quotes || []) if (q.verified) verifiedCount++;
+  }
+  console.log(`  复用 ${cards.size} 张卡片(金句 ${verifiedCount} 条)`);
+} else await pool(chList, async (ch) => {
   const parts = [];
   let total = 0, truncated = false;
   for (const c of ch.chunks) {
@@ -129,6 +143,11 @@ await pool(chList, async (ch) => {
 });
 console.log(`\n✓ 分章摘要完成(金句校验通过 ${verifiedCount} / 丢弃 ${dropped})`);
 
+let book, golden;
+if (persist) {
+  book = persist.book; golden = persist.golden;
+  console.log(`→ 复用全书导读(${(book.coreIdeas || []).length} 论点 / ${golden.length} 金句)`);
+} else {
 // ---------- 站内资源清单(reduce 阶段做关联,链接只许逐字复制) ----------
 const resources = [];
 for (const m of idxHtml.matchAll(/href="((?:[a-z0-9-]+)\.html)"[^>]*>([^<]{2,30})</g)) {
@@ -167,7 +186,6 @@ const REDUCE_SYS = `你是资深技术书导读作者。基于分章摘要(不�
 
 const reduceUser = `书:${TITLE}(共 ${chList.filter((c) => !c.appendix).length} 正章 + ${chList.filter((c) => c.appendix).length} 附录)\n\n分章摘要:\n${JSON.stringify(cardsCompact)}\n\n金句池(下标:章|原文|理由):\n${quotesPool.map((q, i) => `${i}: 第${q.ch}章 | ${q.q.slice(0, 160)} | ${q.why}`).join("\n")}\n\n站内资源列表(title|url):\n${resources.slice(0, 40).map((r) => `${r.title} | ${r.url}`).join("\n")}`;
 
-let book;
 try {
   book = parseJSON(await llm(REDUCE_SYS, reduceUser, 4500));
 } catch (e) { console.error("✗ 全书综合失败:", e.message); process.exit(1); }
@@ -179,12 +197,13 @@ if (missingCh.length) {
   console.log(`  (parts 未覆盖第 ${missingCh.join(",")} 章,自动补「其余章节」部)`);
   book.parts = [...(book.parts || []), { title: "其余章节", why: "(自动补齐,待人审归部)", chapters: missingCh }];
 }
-const golden = (book.goldenQuotes || []).filter((i) => Number.isInteger(i) && quotesPool[i]).map((i) => quotesPool[i]);
+golden = (book.goldenQuotes || []).filter((i) => Number.isInteger(i) && quotesPool[i]).map((i) => quotesPool[i]);
+}
 
-// ---------- 持久化章节卡片(供复跑/人审/pack 重建) ----------
+// ---------- 持久化章节卡片(供复跑/人审/分章页管线) ----------
 const draftDir = join(SITE, "drafts", SLUG);
 mkdirSync(draftDir, { recursive: true });
-writeFileSync(join(draftDir, "book-cards.json"), JSON.stringify({
+if (!persist) writeFileSync(join(draftDir, "book-cards.json"), JSON.stringify({
   meta: { slug: SLUG, title: TITLE, authors: AUTHORS, pages: PAGES, pdf: PDF_LINK, pack: PACK, kb: relative(TUTOR, KB), builtAt: new Date().toISOString(), model: "deepseek-v4-flash", chunks: kb.chunks.length },
   chapters: chList.map((ch) => cards.get(ch.no)),
   book, golden,
@@ -274,19 +293,25 @@ run_code 在隔离目录执行 JavaScript(node)与 Python(python3),10 秒超时,
 
 // ---------- 渲染草稿页 ----------
 console.log("→ 生成草稿页…");
+// 章节翻译页已生成的章,所有链接直达正文;未生成的回退页内锚点
+const chPage = (no) => existsSync(join(SITE, `book-${SLUG}-ch${no}.html`)) ? `book-${SLUG}-ch${no}.html` : null;
 const chCardHtml = (no) => {
   const c = cards.get(no);
   if (!c) return "";
   const deps = c.dependsOn?.length ? ` · 前置:第${c.dependsOn.join(",")}章` : "";
+  const page = chPage(no);
+  const read = page
+    ? `<a class="chip" href="${page}">读本章 →</a>`
+    : (PDF_LINK ? `<a class="chip" href="${esc(PDF_LINK)}">读原文 PDF</a>` : "");
   return `<div class="card" id="ch-${no}" style="padding:12px 14px">
         <div class="kicker" style="font-size:11px">${c.appendix ? "附录" : `第 ${no} 章`} · ${["", "入门", "进阶基础", "进阶"][c.difficulty] || ""} · ${c.chunks} 块</div>
-        <b>${escAllowB(c.titleZh)}</b> <span class="small-note">${esc(c.titleEn)}</span>
+        <b>${page ? `<a href="${page}">${escAllowB(c.titleZh)}</a>` : escAllowB(c.titleZh)}</b> <span class="small-note">${esc(c.titleEn)}</span>
         <div class="para" style="margin:4px 0 0">${escAllowB(c.oneLiner)}</div>
-        <div class="small-note">${deps}</div>
+        <div class="small-note">${deps} ${read}</div>
       </div>`;
 };
 
-const chips = (nos) => (nos || []).map((n) => `<a class="chip" href="#ch-${n}">第${n}章</a>`).join(" ");
+const chips = (nos) => (nos || []).map((n) => { const p = chPage(n); return `<a class="chip" href="${p || "#ch-" + n}">第${n}章</a>`; }).join(" ");
 
 const positioning = book.positioning || {};
 const coreIdeasHtml = (book.coreIdeas || []).map((idea) => `<div class="card">
@@ -301,6 +326,19 @@ ${p.chapters.map(chCardHtml).join("\n")}
       </div>`).join("\n");
 
 const paths = book.paths || {};
+// 章节地图:流程图导向(部分 → 章 → 章),节点直达章节正文页
+const quickSet = new Set(paths.quick?.chapters || []);
+const partsFlow = (book.parts || []).map((p) => `<div class="flow">
+        <span class="flow-node accent">${esc(p.title)}</span>
+        <span class="flow-arrow">→</span>
+${p.chapters.map((n) => {
+  const c = cards.get(n);
+  const page = chPage(n);
+  const nm = c ? esc(c.titleZh.split(/[:：]/)[0].slice(0, 16)) : "";
+  return `<a class="flow-node${quickSet.has(n) ? " accent" : ""}" style="text-decoration:none" href="${page || "#ch-" + n}" title="${c ? esc(c.titleEn) : ""}">第${n}章 ${nm}</a>`;
+}).join(`\n        <span class="flow-arrow">→</span>\n`)}
+        <div class="flow-note">${esc(p.why || "")} · 点章节点直达本章正文${p.chapters.some((n) => quickSet.has(n)) ? " · <b style='color:var(--accent)'>金色</b> = 快读路径章" : ""}</div>
+      </div>`).join("\n");
 const pathCard = (label, p, cls) => `<div class="card ${cls || ""}" style="padding:14px 16px">
         <div class="kicker" style="font-size:11px">${label}${p.minutes ? ` · 约 ${p.minutes} 分钟` : ""}</div>
         <div class="para">${escAllowB(p.story || "")}</div>
@@ -352,7 +390,7 @@ const html = `<!DOCTYPE html>
         <p class="lead">
           ${esc(AUTHORS)}${PAGES ? ` · ${esc(PAGES)} 页` : ""}${PDF_LINK ? ` · <a href="${esc(PDF_LINK)}" target="_blank" rel="noopener">${/\.pdf(\?|$)/i.test(PDF_LINK) ? "原书 PDF" : "原文链接"}</a>` : ""}
           <br><b style="color:var(--warn)">本页由读书管线自动生成,尚未人工审校。</b>
-          基于知识库 ${kb.chunks.length} 块(分章摘要 ${chList.length} 章),金句 ${golden.length} 条(全部逐字校验通过)。
+          基于知识库 ${persist ? persist.meta.chunks : kb.chunks.length} 块(分章摘要 ${chList.length} 章),金句 ${golden.length} 条(全部逐字校验通过)。
         </p>
       </header>
 
@@ -376,7 +414,13 @@ ${coreIdeasHtml}
       </div>
 
       <h2>全书骨架(章节地图)</h2>
+      <p class="small-note" style="margin:0 0 6px">从上到下按阅读顺序;点章节点直达本章中英对照正文,再点部分名回看分组逻辑。</p>
+${partsFlow}
+      <details class="qn" style="margin-top:10px"><summary>展开各章详情(一句话导读 + 前置依赖)</summary>
+        <div style="padding-top:8px">
 ${partsHtml}
+        </div>
+      </details>
 
       <h2>怎么读(三条路径)</h2>
       <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px">
@@ -421,6 +465,7 @@ const outPage = join(SITE, `book-${SLUG}.html`);
 writeFileSync(outPage, html);
 
 // ---------- 人审清单 ----------
+if (!persist) {
 const reviewMd = `# 人审清单 · ${NAME}(读书导读)
 
 - 书: ${TITLE} / ${AUTHORS}
@@ -445,6 +490,9 @@ const reviewMd = `# 人审清单 · ${NAME}(读书导读)
 4. git commit + push
 `;
 writeFileSync(join(draftDir, "REVIEW.md"), reviewMd);
+} else {
+  console.log("· 复跑模式:REVIEW.md 与 book-cards.json 不重写");
+}
 updateManifest({
   kind: "book", slug: SLUG, title: TITLE, authors: AUTHORS, pages: PAGES, pdf: PDF_LINK,
   quickChapters: (paths.quick?.chapters || []).join(","),

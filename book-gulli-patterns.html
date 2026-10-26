@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="Agentic Design Patterns 机器导读初稿(读书管线自动生成,未经人工审校)。">
 <title>读书导读 · Agentic Design Patterns | Agent 学院</title>
-<link rel="stylesheet" href="assets/css/style.css?v=22">
+<link rel="stylesheet" href="assets/css/style.css?v=24">
 </head>
 <body data-chapter="books">
 
@@ -46,231 +46,316 @@
       <h2>核心论点(全书之魂)</h2>
       <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px">
 <div class="card">
-        <div class="kicker" style="font-size:11px"><a class="chip" href="#ch-1">第1章</a> <a class="chip" href="#ch-2">第2章</a> <a class="chip" href="#ch-3">第3章</a></div>
+        <div class="kicker" style="font-size:11px"><a class="chip" href="book-gulli-patterns-ch1.html">第1章</a> <a class="chip" href="book-gulli-patterns-ch2.html">第2章</a> <a class="chip" href="book-gulli-patterns-ch3.html">第3章</a></div>
         <b>分治与编排</b>
         <div class="para" style="margin:4px 0 0">把复杂任务拆成子任务，用<b>提示链、路由、并行</b>等模式编排执行顺序与条件分支，是构建一切智能体的基础。</div>
       </div>
 <div class="card">
-        <div class="kicker" style="font-size:11px"><a class="chip" href="#ch-4">第4章</a> <a class="chip" href="#ch-11">第11章</a> <a class="chip" href="#ch-12">第12章</a></div>
+        <div class="kicker" style="font-size:11px"><a class="chip" href="book-gulli-patterns-ch4.html">第4章</a> <a class="chip" href="book-gulli-patterns-ch11.html">第11章</a> <a class="chip" href="book-gulli-patterns-ch12.html">第12章</a></div>
         <b>反馈与自适应</b>
         <div class="para" style="margin:4px 0 0">通过<b>反思、目标监控、异常恢复</b>形成闭环，让智能体评估自身输出、修正计划并在失败后恢复。</div>
       </div>
 <div class="card">
-        <div class="kicker" style="font-size:11px"><a class="chip" href="#ch-5">第5章</a> <a class="chip" href="#ch-10">第10章</a> <a class="chip" href="#ch-14">第14章</a> <a class="chip" href="#ch-15">第15章</a></div>
+        <div class="kicker" style="font-size:11px"><a class="chip" href="book-gulli-patterns-ch5.html">第5章</a> <a class="chip" href="book-gulli-patterns-ch10.html">第10章</a> <a class="chip" href="book-gulli-patterns-ch14.html">第14章</a> <a class="chip" href="book-gulli-patterns-ch15.html">第15章</a></div>
         <b>外部能力接入</b>
         <div class="para" style="margin:4px 0 0">用<b>工具调用、MCP、RAG、A2A</b>突破模型静态知识，连接外部API、数据与其它智能体。</div>
       </div>
 <div class="card">
-        <div class="kicker" style="font-size:11px"><a class="chip" href="#ch-7">第7章</a> <a class="chip" href="#ch-8">第8章</a></div>
+        <div class="kicker" style="font-size:11px"><a class="chip" href="book-gulli-patterns-ch7.html">第7章</a> <a class="chip" href="book-gulli-patterns-ch8.html">第8章</a></div>
         <b>多智能体与记忆</b>
         <div class="para" style="margin:4px 0 0">把任务分给专业化智能体，靠<b>通信协议与协作结构</b>协同；用短期/长期记忆管理上下文与持久知识。</div>
       </div>
 <div class="card">
-        <div class="kicker" style="font-size:11px"><a class="chip" href="#ch-13">第13章</a> <a class="chip" href="#ch-18">第18章</a> <a class="chip" href="#ch-19">第19章</a></div>
+        <div class="kicker" style="font-size:11px"><a class="chip" href="book-gulli-patterns-ch13.html">第13章</a> <a class="chip" href="book-gulli-patterns-ch18.html">第18章</a> <a class="chip" href="book-gulli-patterns-ch19.html">第19章</a></div>
         <b>安全与评估</b>
         <div class="para" style="margin:4px 0 0">用<b>护栏、人在回路、评估监控</b>确保智能体安全合规、可度量，并持续优化。</div>
       </div>
       </div>
 
       <h2>全书骨架(章节地图)</h2>
+      <p class="small-note" style="margin:0 0 6px">从上到下按阅读顺序;点章节点直达本章中英对照正文,再点部分名回看分组逻辑。</p>
+<div class="flow">
+        <span class="flow-node accent">基础执行模式</span>
+        <span class="flow-arrow">→</span>
+<a class="flow-node accent" style="text-decoration:none" href="book-gulli-patterns-ch1.html" title="Chapter 1: Prompt Chaining">第1章 提示链 Prompt Chain</a>
+        <span class="flow-arrow">→</span>
+<a class="flow-node" style="text-decoration:none" href="book-gulli-patterns-ch2.html" title="Chapter 2: Routing">第2章 路由 Routing</a>
+        <span class="flow-arrow">→</span>
+<a class="flow-node" style="text-decoration:none" href="book-gulli-patterns-ch3.html" title="Chapter 3: Parallelization">第3章 并行化 Parallelizat</a>
+        <div class="flow-note">从单步到多步、从线性到条件与并发，构成智能体执行骨架。 · 点章节点直达本章正文 · <b style='color:var(--accent)'>金色</b> = 快读路径章</div>
+      </div>
+<div class="flow">
+        <span class="flow-node accent">质量与自适应</span>
+        <span class="flow-arrow">→</span>
+<a class="flow-node accent" style="text-decoration:none" href="book-gulli-patterns-ch4.html" title="Chapter 4: Reflection">第4章 反思模式 Reflection</a>
+        <span class="flow-arrow">→</span>
+<a class="flow-node" style="text-decoration:none" href="book-gulli-patterns-ch6.html" title="Chapter 6: Planning">第6章 规划 Planning</a>
+        <span class="flow-arrow">→</span>
+<a class="flow-node" style="text-decoration:none" href="book-gulli-patterns-ch11.html" title="Chapter 11: Goal Setting and Monitoring">第11章 目标设定与监控 Goal Set</a>
+        <span class="flow-arrow">→</span>
+<a class="flow-node" style="text-decoration:none" href="book-gulli-patterns-ch12.html" title="Chapter 12: Exception Handling and">第12章 异常处理与恢复 Exceptio</a>
+        <div class="flow-note">反思、规划、目标监控与异常恢复，让智能体自我改进并稳定运行。 · 点章节点直达本章正文 · <b style='color:var(--accent)'>金色</b> = 快读路径章</div>
+      </div>
+<div class="flow">
+        <span class="flow-node accent">外部连接与协作</span>
+        <span class="flow-arrow">→</span>
+<a class="flow-node accent" style="text-decoration:none" href="book-gulli-patterns-ch5.html" title="Chapter 5: Tool Use (Function Calling)">第5章 工具使用 Tool Use (F</a>
+        <span class="flow-arrow">→</span>
+<a class="flow-node accent" style="text-decoration:none" href="book-gulli-patterns-ch7.html" title="Chapter 7: Multi-Agent Collaboration">第7章 多智能体协作 Multi-Age</a>
+        <span class="flow-arrow">→</span>
+<a class="flow-node" style="text-decoration:none" href="book-gulli-patterns-ch10.html" title="Chapter 10: Model Context Protocol">第10章 模型上下文协议 Model Co</a>
+        <span class="flow-arrow">→</span>
+<a class="flow-node" style="text-decoration:none" href="book-gulli-patterns-ch14.html" title="Chapter 14: Knowledge Retrieval (RAG)">第14章 知识检索 Knowledge R</a>
+        <span class="flow-arrow">→</span>
+<a class="flow-node" style="text-decoration:none" href="book-gulli-patterns-ch15.html" title="Chapter 15: Inter-Agent Communication">第15章 智能体间通信 Inter-Age</a>
+        <div class="flow-note">工具、MCP、RAG、A2A与多智能体，扩展智能体能力边界。 · 点章节点直达本章正文 · <b style='color:var(--accent)'>金色</b> = 快读路径章</div>
+      </div>
+<div class="flow">
+        <span class="flow-node accent">记忆与学习</span>
+        <span class="flow-arrow">→</span>
+<a class="flow-node" style="text-decoration:none" href="book-gulli-patterns-ch8.html" title="Chapter 8: Memory Management">第8章 记忆管理 Memory Mana</a>
+        <span class="flow-arrow">→</span>
+<a class="flow-node" style="text-decoration:none" href="book-gulli-patterns-ch9.html" title="Chapter 9: Learning and Adaptation">第9章 学习与适应 Learning a</a>
+        <div class="flow-note">管理上下文与持久知识，并从经验中持续适应。 · 点章节点直达本章正文</div>
+      </div>
+<div class="flow">
+        <span class="flow-node accent">安全、评估与优化</span>
+        <span class="flow-arrow">→</span>
+<a class="flow-node" style="text-decoration:none" href="book-gulli-patterns-ch13.html" title="Chapter 13: Human-in-the-Loop">第13章 人在回路 Human-in-th</a>
+        <span class="flow-arrow">→</span>
+<a class="flow-node" style="text-decoration:none" href="book-gulli-patterns-ch16.html" title="Chapter 16: Resource-Aware">第16章 资源感知优化 Resource-</a>
+        <span class="flow-arrow">→</span>
+<a class="flow-node" style="text-decoration:none" href="book-gulli-patterns-ch18.html" title="Chapter 18: Guardrails/Safety Patterns">第18章 护栏/安全模式 Guardrai</a>
+        <span class="flow-arrow">→</span>
+<a class="flow-node" style="text-decoration:none" href="book-gulli-patterns-ch19.html" title="Chapter 19: Evaluation and Monitoring">第19章 评估与监控 Evaluation</a>
+        <span class="flow-arrow">→</span>
+<a class="flow-node" style="text-decoration:none" href="book-gulli-patterns-ch20.html" title="Chapter 20: Prioritization">第20章 优先级排序 Prioritiza</a>
+        <div class="flow-note">护栏、人在回路、评估监控、资源优化与优先级排序，保障生产可用。 · 点章节点直达本章正文</div>
+      </div>
+<div class="flow">
+        <span class="flow-node accent">前沿与探索</span>
+        <span class="flow-arrow">→</span>
+<a class="flow-node" style="text-decoration:none" href="book-gulli-patterns-ch17.html" title="Chapter 17: Reasoning Techniques">第17章 推理技术 Reasoning T</a>
+        <span class="flow-arrow">→</span>
+<a class="flow-node" style="text-decoration:none" href="book-gulli-patterns-ch21.html" title="Chapter 21: Exploration and Discovery">第21章 探索与发现 Exploratio</a>
+        <span class="flow-arrow">→</span>
+<a class="flow-node" style="text-decoration:none" href="book-gulli-patterns-ch100.html" title="Appendix A: Advanced Prompting">第100章 附录A</a>
+        <span class="flow-arrow">→</span>
+<a class="flow-node" style="text-decoration:none" href="book-gulli-patterns-ch101.html" title="Appendix B - AI Agentic Interactions:: Appendix B">第101章 附录B - AI 智能体交互 A</a>
+        <span class="flow-arrow">→</span>
+<a class="flow-node" style="text-decoration:none" href="book-gulli-patterns-ch102.html" title="Appendix C - Quick overview of Agentic: Appendix C">第102章 智能体框架速览 Appendix</a>
+        <span class="flow-arrow">→</span>
+<a class="flow-node" style="text-decoration:none" href="book-gulli-patterns-ch103.html" title="Appendix D - Building an Agent with: Appendix D">第103章 附录 D</a>
+        <span class="flow-arrow">→</span>
+<a class="flow-node" style="text-decoration:none" href="book-gulli-patterns-ch104.html" title="Appendix E - AI Agents on the CLI: Appendix E">第104章 命令行上的 AI 智能体 AI </a>
+        <span class="flow-arrow">→</span>
+<a class="flow-node" style="text-decoration:none" href="book-gulli-patterns-ch105.html" title="Appendix F - Under the Hood: An Inside">第105章 附录 F - 深入底层</a>
+        <span class="flow-arrow">→</span>
+<a class="flow-node" style="text-decoration:none" href="book-gulli-patterns-ch106.html" title="Appendix G - Coding Agents: Appendix G">第106章 编码智能体 Coding Age</a>
+        <div class="flow-note">推理技术、探索发现与附录，覆盖高级推理、自主科研与工程实践。 · 点章节点直达本章正文</div>
+      </div>
+      <details class="qn" style="margin-top:10px"><summary>展开各章详情(一句话导读 + 前置依赖)</summary>
+        <div style="padding-top:8px">
 <h3 style="margin:18px 0 8px">基础执行模式 <span class="small-note">从单步到多步、从线性到条件与并发，构成智能体执行骨架。</span></h3>
       <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px">
 <div class="card" id="ch-1" style="padding:12px 14px">
         <div class="kicker" style="font-size:11px">第 1 章 · 入门 · 20 块</div>
-        <b>提示链 Prompt Chaining</b> <span class="small-note">Chapter 1: Prompt Chaining</span>
+        <b><a href="book-gulli-patterns-ch1.html">提示链 Prompt Chaining</a></b> <span class="small-note">Chapter 1: Prompt Chaining</span>
         <div class="para" style="margin:4px 0 0">把复杂任务拆成顺序子任务，前一步输出作为后一步输入，提升可靠性与可控性。</div>
-        <div class="small-note"></div>
+        <div class="small-note"> <a class="chip" href="book-gulli-patterns-ch1.html">读本章 →</a></div>
       </div>
 <div class="card" id="ch-2" style="padding:12px 14px">
         <div class="kicker" style="font-size:11px">第 2 章 · 入门 · 19 块</div>
-        <b>路由 Routing</b> <span class="small-note">Chapter 2: Routing</span>
+        <b><a href="book-gulli-patterns-ch2.html">路由 Routing</a></b> <span class="small-note">Chapter 2: Routing</span>
         <div class="para" style="margin:4px 0 0">本章讲如何用条件逻辑让智能体按输入或状态动态选择工具、子流程或子代理。</div>
-        <div class="small-note"> · 前置:第1章</div>
+        <div class="small-note"> · 前置:第1章 <a class="chip" href="book-gulli-patterns-ch2.html">读本章 →</a></div>
       </div>
 <div class="card" id="ch-3" style="padding:12px 14px">
         <div class="kicker" style="font-size:11px">第 3 章 · 入门 · 20 块</div>
-        <b>并行化 Parallelization</b> <span class="small-note">Chapter 3: Parallelization</span>
+        <b><a href="book-gulli-patterns-ch3.html">并行化 Parallelization</a></b> <span class="small-note">Chapter 3: Parallelization</span>
         <div class="para" style="margin:4px 0 0">讲解如何并发执行无依赖的LLM调用、工具与子代理，以缩短任务总耗时。</div>
-        <div class="small-note"> · 前置:第1,2章</div>
+        <div class="small-note"> · 前置:第1,2章 <a class="chip" href="book-gulli-patterns-ch3.html">读本章 →</a></div>
       </div>
       </div>
 <h3 style="margin:18px 0 8px">质量与自适应 <span class="small-note">反思、规划、目标监控与异常恢复，让智能体自我改进并稳定运行。</span></h3>
       <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px">
 <div class="card" id="ch-4" style="padding:12px 14px">
         <div class="kicker" style="font-size:11px">第 4 章 · 入门 · 19 块</div>
-        <b>反思模式 Reflection</b> <span class="small-note">Chapter 4: Reflection</span>
+        <b><a href="book-gulli-patterns-ch4.html">反思模式 Reflection</a></b> <span class="small-note">Chapter 4: Reflection</span>
         <div class="para" style="margin:4px 0 0">让智能体评估自身输出并迭代改进，以提升质量与准确性。</div>
-        <div class="small-note"> · 前置:第1,2,3章</div>
+        <div class="small-note"> · 前置:第1,2,3章 <a class="chip" href="book-gulli-patterns-ch4.html">读本章 →</a></div>
       </div>
 <div class="card" id="ch-6" style="padding:12px 14px">
         <div class="kicker" style="font-size:11px">第 6 章 · 入门 · 16 块</div>
-        <b>规划 Planning</b> <span class="small-note">Chapter 6: Planning</span>
+        <b><a href="book-gulli-patterns-ch6.html">规划 Planning</a></b> <span class="small-note">Chapter 6: Planning</span>
         <div class="para" style="margin:4px 0 0">讲智能体如何把复杂目标拆解为可执行步骤序列，并动态调整计划。</div>
-        <div class="small-note"></div>
+        <div class="small-note"> <a class="chip" href="book-gulli-patterns-ch6.html">读本章 →</a></div>
       </div>
 <div class="card" id="ch-11" style="padding:12px 14px">
         <div class="kicker" style="font-size:11px">第 11 章 · 进阶基础 · 14 块</div>
-        <b>目标设定与监控 Goal Setting and Monitoring</b> <span class="small-note">Chapter 11: Goal Setting and Monitoring</span>
+        <b><a href="book-gulli-patterns-ch11.html">目标设定与监控 Goal Setting and Monitoring</a></b> <span class="small-note">Chapter 11: Goal Setting and Monitoring</span>
         <div class="para" style="margin:4px 0 0">为智能体设定可衡量目标并持续监控进度，使其从被动反应转为主动达成目标。</div>
-        <div class="small-note"> · 前置:第1章</div>
+        <div class="small-note"> · 前置:第1章 <a class="chip" href="book-gulli-patterns-ch11.html">读本章 →</a></div>
       </div>
 <div class="card" id="ch-12" style="padding:12px 14px">
         <div class="kicker" style="font-size:11px">第 12 章 · 进阶基础 · 11 块</div>
-        <b>异常处理与恢复 Exception Handling and Recovery</b> <span class="small-note">Chapter 12: Exception Handling and</span>
+        <b><a href="book-gulli-patterns-ch12.html">异常处理与恢复 Exception Handling and Recovery</a></b> <span class="small-note">Chapter 12: Exception Handling and</span>
         <div class="para" style="margin:4px 0 0">本章讲如何让智能体检测错误、优雅处理并恢复稳定运行，从而在真实环境中保持可靠。</div>
-        <div class="small-note"></div>
+        <div class="small-note"> <a class="chip" href="book-gulli-patterns-ch12.html">读本章 →</a></div>
       </div>
       </div>
 <h3 style="margin:18px 0 8px">外部连接与协作 <span class="small-note">工具、MCP、RAG、A2A与多智能体，扩展智能体能力边界。</span></h3>
       <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px">
 <div class="card" id="ch-5" style="padding:12px 14px">
         <div class="kicker" style="font-size:11px">第 5 章 · 入门 · 27 块</div>
-        <b>工具使用 Tool Use (Function Calling)</b> <span class="small-note">Chapter 5: Tool Use (Function Calling)</span>
+        <b><a href="book-gulli-patterns-ch5.html">工具使用 Tool Use (Function Calling)</a></b> <span class="small-note">Chapter 5: Tool Use (Function Calling)</span>
         <div class="para" style="margin:4px 0 0">讲智能体如何通过函数调用调用外部API、数据库与代码，突破LLM静态知识限制。</div>
-        <div class="small-note"> · 前置:第1章</div>
+        <div class="small-note"> · 前置:第1章 <a class="chip" href="book-gulli-patterns-ch5.html">读本章 →</a></div>
       </div>
 <div class="card" id="ch-7" style="padding:12px 14px">
         <div class="kicker" style="font-size:11px">第 7 章 · 进阶基础 · 22 块</div>
-        <b>多智能体协作 Multi-Agent Collaboration</b> <span class="small-note">Chapter 7: Multi-Agent Collaboration</span>
+        <b><a href="book-gulli-patterns-ch7.html">多智能体协作 Multi-Agent Collaboration</a></b> <span class="small-note">Chapter 7: Multi-Agent Collaboration</span>
         <div class="para" style="margin:4px 0 0">把复杂任务拆给多个专业化智能体，靠通信协议与协作结构协同完成。</div>
-        <div class="small-note"> · 前置:第1章</div>
+        <div class="small-note"> · 前置:第1章 <a class="chip" href="book-gulli-patterns-ch7.html">读本章 →</a></div>
       </div>
 <div class="card" id="ch-10" style="padding:12px 14px">
         <div class="kicker" style="font-size:11px">第 10 章 · 进阶基础 · 22 块</div>
-        <b>模型上下文协议 Model Context Protocol</b> <span class="small-note">Chapter 10: Model Context Protocol</span>
+        <b><a href="book-gulli-patterns-ch10.html">模型上下文协议 Model Context Protocol</a></b> <span class="small-note">Chapter 10: Model Context Protocol</span>
         <div class="para" style="margin:4px 0 0">介绍MCP这一开放标准，用客户端-服务器架构统一LLM与外部工具、数据源的连接方式。</div>
-        <div class="small-note"> · 前置:第1章</div>
+        <div class="small-note"> · 前置:第1章 <a class="chip" href="book-gulli-patterns-ch10.html">读本章 →</a></div>
       </div>
 <div class="card" id="ch-14" style="padding:12px 14px">
         <div class="kicker" style="font-size:11px">第 14 章 · 入门 · 25 块</div>
-        <b>知识检索 Knowledge Retrieval (RAG)</b> <span class="small-note">Chapter 14: Knowledge Retrieval (RAG)</span>
+        <b><a href="book-gulli-patterns-ch14.html">知识检索 Knowledge Retrieval (RAG)</a></b> <span class="small-note">Chapter 14: Knowledge Retrieval (RAG)</span>
         <div class="para" style="margin:4px 0 0">讲RAG如何让LLM接入外部实时与私有数据，并介绍GraphRAG与Agentic RAG。</div>
-        <div class="small-note"></div>
+        <div class="small-note"> <a class="chip" href="book-gulli-patterns-ch14.html">读本章 →</a></div>
       </div>
 <div class="card" id="ch-15" style="padding:12px 14px">
         <div class="kicker" style="font-size:11px">第 15 章 · 进阶基础 · 18 块</div>
-        <b>智能体间通信 Inter-Agent Communication (A2A)</b> <span class="small-note">Chapter 15: Inter-Agent Communication</span>
+        <b><a href="book-gulli-patterns-ch15.html">智能体间通信 Inter-Agent Communication (A2A)</a></b> <span class="small-note">Chapter 15: Inter-Agent Communication</span>
         <div class="para" style="margin:4px 0 0">介绍Google A2A开放协议，让不同框架构建的智能体互相发现、委派任务并协作。</div>
-        <div class="small-note"></div>
+        <div class="small-note"> <a class="chip" href="book-gulli-patterns-ch15.html">读本章 →</a></div>
       </div>
       </div>
 <h3 style="margin:18px 0 8px">记忆与学习 <span class="small-note">管理上下文与持久知识，并从经验中持续适应。</span></h3>
       <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px">
 <div class="card" id="ch-8" style="padding:12px 14px">
         <div class="kicker" style="font-size:11px">第 8 章 · 进阶基础 · 29 块</div>
-        <b>记忆管理 Memory Management</b> <span class="small-note">Chapter 8: Memory Management</span>
+        <b><a href="book-gulli-patterns-ch8.html">记忆管理 Memory Management</a></b> <span class="small-note">Chapter 8: Memory Management</span>
         <div class="para" style="margin:4px 0 0">讲智能体如何用短期上下文与长期持久存储管理记忆，并给出ADK与LangChain实现。</div>
-        <div class="small-note"></div>
+        <div class="small-note"> <a class="chip" href="book-gulli-patterns-ch8.html">读本章 →</a></div>
       </div>
 <div class="card" id="ch-9" style="padding:12px 14px">
         <div class="kicker" style="font-size:11px">第 9 章 · 进阶基础 · 18 块</div>
-        <b>学习与适应 Learning and Adaptation</b> <span class="small-note">Chapter 9: Learning and Adaptation</span>
+        <b><a href="book-gulli-patterns-ch9.html">学习与适应 Learning and Adaptation</a></b> <span class="small-note">Chapter 9: Learning and Adaptation</span>
         <div class="para" style="margin:4px 0 0">讲智能体如何通过经验与数据自主学习、持续适应动态环境。</div>
-        <div class="small-note"></div>
+        <div class="small-note"> <a class="chip" href="book-gulli-patterns-ch9.html">读本章 →</a></div>
       </div>
       </div>
 <h3 style="margin:18px 0 8px">安全、评估与优化 <span class="small-note">护栏、人在回路、评估监控、资源优化与优先级排序，保障生产可用。</span></h3>
       <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px">
 <div class="card" id="ch-13" style="padding:12px 14px">
         <div class="kicker" style="font-size:11px">第 13 章 · 入门 · 14 块</div>
-        <b>人在回路 Human-in-the-Loop</b> <span class="small-note">Chapter 13: Human-in-the-Loop</span>
+        <b><a href="book-gulli-patterns-ch13.html">人在回路 Human-in-the-Loop</a></b> <span class="small-note">Chapter 13: Human-in-the-Loop</span>
         <div class="para" style="margin:4px 0 0">讲如何把人类判断、监督与反馈嵌入智能体工作流，以应对高风险与模糊场景。</div>
-        <div class="small-note"></div>
+        <div class="small-note"> <a class="chip" href="book-gulli-patterns-ch13.html">读本章 →</a></div>
       </div>
 <div class="card" id="ch-16" style="padding:12px 14px">
         <div class="kicker" style="font-size:11px">第 16 章 · 进阶基础 · 19 块</div>
-        <b>资源感知优化 Resource-Aware Optimization</b> <span class="small-note">Chapter 16: Resource-Aware</span>
+        <b><a href="book-gulli-patterns-ch16.html">资源感知优化 Resource-Aware Optimization</a></b> <span class="small-note">Chapter 16: Resource-Aware</span>
         <div class="para" style="margin:4px 0 0">讲智能体如何在预算、延迟与算力约束下动态分配模型与工具资源。</div>
-        <div class="small-note"> · 前置:第1章</div>
+        <div class="small-note"> · 前置:第1章 <a class="chip" href="book-gulli-patterns-ch16.html">读本章 →</a></div>
       </div>
 <div class="card" id="ch-18" style="padding:12px 14px">
         <div class="kicker" style="font-size:11px">第 18 章 · 进阶基础 · 30 块</div>
-        <b>护栏/安全模式 Guardrails/Safety Patterns</b> <span class="small-note">Chapter 18: Guardrails/Safety Patterns</span>
+        <b><a href="book-gulli-patterns-ch18.html">护栏/安全模式 Guardrails/Safety Patterns</a></b> <span class="small-note">Chapter 18: Guardrails/Safety Patterns</span>
         <div class="para" style="margin:4px 0 0">讲如何用多层护栏让智能体安全、合规、可信地运行。</div>
-        <div class="small-note"></div>
+        <div class="small-note"> <a class="chip" href="book-gulli-patterns-ch18.html">读本章 →</a></div>
       </div>
 <div class="card" id="ch-19" style="padding:12px 14px">
         <div class="kicker" style="font-size:11px">第 19 章 · 进阶基础 · 26 块</div>
-        <b>评估与监控 Evaluation and Monitoring</b> <span class="small-note">Chapter 19: Evaluation and Monitoring</span>
+        <b><a href="book-gulli-patterns-ch19.html">评估与监控 Evaluation and Monitoring</a></b> <span class="small-note">Chapter 19: Evaluation and Monitoring</span>
         <div class="para" style="margin:4px 0 0">讲如何系统度量智能体的效果、效率与合规性，并建立反馈闭环持续监控。</div>
-        <div class="small-note"> · 前置:第11,17章</div>
+        <div class="small-note"> · 前置:第11,17章 <a class="chip" href="book-gulli-patterns-ch19.html">读本章 →</a></div>
       </div>
 <div class="card" id="ch-20" style="padding:12px 14px">
         <div class="kicker" style="font-size:11px">第 20 章 · 入门 · 14 块</div>
-        <b>优先级排序 Prioritization</b> <span class="small-note">Chapter 20: Prioritization</span>
+        <b><a href="book-gulli-patterns-ch20.html">优先级排序 Prioritization</a></b> <span class="small-note">Chapter 20: Prioritization</span>
         <div class="para" style="margin:4px 0 0">讲智能体如何在多任务、资源受限时按紧迫性、重要性与依赖关系排序并动态调整。</div>
-        <div class="small-note"></div>
+        <div class="small-note"> <a class="chip" href="book-gulli-patterns-ch20.html">读本章 →</a></div>
       </div>
       </div>
 <h3 style="margin:18px 0 8px">前沿与探索 <span class="small-note">推理技术、探索发现与附录，覆盖高级推理、自主科研与工程实践。</span></h3>
       <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px">
 <div class="card" id="ch-17" style="padding:12px 14px">
         <div class="kicker" style="font-size:11px">第 17 章 · 进阶基础 · 37 块</div>
-        <b>推理技术 Reasoning Techniques</b> <span class="small-note">Chapter 17: Reasoning Techniques</span>
+        <b><a href="book-gulli-patterns-ch17.html">推理技术 Reasoning Techniques</a></b> <span class="small-note">Chapter 17: Reasoning Techniques</span>
         <div class="para" style="margin:4px 0 0">系统讲解智能体多步推理方法及推理时计算资源扩展原则。</div>
-        <div class="small-note"> · 前置:第4章</div>
+        <div class="small-note"> · 前置:第4章 <a class="chip" href="book-gulli-patterns-ch17.html">读本章 →</a></div>
       </div>
 <div class="card" id="ch-21" style="padding:12px 14px">
         <div class="kicker" style="font-size:11px">第 21 章 · 进阶基础 · 20 块</div>
-        <b>探索与发现 Exploration and Discovery</b> <span class="small-note">Chapter 21: Exploration and Discovery</span>
+        <b><a href="book-gulli-patterns-ch21.html">探索与发现 Exploration and Discovery</a></b> <span class="small-note">Chapter 21: Exploration and Discovery</span>
         <div class="para" style="margin:4px 0 0">让智能体主动探索未知、生成新假设，而非只在预设空间内优化。</div>
-        <div class="small-note"></div>
+        <div class="small-note"> <a class="chip" href="book-gulli-patterns-ch21.html">读本章 →</a></div>
       </div>
 <div class="card" id="ch-100" style="padding:12px 14px">
         <div class="kicker" style="font-size:11px">附录 · 入门 · 46 块</div>
-        <b>附录A：高级提示技术 Advanced Prompting</b> <span class="small-note">Appendix A: Advanced Prompting</span>
+        <b><a href="book-gulli-patterns-ch100.html">附录A：高级提示技术 Advanced Prompting</a></b> <span class="small-note">Appendix A: Advanced Prompting</span>
         <div class="para" style="margin:4px 0 0">系统讲解从基础到进阶的提示工程技术，把提示重构为构建可靠智能体的工程实践。</div>
-        <div class="small-note"></div>
+        <div class="small-note"> <a class="chip" href="book-gulli-patterns-ch100.html">读本章 →</a></div>
       </div>
 <div class="card" id="ch-101" style="padding:12px 14px">
         <div class="kicker" style="font-size:11px">附录 · 入门 · 12 块</div>
-        <b>附录B - AI 智能体交互 AI Agentic Interactions：从 GUI 到真实世界</b> <span class="small-note">Appendix B - AI Agentic Interactions:: Appendix B</span>
+        <b><a href="book-gulli-patterns-ch101.html">附录B - AI 智能体交互 AI Agentic Interactions：从 GUI 到真实世界</a></b> <span class="small-note">Appendix B - AI Agentic Interactions:: Appendix B</span>
         <div class="para" style="margin:4px 0 0">综述智能体如何通过视觉操控GUI、感知物理环境并与开发者对话式编程。</div>
-        <div class="small-note"></div>
+        <div class="small-note"> <a class="chip" href="book-gulli-patterns-ch101.html">读本章 →</a></div>
       </div>
 <div class="card" id="ch-102" style="padding:12px 14px">
         <div class="kicker" style="font-size:11px">附录 · 入门 · 11 块</div>
-        <b>智能体框架速览 Appendix C: Agentic Frameworks Overview</b> <span class="small-note">Appendix C - Quick overview of Agentic: Appendix C</span>
+        <b><a href="book-gulli-patterns-ch102.html">智能体框架速览 Appendix C: Agentic Frameworks Overview</a></b> <span class="small-note">Appendix C - Quick overview of Agentic: Appendix C</span>
         <div class="para" style="margin:4px 0 0">横向对比LangChain、LangGraph、ADK、CrewAI等框架的抽象层级与选型依据。</div>
-        <div class="small-note"></div>
+        <div class="small-note"> <a class="chip" href="book-gulli-patterns-ch102.html">读本章 →</a></div>
       </div>
 <div class="card" id="ch-103" style="padding:12px 14px">
         <div class="kicker" style="font-size:11px">附录 · 入门 · 4 块</div>
-        <b>附录 D：用 AgentSpace 构建智能体</b> <span class="small-note">Appendix D - Building an Agent with: Appendix D</span>
+        <b><a href="book-gulli-patterns-ch103.html">附录 D：用 AgentSpace 构建智能体</a></b> <span class="small-note">Appendix D - Building an Agent with: Appendix D</span>
         <div class="para" style="margin:4px 0 0">介绍用 AgentSpace 平台无代码构建企业级 AI 智能体，涵盖知识图谱与多智能体协作。</div>
-        <div class="small-note"></div>
+        <div class="small-note"> <a class="chip" href="book-gulli-patterns-ch103.html">读本章 →</a></div>
       </div>
 <div class="card" id="ch-104" style="padding:12px 14px">
         <div class="kicker" style="font-size:11px">附录 · 入门 · 9 块</div>
-        <b>命令行上的 AI 智能体 AI Agents on the CLI</b> <span class="small-note">Appendix E - AI Agents on the CLI: Appendix E</span>
+        <b><a href="book-gulli-patterns-ch104.html">命令行上的 AI 智能体 AI Agents on the CLI</a></b> <span class="small-note">Appendix E - AI Agents on the CLI: Appendix E</span>
         <div class="para" style="margin:4px 0 0">对比 Claude、Gemini、Aider、Copilot 四款 CLI 智能体的定位与选型。</div>
-        <div class="small-note"></div>
+        <div class="small-note"> <a class="chip" href="book-gulli-patterns-ch104.html">读本章 →</a></div>
       </div>
 <div class="card" id="ch-105" style="padding:12px 14px">
         <div class="kicker" style="font-size:11px">附录 · 进阶基础 · 20 块</div>
-        <b>附录 F - 深入底层：智能体推理引擎内部机制</b> <span class="small-note">Appendix F - Under the Hood: An Inside</span>
+        <b><a href="book-gulli-patterns-ch105.html">附录 F - 深入底层：智能体推理引擎内部机制</a></b> <span class="small-note">Appendix F - Under the Hood: An Inside</span>
         <div class="para" style="margin:4px 0 0">通过让六大LLM自述推理步骤，揭示智能体核心推理引擎的共性机制。</div>
-        <div class="small-note"></div>
+        <div class="small-note"> <a class="chip" href="book-gulli-patterns-ch105.html">读本章 →</a></div>
       </div>
 <div class="card" id="ch-106" style="padding:12px 14px">
         <div class="kicker" style="font-size:11px">附录 · 进阶基础 · 47 块</div>
-        <b>编码智能体 Coding Agents</b> <span class="small-note">Appendix G - Coding Agents: Appendix G</span>
+        <b><a href="book-gulli-patterns-ch106.html">编码智能体 Coding Agents</a></b> <span class="small-note">Appendix G - Coding Agents: Appendix G</span>
         <div class="para" style="margin:4px 0 0">以人类主导编排、上下文优先、直连前沿模型为原则，组织专家编码智能体团队协作开发</div>
-        <div class="small-note"> · 前置:第4,7章</div>
+        <div class="small-note"> · 前置:第4,7章 <a class="chip" href="book-gulli-patterns-ch106.html">读本章 →</a></div>
       </div>
       </div>
+        </div>
+      </details>
 
       <h2>怎么读(三条路径)</h2>
       <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px">
 <div class="card " style="padding:14px 16px">
         <div class="kicker" style="font-size:11px">快读路径 · 拿核心就走 · 约 90 分钟</div>
         <div class="para">先读提示链打基础，再读反思与工具使用掌握质量与外部能力，最后读多智能体协作理解任务分解与协同，90分钟拿到核心模式。</div>
-        <div style="margin-top:8px"><a class="chip" href="#ch-1">第1章</a> <a class="chip" href="#ch-4">第4章</a> <a class="chip" href="#ch-5">第5章</a> <a class="chip" href="#ch-7">第7章</a></div>
+        <div style="margin-top:8px"><a class="chip" href="book-gulli-patterns-ch1.html">第1章</a> <a class="chip" href="book-gulli-patterns-ch4.html">第4章</a> <a class="chip" href="book-gulli-patterns-ch5.html">第5章</a> <a class="chip" href="book-gulli-patterns-ch7.html">第7章</a></div>
       </div>
 <div class="card " style="padding:14px 16px">
         <div class="kicker" style="font-size:11px">精读路径 · 顺序全读 · 约 720 分钟</div>
         <div class="para">按章顺序精读全部正章与附录，系统掌握21个模式及工程落地细节。</div>
-        <div style="margin-top:8px"><a class="chip" href="#ch-1">第1章</a> <a class="chip" href="#ch-2">第2章</a> <a class="chip" href="#ch-3">第3章</a> <a class="chip" href="#ch-4">第4章</a> <a class="chip" href="#ch-5">第5章</a> <a class="chip" href="#ch-6">第6章</a> <a class="chip" href="#ch-7">第7章</a> <a class="chip" href="#ch-8">第8章</a> <a class="chip" href="#ch-9">第9章</a> <a class="chip" href="#ch-10">第10章</a> <a class="chip" href="#ch-11">第11章</a> <a class="chip" href="#ch-12">第12章</a> <a class="chip" href="#ch-13">第13章</a> <a class="chip" href="#ch-14">第14章</a> <a class="chip" href="#ch-15">第15章</a> <a class="chip" href="#ch-16">第16章</a> <a class="chip" href="#ch-17">第17章</a> <a class="chip" href="#ch-18">第18章</a> <a class="chip" href="#ch-19">第19章</a> <a class="chip" href="#ch-20">第20章</a> <a class="chip" href="#ch-21">第21章</a> <a class="chip" href="#ch-100">第100章</a> <a class="chip" href="#ch-101">第101章</a> <a class="chip" href="#ch-102">第102章</a> <a class="chip" href="#ch-103">第103章</a> <a class="chip" href="#ch-104">第104章</a> <a class="chip" href="#ch-105">第105章</a> <a class="chip" href="#ch-106">第106章</a></div>
+        <div style="margin-top:8px"><a class="chip" href="book-gulli-patterns-ch1.html">第1章</a> <a class="chip" href="book-gulli-patterns-ch2.html">第2章</a> <a class="chip" href="book-gulli-patterns-ch3.html">第3章</a> <a class="chip" href="book-gulli-patterns-ch4.html">第4章</a> <a class="chip" href="book-gulli-patterns-ch5.html">第5章</a> <a class="chip" href="book-gulli-patterns-ch6.html">第6章</a> <a class="chip" href="book-gulli-patterns-ch7.html">第7章</a> <a class="chip" href="book-gulli-patterns-ch8.html">第8章</a> <a class="chip" href="book-gulli-patterns-ch9.html">第9章</a> <a class="chip" href="book-gulli-patterns-ch10.html">第10章</a> <a class="chip" href="book-gulli-patterns-ch11.html">第11章</a> <a class="chip" href="book-gulli-patterns-ch12.html">第12章</a> <a class="chip" href="book-gulli-patterns-ch13.html">第13章</a> <a class="chip" href="book-gulli-patterns-ch14.html">第14章</a> <a class="chip" href="book-gulli-patterns-ch15.html">第15章</a> <a class="chip" href="book-gulli-patterns-ch16.html">第16章</a> <a class="chip" href="book-gulli-patterns-ch17.html">第17章</a> <a class="chip" href="book-gulli-patterns-ch18.html">第18章</a> <a class="chip" href="book-gulli-patterns-ch19.html">第19章</a> <a class="chip" href="book-gulli-patterns-ch20.html">第20章</a> <a class="chip" href="book-gulli-patterns-ch21.html">第21章</a> <a class="chip" href="book-gulli-patterns-ch100.html">第100章</a> <a class="chip" href="book-gulli-patterns-ch101.html">第101章</a> <a class="chip" href="book-gulli-patterns-ch102.html">第102章</a> <a class="chip" href="book-gulli-patterns-ch103.html">第103章</a> <a class="chip" href="book-gulli-patterns-ch104.html">第104章</a> <a class="chip" href="book-gulli-patterns-ch105.html">第105章</a> <a class="chip" href="book-gulli-patterns-ch106.html">第106章</a></div>
       </div>
       </div>
       <h3 style="margin:18px 0 8px">问题驱动路径(带着问题直接进)</h3>
@@ -278,17 +363,17 @@
 <div class="card" style="padding:12px 14px">
         <b>「如何让智能体调用外部API和数据库？」</b>
         <div class="para" style="margin:4px 0 0">第5章工具调用、第10章MCP标准化、第14章RAG检索外部知识。</div>
-        <div style="margin-top:8px"><a class="chip" href="#ch-5">第5章</a> <a class="chip" href="#ch-10">第10章</a> <a class="chip" href="#ch-14">第14章</a></div>
+        <div style="margin-top:8px"><a class="chip" href="book-gulli-patterns-ch5.html">第5章</a> <a class="chip" href="book-gulli-patterns-ch10.html">第10章</a> <a class="chip" href="book-gulli-patterns-ch14.html">第14章</a></div>
       </div>
 <div class="card" style="padding:12px 14px">
         <b>「如何保证智能体输出质量与安全？」</b>
         <div class="para" style="margin:4px 0 0">第4章反思迭代、第13章人在回路、第18章护栏、第19章评估监控。</div>
-        <div style="margin-top:8px"><a class="chip" href="#ch-4">第4章</a> <a class="chip" href="#ch-13">第13章</a> <a class="chip" href="#ch-18">第18章</a> <a class="chip" href="#ch-19">第19章</a></div>
+        <div style="margin-top:8px"><a class="chip" href="book-gulli-patterns-ch4.html">第4章</a> <a class="chip" href="book-gulli-patterns-ch13.html">第13章</a> <a class="chip" href="book-gulli-patterns-ch18.html">第18章</a> <a class="chip" href="book-gulli-patterns-ch19.html">第19章</a></div>
       </div>
 <div class="card" style="padding:12px 14px">
         <b>「如何设计多智能体协作系统？」</b>
         <div class="para" style="margin:4px 0 0">第7章协作结构、第15章A2A通信协议、第8章记忆管理。</div>
-        <div style="margin-top:8px"><a class="chip" href="#ch-7">第7章</a> <a class="chip" href="#ch-15">第15章</a> <a class="chip" href="#ch-8">第8章</a></div>
+        <div style="margin-top:8px"><a class="chip" href="book-gulli-patterns-ch7.html">第7章</a> <a class="chip" href="book-gulli-patterns-ch15.html">第15章</a> <a class="chip" href="book-gulli-patterns-ch8.html">第8章</a></div>
       </div>
       </div>
 
@@ -296,73 +381,73 @@
 <details class="qn"><summary>第1章 · 划线句(已逐字校验)</summary>
         <div class="qn-body">
         <div class="qn-en">"Rather than expecting an LLM to solve a complex problem in a single, monolithic step, prompt chaining advocates for a divide-and-conquer strategy."</div>
-        <div class="qn-zh"><b>为什么值得划线(机器观点,待审):</b>点明本章核心：用分治替代单次大提示</div>
+        <div class="qn-zh"><b>为什么值得划线:</b>点明本章核心：用分治替代单次大提示</div>
         </div>
       </details>
 <details class="qn"><summary>第2章 · 划线句(已逐字校验)</summary>
         <div class="qn-body">
         <div class="qn-en">"Routing introduces conditional logic into an agent's operational framework, enabling a shift from a fixed execution path to a model where the agent dynamically evaluates specific criteria to select from a set of possible subsequent actions."</div>
-        <div class="qn-zh"><b>为什么值得划线(机器观点,待审):</b>点明路由本质：用条件逻辑替代固定执行路径</div>
+        <div class="qn-zh"><b>为什么值得划线:</b>点明路由本质：用条件逻辑替代固定执行路径</div>
         </div>
       </details>
 <details class="qn"><summary>第3章 · 划线句(已逐字校验)</summary>
         <div class="qn-body">
         <div class="qn-en">"The core idea is to identify parts of the workflow that do not depend on the output of other parts and execute them in parallel."</div>
-        <div class="qn-zh"><b>为什么值得划线(机器观点,待审):</b>点明并行化的判断标准：无依赖即可并发</div>
+        <div class="qn-zh"><b>为什么值得划线:</b>点明并行化的判断标准：无依赖即可并发</div>
         </div>
       </details>
 <details class="qn"><summary>第4章 · 划线句(已逐字校验)</summary>
         <div class="qn-body">
         <div class="qn-en">"The Reflection pattern involves an agent evaluating its own work, output, or internal state and using that evaluation to improve its performance or refine its response."</div>
-        <div class="qn-zh"><b>为什么值得划线(机器观点,待审):</b>定义反思模式的核心机制</div>
+        <div class="qn-zh"><b>为什么值得划线:</b>定义反思模式的核心机制</div>
         </div>
       </details>
 <details class="qn"><summary>第5章 · 划线句(已逐字校验)</summary>
         <div class="qn-body">
         <div class="qn-en">"Tool Use is what transforms a language model from a text generator into an agent capable of sensing, reasoning, and acting in the digital or physical world"</div>
-        <div class="qn-zh"><b>为什么值得划线(机器观点,待审):</b>一句话定义工具使用对智能体的意义</div>
+        <div class="qn-zh"><b>为什么值得划线:</b>一句话定义工具使用对智能体的意义</div>
         </div>
       </details>
 <details class="qn"><summary>第6章 · 划线句(已逐字校验)</summary>
         <div class="qn-body">
         <div class="qn-en">"At its core, planning is the ability for an agent or a system of agents to formulate a sequence of actions to move from an initial state towards a goal state."</div>
-        <div class="qn-zh"><b>为什么值得划线(机器观点,待审):</b>定义规划的核心，全章立论基础</div>
+        <div class="qn-zh"><b>为什么值得划线:</b>定义规划的核心，全章立论基础</div>
         </div>
       </details>
 <details class="qn"><summary>第7章 · 划线句(已逐字校验)</summary>
         <div class="qn-body">
         <div class="qn-en">"This approach is predicated on the principle of task decomposition, where a high-level objective is broken down into discrete sub-problems."</div>
-        <div class="qn-zh"><b>为什么值得划线(机器观点,待审):</b>点明多智能体协作的根基是任务分解</div>
+        <div class="qn-zh"><b>为什么值得划线:</b>点明多智能体协作的根基是任务分解</div>
         </div>
       </details>
 <details class="qn"><summary>第8章 · 划线句(已逐字校验)</summary>
         <div class="qn-body">
         <div class="qn-en">"The standardized solution is to implement a dual-component memory system that distinguishes between short-term and long-term storage."</div>
-        <div class="qn-zh"><b>为什么值得划线(机器观点,待审):</b>概括本章核心方案：双组件记忆系统</div>
+        <div class="qn-zh"><b>为什么值得划线:</b>概括本章核心方案：双组件记忆系统</div>
         </div>
       </details>
 <details class="qn"><summary>第10章 · 划线句(已逐字校验)</summary>
         <div class="qn-body">
         <div class="qn-en">"Imagine a universal adapter that allows any LLM to plug into any external system, database, or tool without a custom integration for each one."</div>
-        <div class="qn-zh"><b>为什么值得划线(机器观点,待审):</b>用万能适配器比喻，一句话点明MCP的核心价值。</div>
+        <div class="qn-zh"><b>为什么值得划线:</b>用万能适配器比喻，一句话点明MCP的核心价值。</div>
         </div>
       </details>
 <details class="qn"><summary>第14章 · 划线句(已逐字校验)</summary>
         <div class="qn-body">
         <div class="qn-en">"This process effectively transforms the LLM from a closed-book reasoner into an open-book one, significantly enhancing its utility and trustworthiness."</div>
-        <div class="qn-zh"><b>为什么值得划线(机器观点,待审):</b>一句话点明RAG的本质：从闭卷到开卷</div>
+        <div class="qn-zh"><b>为什么值得划线:</b>一句话点明RAG的本质：从闭卷到开卷</div>
         </div>
       </details>
 <details class="qn"><summary>第18章 · 划线句(已逐字校验)</summary>
         <div class="qn-body">
         <div class="qn-en">"The primary aim of guardrails is not to restrict an agent's capabilities but to ensure its operation is robust, trustworthy, and beneficial."</div>
-        <div class="qn-zh"><b>为什么值得划线(机器观点,待审):</b>点明护栏的本质是引导而非限制，纠正误解。</div>
+        <div class="qn-zh"><b>为什么值得划线:</b>点明护栏的本质是引导而非限制，纠正误解。</div>
         </div>
       </details>
 <details class="qn"><summary>第19章 · 划线句(已逐字校验)</summary>
         <div class="qn-body">
         <div class="qn-en">"Evaluating agents' trajectories is essential, as traditional software tests are insufficient."</div>
-        <div class="qn-zh"><b>为什么值得划线(机器观点,待审):</b>点明智能体评估与传统测试的根本差异</div>
+        <div class="qn-zh"><b>为什么值得划线:</b>点明智能体评估与传统测试的根本差异</div>
         </div>
       </details>
 
@@ -384,12 +469,12 @@
         </p>
       </div>
 
-      <p class="small-note" style="margin-top:24px">生成:2026-10-25 · 模型 deepseek-v4-flash · 分章摘要 28 章(失败 0) · 金句校验通过 82/丢弃 2</p>
+      <p class="small-note" style="margin-top:24px">生成:2026-10-26 · 模型 deepseek-v4-flash · 分章摘要 28 章(失败 0) · 金句校验通过 82/丢弃 0</p>
 
     </div>
   </main>
 </div>
 
-<script src="assets/js/app.js?v=24"></script>
+<script src="assets/js/app.js?v=28"></script>
 </body>
 </html>

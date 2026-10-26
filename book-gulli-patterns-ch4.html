@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Agentic Design Patterns 第 4 章 反思模式 Reflection 中英对照翻译。">
+<title>第 4 章 · 反思模式 Reflection | Agentic Design Patterns | Agent 学院</title>
+<link rel="stylesheet" href="assets/css/style.css?v=24">
+</head>
+<body data-chapter="books">
+
+<header class="topbar">
+  <button class="icon-btn hamburger" id="hamburger" title="打开导航">☰</button>
+  <a class="brand" href="index.html"><span class="logo">学</span> Agent 学院 <small>从零开发智能体 · Ontology · Harness</small></a>
+  <span class="spacer"></span>
+  <span class="progress-pill" id="progress-pill">读书</span>
+  <button class="icon-btn" id="theme-btn">🌙</button>
+</header>
+
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <main class="content">
+    <div class="content-inner">
+
+      <header class="chapter-head">
+        <div class="kicker">读书 · Agentic Design Patterns · 中英对照</div>
+        <h1>第 4 章 · 反思模式 Reflection</h1>
+        <p class="lead">
+          Chapter 4: Reflection · 《Agentic Design Patterns》 · Antonio Gulli · 2025
+          <br>让智能体评估自身输出并迭代改进，以提升质量与准确性。
+          <br><a class="chip" href="book-gulli-patterns.html">← 返回导读</a> <a class="chip" href="papers/pdf/gulli-agentic-design-patterns.pdf">原书 PDF</a> <a class="chip" href="book-gulli-patterns-ch3.html">上一章:第3章</a> <a class="chip" href="book-gulli-patterns-ch5.html">下一章:第5章</a>
+        </p>
+      </header>
+
+      <div class="callout key"><div class="co-title">本章要点</div><p>① 反思引入反馈回路：执行、评估、改进、迭代  ① 生产者-批评者分离角色可避免自我审查的认知偏差  ① 适用于高质量要求的写作、代码、规划等场景  ① 代价是更高延迟、成本与上下文膨胀</p></div>
+<h2>本章划线句</h2>
+<details class="qn"><summary>本章划线句(逐字校验)</summary>
+        <div class="qn-body">
+        <div class="qn-en">"The Reflection pattern involves an agent evaluating its own work, output, or internal state and using that evaluation to improve its performance or refine its response."</div>
+        <div class="qn-zh"><b>为什么值得划线:</b>定义反思模式的核心机制</div>
+        </div>
+      </details>
+<details class="qn"><summary>本章划线句(逐字校验)</summary>
+        <div class="qn-body">
+        <div class="qn-en">"This separation of concerns is powerful because it prevents the "cognitive bias" of an agent reviewing its own work."</div>
+        <div class="qn-zh"><b>为什么值得划线:</b>解释为何用独立批评者更客观</div>
+        </div>
+      </details>
+<details class="qn"><summary>本章划线句(逐字校验)</summary>
+        <div class="qn-body">
+        <div class="qn-en">"Use the Reflection pattern when the quality, accuracy, and detail of the final output are more important than speed and cost."</div>
+        <div class="qn-zh"><b>为什么值得划线:</b>给出何时使用的判断准则</div>
+        </div>
+      </details>
+<h2>正文(英中对照)</h2>
+<div class="seg">
+        <div class="seg-en">"Chapter 4: Reflection Reflection Pattern Overview
+In the preceding chapters, we've explored fundamental agentic patterns: Chaining for sequential execution, Routing for dynamic path selection, and Parallelization for concurrent task execution. These patterns enable agents to perform complex tasks more efficiently and flexibly. However, even with sophisticated workflows, an agent's initial output or plan might not be optimal, accurate, or complete. This is where the Reflection pattern comes into play.
+The Reflection pattern involves an agent evaluating its own work, output, or internal state and using that evaluation to improve its performance or refine its response. It's a form of self-correction or self-improvement, allowing the agent to iteratively refine its output or adjust its approach based on feedback, internal critique, or comparison against desired criteria. Reflection can occasionally be facilitated by a separate agent whose specific role is to analyze the output of an initial agent."</div>
+        <div class="seg-zh">第4章：Reflection（反思）模式概述
+在前几章中，我们探讨了基本的智能体模式：用于顺序执行的 Chaining（链式调用）、用于动态路径选择的 Routing（路由），以及用于并发任务执行的 Parallelization（并行化）。这些模式使智能体能够更高效、更灵活地执行复杂任务。然而，即使拥有精密的工作流，智能体的初始输出或计划也可能并非最优、准确或完整。这正是 Reflection 模式发挥作用之处。
+Reflection 模式涉及智能体评估自身的工作、输出或内部状态，并利用该评估来改进其性能或优化其响应。它是一种自我纠正或自我改进的形式，使智能体能够基于反馈、内部批评或与期望标准的比较，迭代地优化其输出或调整其方法。Reflection 有时可由一个独立的智能体来辅助完成，该智能体的特定角色是分析初始智能体的输出。</div>
+        <div class="seg-note"><b>导读注:</b>Reflection 让智能体自我评估并迭代改进，是自我纠错的关键模式。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"Unlike a simple sequential chain where output is passed directly to the next step, or routing which chooses a path, reflection introduces a feedback loop. The agent doesn't just produce an output; it then examines that output (or the process that generated it), identifies potential issues or areas for improvement, and uses those insights to generate a better version or modify its future actions.
+1. Execution: The agent performs a task or generates an initial output. 2. Evaluation/Critique: The agent (often using another LLM call or a set of rules) analyzes the result from the previous step. This evaluation might check for factual accuracy, coherence, style, completeness, adherence to instructions, or other relevant criteria. 3. Reflection/Refinement: Based on the critique, the agent determines how to improve. This might involve generating a refined output, adjusting parameters for a subsequent step, or even modifying the overall plan. 4. Iteration (Optional but common): The refined output or adjusted approach can then be executed, and the reflection process can repeat until a satisfactory result is achieved or a stopping condition is met."</div>
+        <div class="seg-zh">与简单的顺序链（输出直接传递到下一步）或选择路径的路由不同，Reflection 引入了反馈循环。Agent 不仅生成输出，还会检查该输出（或生成它的过程），识别潜在问题或可改进之处，并利用这些洞察生成更好的版本或调整其未来的行动。1. 执行（Execution）：Agent 执行任务或生成初始输出。2. 评估/批判（Evaluation/Critique）：Agent（通常借助另一次 LLM 调用或一组规则）分析上一步的结果。该评估可能检查事实准确性、连贯性、风格、完整性、对指令的遵循情况或其他相关标准。3. 反思/精炼（Reflection/Refinement）：基于批判，Agent 确定如何改进。这可能涉及生成精炼后的输出、为后续步骤调整参数，甚至修改整体计划。4. 迭代（Iteration，可选但常见）：随后可执行精炼后的输出或调整后的方法，并重复反思过程，直到获得满意结果或满足停止条件。</div>
+        <div class="seg-note"><b>导读注:</b>核心在于<b>反馈循环</b>：Agent 先产出再自我批判，据此迭代改进。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"A key and highly effective implementation of the Reflection pattern separates the process into two distinct logical roles: a Producer and a Critic. This is often called the "Generator-Critic" or "Producer-Reviewer" model. While a single agent can perform self-reflection, using two specialized agents (or two separate LLM calls with distinct system prompts) often yields more robust and unbiased results.
+1. The Producer Agent: This agent's primary responsibility is to perform the initial execution of the task. It focuses entirely on generating the content, whether it's writing code, drafting a blog post, or creating a plan. It takes the initial prompt and produces the first version of the output.
+2. The Critic Agent: This agent's sole purpose is to evaluate the output generated by the Producer. It is given a different set of instructions, often a distinct persona (e.g., "You are a senior software engineer," "You are a meticulous fact-checker"). The Critic's instructions guide it to analyze the Producer's work against specific criteria, such as factual accuracy, code quality, stylistic requirements, or completeness. It is designed to find flaws, suggest improvements, and provide structured feedback."</div>
+        <div class="seg-zh">Reflection 模式的一个关键且高效的实现方式是将过程分离为两个不同的逻辑角色：Producer（生产者）和 Critic（批评者）。这通常被称为“Generator-Critic”（生成者-批评者）或“Producer-Reviewer”（生产者-审查者）模型。虽然单个 agent 可以执行自我反思，但使用两个专门的 agent（或两次使用不同 system prompt 的独立 LLM 调用）通常能产生更稳健、更无偏见的结果。
+1. Producer Agent：该 agent 的主要职责是执行任务的初始工作。它完全专注于生成内容，无论是编写代码、起草博客文章还是创建计划。它接收初始 prompt 并产出第一版输出。
+2. Critic Agent：该 agent 的唯一目的是评估 Producer 生成的输出。它被赋予不同的指令集，通常是一个独特的人设（例如“你是一名资深软件工程师”“你是一名一丝不苟的事实核查员”）。Critic 的指令引导它依据特定标准分析 Producer 的工作，例如事实准确性、代码质量、风格要求或完整性。它被设计用于发现缺陷、提出改进建议并提供结构化反馈。</div>
+        <div class="seg-note"><b>导读注:</b><b>Producer-Critic 分离</b>比单 agent 自省更稳健，关键在于 Critic 用独立人设与标准挑错。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"This separation of concerns is powerful because it prevents the "cognitive bias" of an agent reviewing its own work. The Critic agent approaches the output with a fresh perspective, dedicated entirely to finding errors and areas for improvement. The feedback from the Critic is then passed back to the Producer agent, which uses it as a guide to generate a new, refined version of the output. The provided LangChain and ADK code examples both implement this two-agent model: the LangChain example uses a specific "reflector_prompt" to create a critic persona, while the ADK example explicitly defines a producer and a reviewer agent.
+Implementing reflection often requires structuring the agent's workflow to include these feedback loops. This can be achieved through iterative loops in code, or using frameworks that support state management and conditional transitions based on evaluation results. While a single step of evaluation and refinement can be implemented within either a LangChain/LangGraph, or ADK, or Crew.AI chain, true iterative reflection typically involves more complex orchestration."</div>
+        <div class="seg-zh">这种关注点分离之所以强大，是因为它防止了智能体审查自身工作时的“认知偏差”。Critic（评审者）智能体以全新的视角处理输出，完全专注于发现错误和改进空间。随后，Critic 的反馈被传回 Producer（生产者）智能体，后者将其作为指南来生成新的、经过精炼的输出版本。所提供的 LangChain 和 ADK 代码示例都实现了这种双智能体模型：LangChain 示例使用特定的“reflector_prompt”来创建评审者角色，而 ADK 示例则显式定义了一个生产者智能体和一个评审者智能体。
+
+实现 Reflection（反思）通常需要将智能体的工作流结构化，以包含这些反馈循环。这可以通过代码中的迭代循环来实现，或使用支持状态管理以及基于评估结果进行条件转换的框架来实现。虽然单步的评估与精炼可以在 LangChain/LangGraph、ADK 或 Crew.AI 链中实现，但<b>真正的迭代式 Reflection 通常涉及更复杂的编排</b>。</div>
+        <div class="seg-note"><b>导读注:</b><b>关注点分离</b>避免自审偏差，双智能体模型是关键实现方式。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"The Reflection pattern is crucial for building agents that can produce high-quality outputs, handle nuanced tasks, and exhibit a degree of self-awareness and adaptability. It moves agents beyond simply executing instructions towards a more sophisticated form of problem-solving and content generation.
+The intersection of reflection with goal setting and monitoring (see Chapter 11) is worth noticing. A goal provides the ultimate benchmark for the agent's self-evaluation, while monitoring tracks its progress. In a number of practical cases, Reflection then might act as the corrective engine, using monitored feedback to analyze deviations and adjust its strategy. This synergy transforms the agent from a passive executor into a purposeful system that adaptively works to achieve its objectives."</div>
+        <div class="seg-zh">Reflection（反思）模式对于构建能够产出高质量输出、处理细微复杂任务并展现出一定程度自我意识与适应性的 agent（智能体）至关重要。它使 agent 超越单纯执行指令，迈向更复杂的问题求解与内容生成形式。
+Reflection 与目标设定和监控（见第 11 章）的交汇值得注意。<b>目标为 agent 的自我评估提供了终极基准，而监控则追踪其进展。</b>在许多实际案例中，Reflection 随后可能充当纠错引擎，利用监控反馈分析偏差并调整策略。<b>这种协同将 agent 从被动执行者转变为有目的的系统，自适应地努力实现其目标。</b></div>
+        <div class="seg-note"><b>导读注:</b>点出 Reflection 与目标设定、监控的协同，是 agent 从被动执行转向自适应目标系统的关键。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"Furthermore, the effectiveness of the Reflection pattern is significantly enhanced when the LLM keeps a memory of the conversation (see Chapter 8). This conversational history provides crucial context for the evaluation phase, allowing the agent to assess its output not just in isolation, but against the backdrop of previous interactions, user feedback, and evolving goals. It enables the agent to learn from past critiques and avoid repeating errors. Without memory, each reflection is a self-contained event; with memory, reflection becomes a cumulative process where each cycle builds upon the last, leading to more intelligent and context-aware refinement. Practical Applications &amp; Use Cases
+The Reflection pattern is valuable in scenarios where output quality, accuracy, or adherence to complex constraints is critical:"</div>
+        <div class="seg-zh">此外，当 LLM 保留对话记忆时（见第 8 章），Reflection 模式的有效性会显著增强。这段对话历史为评估阶段提供了关键上下文，使智能体不仅能在孤立状态下评估其输出，还能在先前交互、用户反馈和不断演变的目标背景下进行评估。它使智能体能够从过去的批评中学习并避免重复错误。<b>没有记忆时，每次反思都是自包含的事件；有了记忆，反思就成为一个累积过程，每个循环都建立在前一个循环之上，从而实现更智能、更具上下文感知的改进。</b>实际应用与用例
+
+Reflection 模式在输出质量、准确性或对复杂约束的遵循至关重要的场景中很有价值：</div>
+        <div class="seg-note"><b>导读注:</b><b>记忆让 Reflection 从孤立事件变为累积过程</b>，是提升输出质量的关键。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"1. Creative Writing and Content Generation: Refining generated text, stories, poems, or marketing copy. ● Use Case: An agent writing a blog post. ○ Reflection: Generate a draft, critique it for flow, tone, and clarity, then rewrite based on the critique. Repeat until the post meets quality standards. ○ Benefit: Produces more polished and effective content. 2. Code Generation and Debugging: Writing code, identifying errors, and fixing them. ● Use Case: An agent writing a Python function. ○ Reflection: Write initial code, run tests or static analysis, identify errors or inefficiencies, then modify the code based on the findings. ○ Benefit: Generates more robust and functional code. 3. Complex Problem Solving: Evaluating intermediate steps or proposed solutions in multi-step reasoning tasks. ● Use Case: An agent solving a logic puzzle."</div>
+        <div class="seg-zh">1. 创意写作与内容生成：优化生成的文本、故事、诗歌或营销文案。● 用例：一个智能体撰写博客文章。○ Reflection：生成草稿，对其流畅性、语气和清晰度进行批判，然后根据批判重写。重复直到文章达到质量标准。○ 优势：产出更精炼、更有效的内容。2. 代码生成与调试：编写代码、识别错误并修复它们。● 用例：一个智能体编写 Python 函数。○ Reflection：编写初始代码，运行测试或静态分析，识别错误或低效之处，然后根据发现修改代码。○ 优势：生成更健壮、更实用的代码。3. 复杂问题求解：在多步推理任务中评估中间步骤或提出的解决方案。● 用例：一个智能体解决逻辑谜题。</div>
+        <div class="seg-note"><b>导读注:</b>展示 <b>Reflection</b> 在写作、编码、推理三类任务中的通用迭代优化模式。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"○ Reflection: Propose a step, evaluate if it leads closer to the solution or introduces contradictions, backtrack or choose a different step if needed. ○ Benefit: Improves the agent's ability to navigate complex problem spaces. 4. Summarization and Information Synthesis: Refining summaries for accuracy, completeness, and conciseness. ● Use Case: An agent summarizing a long document. ○ Reflection: Generate an initial summary, compare it against key points in the original document, refine the summary to include missing information or improve accuracy. ○ Benefit: Creates more accurate and comprehensive summaries. 5. Planning and Strategy: Evaluating a proposed plan and identifying potential flaws or improvements. ● Use Case: An agent planning a series of actions to achieve a goal. ○ Reflection: Generate a plan, simulate its execution or evaluate its feasibility against constraints, revise the plan based on the evaluation. ○ Benefit: Develops more effective and realistic plans. 6. Conversational Agents: Reviewing previous turns in a conversation to maintain context, correct misunderstandings, or improve response quality. ● Use Case: A customer support chatbot. ○ Reflection: After a user response, review the conversation history and the last generated message to ensure coherence and address the user's latest input accurately. ○ Benefit: Leads to more natural and effective conversations. Reflection adds a layer of meta-cognition to agentic systems, enabling them to learn from their own outputs and processes, leading to more intelligent, reliable, and high-quality results. Hands-On Code Example (LangChain)"</div>
+        <div class="seg-zh">○ Reflection（反思）：提出一个步骤，评估它是否更接近解决方案或引入矛盾，必要时回溯或选择不同的步骤。○ 收益：提升智能体（agent）在复杂问题空间中导航的能力。4. 总结与信息综合：优化摘要的准确性、完整性和简洁性。● 用例：智能体总结一份长文档。○ Reflection：生成初始摘要，将其与原始文档中的关键点进行比较，优化摘要以纳入缺失信息或提高准确性。○ 收益：生成更准确、更全面的摘要。5. 规划与策略：评估一个拟议计划并识别潜在缺陷或改进点。● 用例：智能体规划一系列行动以实现目标。○ Reflection：生成一个计划，模拟其执行或根据约束条件评估其可行性，基于评估修订计划。○ 收益：制定更有效、更现实的计划。6. 对话智能体：回顾对话中的先前轮次以保持上下文、纠正误解或提高回复质量。● 用例：客户支持聊天机器人。○ Reflection：在用户回复后，回顾对话历史和最后生成的消息，以确保连贯性并准确回应用户的最新输入。○ 收益：带来更自然、更有效的对话。Reflection 为智能体系统增加了一层元认知（meta-cognition），使其能够从自身的输出和过程中学习，从而产生更智能、更可靠、更高质量的结果。动手代码示例（LangChain）</div>
+        <div class="seg-note"><b>导读注:</b><b>Reflection</b> 让智能体自我评估与回溯，是提升复杂任务可靠性的关键机制。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"The implementation of a complete, iterative reflection process necessitates mechanisms for state management and cyclical execution. While these are handled natively in graph-based frameworks like LangGraph or through custom procedural code, the fundamental principle of a single reflection cycle can be demonstrated effectively using the compositional syntax of LCEL (LangChain Expression Language).
+This example implements a reflection loop using the Langchain library and OpenAI's GPT-4o model to iteratively generate and refine a Python function that calculates the
+factorial of a number. The process starts with a task prompt, generates initial code, and then repeatedly reflects on the code based on critiques from a simulated senior software engineer role, refining the code in each iteration until the critique stage determines the code is perfect or a maximum number of iterations is reached. Finally, it prints the resulting refined code.
+First, ensure you have the necessary libraries installed:"</div>
+        <div class="seg-zh">实现一个完整、迭代式的 Reflection 过程，需要状态管理与循环执行的机制。虽然这些在 LangGraph 等基于图的框架中由原生支持，或通过自定义过程式代码处理，但单个 Reflection 循环的基本原理可以用 LCEL（LangChain Expression Language）的组合式语法有效演示。
+本示例使用 Langchain 库和 OpenAI 的 GPT-4o 模型实现一个 Reflection 循环，迭代式地生成并改进一个计算数字阶乘的 Python 函数。该过程从任务 prompt 开始，生成初始代码，然后基于模拟的资深软件工程师角色给出的批评反复进行 Reflection，在每次迭代中改进代码，直到批评阶段判定代码完美或达到最大迭代次数。最后，它打印出最终改进后的代码。
+首先，确保已安装必要的库：</div>
+        <div class="seg-note"><b>导读注:</b>用 LCEL 组合语法演示单轮 Reflection 循环，<b>迭代改进代码</b>直至批评通过。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"pip install langchain langchain-community langchain-openai
+You will also need to set up your environment with your API key for the language model you choose (e.g., OpenAI, Google Gemini, Anthropic).
+import os from dotenv import load_dotenv from langchain_openai import ChatOpenAI from langchain_core.prompts import ChatPromptTemplate from langchain_core.messages import SystemMessage, HumanMessage
+# --- Configuration -- # Load environment variables from .env file (for OPENAI_API_KEY) load_dotenv()
+# Check if the API key is set if not os.getenv("OPENAI_API_KEY"): raise ValueError("OPENAI_API_KEY not found in .env file. Please add it.")
+# Initialize the Chat LLM. We use gpt-4o for better reasoning. # A lower temperature is used for more deterministic outputs. llm = ChatOpenAI(model="gpt-4o", temperature=0.1)
+def run_reflection_loop(): """ Demonstrates a multi-step AI reflection loop to progressively improve a Python function. """ # --- The Core Task -- task_prompt = """ Your task is to create a Python function named `calculate_factorial`. This function should do the following: 1. Accept a single integer `n` as input."</div>
+        <div class="seg-zh">pip install langchain langchain-community langchain-openai
+你还需要为所选的语言模型（例如 OpenAI、Google Gemini、Anthropic）设置带有 API key 的环境。
+import os from dotenv import load_dotenv from langchain_openai import ChatOpenAI from langchain_core.prompts import ChatPromptTemplate from langchain_core.messages import SystemMessage, HumanMessage
+# --- Configuration -- # Load environment variables from .env file (for OPENAI_API_KEY) load_dotenv()
+# Check if the API key is set if not os.getenv("OPENAI_API_KEY"): raise ValueError("OPENAI_API_KEY not found in .env file. Please add it.")
+# Initialize the Chat LLM. We use gpt-4o for better reasoning. # A lower temperature is used for more deterministic outputs. llm = ChatOpenAI(model="gpt-4o", temperature=0.1)
+def run_reflection_loop(): """ Demonstrates a multi-step AI reflection loop to progressively improve a Python function. """ # --- The Core Task -- task_prompt = """ Your task is to create a Python function named `calculate_factorial`. This function should do the following: 1. Accept a single integer `n` as input.</div>
+        <div class="seg-note"><b>导读注:</b>展示<b>Reflection 循环</b>的代码骨架：先装依赖、配 API key，再初始化 LLM。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"2. Calculate its factorial (n!). 3. Include a clear docstring explaining what the function does. 4. Handle edge cases: The factorial of 0 is 1. 5. Handle invalid input: Raise a ValueError if the input is a negative number. """ # --- The Reflection Loop -- max_iterations = 3 current_code = "" # We will build a conversation history to provide context in each step. message_history = [HumanMessage(content=task_prompt)]
+for i in range(max_iterations): print("\n" + "="*25 + f" REFLECTION LOOP: ITERATION {i + 1} " + "="*25)
+# --- 1. GENERATE / REFINE STAGE -- # In the first iteration, it generates. In subsequent iterations, it refines. if i == 0: print("\n&gt;&gt;&gt; STAGE 1: GENERATING initial code...") # The first message is just the task prompt. response = llm.invoke(message_history) current_code = response.content else: print("\n&gt;&gt;&gt; STAGE 1: REFINING code based on previous critique...") # The message history now contains the task, # the last code, and the last critique. # We instruct the model to apply the critiques. message_history.append(HumanMessage(content="Please refine the code using the critiques provided.")) response = llm.invoke(message_history) current_code = response.content"</div>
+        <div class="seg-zh">2. 计算其阶乘(n!)。3. 包含清晰的 docstring 说明该函数的作用。4. 处理边界情况:0 的阶乘为 1。5. 处理无效输入:若输入为负数则抛出 ValueError。""" # --- Reflection 循环 -- max_iterations = 3 current_code = "" # 我们将构建对话历史,以便在每一步中提供上下文。message_history = [HumanMessage(content=task_prompt)]
+for i in range(max_iterations): print("\n" + "="*25 + f" REFLECTION LOOP: ITERATION {i + 1} " + "="*25)
+# --- 1. 生成 / 精炼阶段 -- # 在第一次迭代中,它进行生成。在后续迭代中,它进行精炼。if i == 0: print("\n&gt;&gt;&gt; STAGE 1: GENERATING initial code...") # 第一条消息仅为任务 prompt。response = llm.invoke(message_history) current_code = response.content else: print("\n&gt;&gt;&gt; STAGE 1: REFINING code based on previous critique...") # 此时消息历史包含任务、# 上一次的代码以及上一次的评审意见。# 我们指示模型应用这些评审意见。message_history.append(HumanMessage(content="Please refine the code using the critiques provided.")) response = llm.invoke(message_history) current_code = response.content</div>
+        <div class="seg-note"><b>导读注:</b>展示 <b>Reflection 循环</b>如何用对话历史实现代码生成与迭代精炼。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"print("\n--- Generated Code (v" + str(i + 1) + ") ---\n" + current_code) message_history.append(response) # Add the generated code to history
+# --- 2. REFLECT STAGE -- print("\n&gt;&gt;&gt; STAGE 2: REFLECTING on the generated code...")
+# Create a specific prompt for the reflector agent. # This asks the model to act as a senior code reviewer.
+reflector_prompt = [ SystemMessage(content=""" You are a senior software engineer and an expert in Python. Your role is to perform a meticulous code review. Critically evaluate the provided Python code based on the original task requirements. Look for bugs, style issues, missing edge cases, and areas for improvement. If the code is perfect and meets all requirements, respond with the single phrase 'CODE_IS_PERFECT'. Otherwise, provide a bulleted list of your critiques. """), HumanMessage(content=f"Original Task:\n{task_prompt}\n\nCode to Review:\n{current_code}") ]
+critique_response = llm.invoke(reflector_prompt) critique = critique_response.content
+# --- 3. STOPPING CONDITION -- if "CODE_IS_PERFECT" in critique: print("\n--- Critique ---\nNo further critiques found. The code is satisfactory.") break"</div>
+        <div class="seg-zh">print("\n--- Generated Code (v" + str(i + 1) + ") ---\n" + current_code) message_history.append(response) # 将生成的代码添加到历史记录
+# --- 2. REFLECT STAGE -- print("\n&gt;&gt;&gt; STAGE 2: REFLECTING on the generated code...")
+# 为 Reflection 代理创建特定的 prompt。
+# 这要求模型扮演资深代码审查员的角色。
+reflector_prompt = [ SystemMessage(content=""" 你是一名资深软件工程师和 Python 专家。你的职责是执行细致的代码审查。基于原始任务要求，批判性地评估所提供的 Python 代码。查找 bug、风格问题、缺失的边界情况以及可改进之处。如果代码完美且满足所有要求，请仅回复短语 'CODE_IS_PERFECT'。否则，请提供一份要点式的批评列表。 """), HumanMessage(content=f"原始任务：\n{task_prompt}\n\n待审查代码：\n{current_code}") ]
+critique_response = llm.invoke(reflector_prompt) critique = critique_response.content
+# --- 3. STOPPING CONDITION -- if "CODE_IS_PERFECT" in critique: print("\n--- Critique ---\n未发现进一步批评。代码令人满意。") break</div>
+        <div class="seg-note"><b>导读注:</b>展示 Reflection 循环：生成代码后由资深审查员批判，<b>CODE_IS_PERFECT</b> 作为停止条件。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"print("\n--- Critique ---\n" + critique) # Add the critique to the history for the next refinement loop. message_history.append(HumanMessage(content=f"Critique of the previous code:\n{critique}"))
+print("\n" + "="*30 + " FINAL RESULT " + "="*30) print("\nFinal refined code after the reflection process:\n") print(current_code)
+if __name__ == "__main__": run_reflection_loop()
+The code begins by setting up the environment, loading API keys, and initializing a powerful language model like GPT-4o with a low temperature for focused outputs. The core task is defined by a prompt asking for a Python function to calculate the factorial of a number, including specific requirements for docstrings, edge cases (factorial of 0), and error handling for negative input. The run_reflection_loop function orchestrates the iterative refinement process. Within the loop, in the first iteration, the"</div>
+        <div class="seg-zh">print("\n--- Critique ---\n" + critique) # 将批评加入历史记录，供下一轮 refinement 循环使用。 message_history.append(HumanMessage(content=f"Critique of the previous code:\n{critique}"))
+print("\n" + "="*30 + " FINAL RESULT " + "="*30) print("\nFinal refined code after the reflection process:\n") print(current_code)
+if __name__ == "__main__": run_reflection_loop()
+代码首先设置环境、加载 API 密钥，并初始化一个强大的语言模型（如 GPT-4o），采用较低的温度以获得聚焦的输出。<b>核心任务由一个 prompt 定义</b>，要求编写一个计算数字阶乘的 Python 函数，并包含对 docstring、边界情况（0 的阶乘）以及负数输入错误处理的具体要求。run_reflection_loop 函数负责编排这一迭代 refinement 过程。在循环中，<b>第一次迭代</b>时，</div>
+        <div class="seg-note"><b>导读注:</b>展示 Reflection 循环的代码骨架与任务设定，<b>首次迭代</b>是流程起点。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"language model generates initial code based on the task prompt. In subsequent iterations, it refines the code based on critiques from the previous step. A separate "reflector" role, also played by the language model but with a different system prompt, acts as a senior software engineer to critique the generated code against the original task requirements. This critique is provided as a bulleted list of issues or the phrase 'CODE_IS_PERFECT' if no issues are found. The loop continues until the critique indicates the code is perfect or a maximum number of iterations is reached. The conversation history is maintained and passed to the language model in each step to provide context for both generation/refinement and reflection stages. Finally, the script prints the last generated code version after the loop concludes. Hands-On Code Example (ADK)
+Let's now look at a conceptual code example implemented using the Google ADK. Specifically, the code showcases this by employing a Generator-Critic structure, where one component (the Generator) produces an initial result or plan, and another component (the Critic) provides critical feedback or a critique, guiding the Generator towards a more refined or accurate final output."</div>
+        <div class="seg-zh">语言模型根据任务 prompt 生成初始代码。在后续迭代中,它根据上一步的批评来改进代码。一个独立的"反思者"(reflector)角色同样由语言模型扮演,但使用不同的系统 prompt,充当资深软件工程师,对照原始任务需求对生成的代码提出批评。该批评以问题列表形式给出,若未发现问题则给出短语 'CODE_IS_PERFECT'。循环持续进行,直到批评表明代码已完美或达到最大迭代次数。对话历史被保留并在每一步传给语言模型,为生成/改进和反思阶段提供上下文。最后,脚本在循环结束后打印最后生成的代码版本。动手代码示例(ADK)
+现在我们来看一个使用 Google ADK 实现的概念性代码示例。具体而言,该代码通过采用生成器-批评者(Generator-Critic)结构来展示这一点:其中一个组件(生成器)产生初始结果或计划,另一个组件(批评者)提供关键反馈或批评,引导生成器走向更精炼或更准确的最终输出。</div>
+        <div class="seg-note"><b>导读注:</b><b>Reflection</b> 模式:生成器与批评者循环迭代,直至代码完美或达上限。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"from google.adk.agents import SequentialAgent, LlmAgent
+# The first agent generates the initial draft. generator = LlmAgent( name="DraftWriter", description="Generates initial draft content on a given subject.", instruction="Write a short, informative paragraph about the user's subject.", output_key="draft_text" # The output is saved to this state key. )
+# The second agent critiques the draft from the first agent. reviewer = LlmAgent( name="FactChecker", description="Reviews a given text for factual accuracy and provides a structured critique.", instruction=""" You are a meticulous fact-checker. 1. Read the text provided in the state key 'draft_text'. 2. Carefully verify the factual accuracy of all claims. 3. Your final output must be a dictionary containing two keys: - "status": A string, either "ACCURATE" or "INACCURATE". - "reasoning": A string providing a clear explanation for your status, citing specific issues if any are found.
+""", output_key="review_output" # The structured dictionary is saved here. )"</div>
+        <div class="seg-zh">from google.adk.agents import SequentialAgent, LlmAgent
+# 第一个 agent 生成初始草稿。 generator = LlmAgent( name="DraftWriter", description="针对给定主题生成初始草稿内容。", instruction="围绕用户提供的主题撰写一段简短且信息丰富的段落。", output_key="draft_text" # 输出会保存到该状态键。 )
+# 第二个 agent 对第一个 agent 的草稿进行评审。 reviewer = LlmAgent( name="FactChecker", description="审查给定文本的事实准确性，并提供结构化评审意见。", instruction=""" 你是一名一丝不苟的事实核查员。 1. 阅读状态键 'draft_text' 中提供的文本。 2. 仔细核实所有陈述的事实准确性。 3. 你的最终输出必须是一个包含两个键的字典： - "status"：一个字符串，取值为 "ACCURATE" 或 "INACCURATE"。 - "reasoning"：一个字符串，为你的 status 提供清晰解释，若发现问题则引用具体问题。
+""", output_key="review_output" # 结构化字典会保存到这里。 )</div>
+        <div class="seg-note"><b>导读注:</b>展示<b>SequentialAgent</b>串联生成与核查两个LlmAgent，并用output_key传递状态。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"# The SequentialAgent ensures the generator runs before the reviewer. review_pipeline = SequentialAgent( name="WriteAndReview_Pipeline", sub_agents=[generator, reviewer] )
+# Execution Flow: # 1. generator runs -&gt; saves its paragraph to state['draft_text']. # 2. reviewer runs -&gt; reads state['draft_text'] and saves its dictionary output to state['review_output']."</div>
+        <div class="seg-zh"># SequentialAgent 确保生成器在审查器之前运行。review_pipeline = SequentialAgent( name="WriteAndReview_Pipeline", sub_agents=[generator, reviewer] )
+# 执行流程： # 1. 生成器运行 -&gt; 将其段落保存到 state['draft_text']。 # 2. 审查器运行 -&gt; 读取 state['draft_text'] 并将其字典输出保存到 state['review_output']。</div>
+        <div class="seg-note"><b>导读注:</b><b>SequentialAgent</b> 通过 sub_agents 顺序保证生成先于审查，并用 state 传递草稿。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"This code demonstrates the use of a sequential agent pipeline in Google ADK for generating and reviewing text. It defines two LlmAgent instances: generator and reviewer. The generator agent is designed to create an initial draft paragraph on a given subject. It is instructed to write a short and informative piece and saves its output to the state key draft_text. The reviewer agent acts as a fact-checker for the text produced by the generator. It is instructed to read the text from draft_text and verify its factual accuracy. The reviewer's output is a structured dictionary with two keys: status and reasoning. status indicates if the text is "ACCURATE" or "INACCURATE", while reasoning provides an explanation for the status. This dictionary is saved to the state key review_output. A SequentialAgent named review_pipeline is created to manage the execution order of the two agents. It ensures that the generator runs first, followed by the reviewer. The overall execution flow is that the generator produces text, which is then saved to the state. Subsequently, the reviewer reads this text from the state, performs its fact-checking, and saves its findings (the status and reasoning) back to the state. This pipeline allows for a structured process of content creation and review using separate agents.Note: An alternative implementation utilizing ADK's LoopAgent is also available for those interested."</div>
+        <div class="seg-zh">这段代码演示了在 Google ADK 中使用顺序式智能体流水线（sequential agent pipeline）来生成和审查文本。它定义了两个 LlmAgent 实例：generator 和 reviewer。generator 智能体旨在针对给定主题创建初始草稿段落。它被指示撰写一段简短且信息丰富的文字，并将其输出保存到状态键 draft_text。reviewer 智能体充当 generator 所生成文本的事实核查器。它被指示从 draft_text 读取文本并验证其事实准确性。reviewer 的输出是一个结构化字典，包含两个键：status 和 reasoning。status 表示文本是 "ACCURATE" 还是 "INACCURATE"，而 reasoning 则为该状态提供解释。该字典被保存到状态键 review_output。创建了一个名为 review_pipeline 的 SequentialAgent 来管理两个智能体的执行顺序。它确保 generator 先运行，随后是 reviewer。整体执行流程是：generator 生成文本，文本随后被保存到状态中。接着，reviewer 从状态中读取该文本，执行事实核查，并将其发现（status 和 reasoning）保存回状态。该流水线允许使用独立的智能体进行结构化的内容创建与审查流程。注意：对于感兴趣的人，还提供了利用 ADK 的 LoopAgent 的替代实现。</div>
+        <div class="seg-note"><b>导读注:</b>展示 ADK 顺序流水线：<b>生成→审查</b>两智能体通过状态键协作。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"Before concluding, it's important to consider that while the Reflection pattern significantly enhances output quality, it comes with important trade-offs. The iterative process, though powerful, can lead to higher costs and latency, since every refinement loop may require a new LLM call, making it suboptimal for time-sensitive applications. Furthermore, the pattern is memory-intensive; with each iteration, the conversational history expands, including the initial output, critique, and subsequent refinements.
+What: An agent's initial output is often suboptimal, suffering from inaccuracies, incompleteness, or a failure to meet complex requirements. Basic agentic workflows lack a built-in process for the agent to recognize and fix its own errors. This is solved by having the agent evaluate its own work or, more robustly, by introducing a separate logical agent to act as a critic, preventing the initial response from being the final one regardless of quality."</div>
+        <div class="seg-zh">在得出结论之前，重要的是要考虑到，虽然 Reflection（反思）模式显著提升了输出质量，但它也带来了重要的权衡。迭代过程虽然强大，却可能导致更高的成本和延迟，因为每一次精炼循环都可能需要一次新的 LLM 调用，使其对时间敏感的应用而言并非最优。此外，该模式是内存密集型的；随着每次迭代，对话历史会不断扩展，包括初始输出、批评意见以及后续的精炼内容。\n\n是什么：智能体的初始输出往往并非最优，存在不准确、不完整或未能满足复杂需求的问题。基础的智能体工作流缺乏内置流程，让智能体识别并修正自身的错误。解决方法是让智能体评估自己的工作，或者更稳健地，引入一个独立的逻辑智能体充当批评者（critic），从而防止初始响应无论质量如何都成为最终响应。</div>
+        <div class="seg-note"><b>导读注:</b><b>Reflection 提升质量但代价高</b>：成本、延迟与内存开销是采用前必须权衡的关键。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"Why: The Reflection pattern offers a solution by introducing a mechanism for self-correction and refinement. It establishes a feedback loop where a "producer" agent generates an output, and then a "critic" agent (or the producer itself) evaluates it against predefined criteria. This critique is then used to generate an improved version. This iterative process of generation, evaluation, and refinement progressively enhances the quality of the final result, leading to more accurate, coherent, and reliable outcomes.
+Rule of thumb: Use the Reflection pattern when the quality, accuracy, and detail of the final output are more important than speed and cost. It is particularly effective for tasks like generating polished long-form content, writing and debugging code, and creating detailed plans. Employ a separate critic agent when tasks require high objectivity or specialized evaluation that a generalist producer agent might miss.
+Fig. 1: Reflection design pattern, self-reflection
+Fig.2: Reflection design pattern, producer and critique agent"</div>
+        <div class="seg-zh">Why：Reflection（反思）模式通过引入一种自我纠错与精炼机制提供了解决方案。它建立一个反馈循环，由“producer”（生产者）agent 生成输出，然后由“critic”（批评者）agent（或生产者自身）依据预定义标准对其进行评估。该批评随后被用于生成改进版本。这种生成、评估与精炼的迭代过程会逐步提升最终结果的质量，从而带来更准确、更连贯、更可靠的结果。
+经验法则：当最终输出的质量、准确性和细节比速度和成本更重要时，使用 Reflection 模式。它对于生成精炼的长篇内容、编写和调试代码以及创建详细计划等任务尤其有效。当任务需要高度客观性或专业化评估（而通用型生产者 agent 可能遗漏）时，应使用单独的批评者 agent。
+图 1：Reflection 设计模式，自我反思
+图 2：Reflection 设计模式，生产者与批评者 agent</div>
+        <div class="seg-note"><b>导读注:</b><b>Reflection 模式</b>用生产者-批评者反馈循环提升输出质量，适合重质量甚于速度的任务。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"● The primary advantage of the Reflection pattern is its ability to iteratively self-correct and refine outputs, leading to significantly higher quality, accuracy, and adherence to complex instructions. ● It involves a feedback loop of execution, evaluation/critique, and refinement. Reflection is essential for tasks requiring high-quality, accurate, or nuanced outputs. ● A powerful implementation is the Producer-Critic model, where a separate agent (or prompted role) evaluates the initial output. This separation of concerns enhances objectivity and allows for more specialized, structured feedback.
+● However, these benefits come at the cost of increased latency and computational expense, along with a higher risk of exceeding the model's context window or being throttled by API services. ● While full iterative reflection often requires stateful workflows (like LangGraph), a single reflection step can be implemented in LangChain using LCEL to pass output for critique and subsequent refinement. ● Google ADK can facilitate reflection through sequential workflows where one agent's output is critiqued by another agent, allowing for subsequent refinement steps. ● This pattern enables agents to perform self-correction and enhance their performance over time."</div>
+        <div class="seg-zh">● Reflection（反思）模式的主要优势在于其能够<b>迭代式自我纠正并优化输出</b>，从而显著提升质量、准确性以及对复杂指令的遵循度。● 它包含一个由执行、评估/批判和优化构成的反馈循环。对于需要高质量、准确或细致输出的任务，Reflection 至关重要。● 一种强大的实现是 Producer-Critic（生产者-批判者）模型，即由一个独立的 agent（或通过 prompt 设定的角色）评估初始输出。这种关注点分离增强了客观性，并支持更具专业化、结构化的反馈。● 然而，这些收益以<b>更高的延迟和计算开销</b>为代价，同时超出模型上下文窗口或被 API 服务限流的风险也更高。● 虽然完整的迭代式反思通常需要有状态工作流（如 LangGraph），但单次反思步骤可在 LangChain 中使用 LCEL 实现，将输出传递用于批判和后续优化。● Google ADK 可通过顺序工作流促进反思，即一个 agent 的输出由另一个 agent 进行批判，从而支持后续的优化步骤。● 该模式使 agent 能够执行自我纠正并随时间提升其表现。</div>
+        <div class="seg-note"><b>导读注:</b>Reflection 以延迟和成本换取质量，Producer-Critic 分离关注点是关键实现。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"The reflection pattern provides a crucial mechanism for self-correction within an agent's workflow, enabling iterative improvement beyond a single-pass execution. This is achieved by creating a loop where the system generates an output, evaluates it against specific criteria, and then uses that evaluation to produce a refined result. This evaluation can be performed by the agent itself (self-reflection) or, often more effectively, by a distinct critic agent, which represents a key architectural choice within the pattern.
+While a fully autonomous, multi-step reflection process requires a robust architecture for state management, its core principle is effectively demonstrated in a single generate-critique-refine cycle. As a control structure, reflection can be integrated with other foundational patterns to construct more robust and functionally complex agentic systems.
+Here are some resources for further reading on the Reflection pattern and related concepts:
+1. Training Language Models to Self-Correct via Reinforcement Learning, https://arxiv.org/abs/2409.12917 2. LangChain Expression Language (LCEL) Documentation: https://python.langchain.com/docs/introduction/ 3. LangGraph Documentation:https://www.langchain.com/langgraph"</div>
+        <div class="seg-zh">Reflection（反思）模式为 agent 工作流中的自我纠错提供了关键机制，使系统能够超越单次执行实现迭代改进。这是通过创建一个循环来实现的：系统生成输出，依据特定标准对其进行评估，然后利用该评估结果产出改进后的结果。这种评估可由 agent 自身完成（self-reflection，自我反思），或者通常更有效地由一个独立的 critic agent（评审 agent）完成，这代表了该模式中的一个关键架构选择。
+虽然完全自主的多步反思过程需要健壮的状态管理架构，但其核心原理在单个 generate-critique-refine（生成-评审-改进）循环中即可得到有效展示。作为一种控制结构，Reflection 可与其他基础模式集成，以构建更健壮、功能更复杂的 agentic 系统。
+以下是一些进一步阅读 Reflection 模式及相关概念的资源：
+1. Training Language Models to Self-Correct via Reinforcement Learning, https://arxiv.org/abs/2409.12917 2. LangChain Expression Language (LCEL) Documentation: https://python.langchain.com/docs/introduction/ 3. LangGraph Documentation:https://www.langchain.com/langgraph</div>
+        <div class="seg-note"><b>导读注:</b>点明 <b>generate-critique-refine</b> 循环是 Reflection 的核心，并区分自反思与独立 critic agent。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"4. Google Agent Developer Kit (ADK) Documentation (Multi-Agent Systems): https://google.github.io/adk-docs/agents/multi-agents/"</div>
+        <div class="seg-zh">4. Google Agent Developer Kit (ADK) 文档（多智能体系统）：https://google.github.io/adk-docs/agents/multi-agents/</div>
+        <div class="seg-note"><b>导读注:</b><b>Google ADK</b> 官方多智能体文档入口，适合查阅多 Agent 协作设计。</div>
+      </div>
+
+      <div class="callout info" style="margin-top:24px">
+        <div class="co-title">来源与用途</div>
+        <p style="margin-bottom:0">《Agentic Design Patterns》,Antonio Gulli · 2025 · <a href="papers/pdf/gulli-agentic-design-patterns.pdf" target="_blank" rel="noopener">原书 PDF</a>。本页为学习用途的对照整理,版权归原作者;有问题到读书导师处提问,答案只引用书中原文并标注章节。</p>
+      </div>
+
+      <p class="pager" style="margin-top:18px">
+        <a class="chip" href="book-gulli-patterns-ch3.html">← 第3章 · 并行化 Parallelization</a>
+        <a class="chip" href="book-gulli-patterns.html">导读</a>
+        <a class="chip" href="book-gulli-patterns-ch5.html">第5章 · 工具使用 Tool Use (Function Calling) →</a>
+      </p>
+
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/app.js?v=28"></script>
+</body>
+</html>

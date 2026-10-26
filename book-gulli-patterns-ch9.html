@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Agentic Design Patterns 第 9 章 学习与适应 Learning and Adaptation 中英对照翻译。">
+<title>第 9 章 · 学习与适应 Learning and Adaptation | Agentic Design Patterns | Agent 学院</title>
+<link rel="stylesheet" href="assets/css/style.css?v=24">
+</head>
+<body data-chapter="books">
+
+<header class="topbar">
+  <button class="icon-btn hamburger" id="hamburger" title="打开导航">☰</button>
+  <a class="brand" href="index.html"><span class="logo">学</span> Agent 学院 <small>从零开发智能体 · Ontology · Harness</small></a>
+  <span class="spacer"></span>
+  <span class="progress-pill" id="progress-pill">读书</span>
+  <button class="icon-btn" id="theme-btn">🌙</button>
+</header>
+
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <main class="content">
+    <div class="content-inner">
+
+      <header class="chapter-head">
+        <div class="kicker">读书 · Agentic Design Patterns · 中英对照</div>
+        <h1>第 9 章 · 学习与适应 Learning and Adaptation</h1>
+        <p class="lead">
+          Chapter 9: Learning and Adaptation · 《Agentic Design Patterns》 · Antonio Gulli · 2025
+          <br>讲智能体如何通过经验与数据自主学习、持续适应动态环境。
+          <br><a class="chip" href="book-gulli-patterns.html">← 返回导读</a> <a class="chip" href="papers/pdf/gulli-agentic-design-patterns.pdf">原书 PDF</a> <a class="chip" href="book-gulli-patterns-ch8.html">上一章:第8章</a> <a class="chip" href="book-gulli-patterns-ch10.html">下一章:第10章</a>
+        </p>
+      </header>
+
+      <div class="callout key"><div class="co-title">本章要点</div><p>① 学习方式涵盖强化、监督、无监督、少样本及在线学习等  ① PPO用裁剪机制稳定策略更新，DPO直接优化人类偏好  ① SICA通过修改自身代码迭代自我改进，并配子智能体与监督者  ① AlphaEvolve与OpenEvolve用LLM加进化算法自动发现优化算法</p></div>
+<h2>本章划线句</h2>
+<details class="qn"><summary>本章划线句(逐字校验)</summary>
+        <div class="qn-body">
+        <div class="qn-en">"Agents learn and adapt by changing their thinking, actions, or knowledge based on new experiences and data."</div>
+        <div class="qn-zh"><b>为什么值得划线:</b>点明学习与适应的本质：依据经验改变自身。</div>
+        </div>
+      </details>
+<details class="qn"><summary>本章划线句(逐字校验)</summary>
+        <div class="qn-body">
+        <div class="qn-en">"In short, PPO balances improving performance with staying close to a known, working strategy, which prevents catastrophic failures during training and leads to more stable learning."</div>
+        <div class="qn-zh"><b>为什么值得划线:</b>一句话概括PPO裁剪机制的核心价值。</div>
+        </div>
+      </details>
+<details class="qn"><summary>本章划线句(逐字校验)</summary>
+        <div class="qn-body">
+        <div class="qn-en">"SICA acts as both the modifier and the modified entity, iteratively refining its code base to improve performance across various coding challenges."</div>
+        <div class="qn-zh"><b>为什么值得划线:</b>揭示自我改进智能体的关键特征。</div>
+        </div>
+      </details>
+<h2>正文(英中对照)</h2>
+<div class="seg">
+        <div class="seg-en">"Learning and adaptation are pivotal for enhancing the capabilities of artificial intelligence agents. These processes enable agents to evolve beyond predefined parameters, allowing them to improve autonomously through experience and environmental interaction. By learning and adapting, agents can effectively manage novel situations and optimize their performance without constant manual intervention. This chapter explores the principles and mechanisms underpinning agent learning and adaptation in detail. The big picture
+Agents learn and adapt by changing their thinking, actions, or knowledge based on new experiences and data. This allows agents to evolve from simply following instructions to becoming smarter over time."</div>
+        <div class="seg-zh">学习与适应对于提升人工智能智能体（AI agent）的能力至关重要。这些过程使智能体能够超越预定义参数进行演化，通过经验与环境交互实现自主改进。<b>通过学习与适应，智能体能够有效应对新情境并优化自身表现，而无需持续的人工干预。</b>本章将详细探讨支撑智能体学习与适应的原理与机制。总体图景：智能体通过基于新经验与数据改变其思考、行动或知识来学习和适应。这使智能体能够从单纯遵循指令演化为随时间变得更智能。</div>
+        <div class="seg-note"><b>导读注:</b>点明学习与适应是智能体<b>自主进化</b>的核心机制，而非依赖人工调参。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"● Reinforcement Learning: Agents try actions and receive rewards for positive outcomes and penalties for negative ones, learning optimal behaviors in changing situations. Useful for agents controlling robots or playing games. ● Supervised Learning: Agents learn from labeled examples, connecting inputs to desired outputs, enabling tasks like decision-making and pattern recognition. Ideal for agents sorting emails or predicting trends. ● Unsupervised Learning: Agents discover hidden connections and patterns in unlabeled data, aiding in insights, organization, and creating a mental map of their environment. Useful for agents exploring data without specific guidance. ● Few-Shot/Zero-Shot Learning with LLM-Based Agents: Agents leveraging LLMs can quickly adapt to new tasks with minimal examples or clear instructions, enabling rapid responses to new commands or situations. ● Online Learning: Agents continuously update knowledge with new data, essential for real-time reactions and ongoing adaptation in dynamic environments. Critical for agents processing continuous data streams. ● Memory-Based Learning: Agents recall past experiences to adjust current actions in similar situations, enhancing context awareness and decision-making. Effective for agents with memory recall capabilities."</div>
+        <div class="seg-zh">● 强化学习（Reinforcement Learning）：智能体尝试各种动作，对正面结果获得奖励、对负面结果受到惩罚，从而在不断变化的情境中学习最优行为。适用于控制机器人或玩游戏的智能体。● 监督学习（Supervised Learning）：智能体从带标签的示例中学习，将输入与期望输出关联起来，从而支持决策和模式识别等任务。非常适合对邮件进行分类或预测趋势的智能体。● 无监督学习（Unsupervised Learning）：智能体在无标签数据中发现隐藏的关联和模式，有助于获得洞察、组织信息并构建其环境的心智地图。适用于在没有明确指导的情况下探索数据的智能体。● 基于 LLM 的智能体的少样本/零样本学习（Few-Shot/Zero-Shot Learning）：利用 LLM 的智能体只需极少的示例或清晰的指令即可快速适应新任务，从而对新命令或新情境做出快速响应。● 在线学习（Online Learning）：智能体用新数据持续更新知识，这对于在动态环境中实时反应和持续适应至关重要。对于处理连续数据流的智能体尤为关键。● 基于记忆的学习（Memory-Based Learning）：智能体回忆过往经验，以在类似情境中调整当前动作，从而增强情境感知和决策能力。对具备记忆回忆能力的智能体十分有效。</div>
+        <div class="seg-note"><b>导读注:</b>六种学习范式并列，<b>LLM 智能体的少样本/零样本学习</b>是当下最值得关注的新增能力。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"Agents adapt by changing strategy, understanding, or goals based on learning. This is vital for agents in unpredictable, changing, or new environments.
+Proximal Policy Optimization (PPO) is a reinforcement learning algorithm used to train agents in environments with a continuous range of actions, like controlling a robot's joints or a character in a game. Its main goal is to reliably and stably improve an agent's decision-making strategy, known as its policy.
+The core idea behind PPO is to make small, careful updates to the agent's policy. It avoids drastic changes that could cause performance to collapse. Here's how it works:
+1. Collect Data: The agent interacts with its environment (e.g., plays a game) using its current policy and collects a batch of experiences (state, action, reward). 2. Evaluate a "Surrogate" Goal: PPO calculates how a potential policy update would change the expected reward. However, instead of just maximizing this reward, it uses a special "clipped" objective function. 3. The "Clipping" Mechanism: This is the key to PPO's stability. It creates a "trust region" or a safe zone around the current policy. The algorithm is prevented from making an update that is too different from the current strategy. This clipping acts like a safety brake, ensuring the agent doesn't take a huge, risky step that undoes its learning."</div>
+        <div class="seg-zh">智能体通过基于学习改变策略、理解或目标来适应。这对于处于不可预测、变化或新环境中的智能体至关重要。
+近端策略优化（Proximal Policy Optimization, PPO）是一种强化学习算法，用于在具有连续动作范围的环境中训练智能体，例如控制机器人的关节或游戏中的角色。其主要目标是可靠且稳定地改进智能体的决策策略，即其策略（policy）。
+PPO 的核心思想是对智能体的策略进行小幅、谨慎的更新。它避免可能导致性能崩溃的剧烈变化。其工作方式如下：
+1. 收集数据：智能体使用其当前策略与环境交互（例如玩游戏），并收集一批经验（状态、动作、奖励）。2. 评估“替代”目标：PPO 计算潜在的策略更新将如何改变预期奖励。然而，它不是仅仅最大化该奖励，而是使用一种特殊的“裁剪”目标函数。3. “裁剪”机制：这是 PPO 稳定性的关键。它在当前策略周围创建一个“信任区域”或安全区。算法被阻止做出与当前策略差异过大的更新。这种裁剪就像一个安全刹车，确保智能体不会迈出巨大且冒险的一步，从而毁掉其学习成果。</div>
+        <div class="seg-note"><b>导读注:</b>PPO 用<b>裁剪机制</b>限制策略更新幅度，避免性能崩溃。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"In short, PPO balances improving performance with staying close to a known, working strategy, which prevents catastrophic failures during training and leads to more stable learning.
+Direct Preference Optimization (DPO) is a more recent method designed specifically for aligning Large Language Models (LLMs) with human preferences. It offers a simpler, more direct alternative to using PPO for this task.
+To understand DPO, it helps to first understand the traditional PPO-based alignment method:
+● The PPO Approach (Two-Step Process): 1. Train a Reward Model: First, you collect human feedback data where people rate or compare different LLM responses (e.g., "Response A is better than Response B"). This data is used to train a separate AI model, called a reward model, whose job is to predict what score a human would give to any new response. 2. Fine-Tune with PPO: Next, the LLM is fine-tuned using PPO. The LLM's goal is to generate responses that get the highest possible score from
+the reward model. The reward model acts as the "judge" in the training game."</div>
+        <div class="seg-zh">简而言之，PPO 在提升性能与保持接近已知有效策略之间取得平衡，这能防止训练过程中的灾难性失败，并带来更稳定的学习。
+直接偏好优化（Direct Preference Optimization，DPO）是一种较新的方法，专门用于让大型语言模型（LLM）与人类偏好对齐。它为使用 PPO 完成此任务提供了一种更简单、更直接的替代方案。
+要理解 DPO，首先理解传统的基于 PPO 的对齐方法会有所帮助：
+● PPO 方法（两步流程）：1. 训练奖励模型（Reward Model）：首先，收集人类反馈数据，让人们评分或比较不同的 LLM 回复（例如，“回复 A 比回复 B 更好”）。这些数据用于训练一个单独的 AI 模型，称为奖励模型，其职责是预测人类会对任何新回复给出什么分数。2. 用 PPO 微调：接下来，使用 PPO 对 LLM 进行微调。LLM 的目标是生成能从奖励模型获得尽可能高分的回复。奖励模型在训练游戏中充当“裁判”。</div>
+        <div class="seg-note"><b>导读注:</b>点出 <b>PPO 的稳定性权衡</b> 与 <b>DPO 的简化对齐思路</b>，并梳理两步式 PPO 流程。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"This two-step process can be complex and unstable. For instance, the LLM might find a loophole and learn to "hack" the reward model to get high scores for bad responses.
+● The DPO Approach (Direct Process): DPO skips the reward model entirely. Instead of translating human preferences into a reward score and then optimizing for that score, DPO uses the preference data directly to update the LLM's policy. ● It works by using a mathematical relationship that directly links preference data to the optimal policy. It essentially teaches the model: "Increase the probability of generating responses like the preferred one and decrease the probability of generating ones like the disfavored one."
+In essence, DPO simplifies alignment by directly optimizing the language model on human preference data. This avoids the complexity and potential instability of training and using a separate reward model, making the alignment process more efficient and robust. Practical Applications &amp; Use Cases
+Adaptive agents exhibit enhanced performance in variable environments through iterative updates driven by experiential data."</div>
+        <div class="seg-zh">这个两步过程可能复杂且不稳定。例如，LLM 可能找到漏洞，学会“黑入”奖励模型（reward model），从而为糟糕的回复获得高分。
+● DPO 方法（直接过程）：DPO 完全跳过奖励模型。DPO 不将人类偏好转化为奖励分数再针对该分数进行优化，而是直接使用偏好数据来更新 LLM 的策略。● 其工作原理是利用一种直接将偏好数据与最优策略联系起来的数学关系。它本质上教会模型：“提高生成类似被偏好回复的概率，降低生成类似被厌恶回复的概率。”
+本质上，DPO 通过直接基于人类偏好数据优化语言模型来简化对齐（alignment）。这避免了训练和使用单独奖励模型的复杂性和潜在不稳定性，使对齐过程更高效、更稳健。实际应用与用例
+自适应智能体（adaptive agents）通过由经验数据驱动的迭代更新，在多变环境中展现出增强的性能。</div>
+        <div class="seg-note"><b>导读注:</b>DPO 跳过奖励模型直接优化偏好，规避“奖励黑客”风险。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"● Personalized assistant agents refine interaction protocols through longitudinal analysis of individual user behaviors, ensuring highly optimized response generation. ● Trading bot agents optimize decision-making algorithms by dynamically adjusting model parameters based on high-resolution, real-time market data, thereby maximizing financial returns and mitigating risk factors. ● Application agents optimize user interface and functionality through dynamic modification based on observed user behavior, resulting in increased user engagement and system intuitiveness. ● Robotic and autonomous vehicle agents enhance navigation and response capabilities by integrating sensor data and historical action analysis, enabling safe and efficient operation across diverse environmental conditions. ● Fraud detection agents improve anomaly detection by refining predictive models with newly identified fraudulent patterns, enhancing system security"</div>
+        <div class="seg-zh">● 个性化助手智能体（Personalized assistant agents）通过对个体用户行为的纵向分析来优化交互协议，确保生成高度优化的响应。● 交易机器人智能体（Trading bot agents）基于高分辨率实时市场数据动态调整模型参数，从而优化决策算法，最大化财务回报并降低风险因素。● 应用智能体（Application agents）通过基于观察到的用户行为进行动态修改来优化用户界面和功能，从而提升用户参与度和系统直观性。● 机器人与自动驾驶车辆智能体（Robotic and autonomous vehicle agents）通过整合传感器数据和历史动作分析来增强导航与响应能力，从而在多样化环境条件下实现安全高效运行。● 欺诈检测智能体（Fraud detection agents）通过利用新识别的欺诈模式改进预测模型来提升异常检测能力，增强系统安全性。</div>
+        <div class="seg-note"><b>导读注:</b>列举五类智能体，均以<b>持续学习与动态优化</b>为核心。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"and minimizing financial losses. ● Recommendation agents improve content selection precision by employing user preference learning algorithms, providing highly individualized and contextually relevant recommendations. ● Game AI agents enhance player engagement by dynamically adapting strategic algorithms, thereby increasing game complexity and challenge. ● Knowledge Base Learning Agents: Agents can leverage Retrieval Augmented Generation (RAG) to maintain a dynamic knowledge base of problem descriptions and proven solutions (see the Chapter 14). By storing successful strategies and challenges encountered, the agent can reference this data during decision-making, enabling it to adapt to new situations more effectively by applying previously successful patterns or avoiding known pitfalls. Case Study: The Self-Improving Coding Agent (SICA)"</div>
+        <div class="seg-zh">并最大限度地减少财务损失。● 推荐代理(Recommendation agents)通过采用用户偏好学习算法来提高内容选择精度,提供高度个性化和情境相关的推荐。● 游戏 AI 代理(Game AI agents)通过动态调整策略算法来增强玩家参与度,从而增加游戏的复杂性和挑战性。● 知识库学习代理(Knowledge Base Learning Agents):代理可以利用检索增强生成(Retrieval Augmented Generation,RAG)来维护问题描述和已验证解决方案的动态知识库(见第 14 章)。通过存储成功的策略和遇到的挑战,代理可以在决策过程中引用这些数据,使其能够通过应用先前成功的模式或避免已知的陷阱来更有效地适应新情况。案例研究:自我改进的编码代理(Self-Improving Coding Agent,SICA)</div>
+        <div class="seg-note"><b>导读注:</b><b>知识库学习代理</b>借助 RAG 维护动态知识库,实现经验复用与避坑。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"The Self-Improving Coding Agent (SICA), developed by Maxime Robeyns, Laurence Aitchison, and Martin Szummer, represents an advancement in agent-based learning, demonstrating the capacity for an agent to modify its own source code. This contrasts with traditional approaches where one agent might train another; SICA acts as both the modifier and the modified entity, iteratively refining its code base to improve performance across various coding challenges. SICA's self-improvement operates through an iterative cycle (see Fig.1). Initially, SICA reviews an archive of its past versions and their performance on benchmark tests. It selects the version with the highest performance score, calculated based on a weighted formula considering success, time, and computational cost. This selected version then undertakes the next round of self-modification. It analyzes the archive to identify potential improvements and then directly alters its codebase. The modified agent is subsequently tested against benchmarks, with the results recorded in the archive. This process repeats, facilitating learning directly from past performance. This self-improvement mechanism allows SICA to evolve its capabilities without requiring traditional training paradigms."</div>
+        <div class="seg-zh">由 Maxime Robeyns、Laurence Aitchison 和 Martin Szummer 开发的自我改进编码智能体（Self-Improving Coding Agent, SICA）代表了基于智能体的学习的一项进步，展示了智能体修改自身源代码的能力。这与一个智能体训练另一个智能体的传统方法形成对比；SICA 既是修改者又是被修改实体，迭代地精炼其代码库，以提升在各种编码挑战中的表现。SICA 的自我改进通过一个迭代循环运作（见图1）。首先，SICA 查看其过往版本档案及其在基准测试上的表现。它选择性能得分最高的版本，该得分基于一个考虑成功率、时间和计算成本的加权公式计算得出。这个被选中的版本随后进行下一轮自我修改。它分析档案以识别潜在改进，然后直接修改其代码库。修改后的智能体随后接受基准测试，结果记录在档案中。这一过程重复进行，促进直接从过往表现中学习。这种自我改进机制使 SICA 无需传统训练范式即可进化其能力。</div>
+        <div class="seg-note"><b>导读注:</b>SICA 能<b>修改自身源代码</b>，既是修改者又是被修改者，实现无需传统训练的自我进化。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"Fig.1: SICA's self-improvement, learning and adapting based on its past versions
+SICA underwent significant self-improvement, leading to advancements in code editing and navigation. Initially, SICA utilized a basic file-overwriting approach for code changes. It subsequently developed a "Smart Editor" capable of more intelligent and contextual edits. This evolved into a "Diff-Enhanced Smart Editor," incorporating diffs for targeted modifications and pattern-based editing, and a "Quick Overwrite Tool" to reduce processing demands.
+SICA further implemented "Minimal Diff Output Optimization" and "Context-Sensitive Diff Minimization," using Abstract Syntax Tree (AST) parsing for efficiency. Additionally, a "SmartEditor Input Normalizer" was added. In terms of navigation, SICA independently created an "AST Symbol Locator," using the code's structural map (AST) to identify definitions within the codebase. Later, a "Hybrid Symbol Locator" was developed, combining a quick search with AST checking. This was further optimized via "Optimized AST Parsing in Hybrid Symbol Locator" to focus on relevant code sections, improving search speed.(see Fig. 2)"</div>
+        <div class="seg-zh">图1：SICA 基于其过往版本的自我改进、学习与适应
+SICA 经历了显著的自我改进，从而在代码编辑与导航方面取得进展。最初，SICA 采用基本的文件覆盖方式来进行代码修改。随后，它开发出能够进行更智能、更具上下文感知编辑的“智能编辑器”（Smart Editor）。这进一步演化为“差异增强型智能编辑器”（Diff-Enhanced Smart Editor），引入 diff 以实现针对性修改和基于模式的编辑，并加入“快速覆盖工具”（Quick Overwrite Tool）以降低处理需求。
+SICA 进一步实现了“最小差异输出优化”（Minimal Diff Output Optimization）和“上下文敏感差异最小化”（Context-Sensitive Diff Minimization），利用抽象语法树（Abstract Syntax Tree，AST）解析来提升效率。此外，还加入了“智能编辑器输入规范化器”（SmartEditor Input Normalizer）。在导航方面，SICA 独立创建了“AST 符号定位器”（AST Symbol Locator），利用代码的结构映射（AST）来识别代码库中的定义。后来，又开发出“混合符号定位器”（Hybrid Symbol Locator），将快速搜索与 AST 检查相结合。这通过“混合符号定位器中的优化 AST 解析”（Optimized AST Parsing in Hybrid Symbol Locator）进一步优化，以聚焦相关代码段，提升搜索速度。（见图2）</div>
+        <div class="seg-note"><b>导读注:</b>展示 SICA 如何<b>自主演化</b>出智能编辑器与 AST 定位器，体现自我改进能力。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"Fig.2 : Performance across iterations. Key improvements are annotated with their corresponding tool or agent modifications. (courtesy of Maxime Robeyns , Martin Szummer , Laurence Aitchison)
+SICA's architecture comprises a foundational toolkit for basic file operations, command execution, and arithmetic calculations. It includes mechanisms for result submission and the invocation of specialized sub-agents (coding, problem-solving, and reasoning). These sub-agents decompose complex tasks and manage the LLM's context length, especially during extended improvement cycles.
+An asynchronous overseer, another LLM, monitors SICA's behavior, identifying potential issues such as loops or stagnation. It communicates with SICA and can intervene to halt execution if necessary. The overseer receives a detailed report of SICA's actions, including a callgraph and a log of messages and tool actions, to identify patterns and inefficiencies."</div>
+        <div class="seg-zh">图2：各迭代轮次中的性能表现。关键改进处标注了相应的工具或智能体修改。（感谢 Maxime Robeyns、Martin Szummer、Laurence Aitchison 提供）
+
+SICA 的架构包含一个基础工具包，用于基本文件操作、命令执行和算术计算。它包含结果提交机制以及调用专用子智能体（编码、问题求解和推理）的机制。这些子智能体负责分解复杂任务并管理 LLM 的上下文长度，尤其是在延长的改进周期中。
+
+一个异步监督器（另一个 LLM）监控 SICA 的行为，识别循环或停滞等潜在问题。它与 SICA 通信，并可在必要时介入以停止执行。监督器接收 SICA 行动的详细报告，包括调用图和消息与工具操作日志，以识别模式和低效之处。</div>
+        <div class="seg-note"><b>导读注:</b><b>异步监督器</b>用另一 LLM 监控主智能体，可介入止损，是防循环/停滞的关键设计。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"SICA's LLM organizes information within its context window, its short-term memory, in a structured manner crucial to its operation. This structure includes a System Prompt defining agent goals, tool and sub-agent documentation, and system instructions. A Core Prompt contains the problem statement or instruction, content of open files, and a directory map. Assistant Messages record the agent's step-by-step reasoning, tool and sub-agent call records and results, and overseer communications. This organization facilitates efficient information flow, enhancing LLM operation and
+reducing processing time and costs. Initially, file changes were recorded as diffs, showing only modifications and periodically consolidated.
+SICA: A Look at the Code: Delving deeper into SICA's implementation reveals several key design choices that underpin its capabilities. As discussed, the system is built with a modular architecture, incorporating several sub-agents, such as a coding agent, a problem-solver agent, and a reasoning agent. These sub-agents are invoked by the main agent, much like tool calls, serving to decompose complex tasks and efficiently manage context length, especially during those extended meta-improvement iterations."</div>
+        <div class="seg-zh">SICA 的 LLM 在其上下文窗口（即短期记忆）内以结构化方式组织信息，这种结构化对其运行至关重要。该结构包括：定义智能体目标、工具与子智能体文档及系统指令的 System Prompt（系统提示）；包含问题陈述或指令、打开文件内容及目录映射的 Core Prompt（核心提示）；记录智能体逐步推理、工具与子智能体调用记录及结果、以及监督者通信的 Assistant Messages（助手消息）。这种组织方式促进了高效的信息流动，<b>提升了 LLM 的运行效率，并减少了处理时间与成本</b>。最初，文件变更以 diff 形式记录，仅显示修改内容并定期合并。
+
+SICA：代码剖析：深入探究 SICA 的实现，可发现若干支撑其能力的关键设计选择。如前所述，该系统采用模块化架构，集成了多个子智能体，如编码智能体、问题求解智能体和推理智能体。这些子智能体由主智能体调用，方式类似工具调用，用于分解复杂任务并高效管理上下文长度，<b>尤其是在那些延长的元改进迭代期间</b>。</div>
+        <div class="seg-note"><b>导读注:</b>揭示 SICA 用结构化上下文窗口管理信息，<b>以 diff 记录变更并靠子智能体分解任务</b>。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"The project is actively developed and aims to provide a robust framework for those interested in post-training LLMs on tool use and other agentic tasks, with the full code available for further exploration and contribution at the https://github.com/MaximeRobeyns/self_improving_coding_agent/ GitHub repository.
+For security, the project strongly emphasizes Docker containerization, meaning the agent runs within a dedicated Docker container. This is a crucial measure, as it provides isolation from the host machine, mitigating risks like inadvertent file system manipulation given the agent's ability to execute shell commands.
+To ensure transparency and control, the system features robust observability through an interactive webpage that visualizes events on the event bus and the agent's callgraph. This offers comprehensive insights into the agent's actions, allowing users to inspect individual events, read overseer messages, and collapse sub-agent traces for clearer understanding."</div>
+        <div class="seg-zh">该项目正在积极开发中，旨在为有兴趣对 LLM 进行工具使用及其他智能体任务后训练（post-training）的人提供一个稳健的框架，完整代码可在 https://github.com/MaximeRobeyns/self_improving_coding_agent/ GitHub 仓库中获取，以供进一步探索和贡献。
+
+出于安全考虑，该项目<b>强烈强调 Docker 容器化</b>，即智能体运行在专用 Docker 容器内。这是一项关键措施，因为它提供了与宿主机的隔离，降低了因智能体能够执行 shell 命令而带来的风险，例如无意的文件系统操作。
+
+为确保透明性和控制力，系统通过一个交互式网页实现了<b>强大的可观测性</b>，该网页可视化事件总线上的事件以及智能体的调用图（callgraph）。这提供了对智能体行为的全面洞察，允许用户检查单个事件、阅读监督者（overseer）消息，并折叠子智能体追踪以获得更清晰的理解。</div>
+        <div class="seg-note"><b>导读注:</b>强调 Docker 隔离与可观测性网页，是安全与透明设计的两大亮点。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"In terms of its core intelligence, the agent framework supports LLM integration from various providers, enabling experimentation with different models to find the best fit for specific tasks. Finally, a critical component is the asynchronous overseer, an LLM that runs concurrently with the main agent. This overseer periodically assesses the agent's behavior for pathological deviations or stagnation and can intervene by sending notifications or even cancelling the agent's execution if necessary. It receives a detailed textual representation of the system's state, including a callgraph and an event stream of LLM messages, tool calls, and responses, which allows it to detect inefficient patterns or repeated work.
+A notable challenge in the initial SICA implementation was prompting the LLM-based agent to independently propose novel, innovative, feasible, and engaging modifications during each meta-improvement iteration. This limitation, particularly in
+fostering open-ended learning and authentic creativity in LLM agents, remains a key area of investigation in current research."</div>
+        <div class="seg-zh">就其核心智能而言，该智能体框架支持来自不同提供商的 LLM 集成，从而能够试验不同模型，以找到最适合特定任务的模型。最后，一个关键组件是异步监督器（asynchronous overseer），它是一个与主智能体并发运行的 LLM。该监督器定期评估智能体的行为是否存在病态偏差或停滞，并可在必要时通过发送通知甚至取消智能体的执行来进行干预。它接收系统状态的详细文本表示，包括调用图（callgraph）以及 LLM 消息、工具调用和响应的事件流，这使其能够检测低效模式或重复工作。
+初始 SICA 实现中的一个显著挑战是，促使基于 LLM 的智能体在每次元改进迭代中独立提出新颖、创新、可行且引人入胜的修改。这一局限，尤其是在培养 LLM 智能体的开放式学习和真正创造力方面，仍然是当前研究中的一个关键调查领域。</div>
+        <div class="seg-note"><b>导读注:</b>异步监督器可实时监控并叫停失控智能体，是保障安全的关键设计。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"AlphaEvolve is an AI agent developed by Google designed to discover and optimize algorithms. It utilizes a combination of LLMs, specifically Gemini models (Flash and Pro), automated evaluation systems, and an evolutionary algorithm framework. This system aims to advance both theoretical mathematics and practical computing applications.
+AlphaEvolve employs an ensemble of Gemini models. Flash is used for generating a wide range of initial algorithm proposals, while Pro provides more in-depth analysis and refinement. Proposed algorithms are then automatically evaluated and scored based on predefined criteria. This evaluation provides feedback that is used to iteratively improve the solutions, leading to optimized and novel algorithms.
+In practical computing, AlphaEvolve has been deployed within Google's infrastructure. It has demonstrated improvements in data center scheduling, resulting in a 0.7% reduction in global compute resource usage. It has also contributed to hardware design by suggesting optimizations for Verilog code in upcoming Tensor Processing Units (TPUs). Furthermore, AlphaEvolve has accelerated AI performance, including a 23% speed improvement in a core kernel of the Gemini architecture and up to 32.5% optimization of low-level GPU instructions for FlashAttention."</div>
+        <div class="seg-zh">AlphaEvolve 是 Google 开发的一款 AI agent（智能体），旨在发现并优化算法。它结合了 LLM（大语言模型，具体为 Gemini 的 Flash 与 Pro 模型）、自动评估系统和进化算法框架。<b>该系统旨在推动理论数学与实际计算应用的发展。</b>
+
+AlphaEvolve 采用 Gemini 模型的集成方案。Flash 用于生成广泛的初始算法提案，Pro 则提供更深入的分析与改进。随后，所提出的算法会依据预定义标准被自动评估和打分。这一评估提供反馈，用于迭代改进解决方案，从而得到优化且新颖的算法。
+
+在实际计算中，AlphaEvolve 已部署于 Google 的基础设施内。它在数据中心调度方面展现出改进，使<b>全球计算资源使用量降低 0.7%</b>。它还通过为即将推出的张量处理单元（TPU）中的 Verilog 代码提出优化建议，为硬件设计做出贡献。此外，AlphaEvolve 还加速了 AI 性能，包括<b>Gemini 架构核心 kernel 提速 23%</b>，以及 FlashAttention 的低层 GPU 指令优化最高达 32.5%。</div>
+        <div class="seg-note"><b>导读注:</b><b>0.7% 省算力、23% 提速</b>：进化算法已落地 Google 真实基础设施。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"In the realm of fundamental research, AlphaEvolve has contributed to the discovery of new algorithms for matrix multiplication, including a method for 4x4 complex-valued matrices that uses 48 scalar multiplications, surpassing previously known solutions. In broader mathematical research, it has rediscovered existing state-of-the-art solutions to over 50 open problems in 75% of cases and improved upon existing solutions in 20% of cases, with examples including advancements in the kissing number problem.
+OpenEvolve is an evolutionary coding agent that leverages LLMs (see Fig.3) to iteratively optimize code. It orchestrates a pipeline of LLM-driven code generation, evaluation, and selection to continuously enhance programs for a wide range of tasks. A key aspect of OpenEvolve is its capability to evolve entire code files, rather than being limited to single functions. The agent is designed for versatility, offering support for multiple programming languages and compatibility with OpenAI-compatible APIs"</div>
+        <div class="seg-zh">在基础研究领域，AlphaEvolve 为发现矩阵乘法的新算法做出了贡献，其中包括一种针对 4x4 复值矩阵、使用 48 次标量乘法的方法，<b>超越了此前已知的解决方案</b>。在更广泛的数学研究中，它在 75% 的情况下重新发现了 50 多个开放问题的现有最先进解决方案，并在 20% 的情况下改进了现有解决方案，示例包括接吻数问题（kissing number problem）的进展。
+
+OpenEvolve 是一种进化式编码智能体（evolutionary coding agent），它利用 LLM（见图3）迭代优化代码。它编排由 LLM 驱动的代码生成、评估和选择的流水线，以持续增强面向广泛任务的程序。OpenEvolve 的一个关键方面是它能够进化整个代码文件，而不是仅限于单个函数。该智能体设计注重通用性，支持多种编程语言，并兼容 OpenAI 兼容 API。</div>
+        <div class="seg-note"><b>导读注:</b><b>AlphaEvolve 在矩阵乘法与开放数学问题上超越已知解</b>，OpenEvolve 则能进化整个代码文件。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"for any LLM. Furthermore, it incorporates multi-objective optimization, allows for flexible prompt engineering, and is capable of distributed evaluation to efficiently handle complex coding challenges.
+Fig. 3: The OpenEvolve internal architecture is managed by a controller. This controller orchestrates several key components: the program sampler, Program Database, Evaluator Pool, and LLM Ensembles. Its primary function is to facilitate their learning and adaptation processes to enhance code quality.
+This code snippet uses the OpenEvolve library to perform evolutionary optimization on a program. It initializes the OpenEvolve system with paths to an initial program, an evaluation file, and a configuration file. The evolve.run(iterations=1000) line starts the evolutionary process, running for 1000 iterations to find an improved version of the program. Finally, it prints the metrics of the best program found during the evolution, formatted to four decimal places.
+# Initialize the system evolve = OpenEvolve( initial_program_path="path/to/initial_program.py", evaluation_file="path/to/evaluator.py", config_path="path/to/config.yaml" )"</div>
+        <div class="seg-zh">对于任何 LLM 均适用。此外，它融合了多目标优化，支持灵活的 prompt engineering（提示工程），并具备分布式评估能力，从而高效处理复杂的编程挑战。
+图 3：OpenEvolve 内部架构由控制器管理。该控制器协调若干关键组件：程序采样器（program sampler）、程序数据库（Program Database）、评估器池（Evaluator Pool）和 LLM 集成（LLM Ensembles）。其主要功能是促进它们的学习与适应过程，以提升代码质量。
+此代码片段使用 OpenEvolve 库对程序执行进化优化。它使用初始程序、评估文件和配置文件的路径初始化 OpenEvolve 系统。evolve.run(iterations=1000) 这一行启动进化过程，运行 1000 次迭代以寻找程序的改进版本。最后，它打印进化过程中找到的最佳程序的指标，格式化为四位小数。
+# 初始化系统 evolve = OpenEvolve( initial_program_path="path/to/initial_program.py", evaluation_file="path/to/evaluator.py", config_path="path/to/config.yaml" )</div>
+        <div class="seg-note"><b>导读注:</b><b>OpenEvolve</b> 架构与用法：控制器协调采样、评估与 LLM 集成，代码示例展示 1000 次迭代优化。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"# Run the evolution best_program = await evolve.run(iterations=1000) print(f"Best program metrics:") for name, value in best_program.metrics.items(): print(f" {name}: {value:.4f}")
+What: AI agents often operate in dynamic and unpredictable environments where pre-programmed logic is insufficient. Their performance can degrade when faced with novel situations not anticipated during their initial design. Without the ability to learn from experience, agents cannot optimize their strategies or personalize their interactions over time. This rigidity limits their effectiveness and prevents them from achieving true autonomy in complex, real-world scenarios."</div>
+        <div class="seg-zh"># 运行进化
+best_program = await evolve.run(iterations=1000)
+print(f"Best program metrics:")
+for name, value in best_program.metrics.items():
+    print(f" {name}: {value:.4f}")
+
+问题所在：AI agent（智能体）常常在动态且不可预测的环境中运行，此时预编程逻辑并不充分。当面对初始设计时未预料到的新情况时，它们的性能可能会下降。如果<b>无法从经验中学习</b>，agent 就无法随时间优化其策略或个性化其交互。这种僵化限制了它们的有效性，并阻碍它们在复杂的真实世界场景中实现<b>真正的自主性</b>。</div>
+        <div class="seg-note"><b>导读注:</b>指出预编程逻辑的局限：<b>不能从经验学习</b>就难有真正的自主性。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"Why: The standardized solution is to integrate learning and adaptation mechanisms, transforming static agents into dynamic, evolving systems. This allows an agent to autonomously refine its knowledge and behaviors based on new data and interactions. Agentic systems can use various methods, from reinforcement learning to more advanced techniques like self-modification, as seen in the Self-Improving Coding Agent (SICA). Advanced systems like Google's AlphaEvolve leverage LLMs and evolutionary algorithms to discover entirely new and more efficient solutions to complex problems. By continuously learning, agents can master new tasks, enhance their performance, and adapt to changing conditions without requiring constant manual reprogramming.
+Rule of thumb: Use this pattern when building agents that must operate in dynamic, uncertain, or evolving environments. It is essential for applications requiring personalization, continuous performance improvement, and the ability to handle novel situations autonomously."</div>
+        <div class="seg-zh">为什么：标准化的解决方案是集成学习与适应机制，将静态智能体转变为动态、演化的系统。这使智能体能够基于新数据和交互自主地精炼其知识与行为。智能体系统（agentic systems）可以使用多种方法，从强化学习到更先进的技术（如自我修改），正如在自我改进编码智能体（Self-Improving Coding Agent, SICA）中所见。像谷歌的 AlphaEvolve 这样的先进系统利用 LLM 和进化算法来发现复杂问题的全新且更高效的解决方案。<b>通过持续学习，智能体可以掌握新任务、提升性能，并在无需持续手动重新编程的情况下适应变化的条件。</b>经验法则：在构建必须在动态、不确定或演化环境中运行的智能体时，使用此模式。对于需要个性化、持续性能改进以及自主处理新情况能力的应用而言，这至关重要。</div>
+        <div class="seg-note"><b>导读注:</b>强调<b>持续学习让智能体无需手动重编程即可自主适应</b>，并给出适用场景的经验法则。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"● Learning and Adaptation are about agents getting better at what they do and handling new situations by using their experiences. ● "Adaptation" is the visible change in an agent's behavior or knowledge that comes from learning. ● SICA, the Self-Improving Coding Agent, self-improves by modifying its code based on past performance. This led to tools like the Smart Editor and AST Symbol Locator. ● Having specialized "sub-agents" and an "overseer" helps these self-improving systems manage big tasks and stay on track. ● The way an LLM's "context window" is set up (with system prompts, core prompts, and assistant messages) is super important for how efficiently agents work. ● This pattern is vital for agents that need to operate in environments that are always changing, uncertain, or require a personal touch.
+● Building agents that learn often means hooking them up with machine learning tools and managing how data flows. ● An agent system, equipped with basic coding tools, can autonomously edit itself, and thereby improve its performance on benchmark tasks ● AlphaEvolve is Google's AI agent that leverages LLMs and an evolutionary framework to autonomously discover and optimize algorithms, significantly enhancing both fundamental research and practical computing applications.. Conclusion"</div>
+        <div class="seg-zh">● 学习与适应（Learning and Adaptation）是指智能体通过利用自身经验，在其所做的事情上变得更好，并处理新情况。● “适应”（Adaptation）是智能体行为或知识上可见的变化，这种变化来自学习。● SICA，即自我改进编码智能体（Self-Improving Coding Agent），通过基于过去表现修改自身代码来实现自我改进。这催生了 Smart Editor 和 AST Symbol Locator 等工具。● 拥有专门的“子智能体”（sub-agents）和一个“监督者”（overseer）有助于这些自我改进系统管理大型任务并保持正轨。● LLM 的“上下文窗口”（context window）的设置方式（包括 system prompt、core prompt 和 assistant 消息）对于智能体的工作效率至关重要。● 这种模式对于需要在始终变化、不确定或需要个性化处理的环境中运行的智能体至关重要。
+● 构建会学习的智能体通常意味着要将它们与机器学习工具连接起来，并管理数据流动。● 一个配备了基本编码工具的智能体系统可以自主编辑自身，从而提升其在基准任务上的表现。● AlphaEvolve 是 Google 的 AI 智能体，它利用 LLM 和进化框架来自主发现并优化算法，显著增强了基础研究和实际计算应用。结论</div>
+        <div class="seg-note"><b>导读注:</b>要点出自我改进智能体可自主改代码，<b>上下文窗口</b>设计决定效率。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"This chapter examines the crucial roles of learning and adaptation in Artificial Intelligence. AI agents enhance their performance through continuous data acquisition and experience. The Self-Improving Coding Agent (SICA) exemplifies this by autonomously improving its capabilities through code modifications.
+We have reviewed the fundamental components of agentic AI, including architecture, applications, planning, multi-agent collaboration, memory management, and learning and adaptation. Learning principles are particularly vital for coordinated improvement in multi-agent systems. To achieve this, tuning data must accurately reflect the complete interaction trajectory, capturing the individual inputs and outputs of each participating agent.
+These elements contribute to significant advancements, such as Google's AlphaEvolve. This AI system independently discovers and refines algorithms by LLMs, automated assessment, and an evolutionary approach, driving progress in scientific research and computational techniques. Such patterns can be combined to construct sophisticated AI systems. Developments like AlphaEvolve demonstrate that autonomous algorithmic discovery and optimization by AI agents are attainable. References"</div>
+        <div class="seg-zh">本章探讨学习与适应在人工智能中的关键作用。AI 智能体(agent)通过持续的数据获取和经验来提升其性能。自改进编码智能体(Self-Improving Coding Agent, SICA)通过代码修改自主提升自身能力,正是这一点的例证。
+我们回顾了智能体 AI(agentic AI)的基本组成部分,包括架构、应用、规划、多智能体协作、记忆管理以及学习与适应。<b>学习原则对于多智能体系统中的协同改进尤为重要。</b>为实现这一点,调优数据必须准确反映完整的交互轨迹,捕捉每个参与智能体的单独输入与输出。
+这些要素推动了重大进展,例如 Google 的 AlphaEvolve。该系统通过 LLM、自动评估和进化方法自主发现并改进算法,推动科学研究与计算技术的进步。这些模式可以组合起来构建复杂的 AI 系统。<b>AlphaEvolve 等进展表明,AI 智能体实现自主的算法发现与优化是可行的。</b>参考文献</div>
+        <div class="seg-note"><b>导读注:</b>点出<b>学习与适应</b>是智能体协同改进的关键,并以 AlphaEvolve 佐证自主算法发现可行。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"1. Sutton, R. S., &amp; Barto, A. G. (2018). Reinforcement Learning: An Introduction. MIT Press. 2. Goodfellow, I., Bengio, Y., &amp; Courville, A. (2016). Deep Learning. MIT Press. 3. Mitchell, T. M. (1997). Machine Learning. McGraw-Hill. 4. Proximal Policy Optimization Algorithms by John Schulman, Filip Wolski, Prafulla Dhariwal, Alec Radford, and Oleg Klimov. You can find it on arXiv: https://arxiv.org/abs/1707.06347
+5. Robeyns, M., Aitchison, L., &amp; Szummer, M. (2025). A Self-Improving Coding Agent. arXiv:2504.15228v2. https://arxiv.org/pdf/2504.15228 https://github.com/MaximeRobeyns/self_improving_coding_agent 6. AlphaEvolve blog, https://deepmind.google/discover/blog/alphaevolve-a-gemini-powered-coding-ag ent-for-designing-advanced-algorithms/ 7. OpenEvolve, https://github.com/codelion/openevolve"</div>
+        <div class="seg-zh">1. Sutton, R. S., &amp; Barto, A. G. (2018). Reinforcement Learning: An Introduction. MIT Press. 2. Goodfellow, I., Bengio, Y., &amp; Courville, A. (2016). Deep Learning. MIT Press. 3. Mitchell, T. M. (1997). Machine Learning. McGraw-Hill. 4. Proximal Policy Optimization Algorithms，作者 John Schulman、Filip Wolski、Prafulla Dhariwal、Alec Radford 和 Oleg Klimov。可在 arXiv 上找到：https://arxiv.org/abs/1707.06347
+5. Robeyns, M., Aitchison, L., &amp; Szummer, M. (2025). A Self-Improving Coding Agent. arXiv:2504.15228v2. https://arxiv.org/pdf/2504.15228 https://github.com/MaximeRobeyns/self_improving_coding_agent 6. AlphaEvolve 博客，https://deepmind.google/discover/blog/alphaevolve-a-gemini-powered-coding-ag ent-for-designing-advanced-algorithms/ 7. OpenEvolve，https://github.com/codelion/openevolve</div>
+        <div class="seg-note"><b>导读注:</b>参考文献清单，含强化学习、深度学习经典教材及<b>自改进编码智能体</b>等前沿工作。</div>
+      </div>
+
+      <div class="callout info" style="margin-top:24px">
+        <div class="co-title">来源与用途</div>
+        <p style="margin-bottom:0">《Agentic Design Patterns》,Antonio Gulli · 2025 · <a href="papers/pdf/gulli-agentic-design-patterns.pdf" target="_blank" rel="noopener">原书 PDF</a>。本页为学习用途的对照整理,版权归原作者;有问题到读书导师处提问,答案只引用书中原文并标注章节。</p>
+      </div>
+
+      <p class="pager" style="margin-top:18px">
+        <a class="chip" href="book-gulli-patterns-ch8.html">← 第8章 · 记忆管理 Memory Management</a>
+        <a class="chip" href="book-gulli-patterns.html">导读</a>
+        <a class="chip" href="book-gulli-patterns-ch10.html">第10章 · 模型上下文协议 Model Context Protocol →</a>
+      </p>
+
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/app.js?v=28"></script>
+</body>
+</html>

@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Agentic Design Patterns 附录 智能体框架速览 Appendix C: Agentic Frameworks Overview 中英对照翻译。">
+<title>附录 · 智能体框架速览 Appendix C: Agentic Frameworks Overview | Agentic Design Patterns | Agent 学院</title>
+<link rel="stylesheet" href="assets/css/style.css?v=24">
+</head>
+<body data-chapter="books">
+
+<header class="topbar">
+  <button class="icon-btn hamburger" id="hamburger" title="打开导航">☰</button>
+  <a class="brand" href="index.html"><span class="logo">学</span> Agent 学院 <small>从零开发智能体 · Ontology · Harness</small></a>
+  <span class="spacer"></span>
+  <span class="progress-pill" id="progress-pill">读书</span>
+  <button class="icon-btn" id="theme-btn">🌙</button>
+</header>
+
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <main class="content">
+    <div class="content-inner">
+
+      <header class="chapter-head">
+        <div class="kicker">读书 · Agentic Design Patterns · 中英对照</div>
+        <h1>附录 · 智能体框架速览 Appendix C: Agentic Frameworks Overview</h1>
+        <p class="lead">
+          Appendix C - Quick overview of Agentic: Appendix C · 《Agentic Design Patterns》 · Antonio Gulli · 2025
+          <br>横向对比LangChain、LangGraph、ADK、CrewAI等框架的抽象层级与选型依据。
+          <br><a class="chip" href="book-gulli-patterns.html">← 返回导读</a> <a class="chip" href="papers/pdf/gulli-agentic-design-patterns.pdf">原书 PDF</a> <a class="chip" href="book-gulli-patterns-ch101.html">上一章:第101章</a> <a class="chip" href="book-gulli-patterns-ch103.html">下一章:第103章</a>
+        </p>
+      </header>
+
+      <div class="callout key"><div class="co-title">本章要点</div><p>① LangChain用LCEL串联线性DAG流程，适合简单可预测任务  ① LangGraph以有状态图支持循环、重试与多智能体协作  ① ADK、CrewAI等高层框架以预置模式编排智能体团队  ① 选型核心是权衡图级细粒度控制与平台化开发效率</p></div>
+<h2>本章划线句</h2>
+<details class="qn"><summary>本章划线句(逐字校验)</summary>
+        <div class="qn-body">
+        <div class="qn-en">"Its core strength lies in its LangChain Expression Language (LCEL), which allows you to "pipe" components together into a chain."</div>
+        <div class="qn-zh"><b>为什么值得划线:</b>点明LangChain的核心抽象与线性管道思想</div>
+        </div>
+      </details>
+<details class="qn"><summary>本章划线句(逐字校验)</summary>
+        <div class="qn-body">
+        <div class="qn-en">"Its main advantage is the ability to create cycles, allowing the application to loop, retry, or call tools in a flexible order until a task is complete."</div>
+        <div class="qn-zh"><b>为什么值得划线:</b>概括LangGraph相对LangChain的关键差异</div>
+        </div>
+      </details>
+<details class="qn"><summary>本章划线句(逐字校验)</summary>
+        <div class="qn-body">
+        <div class="qn-en">"Consequently, selecting the right framework hinges on whether the application requires a simple sequence, a dynamic reasoning loop, or a managed team of specialists."</div>
+        <div class="qn-zh"><b>为什么值得划线:</b>给出全章框架选型的三分法判断标准</div>
+        </div>
+      </details>
+<h2>正文(英中对照)</h2>
+<div class="seg">
+        <div class="seg-en">"Appendix C - Quick overview of Agentic Frameworks
+LangChain is a framework for developing applications powered by LLMs. Its core strength lies in its LangChain Expression Language (LCEL), which allows you to "pipe" components together into a chain. This creates a clear, linear sequence where the output of one step becomes the input for the next. It's built for workflows that are Directed Acyclic Graphs (DAGs), meaning the process flows in one direction without loops.
+● Simple RAG: Retrieve a document, create a prompt, get an answer from an LLM. ● Summarization: Take user text, feed it to a summarization prompt, and return the output. ● Extraction: Extract structured data (like JSON) from a block of text.
+# A simple LCEL chain conceptually # (This is not runnable code, just illustrates the flow) chain = prompt | model | output_parse
+LangGraph is a library built on top of LangChain to handle more advanced agentic systems. It allows you to define your workflow as a graph with nodes (functions or LCEL chains) and edges (conditional logic). Its main advantage is the ability to create cycles, allowing the application to loop, retry, or call tools in a flexible order until a task is complete. It explicitly manages the application state, which is passed between nodes and updated throughout the process."</div>
+        <div class="seg-zh">附录 C - Agentic 框架快速概览
+LangChain 是一个用于开发由 LLM 驱动的应用的框架。其核心优势在于 LangChain 表达式语言（LangChain Expression Language, LCEL），它允许你将各组件“管道式”连接成一条链。这创建了一个清晰、线性的序列，其中一步的输出成为下一步的输入。它专为有向无环图（Directed Acyclic Graphs, DAGs）工作流而构建，即流程单向流动、没有循环。
+● 简单 RAG：检索文档、创建 prompt、从 LLM 获取答案。● 摘要：接收用户文本，将其送入摘要 prompt，并返回输出。● 抽取：从一段文本中抽取结构化数据（如 JSON）。
+# 一个简单的 LCEL 链的概念示意 #（这不是可运行代码，仅用于说明流程）chain = prompt | model | output_parse
+LangGraph 是构建在 LangChain 之上的一个库，用于处理更高级的 agentic 系统。它允许你将工作流定义为一个图，包含节点（函数或 LCEL 链）和边（条件逻辑）。其主要优势是能够创建循环，使应用可以循环、重试或按灵活顺序调用工具，直到任务完成。它显式管理应用状态，该状态在节点之间传递并在整个过程中更新。</div>
+        <div class="seg-note"><b>导读注:</b><b>LCEL 适合线性 DAG，LangGraph 支持循环与状态管理</b>，是选型关键。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"● Multi-agent Systems: A supervisor agent routes tasks to specialized worker agents, potentially looping until the goal is met.
+● Plan-and-Execute Agents: An agent creates a plan, executes a step, and then loops back to update the plan based on the result. ● Human-in-the-Loop: The graph can wait for human input before deciding which node to go to next.
+Core Abstraction Chain (using LCEL) Graph of Nodes
+Workflow Type Linear (Directed Acyclic Cyclical (Graphs with loops) Graph)
+State Generally stateless per run Explicit and persistent state Management object
+Primary Use Simple, predictable Complex, dynamic, stateful sequences agents
+● Choose LangChain when your application has a clear, predictable, and linear flow of steps. If you can define the process from A to B to C without needing to loop back, LangChain with LCEL is the perfect tool. ● Choose LangGraph when you need your application to reason, plan, or operate in a loop. If your agent needs to use tools, reflect on the results, and potentially try again with a different approach, you need the cyclical and stateful nature of LangGraph."</div>
+        <div class="seg-zh">● 多智能体系统（Multi-agent Systems）：由 supervisor agent 将任务路由给专门化的 worker agents，可能循环执行直至达成目标。
+● 计划-执行智能体（Plan-and-Execute Agents）：智能体制定计划、执行一个步骤，然后循环回来根据结果更新计划。● 人在回路（Human-in-the-Loop）：图可以等待人类输入，再决定下一步前往哪个节点。
+核心抽象 链（使用 LCEL） 节点图（Graph of Nodes）
+工作流类型 线性（有向无环图） 循环型（带环的图）
+状态管理 每次运行通常无状态 显式且持久的状态对象
+主要用途 简单、可预测的序列 复杂、动态、有状态的智能体
+● 当你的应用具有清晰、可预测且线性的步骤流时，选择 LangChain。如果你能将流程定义为从 A 到 B 再到 C 而无需回环，那么使用 LCEL 的 LangChain 就是完美工具。● 当你的应用需要推理、规划或在循环中运行时，选择 LangGraph。如果你的智能体需要使用工具、对结果进行 Reflection（反思），并可能用不同方法重试，你就需要 LangGraph 的循环与有状态特性。</div>
+        <div class="seg-note"><b>导读注:</b>对比 LangChain 与 LangGraph 的选型：<b>线性流程选 LangChain，循环有状态选 LangGraph</b>。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"# Graph state class State(TypedDict): topic: str joke: str story: str poem: str combined_output: str
+# Nodes def call_llm_1(state: State): """First LLM call to generate initial joke"""
+msg = llm.invoke(f"Write a joke about {state['topic']}") return {"joke": msg.content}
+def call_llm_2(state: State): """Second LLM call to generate story"""
+msg = llm.invoke(f"Write a story about {state['topic']}") return {"story": msg.content}
+def call_llm_3(state: State): """Third LLM call to generate poem"""
+msg = llm.invoke(f"Write a poem about {state['topic']}") return {"poem": msg.content}
+def aggregator(state: State): """Combine the joke and story into a single output"""
+combined = f"Here's a story, joke, and poem about {state['topic']}!\n\n" combined += f"STORY:\n{state['story']}\n\n" combined += f"JOKE:\n{state['joke']}\n\n" combined += f"POEM:\n{state['poem']}" return {"combined_output": combined}
+# Build workflow parallel_builder = StateGraph(State)
+# Add nodes parallel_builder.add_node("call_llm_1", call_llm_1) parallel_builder.add_node("call_llm_2", call_llm_2) parallel_builder.add_node("call_llm_3", call_llm_3) parallel_builder.add_node("aggregator", aggregator)"</div>
+        <div class="seg-zh"># 图状态
+class State(TypedDict):
+    topic: str
+    joke: str
+    story: str
+    poem: str
+    combined_output: str
+
+# 节点
+def call_llm_1(state: State):
+    """第一次 LLM 调用，生成初始笑话"""
+    msg = llm.invoke(f"Write a joke about {state['topic']}")
+    return {"joke": msg.content}
+
+def call_llm_2(state: State):
+    """第二次 LLM 调用，生成故事"""
+    msg = llm.invoke(f"Write a story about {state['topic']}")
+    return {"story": msg.content}
+
+def call_llm_3(state: State):
+    """第三次 LLM 调用，生成诗歌"""
+    msg = llm.invoke(f"Write a poem about {state['topic']}")
+    return {"poem": msg.content}
+
+def aggregator(state: State):
+    """将笑话和故事合并为单一输出"""
+    combined = f"Here's a story, joke, and poem about {state['topic']}!\n\n"
+    combined += f"STORY:\n{state['story']}\n\n"
+    combined += f"JOKE:\n{state['joke']}\n\n"
+    combined += f"POEM:\n{state['poem']}"
+    return {"combined_output": combined}
+
+# 构建工作流
+parallel_builder = StateGraph(State)
+
+# 添加节点
+parallel_builder.add_node("call_llm_1", call_llm_1)
+parallel_builder.add_node("call_llm_2", call_llm_2)
+parallel_builder.add_node("call_llm_3", call_llm_3)
+parallel_builder.add_node("aggregator", aggregator)</div>
+        <div class="seg-note"><b>导读注:</b>展示<b>并行 LLM 调用</b>的图结构：三个节点独立生成内容，再由聚合器合并。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"# Add edges to connect nodes parallel_builder.add_edge(START, "call_llm_1") parallel_builder.add_edge(START, "call_llm_2") parallel_builder.add_edge(START, "call_llm_3") parallel_builder.add_edge("call_llm_1", "aggregator") parallel_builder.add_edge("call_llm_2", "aggregator") parallel_builder.add_edge("call_llm_3", "aggregator") parallel_builder.add_edge("aggregator", END) parallel_workflow = parallel_builder.compile()
+# Show workflow display(Image(parallel_workflow.get_graph().draw_mermaid_png()))
+# Invoke state = parallel_workflow.invoke({"topic": "cats"}) print(state["combined_output"])
+This code defines and runs a LangGraph workflow that operates in parallel. Its main purpose is to simultaneously generate a joke, a story, and a poem about a given topic and then combine them into a single, formatted text output. Google's ADK
+Google's Agent Development Kit, or ADK, provides a high-level, structured framework for building and deploying applications composed of multiple, interacting AI agents. It contrasts with LangChain and LangGraph by offering a more opinionated and production-oriented system for orchestrating agent collaboration, rather than providing the fundamental building blocks for an agent's internal logic."</div>
+        <div class="seg-zh"># 添加边以连接节点
+parallel_builder.add_edge(START, "call_llm_1")
+parallel_builder.add_edge(START, "call_llm_2")
+parallel_builder.add_edge(START, "call_llm_3")
+parallel_builder.add_edge("call_llm_1", "aggregator")
+parallel_builder.add_edge("call_llm_2", "aggregator")
+parallel_builder.add_edge("call_llm_3", "aggregator")
+parallel_builder.add_edge("aggregator", END)
+parallel_workflow = parallel_builder.compile()
+
+# 显示工作流
+display(Image(parallel_workflow.get_graph().draw_mermaid_png()))
+
+# 调用
+state = parallel_workflow.invoke({"topic": "cats"})
+print(state["combined_output"])
+
+这段代码定义并运行了一个<b>并行</b>工作的 LangGraph 工作流。其主要目的是针对给定主题<b>同时生成</b>一个笑话、一个故事和一首诗，然后将它们组合成一个格式化的单一文本输出。
+
+Google 的 ADK
+Google 的 Agent Development Kit（ADK，智能体开发工具包）提供了一个高层次、结构化的框架，用于构建和部署由多个交互式 AI 智能体组成的应用。它与 LangChain 和 LangGraph 形成对比，因为它提供了一个更<b>有主见且面向生产</b>的系统来编排智能体协作，而不是提供智能体内部逻辑的基本构建块。</div>
+        <div class="seg-note"><b>导读注:</b>展示 LangGraph 并行分支与聚合，并对比 Google ADK 的<b>生产导向</b>定位。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"LangChain operates at the most foundational level, offering the components and standardized interfaces to create sequences of operations, such as calling a model and parsing its output. LangGraph extends this by introducing a more flexible and powerful control flow; it treats an agent's workflow as a stateful graph. Using LangGraph, a developer explicitly defines nodes, which are functions or tools, and edges, which dictate the path of execution. This graph structure allows for complex, cyclical reasoning where the system can loop, retry tasks, and make decisions based on an explicitly managed state object that is passed between nodes. It gives the developer fine-grained control over a single agent's thought process or the ability to construct a multi-agent system from first principles."</div>
+        <div class="seg-zh">LangChain 处于最基础的层面，提供组件和标准化接口来构建操作序列，例如调用模型并解析其输出。LangGraph 在此基础上扩展，引入了更灵活、更强大的控制流；它将智能体（agent）的工作流视为一个有状态图（stateful graph）。使用 LangGraph，开发者显式定义节点（node，即函数或工具）和边（edge，即决定执行路径）。这种图结构支持复杂的循环推理，系统可以循环、重试任务，并基于在节点之间传递的显式管理的状态对象（state object）做出决策。它让开发者能够对单个智能体的思考过程进行细粒度控制，或从基本原理出发构建多智能体系统（multi-agent system）。</div>
+        <div class="seg-note"><b>导读注:</b>LangGraph 把智能体工作流建模为<b>有状态图</b>，实现循环推理与细粒度控制。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"Google's ADK abstracts away much of this low-level graph construction. Instead of asking the developer to define every node and edge, it provides pre-built architectural patterns for multi-agent interaction. For instance, ADK has built-in agent types like SequentialAgent or ParallelAgent, which manage the flow of control between different agents automatically. It is architected around the concept of a "team" of agents, often with a primary agent delegating tasks to specialized sub-agents. State and session management are handled more implicitly by the framework, providing a more cohesive but less granular approach than LangGraph's explicit state passing. Therefore, while LangGraph gives you the detailed tools to design the intricate wiring of a single robot or a team, Google's ADK gives you a factory assembly line designed to build and manage a fleet of robots that already know how to work together.
+from google.adk.agents import LlmAgent from google.adk.tools import google_Search
+model="gemini-2.0-flash-exp", name="question_answer_agent", description="A helpful assistant agent that can answer questions.", instruction="""Respond to the query using google search""", tools=[google_search], )"</div>
+        <div class="seg-zh">Google 的 ADK（Agent Development Kit）将大部分这类底层图构建抽象化了。它不要求开发者定义每个节点和边，而是提供预构建的多智能体交互架构模式。例如，ADK 内置了 SequentialAgent 或 ParallelAgent 等智能体类型，自动管理不同智能体之间的控制流。它的架构围绕智能体"团队"的概念，通常由一个主智能体将任务委派给专门化的子智能体。状态和会话管理由框架更隐式地处理，相比 LangGraph 显式的状态传递，提供了更内聚但粒度更粗的方法。因此，LangGraph 为你提供设计单个机器人或团队复杂连线的细致工具，而 Google 的 ADK 则为你提供一条工厂装配线，用于构建和管理一群已经懂得如何协同工作的机器人。
+from google.adk.agents import LlmAgent from google.adk.tools import google_Search
+model="gemini-2.0-flash-exp", name="question_answer_agent", description="A helpful assistant agent that can answer questions.", instruction="""Respond to the query using google search""", tools=[google_search], )</div>
+        <div class="seg-note"><b>导读注:</b><b>ADK 用预置团队模式替代底层图构建</b>，与 LangGraph 的显式连线形成对比。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"This code creates a search-augmented agent. When this agent receives a question, it will not just rely on its pre-existing knowledge. Instead, following its instructions, it will use the Google Search tool to find relevant, real-time information from the web and then use that information to construct its answer. Crew.AI
+CrewAI offers an orchestration framework for building multi-agent systems by focusing on collaborative roles and structured processes. It operates at a higher level of abstraction than foundational toolkits, providing a conceptual model that mirrors a human team. Instead of defining the granular flow of logic as a graph, the developer defines the actors and their assignments, and CrewAI manages their interaction."</div>
+        <div class="seg-zh">这段代码创建了一个搜索增强型 agent（智能体）。当该 agent 收到问题时，它不会仅依赖其已有知识。相反，按照其指令，它会使用 Google Search 工具从网络上查找相关的实时信息，然后利用这些信息来构建答案。Crew.AI 提供了一个编排框架，通过聚焦协作角色与结构化流程来构建多 agent 系统。它运行在比基础工具包更高的抽象层级上，提供了一种映射人类团队的概念模型。开发者无需像定义图那样定义细粒度的逻辑流程，而是定义参与者及其任务分配，由 CrewAI 管理它们的交互。</div>
+        <div class="seg-note"><b>导读注:</b><b>搜索增强</b>让 agent 突破预训练知识限制，CrewAI 则以角色协作抽象简化多 agent 编排。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"The core components of this framework are Agents, Tasks, and the Crew. An Agent is defined not just by its function but by a persona, including a specific role, a goal, and a backstory, which guides its behavior and communication style. A Task is a discrete unit of work with a clear description and expected output, assigned to a specific Agent. The Crew is the cohesive unit that contains the Agents and the list of Tasks, and it executes a predefined Process. This process dictates the workflow, which is typically either sequential, where the output of one task becomes the input for the next in line, or hierarchical, where a manager-like agent delegates tasks and coordinates the workflow among other agents.
+When compared to other frameworks, CrewAI occupies a distinct position. It moves away from the low-level, explicit state management and control flow of LangGraph, where a developer wires together every node and conditional edge. Instead of building a state machine, the developer designs a team charter. While Googlés ADK provides a comprehensive, production-oriented platform for the entire agent lifecycle, CrewAI concentrates specifically on the logic of agent collaboration and for simulating a team of specialists"</div>
+        <div class="seg-zh">该框架的核心组件是 Agents、Tasks 和 Crew。<b>Agent 不仅由其功能定义，还由其 persona（人设）定义</b>，包括特定角色、目标和背景故事，用以指导其行为与沟通风格。Task 是一个离散的工作单元，具有清晰的描述和预期输出，并分配给特定 Agent。Crew 是包含 Agents 与 Tasks 列表的凝聚单元，执行预定义的 Process。该流程决定工作流，通常为顺序式（一个任务的输出成为下一个任务的输入）或层级式（由类似管理者的 agent 委派任务并协调其他 agent 间的工作流）。
+与其他框架相比，CrewAI 占据独特位置。它<b>摆脱了 LangGraph 低层次、显式的状态管理与控制流</b>——在 LangGraph 中开发者需连接每个节点与条件边。开发者不再构建状态机，而是设计团队章程。Google 的 ADK 为整个 agent 生命周期提供全面的、面向生产的平台，而 CrewAI 则<b>专注于 agent 协作逻辑并模拟专家团队</b>。</div>
+        <div class="seg-note"><b>导读注:</b>点出 CrewAI 以 persona 定义 Agent、以团队章程替代状态机的独特定位</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"@crew def crew(self) -&gt; Crew: """Creates the research crew""" return Crew( agents=self.agents, tasks=self.tasks, process=Process.sequential, verbose=True, )
+This code sets up a sequential workflow for a team of AI agents, where they tackle a list of tasks in a specific order, with detailed logging enabled to monitor their progress. Other agent development framework
+Microsoft AutoGen: AutoGen is a framework centered on orchestrating multiple agents that solve tasks through conversation. Its architecture enables agents with distinct capabilities to interact, allowing for complex problem decomposition and collaborative resolution. The primary advantage of AutoGen is its flexible, conversation-driven approach that supports dynamic and complex multi-agent interactions. However, this conversational paradigm can lead to less predictable execution paths and may require sophisticated prompt engineering to ensure tasks converge efficiently."</div>
+        <div class="seg-zh">@crew
+def crew(self) -&gt; Crew:
+    """创建研究团队"""
+    return Crew(
+        agents=self.agents,
+        tasks=self.tasks,
+        process=Process.sequential,
+        verbose=True,
+    )
+这段代码为一个 AI agent 团队设置了<b>顺序工作流</b>，团队按特定顺序处理一系列任务，并启用详细日志记录以监控进度。其他 agent 开发框架
+Microsoft AutoGen：AutoGen 是一个以编排多个 agent 为核心的框架，这些 agent 通过对话来解决问题。其架构使具备不同能力的 agent 能够交互，从而实现复杂问题的分解与协作解决。AutoGen 的主要优势在于其灵活、<b>对话驱动</b>的方式，支持动态且复杂的多 agent 交互。然而，这种对话范式可能导致执行路径<b>较难预测</b>，并且可能需要复杂的 prompt 工程来确保任务高效收敛。</div>
+        <div class="seg-note"><b>导读注:</b>对比顺序工作流与 AutoGen 对话式编排的取舍：灵活但路径难预测。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"LlamaIndex: LlamaIndex is fundamentally a data framework designed to connect large language models with external and private data sources. It excels at creating sophisticated data ingestion and retrieval pipelines, which are essential for building knowledgeable agents that can perform RAG. While its data indexing and querying capabilities are exceptionally powerful for creating context-aware agents, its native tools for complex agentic control flow and multi-agent orchestration are less developed compared to agent-first frameworks. LlamaIndex is optimal when the core technical challenge is data retrieval and synthesis.
+Haystack: Haystack is an open-source framework engineered for building scalable and production-ready search systems powered by language models. Its architecture is composed of modular, interoperable nodes that form pipelines for document retrieval, question answering, and summarization. The main strength of Haystack is its focus on performance and scalability for large-scale information retrieval tasks, making it suitable for enterprise-grade applications. A potential trade-off is that its design, optimized for search pipelines, can be more rigid for implementing highly dynamic and creative agentic behaviors."</div>
+        <div class="seg-zh">LlamaIndex：LlamaIndex 本质上是一个数据框架，旨在将大型语言模型（LLM）与外部及私有数据源连接起来。它擅长构建复杂的数据摄取与检索流水线，这对于构建能够执行 RAG 的知识型 agent 至关重要。尽管其数据索引与查询能力对于创建上下文感知的 agent 极为强大，但相比 agent 优先的框架，其用于复杂 agentic 控制流与多 agent 编排的原生工具尚不够成熟。<b>当核心技术挑战在于数据检索与合成时，LlamaIndex 是最佳选择。</b>
+
+Haystack：Haystack 是一个开源框架，专为构建由语言模型驱动的可扩展、生产就绪的搜索系统而设计。其架构由模块化、可互操作的节点组成，这些节点构成用于文档检索、问答和摘要的流水线。Haystack 的主要优势在于其专注于大规模信息检索任务的性能与可扩展性，使其适用于企业级应用。一个潜在的权衡是，其针对搜索流水线优化的设计在实现高度动态和创造性的 agentic 行为时可能较为僵化。</div>
+        <div class="seg-note"><b>导读注:</b>对比两大框架定位：<b>LlamaIndex 强于数据检索</b>，Haystack 强于搜索性能与扩展性。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"MetaGPT: MetaGPT implements a multi-agent system by assigning roles and tasks based on a predefined set of Standard Operating Procedures (SOPs). This framework structures agent collaboration to mimic a software development company, with agents taking on roles like product managers or engineers to complete complex tasks. This SOP-driven approach results in highly structured and coherent outputs, which is a significant advantage for specialized domains like code generation. The framework's primary limitation is its high degree of specialization, making it less adaptable for general-purpose agentic tasks outside of its core design.
+SuperAGI: SuperAGI is an open-source framework designed to provide a complete lifecycle management system for autonomous agents. It includes features for agent provisioning, monitoring, and a graphical interface, aiming to enhance the reliability of agent execution. The key benefit is its focus on production-readiness, with built-in mechanisms to handle common failure modes like looping and to provide observability into agent performance. A potential drawback is that its comprehensive platform approach can introduce more complexity and overhead than a more lightweight, library-based framework."</div>
+        <div class="seg-zh">MetaGPT：MetaGPT 通过基于预定义的标准操作流程（Standard Operating Procedures, SOPs）分配角色和任务来实现多智能体系统。该框架构建智能体协作结构以模拟软件开发公司，智能体承担产品经理或工程师等角色来完成复杂任务。<b>这种由 SOP 驱动的方法产生高度结构化且连贯的输出，对于代码生成等专业领域而言是显著优势。</b>该框架的主要局限在于其高度专业化，<b>使其不太适用于核心设计之外的通用智能体任务</b>。
+
+SuperAGI：SuperAGI 是一个开源框架，旨在为自主智能体提供完整的生命周期管理系统。它包含智能体配置、监控以及图形界面等功能，旨在提升智能体执行的可靠性。其关键优势在于<b>对生产就绪性的关注</b>，内置机制可处理循环等常见故障模式，并提供对智能体性能的可观测性。一个潜在缺点是，其综合性平台方法可能比更轻量的基于库的框架<b>引入更多复杂性和开销</b>。</div>
+        <div class="seg-note"><b>导读注:</b>对比两大智能体框架：<b>SOP 驱动带来结构化优势但牺牲通用性，平台化提升可靠性却增加复杂度</b>。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"Semantic Kernel: Developed by Microsoft, Semantic Kernel is an SDK that integrates large language models with conventional programming code through a system of "plugins" and "planners." It allows an LLM to invoke native functions and orchestrate workflows, effectively treating the model as a reasoning engine within a larger software application. Its primary strength is its seamless integration with existing enterprise codebases, particularly in .NET and Python environments. The conceptual overhead of its plugin and planner architecture can present a steeper learning curve compared to more straightforward agent frameworks."</div>
+        <div class="seg-zh">Semantic Kernel：由微软开发，Semantic Kernel 是一个 SDK，通过“插件”（plugins）和“规划器”（planners）体系将大型语言模型（LLM）与传统编程代码集成。它允许 LLM 调用原生函数并编排工作流，从而有效地将模型视为更大软件应用中的推理引擎。其主要优势是与现有企业代码库的无缝集成，尤其是在 .NET 和 Python 环境中。<b>其插件与规划器架构的概念开销相比更直接的 agent 框架可能带来更陡峭的学习曲线。</b></div>
+        <div class="seg-note"><b>导读注:</b>微软 SDK 用插件/规划器把 LLM 接入企业代码，<b>学习曲线偏陡</b>。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"Strands Agents: An AWS lightweight and flexible SDK that uses a model-driven approach for building and running AI agents. It is designed to be simple and scalable, supporting everything from basic conversational assistants to complex multi-agent autonomous systems. The framework is model-agnostic, offering broad support for various LLM providers, and includes native integration with the MCP for easy access to external tools. Its core advantage is its simplicity and flexibility, with a customizable agent loop that is easy to get started with. A potential trade-off is that its lightweight design means developers may need to build out more of the surrounding operational infrastructure, such as advanced monitoring or lifecycle management systems, which more comprehensive frameworks might provide out-of-the-box. Conclusion"</div>
+        <div class="seg-zh">Strands Agents：一个 AWS 轻量且灵活的 SDK，采用模型驱动（model-driven）方法构建和运行 AI 智能体（AI agents）。它被设计为简单且可扩展，支持从基础对话助手到复杂多智能体自主系统的一切场景。该框架与模型无关（model-agnostic），广泛支持各类 LLM 提供商，并原生集成 MCP，以便轻松访问外部工具。其核心优势在于简单性和灵活性，具有易于上手的可定制智能体循环（agent loop）。一个潜在的权衡是，其轻量设计意味着开发者可能需要自行构建更多周边运维基础设施，例如高级监控或生命周期管理系统，而更全面的框架可能会开箱即用地提供这些能力。结论</div>
+        <div class="seg-note"><b>导读注:</b><b>轻量灵活</b>是卖点，但运维基础设施需自建，选型时需权衡。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"The landscape of agentic frameworks offers a diverse spectrum of tools, from low-level libraries for defining agent logic to high-level platforms for orchestrating multi-agent collaboration. At the foundational level, LangChain enables simple, linear workflows, while LangGraph introduces stateful, cyclical graphs for more complex reasoning. Higher-level frameworks like CrewAI and Google's ADK shift the focus to orchestrating teams of agents with predefined roles, while others like LlamaIndex specialize in data-intensive applications. This variety presents developers with a core trade-off between the granular control of graph-based systems and the streamlined development of more opinionated platforms. Consequently, selecting the right framework hinges on whether the application requires a simple sequence, a dynamic reasoning loop, or a managed team of specialists. Ultimately, this evolving ecosystem empowers developers to build increasingly sophisticated AI systems by choosing the precise level of abstraction their project demands. References"</div>
+        <div class="seg-zh">Agentic 框架的版图提供了多样化的工具谱系，从用于定义 agent 逻辑的底层库到用于编排多 agent 协作的高层平台。在基础层面，LangChain 支持简单的线性工作流，而 LangGraph 引入了有状态、循环的图结构，以支持更复杂的推理。更高层的框架如 CrewAI 和 Google 的 ADK（Agent Development Kit）将重点转向编排具有预定义角色的 agent 团队，而 LlamaIndex 等其他框架则专注于数据密集型应用。这种多样性为开发者带来了一个核心权衡：<b>基于图的系统的细粒度控制</b>与<b>更具主见的平台所带来的简化开发</b>之间的取舍。因此，选择合适的框架取决于应用需要的是简单序列、动态推理循环，还是受管理的专家团队。最终，这一不断演进的生态系统使开发者能够通过选择项目所需的精确抽象层级，构建日益复杂的 AI 系统。参考文献</div>
+        <div class="seg-note"><b>导读注:</b>核心在于<b>控制力与开发效率的权衡</b>，选型取决于工作流复杂度。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"1. LangChain, https://www.langchain.com/ 2. LangGraph, https://www.langchain.com/langgraph 3. Google's ADK, https://google.github.io/adk-docs/ 4. Crew.AI, https://docs.crewai.com/en/introduction"</div>
+        <div class="seg-zh">1. LangChain，https://www.langchain.com/ 2. LangGraph，https://www.langchain.com/langgraph 3. Google 的 ADK（Agent Development Kit，智能体开发工具包），https://google.github.io/adk-docs/ 4. Crew.AI，https://docs.crewai.com/en/introduction</div>
+        <div class="seg-note"><b>导读注:</b>列出四个智能体开发框架及文档链接，<b>ADK 首次出现补全英文全称</b>。</div>
+      </div>
+
+      <div class="callout info" style="margin-top:24px">
+        <div class="co-title">来源与用途</div>
+        <p style="margin-bottom:0">《Agentic Design Patterns》,Antonio Gulli · 2025 · <a href="papers/pdf/gulli-agentic-design-patterns.pdf" target="_blank" rel="noopener">原书 PDF</a>。本页为学习用途的对照整理,版权归原作者;有问题到读书导师处提问,答案只引用书中原文并标注章节。</p>
+      </div>
+
+      <p class="pager" style="margin-top:18px">
+        <a class="chip" href="book-gulli-patterns-ch101.html">← 第101章 · 附录B - AI 智能体交互 AI Agentic Interactions：从 GUI 到真实世界</a>
+        <a class="chip" href="book-gulli-patterns.html">导读</a>
+        <a class="chip" href="book-gulli-patterns-ch103.html">第103章 · 附录 D：用 AgentSpace 构建智能体 →</a>
+      </p>
+
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/app.js?v=28"></script>
+</body>
+</html>

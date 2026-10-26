@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Agentic Design Patterns 第 14 章 知识检索 Knowledge Retrieval (RAG) 中英对照翻译。">
+<title>第 14 章 · 知识检索 Knowledge Retrieval (RAG) | Agentic Design Patterns | Agent 学院</title>
+<link rel="stylesheet" href="assets/css/style.css?v=24">
+</head>
+<body data-chapter="books">
+
+<header class="topbar">
+  <button class="icon-btn hamburger" id="hamburger" title="打开导航">☰</button>
+  <a class="brand" href="index.html"><span class="logo">学</span> Agent 学院 <small>从零开发智能体 · Ontology · Harness</small></a>
+  <span class="spacer"></span>
+  <span class="progress-pill" id="progress-pill">读书</span>
+  <button class="icon-btn" id="theme-btn">🌙</button>
+</header>
+
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <main class="content">
+    <div class="content-inner">
+
+      <header class="chapter-head">
+        <div class="kicker">读书 · Agentic Design Patterns · 中英对照</div>
+        <h1>第 14 章 · 知识检索 Knowledge Retrieval (RAG)</h1>
+        <p class="lead">
+          Chapter 14: Knowledge Retrieval (RAG) · 《Agentic Design Patterns》 · Antonio Gulli · 2025
+          <br>讲RAG如何让LLM接入外部实时与私有数据，并介绍GraphRAG与Agentic RAG。
+          <br><a class="chip" href="book-gulli-patterns.html">← 返回导读</a> <a class="chip" href="papers/pdf/gulli-agentic-design-patterns.pdf">原书 PDF</a> <a class="chip" href="book-gulli-patterns-ch13.html">上一章:第13章</a> <a class="chip" href="book-gulli-patterns-ch15.html">下一章:第15章</a>
+        </p>
+      </header>
+
+      <div class="callout key"><div class="co-title">本章要点</div><p>① RAG先语义检索相关片段，再拼入提示词，让回答有据可查  ① 嵌入、语义相似度、分块与向量数据库是RAG的四大基础  ① GraphRAG用知识图谱补足跨文档关联推理  ① Agentic RAG加推理层，可校验来源、消解冲突、多步检索</p></div>
+<h2>本章划线句</h2>
+<details class="qn"><summary>本章划线句(逐字校验)</summary>
+        <div class="qn-body">
+        <div class="qn-en">"This process effectively transforms the LLM from a closed-book reasoner into an open-book one, significantly enhancing its utility and trustworthiness."</div>
+        <div class="qn-zh"><b>为什么值得划线:</b>一句话点明RAG的本质：从闭卷到开卷</div>
+        </div>
+      </details>
+<details class="qn"><summary>本章划线句(逐字校验)</summary>
+        <div class="qn-body">
+        <div class="qn-en">"In essence, while other techniques search for words, vector databases search for meaning."</div>
+        <div class="qn-zh"><b>为什么值得划线:</b>精炼区分关键词检索与语义检索</div>
+        </div>
+      </details>
+<details class="qn"><summary>本章划线句(逐字校验)</summary>
+        <div class="qn-body">
+        <div class="qn-en">"Instead of just retrieving and augmenting, an "agent"—a specialized AI component—acts as a critical gatekeeper and refiner of knowledge."</div>
+        <div class="qn-zh"><b>为什么值得划线:</b>概括Agentic RAG的核心增量</div>
+        </div>
+      </details>
+<h2>正文(英中对照)</h2>
+<div class="seg">
+        <div class="seg-en">"LLMs exhibit substantial capabilities in generating human-like text. However, their knowledge base is typically confined to the data on which they were trained, limiting their access to real-time information, specific company data, or highly specialized details. Knowledge Retrieval (RAG, or Retrieval Augmented Generation), addresses this limitation. RAG enables LLMs to access and integrate external, current, and context-specific information, thereby enhancing the accuracy, relevance, and factual basis of their outputs.
+For AI agents, this is crucial as it allows them to ground their actions and responses in real-time, verifiable data beyond their static training. This capability enables them to perform complex tasks accurately, such as accessing the latest company policies to answer a specific question or checking current inventory before placing an order. By integrating external knowledge, RAG transforms agents from simple conversationalists into effective, data-driven tools capable of executing meaningful work. Knowledge Retrieval (RAG) Pattern Overview"</div>
+        <div class="seg-zh">LLM 在生成类人文本方面展现出强大的能力。然而，其知识库通常局限于训练时所使用的数据，这限制了它们获取实时信息、特定公司数据或高度专业化细节的能力。知识检索（RAG，即检索增强生成，Retrieval Augmented Generation）解决了这一局限。RAG 使 LLM 能够访问并整合外部的、当前的、特定上下文的信息，从而提升其输出的准确性、相关性和事实基础。
+对于 AI agent 而言，这一点至关重要，因为它使 agent 能够将其行动和响应建立在实时、可验证的数据之上，而非仅依赖其静态训练数据。这一能力使它们能够准确执行复杂任务，例如访问最新的公司政策以回答特定问题，或在提交订单前检查当前库存。通过整合外部知识，RAG 将 agent 从简单的对话者转变为能够执行有意义工作的有效、数据驱动的工具。知识检索（RAG）模式概述</div>
+        <div class="seg-note"><b>导读注:</b>点出 RAG 如何让 LLM 突破静态训练数据限制，<b>实时接入外部知识</b>。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"The Knowledge Retrieval (RAG) pattern significantly enhances the capabilities of LLMs by granting them access to external knowledge bases before generating a response. Instead of relying solely on their internal, pre-trained knowledge, RAG allows LLMs to "look up" information, much like a human might consult a book or search the internet. This process empowers LLMs to provide more accurate, up-to-date, and verifiable answers.
+When a user poses a question or gives a prompt to an AI system using RAG, the query isn't sent directly to the LLM. Instead, the system first scours a vast external knowledge base—a highly organized library of documents, databases, or web pages—for relevant information. This search is not a simple keyword match; it's a "semantic search" that understands the user's intent and the meaning behind their words. This initial search pulls out the most pertinent snippets or "chunks" of information. These extracted pieces are then "augmented," or added, to the original prompt, creating a richer, more informed query. Finally, this enhanced prompt is sent to the LLM. With this additional context, the LLM can generate a response that is not only fluent and natural but also factually grounded in the retrieved data."</div>
+        <div class="seg-zh">知识检索（Knowledge Retrieval，RAG）模式通过在生成响应之前让 LLM 访问外部知识库，显著增强了 LLM 的能力。RAG 不再仅依赖其内部预训练知识，而是允许 LLM“查阅”信息，就像人类可能会查阅书籍或搜索互联网一样。这一过程使 LLM 能够提供更准确、更及时且可验证的答案。
+
+当用户向使用 RAG 的 AI 系统提出问题或给出 prompt 时，查询并不会直接发送给 LLM。相反，系统会首先在庞大的外部知识库——一个高度组织化的文档、数据库或网页库——中搜寻相关信息。这种搜索不是简单的关键词匹配，而是<b>“语义搜索”</b>，它理解用户意图以及其词语背后的含义。这一初始搜索会提取出最相关的信息片段或“块”。随后，这些提取出的片段会被“增强”，即添加到原始 prompt 中，形成一个信息更丰富、更有依据的查询。最后，这个增强后的 prompt 会被发送给 LLM。借助这些额外上下文，LLM 可以生成不仅流畅自然、而且在事实上有 retrieved data 作为依据的响应。</div>
+        <div class="seg-note"><b>导读注:</b>点明 RAG 的核心：先<b>语义检索</b>再增强 prompt，使回答更准确可验证。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"The RAG framework provides several significant benefits. It allows LLMs to access up-to-date information, thereby overcoming the constraints of their static training
+data. This approach also reduces the risk of "hallucination"—the generation of false information—by grounding responses in verifiable data. Moreover, LLMs can utilize specialized knowledge found in internal company documents or wikis. A vital advantage of this process is the capability to offer "citations," which pinpoint the exact source of information, thereby enhancing the trustworthiness and verifiability of the AI's responses..
+To fully appreciate how RAG functions, it's essential to understand a few core concepts (see Fig.1):"</div>
+        <div class="seg-zh">RAG 框架提供了若干显著优势。它使 LLM 能够访问最新信息，从而克服其静态训练数据的限制。这种方法还通过将回答建立在可验证数据之上，降低了“幻觉”（即生成虚假信息）的风险。此外，LLM 可以利用公司内部文档或 wiki 中的专业知识。该流程的一个关键优势是能够提供“引用”，精确指出信息的准确来源，从而增强 AI 回答的可信度和可验证性。
+要充分理解 RAG 如何运作，有必要了解几个核心概念（见图 1）：</div>
+        <div class="seg-note"><b>导读注:</b><b>RAG 的四大优势</b>：实时信息、减少幻觉、内部知识、可溯源引用。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"Embeddings: In the context of LLMs, embeddings are numerical representations of text, such as words, phrases, or entire documents. These representations are in the form of a vector, which is a list of numbers. The key idea is to capture the semantic meaning and the relationships between different pieces of text in a mathematical space. Words or phrases with similar meanings will have embeddings that are closer to each other in this vector space. For instance, imagine a simple 2D graph. The word "cat" might be represented by the coordinates (2, 3), while "kitten" would be very close at (2.1, 3.1). In contrast, the word "car" would have a distant coordinate like (8, 1), reflecting its different meaning. In reality, these embeddings are in a much higher-dimensional space with hundreds or even thousands of dimensions, allowing for a very nuanced understanding of language."</div>
+        <div class="seg-zh">Embeddings（嵌入）：在 LLM 的语境中，embeddings 是文本（如单词、短语或整篇文档）的数值表示。这些表示以向量（vector）的形式存在，向量即一串数字。其核心思想是在数学空间中捕捉不同文本片段的语义含义及其相互关系。<b>含义相近的单词或短语，其 embeddings 在该向量空间中彼此更接近。</b>例如，想象一个简单的二维图：单词 "cat" 可能由坐标 (2, 3) 表示，而 "kitten" 则非常接近，位于 (2.1, 3.1)。相比之下，单词 "car" 的坐标可能相距较远，如 (8, 1)，这反映了其不同的含义。在现实中，这些 embeddings 处于维度高得多的空间中，拥有数百甚至数千个维度，从而能够对语言实现非常细致的理解。</div>
+        <div class="seg-note"><b>导读注:</b>用二维坐标类比揭示<b>向量空间距离即语义相似度</b>，直观易懂。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"Text Similarity: Text similarity refers to the measure of how alike two pieces of text are. This can be at a surface level, looking at the overlap of words (lexical similarity), or at a deeper, meaning-based level. In the context of RAG, text similarity is crucial for finding the most relevant information in the knowledge base that corresponds to a user's query. For instance, consider the sentences: "What is the capital of France?" and "Which city is the capital of France?". While the wording is different, they are asking the same question. A good text similarity model would recognize this and assign a high similarity score to these two sentences, even though they only share a few words. This is often calculated using the embeddings of the texts."</div>
+        <div class="seg-zh">文本相似度（Text Similarity）：文本相似度是指衡量两段文本有多相似的程度。这可以在表层层面进行，考察词语的重叠（词汇相似度），也可以在更深层的、基于含义的层面进行。在 RAG 的语境中，文本相似度对于在知识库中找到与用户查询相对应的最相关信息至关重要。例如，考虑以下句子：“What is the capital of France?”和“Which city is the capital of France?”。尽管措辞不同，它们问的是同一个问题。一个好的文本相似度模型会识别出这一点，并给这两个句子赋予较高的相似度分数，即使它们只共享少数几个词。这通常使用文本的嵌入（embeddings）来计算。</div>
+        <div class="seg-note"><b>导读注:</b><b>语义相似</b>而非字面重叠，是 RAG 检索的关键。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"Semantic Similarity and Distance: Semantic similarity is a more advanced form of text similarity that focuses purely on the meaning and context of the text, rather than just the words used. It aims to understand if two pieces of text convey the same concept or idea. Semantic distance is the inverse of this; a high semantic similarity implies a low semantic distance, and vice versa. In RAG, semantic search relies on finding documents with the smallest semantic distance to the user's query. For instance, the phrases "a furry feline companion" and "a domestic cat" have no words in common besides "a". However, a model that understands semantic similarity would
+recognize that they refer to the same thing and would consider them to be highly similar. This is because their embeddings would be very close in the vector space, indicating a small semantic distance. This is the "smart search" that allows RAG to find relevant information even when the user's wording doesn't exactly match the text in the knowledge base."</div>
+        <div class="seg-zh">语义相似度与距离（Semantic Similarity and Distance）：语义相似度是一种更高级的文本相似度形式，它纯粹关注文本的含义和上下文，而不仅仅是所使用的词语。它旨在理解两段文本是否传达相同的概念或想法。语义距离则与之相反；<b>语义相似度高意味着语义距离小，反之亦然</b>。在 RAG 中，语义搜索依赖于找到与用户查询语义距离最小的文档。例如，短语“a furry feline companion”和“a domestic cat”除了“a”之外没有任何共同的词。然而，一个理解语义相似度的模型会识别出它们指的是同一事物，并认为它们高度相似。这是因为它们的 embedding 在向量空间中会非常接近，表明语义距离很小。这就是“智能搜索”，它使 RAG 即使用户的措辞与知识库中的文本不完全匹配，也能找到相关信息。</div>
+        <div class="seg-note"><b>导读注:</b>点明语义相似度靠 embedding 距离而非字面匹配，是 RAG 智能检索的关键。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"Fig.1: RAG Core Concepts: Chunking, Embeddings, and Vector Database
+Chunking of Documents: Chunking is the process of breaking down large documents into smaller, more manageable pieces, or "chunks." For a RAG system to work efficiently, it cannot feed entire large documents into the LLM. Instead, it processes these smaller chunks. The way documents are chunked is important for preserving the context and meaning of the information. For instance, instead of treating a 50-page user manual as a single block of text, a chunking strategy might break it down into sections, paragraphs, or even sentences. For instance, a section on "Troubleshooting" would be a separate chunk from the "Installation Guide." When a user asks a question about a specific problem, the RAG system can then retrieve the most relevant troubleshooting chunk, rather than the entire manual. This makes the"</div>
+        <div class="seg-zh">图1：RAG 核心概念：分块（Chunking）、嵌入（Embeddings）与向量数据库（Vector Database）
+
+文档分块：分块是将大型文档拆解为更小、更易管理的片段（即“块”，chunk）的过程。为使 RAG 系统高效运行，它不能将整份大型文档直接输入 LLM。相反，它处理这些更小的块。<b>文档的分块方式对于保留信息的上下文和含义至关重要。</b>例如，与其将一份 50 页的用户手册视为单一文本块，分块策略可能会将其拆分为章节、段落甚至句子。例如，“故障排除”一节会与“安装指南”成为各自独立的块。当用户就某个具体问题提问时，RAG 系统便可检索到最相关的故障排除块，而非整本手册。这使得</div>
+        <div class="seg-note"><b>导读注:</b>强调<b>分块方式决定上下文保留</b>，并用用户手册示例说明按章节切块如何提升检索精度。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"retrieval process faster and the information provided to the LLM more focused and relevant to the user's immediate need. Once documents are chunked, the RAG system must employ a retrieval technique to find the most relevant pieces for a given query. The primary method is vector search, which uses embeddings and semantic distance to find chunks that are conceptually similar to the user's question. An older, but still valuable, technique is BM25, a keyword-based algorithm that ranks chunks based on term frequency without understanding semantic meaning. To get the best of both worlds, hybrid search approaches are often used, combining the keyword precision of BM25 with the contextual understanding of semantic search. This fusion allows for more robust and accurate retrieval, capturing both literal matches and conceptual relevance."</div>
+        <div class="seg-zh">检索过程更快，提供给 LLM 的信息更聚焦、更贴合用户的即时需求。文档完成分块后，RAG 系统必须采用一种检索技术，为给定查询找到最相关的片段。主要方法是<b>向量搜索（vector search）</b>，它利用嵌入（embedding）和语义距离来找出与用户问题在概念上相似的片段。一种更早但仍具价值的技术是 <b>BM25</b>，这是一种基于关键词的算法，依据词频对片段排序，但不理解语义含义。为兼取两者之长，常采用<b>混合搜索（hybrid search）</b>方法，将 BM25 的关键词精确性与语义搜索的上下文理解相结合。这种融合能实现更稳健、更准确的检索，同时捕捉字面匹配与概念相关性。</div>
+        <div class="seg-note"><b>导读注:</b>点出<b>混合搜索</b>兼取关键词精确与语义理解之长，是检索质量的关键。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"Vector databases: A vector database is a specialized type of database designed to store and query embeddings efficiently. After documents are chunked and converted into embeddings, these high-dimensional vectors are stored in a vector database. Traditional retrieval techniques, like keyword-based search, are excellent at finding documents containing exact words from a query but lack a deep understanding of language. They wouldn't recognize that "furry feline companion" means "cat." This is where vector databases excel. They are built specifically for semantic search. By storing text as numerical vectors, they can find results based on conceptual meaning, not just keyword overlap. When a user's query is also converted into a vector, the database uses highly optimized algorithms (like HNSW - Hierarchical Navigable Small World) to rapidly search through millions of vectors and find the ones that are "closest" in meaning. This approach is far superior for RAG because it uncovers relevant context even if the user's phrasing is completely different from the source documents. In essence, while other techniques search for words, vector databases search for meaning. This technology is implemented in various forms, from managed databases like Pinecone and Weaviate to open-source solutions such as Chroma DB, Milvus, and Qdrant. Even existing databases can be augmented with vector search capabilities, as seen with Redis, Elasticsearch, and Postgres (using the pgvector extension). The core retrieval mechanisms are often powered by libraries like Meta AI's FAISS or Google Research's ScaNN, which are fundamental to the efficiency of these systems."</div>
+        <div class="seg-zh">向量数据库（vector database）：向量数据库是一种专门设计用于高效存储和查询 embedding 的数据库类型。文档被分块并转换为 embedding 后，这些高维向量便存储在向量数据库中。传统检索技术（如基于关键词的搜索）擅长查找包含查询中确切词语的文档，但缺乏对语言的深层理解。它们无法识别“毛茸茸的猫科伙伴”指的就是“猫”。这正是向量数据库的优势所在。它们专为语义搜索而构建。通过将文本存储为数值向量，它们可以基于概念含义而非仅关键词重叠来查找结果。当用户的查询也被转换为向量时，数据库使用高度优化的算法（如 HNSW——分层可导航小世界）快速搜索数百万个向量，并找到含义上“最接近”的那些。这种方法对 RAG 而言远为优越，因为即使用户的措辞与源文档完全不同，它也能挖掘出相关的上下文。本质上，其他技术搜索的是词语，而向量数据库搜索的是含义。该技术以多种形式实现，从 Pinecone 和 Weaviate 等托管数据库，到 Chroma DB、Milvus 和 Qdrant 等开源解决方案。甚至现有数据库也可以增强向量搜索能力，如 Redis、Elasticsearch 和 Postgres（使用 pgvector 扩展）所示。核心检索机制通常由 Meta AI 的 FAISS 或 Google Research 的 ScaNN 等库驱动，这些库是这些系统效率的基础。</div>
+        <div class="seg-note"><b>导读注:</b>点明向量数据库以<b>语义搜索</b>取代关键词匹配，是 RAG 检索的关键。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"RAG's Challenges: Despite its power, the RAG pattern is not without its challenges. A primary issue arises when the information needed to answer a query is not confined to a single chunk but is spread across multiple parts of a document or even several documents. In such cases, the retriever might fail to gather all the necessary context, leading to an incomplete or inaccurate answer. The system's effectiveness is also
+highly dependent on the quality of the chunking and retrieval process; if irrelevant chunks are retrieved, it can introduce noise and confuse the LLM. Furthermore, effectively synthesizing information from potentially contradictory sources remains a significant hurdle for these systems. Besides that, another challenge is that RAG requires the entire knowledge base to be pre-processed and stored in specialized databases, such as vector or graph databases, which is a considerable undertaking. Consequently, this knowledge requires periodic reconciliation to remain up-to-date, a crucial task when dealing with evolving sources like company wikis. This entire process can have a noticeable impact on performance, increasing latency, operational costs, and the number of tokens used in the final prompt."</div>
+        <div class="seg-zh">RAG 的挑战：尽管 RAG 模式功能强大，但并非没有挑战。一个主要问题出现在回答查询所需的信息不局限于单个 chunk（数据块），而是分散在文档的多个部分甚至多个文档中时。在这种情况下，检索器可能无法收集到所有必要的上下文，导致答案不完整或不准确。系统的有效性还高度依赖于 chunking（分块）和检索过程的质量；如果检索到不相关的 chunk，就会引入噪声并混淆 LLM。此外，如何有效地综合来自潜在相互矛盾来源的信息，仍然是这些系统面临的重大障碍。除此之外，另一个挑战是 RAG 要求对整个知识库进行预处理并存储到专用数据库（如向量数据库或图数据库）中，这是一项相当大的工程。因此，这些知识需要定期核对以保持最新，这在处理公司 wiki 等不断演变的来源时是一项关键任务。整个流程会对性能产生明显影响，增加延迟、运营成本以及最终 prompt 中使用的 token 数量。</div>
+        <div class="seg-note"><b>导读注:</b>点出 RAG 的五大痛点：<b>上下文分散、检索噪声、信息矛盾、知识库维护成本高、性能开销大</b>。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"In summary, the Retrieval-Augmented Generation (RAG) pattern represents a significant leap forward in making AI more knowledgeable and reliable. By seamlessly integrating an external knowledge retrieval step into the generation process, RAG addresses some of the core limitations of standalone LLMs. The foundational concepts of embeddings and semantic similarity, combined with retrieval techniques like keyword and hybrid search, allow the system to intelligently find relevant information, which is made manageable through strategic chunking. This entire retrieval process is powered by specialized vector databases designed to store and efficiently query millions of embeddings at scale. While challenges in retrieving fragmented or contradictory information persist, RAG empowers LLMs to produce answers that are not only contextually appropriate but also anchored in verifiable facts, fostering greater trust and utility in AI."</div>
+        <div class="seg-zh">总之，检索增强生成（Retrieval-Augmented Generation, RAG）模式代表着在让 AI 更有知识、更可靠方面的一次重大飞跃。通过将外部知识检索步骤无缝集成到生成过程中，RAG 解决了独立 LLM 的一些核心局限。嵌入（embeddings）与语义相似度这些基础概念，结合关键词搜索与混合搜索等检索技术，使系统能够智能地找到相关信息，而战略性分块（chunking）则让这一过程变得可控。整个检索过程由专门的向量数据库（vector databases）支撑，这类数据库旨在规模化地存储并高效查询数百万条嵌入。尽管在检索碎片化或相互矛盾的信息方面仍存在挑战，RAG 使 LLM 能够生成不仅符合上下文、而且<b>锚定于可验证事实</b>的答案，从而提升人们对 AI 的信任与 AI 的实用性。</div>
+        <div class="seg-note"><b>导读注:</b>总结 RAG 如何弥补独立 LLM 的局限，并强调答案<b>锚定可验证事实</b>。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"Graph RAG: GraphRAG is an advanced form of Retrieval-Augmented Generation that utilizes a knowledge graph instead of a simple vector database for information retrieval. It answers complex queries by navigating the explicit relationships (edges) between data entities (nodes) within this structured knowledge base. A key advantage is its ability to synthesize answers from information fragmented across multiple documents, a common failing of traditional RAG. By understanding these connections, GraphRAG provides more contextually accurate and nuanced responses.
+Use cases include complex financial analysis, connecting companies to market events, and scientific research for discovering relationships between genes and diseases. The primary drawback, however, is the significant complexity, cost, and expertise required to build and maintain a high-quality knowledge graph. This setup is also less flexible and can introduce higher latency compared to simpler vector search systems. The system's effectiveness is entirely dependent on the quality and completeness of the underlying graph structure. Consequently, GraphRAG offers superior contextual reasoning for intricate questions but at a much higher implementation and"</div>
+        <div class="seg-zh">Graph RAG：GraphRAG 是检索增强生成（Retrieval-Augmented Generation）的一种高级形式，它使用知识图谱而非简单的向量数据库进行信息检索。它通过在该结构化知识库中导航数据实体（节点）之间的显式关系（边）来回答复杂查询。其一个关键优势是能够从分散在多个文档中的信息综合出答案，这是传统 RAG 常见的失败之处。通过理解这些连接，GraphRAG 提供更具上下文准确性和细致入微的响应。
+
+用例包括复杂的金融分析、将公司与市场事件关联起来，以及用于发现基因与疾病之间关系的科学研究。<b>然而，主要缺点在于构建和维护高质量知识图谱所需的显著复杂性、成本和专业知识。</b>与更简单的向量搜索系统相比，这种设置也不够灵活，并可能引入更高的延迟。<b>系统的有效性完全取决于底层图结构的质量和完整性。</b>因此，GraphRAG 为复杂问题提供了更优越的上下文推理能力，但代价是更高的实施和</div>
+        <div class="seg-note"><b>导读注:</b>点出 GraphRAG 以知识图谱替代向量库的取舍：<b>上下文推理更强，但构建成本与延迟更高</b>。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"maintenance cost. In summary, it excels where deep, interconnected insights are more critical than the speed and simplicity of standard RAG.
+Agentic RAG: An evolution of this pattern, known as Agentic RAG (see Fig.2), introduces a reasoning and decision-making layer to significantly enhance the reliability of information extraction. Instead of just retrieving and augmenting, an "agent"—a specialized AI component—acts as a critical gatekeeper and refiner of knowledge. Rather than passively accepting the initially retrieved data, this agent actively interrogates its quality, relevance, and completeness, as illustrated by the following scenarios.
+First, an agent excels at reflection and source validation. If a user asks, "What is our company's policy on remote work?" a standard RAG might pull up a 2020 blog post alongside the official 2025 policy document. The agent, however, would analyze the documents' metadata, recognize the 2025 policy as the most current and authoritative source, and discard the outdated blog post before sending the correct context to the LLM for a precise answer."</div>
+        <div class="seg-zh">维护成本。总之，在深度、相互关联的洞察比标准 RAG 的速度和简洁性更为关键的场景中，它表现优异。
+
+Agentic RAG：作为该模式的一种演进，Agentic RAG（见图2）引入了推理与决策层，以显著提升信息提取的可靠性。它不再只是检索与增强，而是由一个“agent”（智能体）——一种专门的 AI 组件——充当知识的关键把关者与精炼者。该 agent 不再被动接受最初检索到的数据，而是主动审视其质量、相关性与完整性，如下列场景所示。
+
+首先，agent 擅长反思与来源验证。如果用户问：“我们公司关于远程办公的政策是什么？”标准 RAG 可能会同时检索到一篇 2020 年的博客文章和官方的 2025 年政策文件。而 agent 会分析文档的元数据，识别出 2025 年政策是最新且最权威的来源，并在将正确的上下文发送给 LLM 以给出精确答案之前，丢弃过时的博客文章。</div>
+        <div class="seg-note"><b>导读注:</b><b>Agentic RAG</b> 引入智能体把关，主动验证来源时效与权威性。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"Fig.2: Agentic RAG introduces a reasoning agent that actively evaluates, reconciles, and refines retrieved information to ensure a more accurate and trustworthy final response.
+Second, an agent is adept at reconciling knowledge conflicts. Imagine a financial analyst asks, "What was Project Alpha's Q1 budget?" The system retrieves two documents: an initial proposal stating a €50,000 budget and a finalized financial report listing it as €65,000. An Agentic RAG would identify this contradiction, prioritize the financial report as the more reliable source, and provide the LLM with the verified figure, ensuring the final answer is based on the most accurate data.
+Third, an agent can perform multi-step reasoning to synthesize complex answers. If a user asks, "How do our product's features and pricing compare to Competitor X's?" the agent would decompose this into separate sub-queries. It would initiate distinct searches for its own product's features, its pricing, Competitor X's features, and Competitor X's pricing. After gathering these individual pieces of information, the agent would synthesize them into a structured, comparative context before feeding it to the LLM, enabling a comprehensive response that a simple retrieval could not have produced."</div>
+        <div class="seg-zh">图2：Agentic RAG 引入一个推理 agent（智能体），主动评估、协调并精炼检索到的信息，以确保最终回答更准确、更可信。
+其次，agent 擅长协调知识冲突。设想一位财务分析师问：“Project Alpha 第一季度的预算是多少？”系统检索到两份文档：一份初始提案写明预算为 €50,000，一份最终财务报告则列为 €65,000。Agentic RAG 会识别出这一矛盾，将财务报告优先视为更可靠的来源，并把经核实的数字提供给 LLM，从而确保最终答案基于最准确的数据。
+第三，agent 可以执行多步推理以综合出复杂答案。如果用户问：“我们产品的功能与定价和 Competitor X 相比如何？”agent 会将其分解为若干独立的子查询。它会分别发起针对自家产品功能、自家产品定价、Competitor X 功能以及 Competitor X 定价的检索。在收集到这些单独的信息片段后，agent 会将它们综合成一个结构化的对比上下文，再提供给 LLM，从而给出简单检索无法产生的全面回答。</div>
+        <div class="seg-note"><b>导读注:</b><b>Agentic RAG</b> 通过推理 agent 协调冲突、多步检索，显著提升答案可信度。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"Fourth, an agent can identify knowledge gaps and use external tools. Suppose a user asks, "What was the market's immediate reaction to our new product launched yesterday?" The agent searches the internal knowledge base, which is updated weekly, and finds no relevant information. Recognizing this gap, it can then activate a tool—such as a live web-search API—to find recent news articles and social media sentiment. The agent then uses this freshly gathered external information to provide an up-to-the-minute answer, overcoming the limitations of its static internal database.
+Challenges of Agentic RAG: While powerful, the agentic layer introduces its own set of challenges. The primary drawback is a significant increase in complexity and cost. Designing, implementing, and maintaining the agent's decision-making logic and tool integrations requires substantial engineering effort and adds to computational expenses. This complexity can also lead to increased latency, as the agent's cycles of reflection, tool use, and multi-step reasoning take more time than a standard, direct retrieval process. Furthermore, the agent itself can become a new source of error; a flawed reasoning process could cause it to get stuck in useless loops, misinterpret a task, or improperly discard relevant information, ultimately degrading the quality of the final response."</div>
+        <div class="seg-zh">第四，agent（智能体）能够识别知识缺口并使用外部工具。假设用户问：“市场对我们昨天发布的新产品有何即时反应？”agent 搜索每周更新的内部知识库，未找到相关信息。<b>识别到这一缺口后，它可以调用工具</b>——例如实时网络搜索 API——来查找最新新闻文章和社交媒体情绪。随后，agent 利用这些新收集的外部信息给出最新答案，<b>克服其静态内部数据库的局限</b>。
+
+Agentic RAG（智能体式 RAG）的挑战：尽管强大，agent 层也带来了一系列自身挑战。<b>主要缺点是复杂性和成本显著增加</b>。设计、实现和维护 agent 的决策逻辑与工具集成需要大量工程投入，并增加计算开销。这种复杂性还可能导致延迟增加，因为 agent 的 Reflection（反思）、工具使用和多步推理循环比标准的直接检索过程耗时更长。此外，<b>agent 本身可能成为新的错误来源</b>；有缺陷的推理过程可能使其陷入无用的循环、误解任务或不当丢弃相关信息，最终降低最终回答的质量。</div>
+        <div class="seg-note"><b>导读注:</b>agent 能补知识缺口，但<b>复杂度、成本与延迟</b>随之上升，且 agent 自身可能成为新错误源。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"In summary: Agentic RAG represents a sophisticated evolution of the standard retrieval pattern, transforming it from a passive data pipeline into an active, problem-solving framework. By embedding a reasoning layer that can evaluate sources, reconcile conflicts, decompose complex questions, and use external tools, agents dramatically improve the reliability and depth of the generated answers. This advancement makes the AI more trustworthy and capable, though it comes with important trade-offs in system complexity, latency, and cost that must be carefully managed.
+Knowledge Retrieval (RAG) is changing how Large Language Models (LLMs) are utilized across various industries, enhancing their ability to provide more accurate and contextually relevant responses."</div>
+        <div class="seg-zh">总之：Agentic RAG（智能体式检索增强生成）代表了标准检索模式的一次复杂演进，将其从被动的数据管道转变为主动的、解决问题的框架。通过嵌入一个能够评估来源、调和冲突、分解复杂问题并使用外部工具的推理层（reasoning layer），智能体显著提升了生成答案的可靠性与深度。这一进步使 AI 更加可信、能力更强，但也伴随着在系统复杂性、延迟和成本方面的重要权衡，必须加以谨慎管理。
+知识检索（RAG）正在改变大型语言模型（Large Language Models，LLMs）在各行各业的使用方式，增强其提供更准确、更贴合上下文的回答的能力。</div>
+        <div class="seg-note"><b>导读注:</b>点出 Agentic RAG 从被动管道到主动推理框架的跃迁及其<b>复杂性、延迟与成本</b>权衡。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"● Enterprise Search and Q&amp;A: Organizations can develop internal chatbots that respond to employee inquiries using internal documentation such as HR policies, technical manuals, and product specifications. The RAG system extracts relevant sections from these documents to inform the LLM's response. ● Customer Support and Helpdesks: RAG-based systems can offer precise and consistent responses to customer queries by accessing information from product manuals, frequently asked questions (FAQs), and support tickets. This can reduce the need for direct human intervention for routine issues. ● Personalized Content Recommendation: Instead of basic keyword matching, RAG can identify and retrieve content (articles, products) that is semantically related to a user's preferences or previous interactions, leading to more relevant recommendations. ● News and Current Events Summarization: LLMs can be integrated with real-time news feeds. When prompted about a current event, the RAG system retrieves recent articles, allowing the LLM to produce an up-to-date summary."</div>
+        <div class="seg-zh">● 企业搜索与问答（Enterprise Search and Q&amp;A）：组织可以开发内部聊天机器人，利用人力资源政策、技术手册和产品规格等内部文档来回应员工咨询。RAG 系统从这些文档中提取相关章节，为 LLM 的响应提供依据。 ● 客户支持与服务台（Customer Support and Helpdesks）：基于 RAG 的系统可以通过访问产品手册、常见问题解答（FAQs）和支持工单中的信息，为客户查询提供精确且一致的响应。这可以减少常规问题对直接人工干预的需求。 ● 个性化内容推荐（Personalized Content Recommendation）：RAG 不再依赖基础的关键词匹配，而是能够识别并检索与用户偏好或先前交互在语义上相关的内容（文章、产品），从而产生更相关的推荐。 ● 新闻与时事摘要（News and Current Events Summarization）：LLM 可以与实时新闻源集成。当被提示某个当前事件时，RAG 系统会检索近期文章，使 LLM 能够生成最新的摘要。</div>
+        <div class="seg-note"><b>导读注:</b>展示 RAG 的四大应用场景，<b>企业搜索与客户支持</b>最贴近落地。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"By incorporating external knowledge, RAG extends the capabilities of LLMs beyond simple communication to function as knowledge processing systems.
+To illustrate the Knowledge Retrieval (RAG) pattern, let's see three examples.
+First, is how to use Google Search to do RAG and ground LLMs to search results. Since RAG involves accessing external information, the Google Search tool is a direct example of a built-in retrieval mechanism that can augment an LLM's knowledge.
+from google.adk.tools import google_search from google.adk.agents import Agent
+search_agent = Agent( name="research_assistant", model="gemini-2.0-flash-exp", instruction="You help users research topics. When asked, use the Google Search tool", tools=[google_search] )"</div>
+        <div class="seg-zh">通过整合外部知识，RAG 将 LLM 的能力从简单的交流扩展到可作为知识处理系统运行。
+为了说明知识检索（Knowledge Retrieval，RAG）模式，让我们看三个示例。
+首先，是如何使用 Google Search 进行 RAG，并将 LLM 锚定（ground）到搜索结果上。由于 RAG 涉及访问外部信息，Google Search 工具是内置检索机制的一个直接示例，该机制可以增强 LLM 的知识。
+from google.adk.tools import google_search from google.adk.agents import Agent
+search_agent = Agent( name="research_assistant", model="gemini-2.0-flash-exp", instruction="You help users research topics. When asked, use the Google Search tool", tools=[google_search] )</div>
+        <div class="seg-note"><b>导读注:</b><b>RAG 让 LLM 成为知识处理系统</b>，Google Search 是内置检索增强的直观示例。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"Second, this section explains how to utilize Vertex AI RAG capabilities within the Google ADK. The code provided demonstrates the initialization of VertexAiRagMemoryService from the ADK. This allows for establishing a connection to a Google Cloud Vertex AI RAG Corpus. The service is configured by specifying the corpus resource name and optional parameters such as SIMILARITY_TOP_K and VECTOR_DISTANCE_THRESHOLD. These parameters influence the retrieval process. SIMILARITY_TOP_K defines the number of top similar results to be retrieved. VECTOR_DISTANCE_THRESHOLD sets a limit on the semantic distance for the retrieved results. This setup enables agents to perform scalable and persistent semantic knowledge retrieval from the designated RAG Corpus. The process effectively integrates Google Cloud's RAG functionalities into an ADK agent, thereby supporting the development of responses grounded in factual data.
+# Import the necessary VertexAiRagMemoryService class from the google.adk.memory module. from google.adk.memory import VertexAiRagMemoryService"</div>
+        <div class="seg-zh">其次，本节说明如何在 Google ADK 中利用 Vertex AI RAG 能力。所提供的代码演示了从 ADK 初始化 VertexAiRagMemoryService。这允许建立与 Google Cloud Vertex AI RAG Corpus 的连接。该服务通过指定 corpus 资源名称以及可选参数（如 SIMILARITY_TOP_K 和 VECTOR_DISTANCE_THRESHOLD）进行配置。这些参数会影响检索过程。SIMILARITY_TOP_K 定义要检索的 top 相似结果数量。VECTOR_DISTANCE_THRESHOLD 为检索结果的语义距离设定限制。此设置使 agent 能够从指定的 RAG Corpus 执行可扩展且持久的语义知识检索。该过程有效地将 Google Cloud 的 RAG 功能集成到 ADK agent 中，从而支持开发基于事实数据的响应。
+# Import the necessary VertexAiRagMemoryService class from the google.adk.memory module. from google.adk.memory import VertexAiRagMemoryService</div>
+        <div class="seg-note"><b>导读注:</b>展示如何用 <b>VertexAiRagMemoryService</b> 将 Vertex AI RAG 接入 ADK agent。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"RAG_CORPUS_RESOURCE_NAME = "projects/your-gcp-project-id/locations/us-central1/ragCorpora/your-c orpus-id"
+# Define an optional parameter for the number of top similar results
+to retrieve. # This controls how many relevant document chunks the RAG service will return. SIMILARITY_TOP_K = 5
+# Define an optional parameter for the vector distance threshold. # This threshold determines the maximum semantic distance allowed for retrieved results; # results with a distance greater than this value might be filtered out. VECTOR_DISTANCE_THRESHOLD = 0.7
+# Initialize an instance of VertexAiRagMemoryService. # This sets up the connection to your Vertex AI RAG Corpus. # - rag_corpus: Specifies the unique identifier for your RAG Corpus. # - similarity_top_k: Sets the maximum number of similar results to fetch. # - vector_distance_threshold: Defines the similarity threshold for filtering results. memory_service = VertexAiRagMemoryService( rag_corpus=RAG_CORPUS_RESOURCE_NAME, similarity_top_k=SIMILARITY_TOP_K, vector_distance_threshold=VECTOR_DISTANCE_THRESHOLD )"</div>
+        <div class="seg-zh">RAG_CORPUS_RESOURCE_NAME = "projects/your-gcp-project-id/locations/us-central1/ragCorpora/your-c orpus-id"
+# 定义用于检索的<b>最相似结果数量</b>的可选参数。
+# 这控制 RAG 服务将返回多少个相关文档块。
+SIMILARITY_TOP_K = 5
+# 定义<b>向量距离阈值</b>的可选参数。
+# 该阈值决定检索结果允许的最大语义距离；
+# 距离大于该值的结果可能会被过滤掉。
+VECTOR_DISTANCE_THRESHOLD = 0.7
+# 初始化 VertexAiRagMemoryService 的实例。
+# 这会建立与你的 Vertex AI RAG Corpus 的连接。
+# - rag_corpus：指定 RAG Corpus 的唯一标识符。
+# - similarity_top_k：设置要获取的最相似结果的最大数量。
+# - vector_distance_threshold：定义用于过滤结果的相似度阈值。
+memory_service = VertexAiRagMemoryService(
+    rag_corpus=RAG_CORPUS_RESOURCE_NAME,
+    similarity_top_k=SIMILARITY_TOP_K,
+    vector_distance_threshold=VECTOR_DISTANCE_THRESHOLD
+)</div>
+        <div class="seg-note"><b>导读注:</b>示例展示如何用<b>相似度数量与向量距离阈值</b>配置 Vertex AI RAG 检索。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"Third, let's walk through a complete example using LangChain.
+import os import requests from typing import List, Dict, Any, TypedDict from langchain_community.document_loaders import TextLoader
+from langchain_core.documents import Document from langchain_core.prompts import ChatPromptTemplate from langchain_core.output_parsers import StrOutputParser from langchain_community.embeddings import OpenAIEmbeddings from langchain_community.vectorstores import Weaviate from langchain_openai import ChatOpenAI from langchain.text_splitter import CharacterTextSplitter from langchain.schema.runnable import RunnablePassthrough from langgraph.graph import StateGraph, END import weaviate from weaviate.embedded import EmbeddedOptions
+# Load environment variables (e.g., OPENAI_API_KEY) dotenv.load_dotenv() # Set your OpenAI API key (ensure it's loaded from .env or set here) # os.environ["OPENAI_API_KEY"] = "YOUR_OPENAI_API_KEY"
+# --- 1. Data Preparation (Preprocessing) --# Load data url = "https://github.com/langchain-ai/langchain/blob/master/docs/docs/how_ to/state_of_the_union.txt" res = requests.get(url)"</div>
+        <div class="seg-zh">第三，让我们通过 LangChain 走一遍一个完整的示例。
+import os import requests from typing import List, Dict, Any, TypedDict from langchain_community.document_loaders import TextLoader
+from langchain_core.documents import Document from langchain_core.prompts import ChatPromptTemplate from langchain_core.output_parsers import StrOutputParser from langchain_community.embeddings import OpenAIEmbeddings from langchain_community.vectorstores import Weaviate from langchain_openai import ChatOpenAI from langchain.text_splitter import CharacterTextSplitter from langchain.schema.runnable import RunnablePassthrough from langgraph.graph import StateGraph, END import weaviate from weaviate.embedded import EmbeddedOptions
+# 加载环境变量（例如 OPENAI_API_KEY） dotenv.load_dotenv() # 设置你的 OpenAI API key（确保从 .env 加载或在此处设置） # os.environ["OPENAI_API_KEY"] = "YOUR_OPENAI_API_KEY"
+# --- 1. 数据准备（预处理） --# 加载数据 url = "https://github.com/langchain-ai/langchain/blob/master/docs/docs/how_ to/state_of_the_union.txt" res = requests.get(url)</div>
+        <div class="seg-note"><b>导读注:</b>完整示例从<b>数据准备</b>起步，展示 LangChain 全流程代码骨架。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"with open("state_of_the_union.txt", "w") as f: f.write(res.text)
+loader = TextLoader('./state_of_the_union.txt') documents = loader.load()
+# Chunk documents text_splitter = CharacterTextSplitter(chunk_size=500, chunk_overlap=50) chunks = text_splitter.split_documents(documents)
+# Embed and store chunks in Weaviate client = weaviate.Client( embedded_options = EmbeddedOptions() )
+vectorstore = Weaviate.from_documents( client = client, documents = chunks, embedding = OpenAIEmbeddings(), by_text = False )
+# Define the retriever retriever = vectorstore.as_retriever()
+# Initialize LLM llm = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0)
+# --- 2. Define the State for LangGraph --class RAGGraphState(TypedDict): question: str
+documents: List[Document] generation: str
+# --- 3. Define the Nodes (Functions) -- def retrieve_documents_node(state: RAGGraphState) -&gt; RAGGraphState: """Retrieves documents based on the user's question.""" question = state["question"] documents = retriever.invoke(question) return {"documents": documents, "question": question, "generation": ""}"</div>
+        <div class="seg-zh">with open("state_of_the_union.txt", "w") as f: f.write(res.text)
+loader = TextLoader('./state_of_the_union.txt') documents = loader.load()
+# 分块文档 text_splitter = CharacterTextSplitter(chunk_size=500, chunk_overlap=50) chunks = text_splitter.split_documents(documents)
+# 将分块嵌入并存储到 Weaviate client = weaviate.Client( embedded_options = EmbeddedOptions() )
+vectorstore = Weaviate.from_documents( client = client, documents = chunks, embedding = OpenAIEmbeddings(), by_text = False )
+# 定义检索器 retriever = vectorstore.as_retriever()
+# 初始化 LLM llm = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0)
+# --- 2. 为 LangGraph 定义状态 --class RAGGraphState(TypedDict): question: str
+documents: List[Document] generation: str
+# --- 3. 定义节点（函数）-- def retrieve_documents_node(state: RAGGraphState) -&gt; RAGGraphState: """根据用户问题检索文档。""" question = state["question"] documents = retriever.invoke(question) return {"documents": documents, "question": question, "generation": ""}</div>
+        <div class="seg-note"><b>导读注:</b>展示用 LangGraph 构建 RAG 流程：<b>状态定义与检索节点</b>是核心。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"def generate_response_node(state: RAGGraphState) -&gt; RAGGraphState: """Generates a response using the LLM based on retrieved documents.""" question = state["question"] documents = state["documents"]
+# Prompt template from the PDF template = """You are an assistant for question-answering tasks. Use the following pieces of retrieved context to answer the question. If you don't know the answer, just say that you don't know. Use three sentences maximum and keep the answer concise. Question: {question} Context: {context} Answer: """ prompt = ChatPromptTemplate.from_template(template)
+# Format the context from the documents context = "\n\n".join([doc.page_content for doc in documents])
+# Create the RAG chain rag_chain = prompt | llm | StrOutputParser()
+# Invoke the chain generation = rag_chain.invoke({"context": context, "question": question}) return {"question": question, "documents": documents, "generation": generation}
+# --- 4. Build the LangGraph Graph -- workflow = StateGraph(RAGGraphState)"</div>
+        <div class="seg-zh">def generate_response_node(state: RAGGraphState) -&gt; RAGGraphState: """基于检索到的文档，使用 LLM 生成回答。""" question = state["question"] documents = state["documents"]
+# 来自 PDF 的 prompt 模板 template = """You are an assistant for question-answering tasks. Use the following pieces of retrieved context to answer the question. If you don't know the answer, just say that you don't know. Use three sentences maximum and keep the answer concise. Question: {question} Context: {context} Answer: """ prompt = ChatPromptTemplate.from_template(template)
+# 将文档中的上下文格式化 context = "\n\n".join([doc.page_content for doc in documents])
+# 创建 RAG 链 rag_chain = prompt | llm | StrOutputParser()
+# 调用链 generation = rag_chain.invoke({"context": context, "question": question}) return {"question": question, "documents": documents, "generation": generation}
+# --- 4. 构建 LangGraph 图 -- workflow = StateGraph(RAGGraphState)</div>
+        <div class="seg-note"><b>导读注:</b>展示 RAG 节点如何用 prompt 模板与链式调用生成回答。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"# Add nodes workflow.add_node("retrieve", retrieve_documents_node)
+workflow.add_node("generate", generate_response_node)
+# Set the entry point workflow.set_entry_point("retrieve")
+# Add edges (transitions) workflow.add_edge("retrieve", "generate") workflow.add_edge("generate", END)
+# Compile the graph app = workflow.compile()
+# --- 5. Run the RAG Application -- if __name__ == "__main__": print("\n--- Running RAG Query ---") query = "What did the president say about Justice Breyer" inputs = {"question": query} for s in app.stream(inputs): print(s)
+print("\n--- Running another RAG Query ---") query_2 = "What did the president say about the economy?" inputs_2 = {"question": query_2} for s in app.stream(inputs_2): print(s)"</div>
+        <div class="seg-zh"># 添加节点
+workflow.add_node("retrieve", retrieve_documents_node)
+workflow.add_node("generate", generate_response_node)
+# 设置入口点
+workflow.set_entry_point("retrieve")
+# 添加边（转换）
+workflow.add_edge("retrieve", "generate")
+workflow.add_edge("generate", END)
+# 编译图
+app = workflow.compile()
+# --- 5. 运行 RAG 应用 --
+if __name__ == "__main__":
+    print("\n--- 运行 RAG 查询 ---")
+    query = "总统对 Breyer 法官说了什么"
+    inputs = {"question": query}
+    for s in app.stream(inputs):
+        print(s)
+
+    print("\n--- 运行另一个 RAG 查询 ---")
+    query_2 = "总统对经济说了什么？"
+    inputs_2 = {"question": query_2}
+    for s in app.stream(inputs_2):
+        print(s)</div>
+        <div class="seg-note"><b>导读注:</b>展示用 <b>LangGraph</b> 构建 RAG 工作流：添加节点、连边、编译并流式运行查询。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"This Python code illustrates a Retrieval-Augmented Generation (RAG) pipeline implemented with LangChain and LangGraph. The process begins with the creation of a knowledge base derived from a text document, which is segmented into chunks and transformed into embeddings. These embeddings are then stored in a Weaviate vector store, facilitating efficient information retrieval. A StateGraph in LangGraph is utilized to manage the workflow between two key functions: `retrieve_documents_node` and `generate_response_node`. The `retrieve_documents_node` function queries the vector store to identify relevant document chunks based on the user's input. Subsequently, the `generate_response_node` function utilizes the retrieved information and a predefined prompt template to produce a response using an OpenAI Large Language Model (LLM). The `app.stream` method allows the execution of queries through the RAG pipeline, demonstrating the system's capacity to generate contextually relevant outputs."</div>
+        <div class="seg-zh">这段 Python 代码展示了一个用 LangChain 和 LangGraph 实现的检索增强生成(Retrieval-Augmented Generation, RAG)流水线。流程始于从文本文档构建知识库,文档被切分为块(chunk)并转换为嵌入(embedding)。这些嵌入随后存入 Weaviate 向量库(vector store),以实现高效的信息检索。LangGraph 中的 StateGraph 用于管理两个关键函数之间的工作流:`retrieve_documents_node` 和 `generate_response_node`。`retrieve_documents_node` 函数查询向量库,根据用户输入找出相关文档块。随后,`generate_response_node` 函数利用检索到的信息和预定义的 prompt 模板,通过 OpenAI 大语言模型(Large Language Model, LLM)生成响应。`app.stream` 方法允许通过 RAG 流水线执行查询,展示了系统生成上下文相关输出的能力。</div>
+        <div class="seg-note"><b>导读注:</b>展示 LangGraph 双节点 RAG 流水线:<b>检索与生成分离</b>,由 StateGraph 编排。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"What: LLMs possess impressive text generation abilities but are fundamentally limited by their training data. This knowledge is static, meaning it doesn't include real-time information or private, domain-specific data. Consequently, their responses can be outdated, inaccurate, or lack the specific context required for specialized tasks. This gap restricts their reliability for applications demanding current and factual answers.
+Why: The Retrieval-Augmented Generation (RAG) pattern provides a standardized solution by connecting LLMs to external knowledge sources. When a query is received, the system first retrieves relevant information snippets from a specified knowledge base. These snippets are then appended to the original prompt, enriching it with timely and specific context. This augmented prompt is then sent to the LLM, enabling it to generate a response that is accurate, verifiable, and grounded in external data. This process effectively transforms the LLM from a closed-book reasoner into an open-book one, significantly enhancing its utility and trustworthiness."</div>
+        <div class="seg-zh">是什么：LLM 拥有令人印象深刻的文本生成能力，但根本上受限于其训练数据。这些知识是静态的，意味着它不包含实时信息或私有的、领域特定的数据。因此，它们的响应可能过时、不准确，或缺乏专业任务所需的特定上下文。这一差距限制了它们在需要最新且事实性答案的应用中的可靠性。
+
+为什么：检索增强生成（Retrieval-Augmented Generation, RAG）模式通过将 LLM 连接到外部知识源，提供了一种标准化的解决方案。当收到查询时，系统首先从指定的知识库中检索相关的信息片段。然后，这些片段被附加到原始 prompt 中，用及时且具体的上下文对其进行丰富。这个增强后的 prompt 随后被发送给 LLM，使其能够生成准确、可验证且基于外部数据的响应。这一过程有效地将 LLM 从<b>闭卷推理器</b>转变为<b>开卷推理器</b>，显著提升了其效用和可信度。</div>
+        <div class="seg-note"><b>导读注:</b>RAG 将 LLM 从<b>闭卷</b>变<b>开卷</b>，解决静态知识局限。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"Rule of thumb: Use this pattern when you need an LLM to answer questions or generate content based on specific, up-to-date, or proprietary information that was not part of its original training data. It is ideal for building Q&amp;A systems over internal documents, customer support bots, and applications requiring verifiable, fact-based responses with citations.
+Knowledge Retrieval pattern: an AI agent to query and retrieve information from structured databases
+Fig. 3: Knowledge Retrieval pattern: an AI agent to find and synthesize information from the public internet in response to user queries. Key Takeaways
+● Knowledge Retrieval (RAG) enhances LLMs by allowing them to access external, up-to-date, and specific information. ● The process involves Retrieval (searching a knowledge base for relevant snippets) and Augmentation (adding these snippets to the LLM's prompt). ● RAG helps LLMs overcome limitations like outdated training data, reduces "hallucinations," and enables domain-specific knowledge integration. ● RAG allows for attributable answers, as the LLM's response is grounded in retrieved sources. ● GraphRAG leverages a knowledge graph to understand the relationships between different pieces of information, allowing it to answer complex questions that require synthesizing data from multiple sources."</div>
+        <div class="seg-zh">经验法则：当你需要 LLM 基于特定的、最新的或专有的、且不在其原始训练数据中的信息来回答问题或生成内容时，使用此模式。它非常适合构建基于内部文档的问答系统、客户支持机器人，以及需要可验证、基于事实并带引用的响应的应用。
+知识检索模式：AI agent 从结构化数据库中查询并检索信息
+图 3：知识检索模式：AI agent 响应用户查询，从公共互联网中查找并综合信息。关键要点
+● 知识检索（RAG）通过允许 LLM 访问外部的、最新的和特定的信息来增强 LLM。● 该过程包括检索（在知识库中搜索相关片段）和增强（将这些片段添加到 LLM 的 prompt 中）。● RAG 帮助 LLM 克服训练数据过时等限制，减少“幻觉”，并实现领域特定知识的集成。● RAG 支持可归因的答案，因为 LLM 的响应以检索到的来源为基础。● GraphRAG 利用知识图谱来理解不同信息片段之间的关系，使其能够回答需要综合多个来源数据的复杂问题。</div>
+        <div class="seg-note"><b>导读注:</b><b>RAG</b> 的核心是检索+增强，让 LLM 基于外部来源作答并减少幻觉。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"● Agentic RAG moves beyond simple information retrieval by using an intelligent agent to actively reason about, validate, and refine external knowledge, ensuring a more accurate and reliable answer. ● Practical applications span enterprise search, customer support, legal research, and personalized recommendations. Conclusion
+In conclusion, Retrieval-Augmented Generation (RAG) addresses the core limitation of a Large Language Model's static knowledge by connecting it to external, up-to-date data sources. The process works by first retrieving relevant information snippets and then augmenting the user's prompt, enabling the LLM to generate more accurate and contextually aware responses. This is made possible by foundational technologies like embeddings, semantic search, and vector databases, which find information based on meaning rather than just keywords. By grounding outputs in verifiable data, RAG significantly reduces factual errors and allows for the use of proprietary information, enhancing trust through citations."</div>
+        <div class="seg-zh">● Agentic RAG（智能体式检索增强生成）超越了简单的信息检索，通过使用智能体主动对外部知识进行推理、验证和精炼，确保答案更加准确可靠。● 实际应用涵盖企业搜索、客户支持、法律研究和个性化推荐。结论：总之，Retrieval-Augmented Generation（RAG，检索增强生成）通过将大型语言模型（LLM）连接到外部的、最新的数据源，解决了其静态知识这一核心局限。其工作流程是首先检索相关的信息片段，然后将其增强到用户的 prompt 中，使 LLM 能够生成更准确、更具上下文感知能力的回答。这得益于 embeddings（嵌入）、semantic search（语义搜索）和 vector databases（向量数据库）等基础技术，它们基于语义而非仅凭关键词来查找信息。通过将输出建立在可验证的数据之上，RAG 显著减少了事实性错误，并允许使用专有信息，通过引用增强信任。</div>
+        <div class="seg-note"><b>导读注:</b>总结 RAG 如何以检索+增强突破 LLM 静态知识局限，并点出 Agentic RAG 的主动推理新方向。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"An advanced evolution, Agentic RAG, introduces a reasoning layer that actively validates, reconciles, and synthesizes retrieved knowledge for even greater reliability. Similarly, specialized approaches like GraphRAG leverage knowledge graphs to navigate explicit data relationships, allowing the system to synthesize answers to highly complex, interconnected queries. This agent can resolve conflicting information, perform multi-step queries, and use external tools to find missing data. While these advanced methods add complexity and latency, they drastically improve the depth and trustworthiness of the final response. Practical applications for these patterns are already transforming industries, from enterprise search and customer support to personalized content delivery. Despite the challenges, RAG is a crucial pattern for making AI more knowledgeable, reliable, and useful. Ultimately, it transforms LLMs from closed-book conversationalists into powerful, open-book reasoning tools.
+1. Lewis, P., et al. (2020). Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks. https://arxiv.org/abs/2005.11401 2. Google AI for Developers Documentation. Retrieval Augmented Generation https://cloud.google.com/vertex-ai/generative-ai/docs/rag-engine/rag-overv iew"</div>
+        <div class="seg-zh">一种更高级的演进——<b>Agentic RAG</b>（智能体式 RAG）——引入了推理层，主动验证、协调并综合检索到的知识，从而获得更高的可靠性。类似地，GraphRAG 等专门方法利用知识图谱来导航显式的数据关系，使系统能够针对高度复杂、相互关联的查询综合出答案。该智能体可以解决信息冲突、执行多步查询，并使用外部工具查找缺失数据。尽管这些高级方法增加了复杂性和延迟，但它们大幅提升了最终响应的深度与可信度。这些模式的实用应用已经在改变各行各业，从企业搜索、客户支持到个性化内容交付。尽管存在挑战，RAG 仍是让 AI 更有知识、更可靠、更有用的关键模式。最终，它将 LLM 从闭卷式对话者转变为强大的开卷式推理工具。</div>
+        <div class="seg-note"><b>导读注:</b><b>Agentic RAG</b> 引入推理层主动校验知识，是提升可靠性的关键演进。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"3. Retrieval-Augmented Generation with Graphs (GraphRAG), https://arxiv.org/abs/2501.00309 4. LangChain and LangGraph: Leonie Monigatti, "Retrieval-Augmented Generation (RAG): From Theory to LangChain Implementation," https://medium.com/data-science/retrieval-augmented-generation-rag-fro m-theory-to-langchain-implementation-4e9bd5f6a4f2 5. Google Cloud Vertex AI RAG Corpus https://cloud.google.com/vertex-ai/generative-ai/docs/rag-engine/manage-y our-rag-corpus#corpus-management"</div>
+        <div class="seg-zh">3. 基于图的检索增强生成（GraphRAG），https://arxiv.org/abs/2501.00309 4. LangChain 与 LangGraph：Leonie Monigatti，《检索增强生成（RAG）：从理论到 LangChain 实现》，https://medium.com/data-science/retrieval-augmented-generation-rag-fro m-theory-to-langchain-implementation-4e9bd5f6a4f2 5. Google Cloud Vertex AI RAG 语料库 https://cloud.google.com/vertex-ai/generative-ai/docs/rag-engine/manage-y our-rag-corpus#corpus-management</div>
+        <div class="seg-note"><b>导读注:</b>三条参考资料分别指向<b>GraphRAG 论文</b>、LangChain 实践教程与 Vertex AI 语料库管理文档。</div>
+      </div>
+
+      <div class="callout info" style="margin-top:24px">
+        <div class="co-title">来源与用途</div>
+        <p style="margin-bottom:0">《Agentic Design Patterns》,Antonio Gulli · 2025 · <a href="papers/pdf/gulli-agentic-design-patterns.pdf" target="_blank" rel="noopener">原书 PDF</a>。本页为学习用途的对照整理,版权归原作者;有问题到读书导师处提问,答案只引用书中原文并标注章节。</p>
+      </div>
+
+      <p class="pager" style="margin-top:18px">
+        <a class="chip" href="book-gulli-patterns-ch13.html">← 第13章 · 人在回路 Human-in-the-Loop</a>
+        <a class="chip" href="book-gulli-patterns.html">导读</a>
+        <a class="chip" href="book-gulli-patterns-ch15.html">第15章 · 智能体间通信 Inter-Agent Communication (A2A) →</a>
+      </p>
+
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/app.js?v=28"></script>
+</body>
+</html>

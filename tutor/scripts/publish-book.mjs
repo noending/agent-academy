@@ -25,7 +25,7 @@ html = html.replace(/机器导读初稿(自动生成,未经人工审校)/g, "导
 html = html.replace(/<br><b style="color:var\(--warn\)">本页由读书管线自动生成,尚未人工审校。<\/b>/g, "");
 // 整块移除「人审须知」callout
 html = html.replace(/<div class="callout warn">\s*<div class="co-title">人审须知[^<]*<\/div>[\s\S]*?<\/p>\s*<\/div>/, "");
-html = html.replace(/(机器观点,待审):/g, ":");
+html = html.replace(/\((机器观点,待审)\):/g, ":");
 html = html.replace(/(机器生成,待审)/g, "");
 if (html.length === before) console.log("· 页面无需变更(可能已发布)");
 else writeFileSync(page, html);

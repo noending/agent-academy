@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Agentic Design Patterns 第 19 章 评估与监控 Evaluation and Monitoring 中英对照翻译。">
+<title>第 19 章 · 评估与监控 Evaluation and Monitoring | Agentic Design Patterns | Agent 学院</title>
+<link rel="stylesheet" href="assets/css/style.css?v=24">
+</head>
+<body data-chapter="books">
+
+<header class="topbar">
+  <button class="icon-btn hamburger" id="hamburger" title="打开导航">☰</button>
+  <a class="brand" href="index.html"><span class="logo">学</span> Agent 学院 <small>从零开发智能体 · Ontology · Harness</small></a>
+  <span class="spacer"></span>
+  <span class="progress-pill" id="progress-pill">读书</span>
+  <button class="icon-btn" id="theme-btn">🌙</button>
+</header>
+
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <main class="content">
+    <div class="content-inner">
+
+      <header class="chapter-head">
+        <div class="kicker">读书 · Agentic Design Patterns · 中英对照</div>
+        <h1>第 19 章 · 评估与监控 Evaluation and Monitoring</h1>
+        <p class="lead">
+          Chapter 19: Evaluation and Monitoring · 《Agentic Design Patterns》 · Antonio Gulli · 2025
+          <br>讲如何系统度量智能体的效果、效率与合规性，并建立反馈闭环持续监控。
+          <br><a class="chip" href="book-gulli-patterns.html">← 返回导读</a> <a class="chip" href="papers/pdf/gulli-agentic-design-patterns.pdf">原书 PDF</a> <a class="chip" href="book-gulli-patterns-ch18.html">上一章:第18章</a> <a class="chip" href="book-gulli-patterns-ch20.html">下一章:第20章</a>
+        </p>
+      </header>
+
+      <div class="callout key"><div class="co-title">本章要点</div><p>① 评估需超越精确匹配，用语义相似度、LLM-as-a-Judge等指标  ① 监控延迟与token用量，保障体验并控制成本  ① 评估智能体轨迹与工具调用，而非只看最终输出  ① 多智能体需评估协作质量，并向正式契约式承包商演进</p></div>
+<h2>本章划线句</h2>
+<details class="qn"><summary>本章划线句(逐字校验)</summary>
+        <div class="qn-body">
+        <div class="qn-en">"Evaluating agents' trajectories is essential, as traditional software tests are insufficient."</div>
+        <div class="qn-zh"><b>为什么值得划线:</b>点明智能体评估与传统测试的根本差异</div>
+        </div>
+      </details>
+<details class="qn"><summary>本章划线句(逐字校验)</summary>
+        <div class="qn-body">
+        <div class="qn-en">"This LLM-as-a-Judge approach assesses another AI agent's output based on predefined criteria for "helpfulness.""</div>
+        <div class="qn-zh"><b>为什么值得划线:</b>概括主观质量评估的核心方法</div>
+        </div>
+      </details>
+<details class="qn"><summary>本章划线句(逐字校验)</summary>
+        <div class="qn-body">
+        <div class="qn-en">"This transformation is supported by four key pillars that collectively ensure clarity, reliability, and robust execution of tasks that were previously beyond the scope of autonomous systems."</div>
+        <div class="qn-zh"><b>为什么值得划线:</b>引出从智能体到承包商的四支柱框架</div>
+        </div>
+      </details>
+<h2>正文(英中对照)</h2>
+<div class="seg">
+        <div class="seg-en">"This chapter examines methodologies that allow intelligent agents to systematically assess their performance, monitor progress toward goals, and detect operational anomalies. While Chapter 11 outlines goal setting and monitoring, and Chapter 17 addresses Reasoning mechanisms, this chapter focuses on the continuous, often external, measurement of an agent's effectiveness, efficiency, and compliance with requirements. This includes defining metrics, establishing feedback loops, and implementing reporting systems to ensure agent performance aligns with expectations in operational environments (see Fig.1)
+Fig:1. Best practices for evaluation and monitoring Practical Applications &amp; Use Cases"</div>
+        <div class="seg-zh">本章探讨使智能体(Intelligent Agent)能够系统评估自身表现、监控目标进展并检测运行异常的方法论。第11章概述了目标设定与监控，第17章讨论了推理(Reasoning)机制，而本章聚焦于对智能体有效性、效率及需求合规性的持续、通常是外部的测量。这包括定义指标、建立反馈回路，以及实施报告系统，以确保智能体表现与运行环境中的预期保持一致（见图1）。
+图1. 评估与监控的最佳实践 实际应用与用例</div>
+        <div class="seg-note"><b>导读注:</b>强调<b>外部持续测量</b>智能体表现，而非仅靠内部目标监控。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"● Performance Tracking in Live Systems: Continuously monitoring the accuracy, latency, and resource consumption of an agent deployed in a production environment (e.g., a customer service chatbot's resolution rate, response time). ● A/B Testing for Agent Improvements: Systematically comparing the performance of different agent versions or strategies in parallel to identify optimal approaches (e.g., trying two different planning algorithms for a logistics agent). ● Compliance and Safety Audits: Generate automated audit reports that track an agent's compliance with ethical guidelines, regulatory requirements, and safety protocols over time. These reports can be verified by a human-in-the-loop or another agent, and can generate KPIs or trigger alerts upon identifying issues. ● Enterprise systems: To govern Agentic AI in corporate systems, a new control instrument, the AI "Contract," is needed. This dynamic agreement codifies the objectives, rules, and controls for AI-delegated tasks. ● Drift Detection: Monitoring the relevance or accuracy of an agent's outputs over time, detecting when its performance degrades due to changes in input data distribution (concept drift) or environmental shifts. ● Anomaly Detection in Agent Behavior: Identifying unusual or unexpected actions taken by an agent that might indicate an error, a malicious attack, or an emergent un-desired behavior. ● Learning Progress Assessment: For agents designed to learn, tracking their learning curve, improvement in specific skills, or generalization capabilities over different tasks or data sets. Hands-On Code Example"</div>
+        <div class="seg-zh">● 实时系统中的性能跟踪：持续监控部署在生产环境中的 agent 的准确性、延迟和资源消耗（例如，客服聊天机器人（chatbot）的解决率、响应时间）。 ● 用于 agent 改进的 A/B 测试：并行地系统比较不同 agent 版本或策略的性能，以识别最优方法（例如，为物流 agent 尝试两种不同的规划算法）。 ● 合规与安全审计：生成自动化审计报告，跟踪 agent 在一段时间内对伦理准则、监管要求和安全协议的合规情况。这些报告可由 human-in-the-loop 或另一个 agent 验证，并可在发现问题时生成 KPI 或触发警报。 ● 企业系统：为了在企业系统中治理 Agentic AI，需要一种新的控制工具，即 AI“Contract”。这种动态协议将 AI 委托任务的目标、规则和控制编纂成文。 ● 漂移检测（Drift Detection）：随时间监控 agent 输出的相关性或准确性，检测其性能何时因输入数据分布变化（概念漂移（concept drift））或环境变化而下降。 ● Agent 行为中的异常检测：识别 agent 采取的异常或意外动作，这些动作可能表明错误、恶意攻击或涌现出的非期望行为。 ● 学习进度评估：对于为学习而设计的 agent，跟踪其学习曲线、特定技能的提升，或在不同任务或数据集上的泛化能力。 动手代码示例</div>
+        <div class="seg-note"><b>导读注:</b>涵盖 agent 运维监控的多个关键维度，<b>漂移检测</b>与<b>AI Contract</b>治理工具最值得关注。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"Developing a comprehensive evaluation framework for AI agents is a challenging endeavor, comparable to an academic discipline or a substantial publication in its complexity. This difficulty stems from the multitude of factors to consider, such as model performance, user interaction, ethical implications, and broader societal impact. Nevertheless, for practical implementation, the focus can be narrowed to critical use cases essential for the efficient and effective functioning of AI agents.
+Agent Response Assessment: This core process is essential for evaluating the quality and accuracy of an agent's outputs. It involves determining if the agent delivers pertinent, correct, logical, unbiased, and accurate information in response to given inputs. Assessment metrics may include factual correctness, fluency, grammatical precision, and adherence to the user's intended purpose.
+def evaluate_response_accuracy(agent_output: str, expected_output: str) -&gt; float: """Calculates a simple accuracy score for agent responses.""" # This is a very basic exact match; real-world would use more sophisticated metrics return 1.0 if agent_output.strip().lower() == expected_output.strip().lower() else 0.0"</div>
+        <div class="seg-zh">为 AI 智能体（AI agents）开发一个全面的评估框架是一项艰巨的任务，其复杂性堪比一门学科或一部重要的出版物。这种困难源于需要考虑的众多因素，例如模型性能、用户交互、伦理影响以及更广泛的社会影响。然而，对于实际实施而言，可以将重点缩小到对 AI 智能体高效且有效运行至关重要的关键用例。
+智能体响应评估：这一核心过程对于评估智能体输出的质量和准确性至关重要。它涉及判断智能体是否针对给定输入提供相关、正确、合乎逻辑、无偏见且准确的信息。评估指标可能包括事实正确性、流畅性、语法精确性以及对用户预期目的的符合程度。
+def evaluate_response_accuracy(agent_output: str, expected_output: str) -&gt; float: """Calculates a simple accuracy score for agent responses.""" # This is a very basic exact match; real-world would use more sophisticated metrics return 1.0 if agent_output.strip().lower() == expected_output.strip().lower() else 0.0</div>
+        <div class="seg-note"><b>导读注:</b><b>评估框架</b>虽复杂，但落地需聚焦关键用例，响应评估是核心。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"# Example usage agent_response = "The capital of France is Paris." ground_truth = "Paris is the capital of France." score = evaluate_response_accuracy(agent_response, ground_truth) print(f"Response accuracy: {score}")
+The Python function `evaluate_response_accuracy` calculates a basic accuracy score for an AI agent's response by performing an exact, case-insensitive comparison between the agent's output and the expected output, after removing leading or trailing whitespace. It returns a score of 1.0 for an exact match and 0.0 otherwise, representing a binary correct or incorrect evaluation. This method, while straightforward for simple checks, does not account for variations like paraphrasing or semantic equivalence.
+The problem lies in its method of comparison. The function performs a strict, character-for-character comparison of the two strings. In the example provided:
+● agent_response: "The capital of France is Paris." ● ground_truth: "Paris is the capital of France."
+Even after removing whitespace and converting to lowercase, these two strings are not identical. As a result, the function will incorrectly return an accuracy score of 0.0, even though both sentences convey the same meaning."</div>
+        <div class="seg-zh"># 示例用法
+agent_response = "The capital of France is Paris."
+ground_truth = "Paris is the capital of France."
+score = evaluate_response_accuracy(agent_response, ground_truth)
+print(f"Response accuracy: {score}")
+
+Python 函数 `evaluate_response_accuracy` 通过去除首尾空白后，对 AI agent 的输出与预期输出进行精确、不区分大小写的比较，从而为 AI agent 的响应计算一个基础准确率分数。若完全匹配则返回 1.0，否则返回 0.0，表示二元的正确或错误评估。<b>该方法虽然对简单检查很直接，但无法处理改写或语义等价等变体。</b>
+
+问题在于其比较方法。该函数对两个字符串进行严格的逐字符比较。在所提供的示例中：
+● agent_response: "The capital of France is Paris." ● ground_truth: "Paris is the capital of France."
+即使去除空白并转换为小写后，这两个字符串也并不相同。因此，<b>即使两句话表达相同含义，该函数也会错误地返回 0.0 的准确率分数。</b></div>
+        <div class="seg-note"><b>导读注:</b>揭示精确匹配评估的致命缺陷：<b>语义相同但措辞不同即判错</b>。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"A straightforward comparison falls short in assessing semantic similarity, only succeeding if an agent's response exactly matches the expected output. A more effective evaluation necessitates advanced Natural Language Processing (NLP) techniques to discern the meaning between sentences. For thorough AI agent evaluation in real-world scenarios, more sophisticated metrics are often indispensable. These metrics can encompass String Similarity Measures like Levenshtein distance and Jaccard similarity, Keyword Analysis for the presence or absence of specific keywords, Semantic Similarity using cosine similarity with embedding models, LLM-as-a-Judge Evaluations (discussed later for assessing nuanced correctness and helpfulness), and RAG-specific Metrics such as faithfulness 3"</div>
+        <div class="seg-zh">简单的比较不足以评估语义相似性，只有当智能体的响应与预期输出完全匹配时才能成功。更有效的评估需要先进的自然语言处理（Natural Language Processing, NLP）技术来辨别句子之间的含义。为了在真实场景中对 AI 智能体进行全面评估，通常离不开更复杂的指标。这些指标可以包括：字符串相似度度量（String Similarity Measures），如 Levenshtein 距离和 Jaccard 相似度；关键词分析（Keyword Analysis），用于判断特定关键词是否存在；语义相似度（Semantic Similarity），使用嵌入模型计算余弦相似度；LLM-as-a-Judge 评估（后文讨论，用于评估细微的正确性和有用性）；以及 RAG 专用指标（RAG-specific Metrics），如忠实度（faithfulness）3。</div>
+        <div class="seg-note"><b>导读注:</b>指出简单比对不足，强调需用<b>NLP与多维指标</b>全面评估智能体。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"Latency Monitoring: Latency Monitoring for Agent Actions is crucial in applications where the speed of an AI agent's response or action is a critical factor. This process measures the duration required for an agent to process requests and generate outputs. Elevated latency can adversely affect user experience and the agent's overall effectiveness, particularly in real-time or interactive environments. In practical applications, simply printing latency data to the console is insufficient. Logging this information to a persistent storage system is recommended. Options include structured log files (e.g., JSON), time-series databases (e.g., InfluxDB, Prometheus), data warehouses (e.g., Snowflake, BigQuery, PostgreSQL), or observability platforms (e.g., Datadog, Splunk, Grafana Cloud).
+Tracking Token Usage for LLM Interactions: For LLM-powered agents, tracking token usage is crucial for managing costs and optimizing resource allocation. Billing for LLM interactions often depends on the number of tokens processed (input and output). Therefore, efficient token usage directly reduces operational expenses. Additionally, monitoring token counts helps identify potential areas for improvement in prompt engineering or response generation processes."</div>
+        <div class="seg-zh">延迟监控（Latency Monitoring）：在 AI agent 响应或动作速度至关重要的应用中，对 agent 动作进行延迟监控非常关键。该过程衡量 agent 处理请求并生成输出所需的时长。<b>延迟升高会负面影响用户体验和 agent 的整体有效性</b>，在实时或交互式环境中尤其如此。在实际应用中，仅将延迟数据打印到控制台是不够的。建议将此信息记录到持久化存储系统。可选方案包括结构化日志文件（如 JSON）、时序数据库（如 InfluxDB、Prometheus）、数据仓库（如 Snowflake、BigQuery、PostgreSQL）或可观测性平台（如 Datadog、Splunk、Grafana Cloud）。
+
+跟踪 LLM 交互的 token 用量（Tracking Token Usage for LLM Interactions）：对于由 LLM 驱动的 agent，跟踪 token 用量对于管理成本和优化资源分配至关重要。LLM 交互的计费通常取决于处理的 token 数量（输入和输出）。因此，<b>高效的 token 用量可直接降低运营费用</b>。此外，监控 token 计数有助于识别 prompt 工程或响应生成过程中潜在的改进空间。</div>
+        <div class="seg-note"><b>导读注:</b>强调延迟与 token 用量需持久化监控，而非仅打印控制台。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"# This is conceptual as actual token counting depends on the LLM API class LLMInteractionMonitor: def __init__(self): self.total_input_tokens = 0 self.total_output_tokens = 0
+def record_interaction(self, prompt: str, response: str): # In a real scenario, use LLM API's token counter or a tokenizer input_tokens = len(prompt.split()) # Placeholder output_tokens = len(response.split()) # Placeholder self.total_input_tokens += input_tokens self.total_output_tokens += output_tokens print(f"Recorded interaction: Input tokens={input_tokens}, Output tokens={output_tokens}")
+def get_total_tokens(self): return self.total_input_tokens, self.total_output_tokens
+# Example usage monitor = LLMInteractionMonitor() monitor.record_interaction("What is the capital of France?", "The capital of France is Paris.")
+monitor.record_interaction("Tell me a joke.", "Why don't scientists trust atoms? Because they make up everything!") input_t, output_t = monitor.get_total_tokens() print(f"Total input tokens: {input_t}, Total output tokens: {output_t}")"</div>
+        <div class="seg-zh"># 这是概念性的，因为实际的 token 计数取决于 LLM API
+class LLMInteractionMonitor:
+    def __init__(self):
+        self.total_input_tokens = 0
+        self.total_output_tokens = 0
+
+    def record_interaction(self, prompt: str, response: str):
+        # 在实际场景中，使用 LLM API 的 token 计数器或分词器
+        input_tokens = len(prompt.split())  # 占位符
+        output_tokens = len(response.split())  # 占位符
+        self.total_input_tokens += input_tokens
+        self.total_output_tokens += output_tokens
+        print(f"记录交互：输入 token={input_tokens}，输出 token={output_tokens}")
+
+    def get_total_tokens(self):
+        return self.total_input_tokens, self.total_output_tokens
+
+# 示例用法
+monitor = LLMInteractionMonitor()
+monitor.record_interaction("What is the capital of France?", "The capital of France is Paris.")
+monitor.record_interaction("Tell me a joke.", "Why don't scientists trust atoms? Because they make up everything!")
+input_t, output_t = monitor.get_total_tokens()
+print(f"总输入 token：{input_t}，总输出 token：{output_t}")</div>
+        <div class="seg-note"><b>导读注:</b><b>token 计数是占位实现</b>，真实场景需调用 LLM API 或分词器。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"This section introduces a conceptual Python class, `LLMInteractionMonitor`, developed to track token usage in large language model interactions. The class incorporates counters for both input and output tokens. Its `record_interaction` method simulates token counting by splitting the prompt and response strings. In a practical implementation, specific LLM API tokenizers would be employed for precise token counts. As interactions occur, the monitor accumulates the total input and output token counts. The `get_total_tokens` method provides access to these cumulative totals, essential for cost management and optimization of LLM usage.
+Custom Metric for "Helpfulness" using LLM-as-a-Judge: Evaluating subjective qualities like an AI agent's "helpfulness" presents challenges beyond standard objective metrics. A potential framework involves using an LLM as an evaluator. This LLM-as-a-Judge approach assesses another AI agent's output based on predefined criteria for "helpfulness." Leveraging the advanced linguistic capabilities of LLMs, this method offers nuanced, human-like evaluations of subjective qualities, surpassing simple keyword matching or rule-based assessments. Though in development, this technique shows promise for automating and scaling qualitative evaluations."</div>
+        <div class="seg-zh">本节介绍了一个概念性的 Python 类 `LLMInteractionMonitor`，用于跟踪大语言模型（large language model, LLM）交互中的 token 使用情况。该类包含输入和输出 token 的计数器。其 `record_interaction` 方法通过拆分 prompt 和响应字符串来模拟 token 计数。在实际实现中，会采用特定的 LLM API tokenizer 来获得精确的 token 计数。随着交互的发生，监控器会累计输入和输出 token 的总数。`get_total_tokens` 方法提供对这些累计总数的访问，这对于成本管理和优化 LLM 使用至关重要。
+使用 LLM-as-a-Judge 的“Helpfulness”自定义指标：评估 AI agent 的“helpfulness”等主观质量，会带来超出标准客观指标的挑战。一个潜在的框架涉及使用 LLM 作为评估器。这种 LLM-as-a-Judge 方法基于预定义的“helpfulness”标准来评估另一个 AI agent 的输出。利用 LLM 的高级语言能力，该方法可对主观质量提供细致、类人的评估，超越简单的关键词匹配或基于规则的评估。尽管仍在开发中，该技术显示出在自动化和扩展定性评估方面的前景。</div>
+        <div class="seg-note"><b>导读注:</b>介绍 token 监控类与 <b>LLM-as-a-Judge</b> 主观评估思路，兼顾成本与质量。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"import google.generativeai as genai import os import json import logging from typing import Optional
+# --- Configuration -- logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s - %(message)s')
+# Set your API key as an environment variable to run this script # For example, in your terminal: export GOOGLE_API_KEY='your_key_here' try: genai.configure(api_key=os.environ["GOOGLE_API_KEY"]) except KeyError: logging.error("Error: GOOGLE_API_KEY environment variable not set.")
+# --- LLM-as-a-Judge Rubric for Legal Survey Quality --LEGAL_SURVEY_RUBRIC = """ You are an expert legal survey methodologist and a critical legal reviewer. Your task is to evaluate the quality of a given legal survey question.
+Provide a score from 1 to 5 for overall quality, along with a detailed rationale and specific feedback. Focus on the following criteria:
+1. **Clarity &amp; Precision (Score 1-5):** * 1: Extremely vague, highly ambiguous, or confusing. * 3: Moderately clear, but could be more precise. * 5: Perfectly clear, unambiguous, and precise in its legal terminology (if applicable) and intent."</div>
+        <div class="seg-zh">import google.generativeai as genai
+import os
+import json
+import logging
+from typing import Optional
+
+# --- 配置 --
+logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s - %(message)s')
+
+# 将你的 API 密钥设置为环境变量以运行此脚本
+# 例如，在终端中：export GOOGLE_API_KEY='your_key_here'
+try:
+    genai.configure(api_key=os.environ["GOOGLE_API_KEY"])
+except KeyError:
+    logging.error("错误：未设置 GOOGLE_API_KEY 环境变量。")
+
+# --- 用于法律调查质量的 LLM-as-a-Judge 评分标准 --
+LEGAL_SURVEY_RUBRIC = """
+你是一位专家级法律调查方法学家和严谨的法律评审员。你的任务是评估给定法律调查问题的质量。
+
+请为整体质量提供 1 到 5 的评分，并附上详细的理由和具体反馈。重点关注以下标准：
+
+1. **清晰度与精确性（评分 1-5）：**
+   * 1：极其模糊、高度歧义或令人困惑。
+   * 3：中等清晰，但可以更精确。
+   * 5：完全清晰、无歧义，其法律术语（如适用）和意图均精确。</div>
+        <div class="seg-note"><b>导读注:</b>展示用 LLM-as-a-Judge 评分标准评估法律调查问题质量的代码框架。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"2. **Neutrality &amp; Bias (Score 1-5):** * 1: Highly leading or biased, clearly influencing the respondent towards a specific answer. * 3: Slightly suggestive or could be interpreted as leading. * 5: Completely neutral, objective, and free from any leading language or loaded terms.
+3. **Relevance &amp; Focus (Score 1-5):** * 1: Irrelevant to the stated survey topic or out of scope. * 3: Loosely related but could be more focused. * 5: Directly relevant to the survey's objectives and well-focused on a single concept.
+4. **Completeness (Score 1-5):** * 1: Omits critical information needed to answer accurately or provides insufficient context. * 3: Mostly complete, but minor details are missing. * 5: Provides all necessary context and information for the respondent to answer thoroughly.
+5. **Appropriateness for Audience (Score 1-5):** * 1: Uses jargon inaccessible to the target audience or is overly simplistic for experts. * 3: Generally appropriate, but some terms might be challenging or oversimplified. * 5: Perfectly tailored to the assumed legal knowledge and background of the target survey audience."</div>
+        <div class="seg-zh">2. **中立性与偏见（Neutrality &amp; Bias，评分 1-5）：** * 1：高度引导性或带有偏见，明显将受访者引向特定答案。 * 3：略有暗示性，或可被解读为引导性。 * 5：完全中立、客观，不含任何引导性语言或带有倾向性的措辞。
+3. **相关性与聚焦度（Relevance &amp; Focus，评分 1-5）：** * 1：与所述调查主题无关或超出范围。 * 3：关联松散，但可以更聚焦。 * 5：与调查目标直接相关，并良好地聚焦于单一概念。
+4. **完整性（Completeness，评分 1-5）：** * 1：遗漏准确作答所需的关键信息，或提供的背景不足。 * 3：基本完整，但缺少次要细节。 * 5：提供受访者全面作答所需的全部背景和信息。
+5. **对目标受众的适宜性（Appropriateness for Audience，评分 1-5）：** * 1：使用目标受众无法理解的术语，或对专家而言过于简单。 * 3：总体适宜，但某些术语可能较难理解或过于简化。 * 5：完全契合目标调查受众假定的法律知识和背景。</div>
+        <div class="seg-note"><b>导读注:</b>给出问卷题项质量评估的<b>五级评分标准</b>，覆盖中立性、相关性、完整性与受众适宜性。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"Your response MUST be a JSON object with the following keys: * `overall_score`: An integer from 1 to 5 (average of criterion scores, or your holistic judgment). * `rationale`: A concise summary of why this score was given, highlighting major strengths and weaknesses. * `detailed_feedback`: A bullet-point list detailing feedback for each criterion (Clarity, Neutrality, Relevance, Completeness, Audience Appropriateness). Suggest specific improvements. * `concerns`: A list of any specific legal, ethical, or methodological concerns. * `recommended_action`: A brief recommendation (e.g., "Revise for neutrality", "Approve as is", "Clarify scope"). """
+class LLMJudgeForLegalSurvey: """A class to evaluate legal survey questions using a generative AI model."""
+def __init__(self, model_name: str = 'gemini-1.5-flash-latest', temperature: float = 0.2): """ Initializes the LLM Judge.
+Args: model_name (str): The name of the Gemini model to use. 'gemini-1.5-flash-latest' is recommended for speed and cost. 'gemini-1.5-pro-latest' offers the highest quality. temperature (float): The generation temperature. Lower is better for deterministic evaluation. """ self.model = genai.GenerativeModel(model_name) self.temperature = temperature"</div>
+        <div class="seg-zh">class LLMJudgeForLegalSurvey: """一个使用生成式 AI 模型评估法律调查问题的类。"""
+
+def __init__(self, model_name: str = 'gemini-1.5-flash-latest', temperature: float = 0.2): """初始化 LLM Judge（LLM 评审器）。
+
+参数：
+    model_name (str)：要使用的 Gemini 模型名称。推荐使用 'gemini-1.5-flash-latest' 以兼顾速度与成本。'gemini-1.5-pro-latest' 可提供最高质量。
+    temperature (float)：生成温度。较低的值更有利于确定性评估。"""
+    self.model = genai.GenerativeModel(model_name)
+    self.temperature = temperature</div>
+        <div class="seg-note"><b>导读注:</b><b>LLM Judge</b> 类初始化：模型选择与低温度设定决定评估的<b>确定性与成本</b>。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"def _generate_prompt(self, survey_question: str) -&gt; str: """Constructs the full prompt for the LLM judge.""" return f"{LEGAL_SURVEY_RUBRIC}\n\n---\n**LEGAL SURVEY QUESTION TO EVALUATE:**\n{survey_question}\n---"
+def judge_survey_question(self, survey_question: str) -&gt; Optional[dict]: """ Judges the quality of a single legal survey question using the LLM.
+Args: survey_question (str): The legal survey question to be evaluated.
+Returns: Optional[dict]: A dictionary containing the LLM's judgment, or None if an error occurs. """ full_prompt = self._generate_prompt(survey_question)
+try: logging.info(f"Sending request to '{self.model.model_name}' for judgment...") response = self.model.generate_content( full_prompt, generation_config=genai.types.GenerationConfig( temperature=self.temperature, response_mime_type="application/json" ) )
+# Check for content moderation or other reasons for an empty response. if not response.parts: safety_ratings = response.prompt_feedback.safety_ratings logging.error(f"LLM response was empty or blocked. Safety Ratings: {safety_ratings}") return None"</div>
+        <div class="seg-zh">def _generate_prompt(self, survey_question: str) -&gt; str: """为 LLM 评判器构造完整的 prompt。""" return f"{LEGAL_SURVEY_RUBRIC}\n\n---\n**待评估的法律调查问题：**\n{survey_question}\n---"
+def judge_survey_question(self, survey_question: str) -&gt; Optional[dict]: """使用 LLM 评判单个法律调查问题的质量。
+
+参数：
+    survey_question (str)：待评估的法律调查问题。
+
+返回：
+    Optional[dict]：包含 LLM 评判结果的字典；若发生错误则返回 None。""" full_prompt = self._generate_prompt(survey_question)
+try: logging.info(f"正在向 '{self.model.model_name}' 发送评判请求...") response = self.model.generate_content( full_prompt, generation_config=genai.types.GenerationConfig( temperature=self.temperature, response_mime_type="application/json" ) )
+
+# 检查内容审核或其他导致空响应的原因。 if not response.parts: safety_ratings = response.prompt_feedback.safety_ratings logging.error(f"LLM 响应为空或被拦截。安全评级：{safety_ratings}") return None</div>
+        <div class="seg-note"><b>导读注:</b>展示用 LLM 评判法律调查问题的代码：<b>空响应时读取安全评级</b>并返回 None。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"except json.JSONDecodeError: logging.error(f"Failed to decode LLM response as JSON. Raw response: {response.text}") return None except Exception as e: logging.error(f"An unexpected error occurred during LLM judgment: {e}") return None
+# --- Example Usage --if __name__ == "__main__": judge = LLMJudgeForLegalSurvey()
+good_legal_survey_question = """ To what extent do you agree or disagree that current intellectual property laws in Switzerland adequately protect emerging AI-generated content, assuming the content meets the originality criteria established by the Federal Supreme Court? (Select one: Strongly Disagree, Disagree, Neutral, Agree, Strongly Agree) """ print("\n--- Evaluating Good Legal Survey Question ---") judgment_good = judge.judge_survey_question(good_legal_survey_question) if judgment_good: print(json.dumps(judgment_good, indent=2))
+# --- Biased/Poor Example -- biased_legal_survey_question = """ Don't you agree that overly restrictive data privacy laws like the FADP are hindering essential technological innovation and economic growth in Switzerland? (Select one: Yes, No) """ print("\n--- Evaluating Biased Legal Survey Question ---") judgment_biased = judge.judge_survey_question(biased_legal_survey_question) if judgment_biased: print(json.dumps(judgment_biased, indent=2))"</div>
+        <div class="seg-zh">except json.JSONDecodeError: logging.error(f"Failed to decode LLM response as JSON. Raw response: {response.text}") return None except Exception as e: logging.error(f"An unexpected error occurred during LLM judgment: {e}") return None
+# --- Example Usage --if __name__ == "__main__": judge = LLMJudgeForLegalSurvey()
+good_legal_survey_question = """ To what extent do you agree or disagree that current intellectual property laws in Switzerland adequately protect emerging AI-generated content, assuming the content meets the originality criteria established by the Federal Supreme Court? (Select one: Strongly Disagree, Disagree, Neutral, Agree, Strongly Agree) """ print("\n--- Evaluating Good Legal Survey Question ---") judgment_good = judge.judge_survey_question(good_legal_survey_question) if judgment_good: print(json.dumps(judgment_good, indent=2))
+# --- Biased/Poor Example -- biased_legal_survey_question = """ Don't you agree that overly restrictive data privacy laws like the FADP are hindering essential technological innovation and economic growth in Switzerland? (Select one: Yes, No) """ print("\n--- Evaluating Biased Legal Survey Question ---") judgment_biased = judge.judge_survey_question(biased_legal_survey_question) if judgment_biased: print(json.dumps(judgment_biased, indent=2))</div>
+        <div class="seg-note"><b>导读注:</b>代码示例展示<b>好问题与偏颇问题的对比评估</b>，注意异常处理与JSON输出。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"# --- Ambiguous/Vague Example -- vague_legal_survey_question = """ What are your thoughts on legal tech? """ print("\n--- Evaluating Vague Legal Survey Question ---") judgment_vague = judge.judge_survey_question(vague_legal_survey_question) if judgment_vague: print(json.dumps(judgment_vague, indent=2))
+The Python code defines a class LLMJudgeForLegalSurvey designed to evaluate the quality of legal survey questions using a generative AI model. It utilizes the google.generativeai library to interact with Gemini models.
+The core functionality involves sending a survey question to the model along with a detailed rubric for evaluation. The rubric specifies five criteria for judging survey questions: Clarity &amp; Precision, Neutrality &amp; Bias, Relevance &amp; Focus, Completeness,
+and Appropriateness for Audience. For each criterion, a score from 1 to 5 is assigned, and a detailed rationale and feedback are required in the output. The code constructs a prompt that includes the rubric and the survey question to be evaluated."</div>
+        <div class="seg-zh"># --- 模糊/含糊示例 -- vague_legal_survey_question = """ 你对法律科技有什么看法？ """ print("\n--- 评估模糊的法律调查问题 ---") judgment_vague = judge.judge_survey_question(vague_legal_survey_question) if judgment_vague: print(json.dumps(judgment_vague, indent=2))
+这段 Python 代码定义了一个名为 LLMJudgeForLegalSurvey 的类，旨在使用生成式 AI 模型评估法律调查问题的质量。它利用 google.generativeai 库与 Gemini 模型进行交互。
+核心功能包括将调查问题连同详细的评分标准一起发送给模型进行评估。该评分标准规定了评判调查问题的五项标准：<b>清晰度与精确性</b>、<b>中立性与偏见</b>、<b>相关性与聚焦</b>、<b>完整性</b>以及<b>对受众的适宜性</b>。对于每项标准，需给出 1 到 5 分的评分，并且输出中要求提供详细的理由和反馈。代码构建了一个包含评分标准和待评估调查问题的 prompt。</div>
+        <div class="seg-note"><b>导读注:</b>展示如何用 LLM 按五项标准自动评判调查问题质量。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"The judge_survey_question method sends this prompt to the configured Gemini model, requesting a JSON response formatted according to the defined structure. The expected output JSON includes an overall score, a summary rationale, detailed feedback for each criterion, a list of concerns, and a recommended action. The class handles potential errors during the AI model interaction, such as JSON decoding issues or empty responses. The script demonstrates its operation by evaluating examples of legal survey questions, illustrating how the AI assesses quality based on the predefined criteria.
+Before we conclude, let's examine various evaluation methods, considering their strengths and weaknesses.
+Human Evaluation Captures subtle behavior Difficult to scale, expensive, and time-consuming, as it considers subjective human factors.
+LLM-as-a-Judge Consistent, efficient, and scalable. Intermediate steps may be overlooked. Limited by LLM capabilities.
+Automated Metrics Scalable, efficient, and Potential limitation in objective capturing complete capabilities. Agents trajectories"</div>
+        <div class="seg-zh">judge_survey_question 方法将此 prompt 发送给已配置的 Gemini 模型，请求按既定结构返回 JSON 格式的响应。预期的输出 JSON 包含总体评分、总结性理由、针对每项标准的详细反馈、问题清单以及建议采取的行动。该类会处理 AI 模型交互过程中的潜在错误，例如 JSON 解码问题或空响应。该脚本通过评估法律调查问题的示例来演示其运行过程，说明 AI 如何依据预定义标准评估质量。
+在结束之前，让我们考察各种评估方法，考虑它们的优势与劣势。
+人工评估 能捕捉细微行为 难以规模化、成本高且耗时，因为它需要考虑主观的人为因素。
+LLM-as-a-Judge 一致、高效且可扩展。中间步骤可能被忽略。受限于 LLM 的能力。
+自动化指标 可扩展、高效，且在客观捕捉完整能力方面可能存在局限。Agents 轨迹</div>
+        <div class="seg-note"><b>导读注:</b>对比人工评估、LLM-as-a-Judge 与自动化指标的优劣，<b>LLM-as-a-Judge 可能忽略中间步骤</b>。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"Evaluating agents' trajectories is essential, as traditional software tests are insufficient. Standard code yields predictable pass/fail results, whereas agents operate probabilistically, necessitating qualitative assessment of both the final output and the agent's trajectory—the sequence of steps taken to reach a solution. Evaluating multi-agent systems is challenging because they are constantly in flux. This
+requires developing sophisticated metrics that go beyond individual performance to measure the effectiveness of communication and teamwork. Moreover, the environments themselves are not static, demanding that evaluation methods, including test cases, adapt over time."</div>
+        <div class="seg-zh">评估智能体（agent）的轨迹至关重要，因为传统软件测试已不足以应对。标准代码产生可预测的通过/失败结果，而智能体以概率方式运行，因此需要对最终输出和智能体轨迹——即达到解决方案所采取的步骤序列——进行定性评估。评估多智能体（multi-agent）系统颇具挑战，因为它们始终处于动态变化之中。这需要开发超越个体性能的复杂指标，以衡量沟通与团队协作的有效性。此外，环境本身并非静态，要求评估方法（包括测试用例）随时间自适应调整。</div>
+        <div class="seg-note"><b>导读注:</b>强调<b>智能体轨迹评估</b>的必要性，并指出多智能体系统与环境动态性带来的评估挑战。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"This involves examining the quality of decisions, the reasoning process, and the overall outcome. Implementing automated evaluations is valuable, particularly for development beyond the prototype stage. Analyzing trajectory and tool use includes evaluating the steps an agent employs to achieve a goal, such as tool selection, strategies, and task efficiency. For example, an agent addressing a customer's product query might ideally follow a trajectory involving intent determination, database search tool use, result review, and report generation. The agent's actual actions are compared to this expected, or ground truth, trajectory to identify errors and inefficiencies. Comparison methods include exact match (requiring a perfect match to the ideal sequence), in-order match (correct actions in order, allowing extra steps), any-order match (correct actions in any order, allowing extra steps), precision (measuring the relevance of predicted actions), recall (measuring how many essential actions are captured), and single-tool use (checking for a specific action). Metric selection depends on specific agent requirements, with high-stakes scenarios potentially demanding an exact match, while more flexible situations might use an in-order or any-order match."</div>
+        <div class="seg-zh">这涉及考察决策质量、推理过程与整体结果。实施自动化评估很有价值，尤其是在原型阶段之后的开发中。分析轨迹（trajectory）与工具使用，包括评估智能体（agent）为实现目标所采取的步骤，例如工具选择、策略与任务效率。例如，一个处理客户产品查询的智能体，理想情况下可能遵循一条包含意图判定、数据库搜索工具使用、结果审查与报告生成的轨迹。将智能体的实际动作与这一预期轨迹（或称<b>真实基准（ground truth）</b>）进行比较，以识别错误与低效之处。比较方法包括<b>精确匹配</b>（要求与理想序列完全一致）、<b>顺序匹配</b>（动作顺序正确，允许额外步骤）、<b>任意顺序匹配</b>（动作顺序不限，允许额外步骤）、<b>精确率</b>（衡量预测动作的相关性）、<b>召回率</b>（衡量捕获了多少必要动作）以及<b>单工具使用</b>（检查是否存在特定动作）。指标选择取决于具体的智能体需求，高风险场景可能要求精确匹配，而更灵活的情形则可能采用顺序匹配或任意顺序匹配。</div>
+        <div class="seg-note"><b>导读注:</b><b>轨迹评估</b>的多种匹配方法与指标选择，是智能体评测的关键。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"Evaluation of AI agents involves two primary approaches: using test files and using evalset files. Test files, in JSON format, represent single, simple agent-model interactions or sessions and are ideal for unit testing during active development, focusing on rapid execution and simple session complexity. Each test file contains a single session with multiple turns, where a turn is a user-agent interaction including the user’s query, expected tool use trajectory, intermediate agent responses, and final response. For example, a test file might detail a user request to “Turn off device_2 in the Bedroom,” specifying the agent’s use of a set_device_info tool with parameters like location: Bedroom, device_id: device_2, and status: OFF, and an expected final response of “I have set the device_2 status to off.” Test files can be organized into folders and may include a test_config.json file to define evaluation criteria. Evalset files utilize a dataset called an “evalset” to evaluate interactions, containing multiple potentially lengthy sessions suited for simulating complex, multi-turn conversations and integration tests. An evalset file comprises multiple “evals,” each representing a distinct session with one or more “turns” that include user queries, expected tool use, intermediate responses, and a reference final response. An example evalset might include a session where the user first asks “What can you do?” and then says “Roll a"</div>
+        <div class="seg-zh">AI agent 的评估涉及两种主要方法：使用 test 文件和使用 evalset 文件。test 文件采用 JSON 格式，表示单个、简单的 agent-model 交互或会话，非常适合在活跃开发期间进行单元测试，侧重于快速执行和简单的会话复杂度。每个 test 文件包含一个具有多个 turn 的单一 session，其中 turn 是用户与 agent 的交互，包括用户查询、预期的工具使用轨迹、中间 agent 响应和最终响应。例如，一个 test 文件可能详细描述用户请求“Turn off device_2 in the Bedroom”，指定 agent 使用 set_device_info 工具，参数如 location: Bedroom、device_id: device_2 和 status: OFF，以及预期的最终响应“I have set the device_2 status to off.”。test 文件可以组织到文件夹中，并可能包含一个 test_config.json 文件来定义评估标准。evalset 文件利用一个称为“evalset”的数据集来评估交互，包含多个可能很长的 session，适合模拟复杂的多轮对话和集成测试。一个 evalset 文件包含多个“eval”，每个代表一个不同的 session，具有一个或多个“turn”，其中包括用户查询、预期的工具使用、中间响应和参考最终响应。一个示例 evalset 可能包含一个 session，用户首先问“What can you do?”，然后说“Roll a</div>
+        <div class="seg-note"><b>导读注:</b>对比 test 与 evalset 两种评估方式，<b>单元测试 vs 集成测试</b>的定位一目了然。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"10 sided dice twice and then check if 9 is a prime or not,” defining expected roll\_die tool calls and a check_prime tool call, along with the final response summarizing the dice rolls and the prime check.
+Multi-agents: Evaluating a complex AI system with multiple agents is much like assessing a team project. Because there are many steps and handoffs, its complexity is an advantage, allowing you to check the quality of work at each stage. You can examine how well each individual "agent" performs its specific job, but you must also evaluate how the entire system is performing as a whole.
+To do this, you ask key questions about the team's dynamics, supported by concrete examples:"</div>
+        <div class="seg-zh">掷 10 面骰子两次，然后检查 9 是否为质数”，定义预期的 roll\_die 工具调用和 check\_prime 工具调用，以及总结骰子掷出结果和质数检查的最终响应。
+多智能体（Multi-agents）：评估一个具有多个智能体的复杂 AI 系统，很像评估一个团队项目。由于存在许多步骤和交接，其复杂性是一种优势，让你可以检查每个阶段的工作质量。你可以检查每个个体“智能体”执行其特定任务的表现如何，但你也必须评估整个系统作为一个整体的表现。
+为此，你要提出关于团队动态的关键问题，并以具体示例作为支撑：</div>
+        <div class="seg-note"><b>导读注:</b><b>多智能体评估</b>类比团队项目，强调既要看单个智能体表现，也要看系统整体协作。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"● Are the agents cooperating effectively? For instance, after a 'Flight-Booking Agent' secures a flight, does it successfully pass the correct dates and destination to the 'Hotel-Booking Agent'? A failure in cooperation could lead to a hotel being booked for the wrong week. ● Did they create a good plan and stick to it? Imagine the plan is to first book a flight, then a hotel. If the 'Hotel Agent' tries to book a room before the flight is confirmed, it has deviated from the plan. You also check if an agent gets stuck, for example, endlessly searching for a "perfect" rental car and never moving on to the next step. ● Is the right agent being chosen for the right task? If a user asks about the weather for their trip, the system should use a specialized 'Weather Agent' that provides live data. If it instead uses a 'General Knowledge Agent' that gives a generic answer like "it's usually warm in summer," it has chosen the wrong tool for the job. ● Finally, does adding more agents improve performance? If you add a new 'Restaurant-Reservation Agent' to the team, does it make the overall trip-planning better and more efficient? Or does it create conflicts and slow the system down, indicating a problem with scalability?. From Agents to Advanced Contractors"</div>
+        <div class="seg-zh">● <b>智能体之间的协作是否有效？</b>例如，在“航班预订智能体”（Flight-Booking Agent）成功订好航班后，它是否将正确的日期和目的地成功传递给“酒店预订智能体”（Hotel-Booking Agent）？协作失败可能导致酒店订错周次。● <b>它们是否制定了良好的计划并坚持执行？</b>设想计划是先订航班、再订酒店。如果“酒店智能体”（Hotel Agent）在航班确认之前就试图预订房间，那就偏离了计划。你还要检查某个智能体是否陷入停滞，例如无休止地搜索“完美”的租车而始终不进入下一步。● <b>是否为正确的任务选择了正确的智能体？</b>如果用户询问旅行期间的天气，系统应使用提供实时数据的专用“天气智能体”（Weather Agent）。如果它改用“通用知识智能体”（General Knowledge Agent）给出“夏天通常很暖和”这类泛泛的回答，那就是为任务选错了工具。● 最后，<b>增加更多智能体是否能提升性能？</b>如果你向团队新增一个“餐厅预订智能体”（Restaurant-Reservation Agent），它是否让整体旅行规划变得更好、更高效？还是说它制造冲突、拖慢系统，从而表明存在可扩展性问题？从智能体到高级承包商</div>
+        <div class="seg-note"><b>导读注:</b>提出评估多智能体系统的四个关键维度：<b>协作、计划遵循、任务匹配与可扩展性</b>。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"Recently, it has been proposed (Agent Companion, gulli et al.) an evolution from simple AI agents to advanced "contractors", moving from probabilistic, often unreliable systems to more deterministic and accountable ones designed for complex, high-stakes environments (see Fig.2).
+Today's common AI agents operate on brief, underspecified instructions, which makes them suitable for simple demonstrations but brittle in production, where ambiguity leads to failure. The "contractor" model addresses this by establishing a rigorous, formalized relationship between the user and the AI, built upon a foundation of clearly defined and mutually agreed-upon terms, much like a legal service agreement in the human world. This transformation is supported by four key pillars that collectively ensure clarity, reliability, and robust execution of tasks that were previously beyond the scope of autonomous systems."</div>
+        <div class="seg-zh">最近，有人提出（Agent Companion，gulli 等人）从简单的 AI agent 向高级"承包商"（contractor）的演进，即从概率性、往往不可靠的系统转向更具确定性、可问责的系统，专为复杂、高风险环境而设计（见图2）。
+当今常见的 AI agent 基于简短、未充分指定的指令运行，这使其适合简单演示，但在生产中很脆弱，因为歧义会导致失败。"承包商"模型通过在用户与 AI 之间建立严格、形式化的关系来解决这一问题，这种关系建立在明确定义且双方同意的条款基础之上，很像人类世界中的法律服务协议。这一转变由四大关键支柱支撑，它们共同确保清晰性、可靠性以及对先前超出自主系统范围的任务的稳健执行。</div>
+        <div class="seg-note"><b>导读注:</b>提出 AI 从 agent 向"承包商"演进，以<b>形式化契约关系</b>解决生产环境中的歧义与不可靠问题。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"First is the pillar of the Formalized Contract, a detailed specification that serves as the single source of truth for a task. It goes far beyond a simple prompt. For example, a contract for a financial analysis task wouldn't just say "analyze last quarter's sales"; it would demand "a 20-page PDF report analyzing European market sales from Q1 2025, including five specific data visualizations, a comparative analysis against Q1 2024, and a risk assessment based on the included dataset of supply chain disruptions." This contract explicitly defines the required deliverables, their precise specifications, the acceptable data sources, the scope of work, and even the expected computational cost and completion time, making the outcome objectively verifiable."</div>
+        <div class="seg-zh">首先是形式化契约（Formalized Contract）的支柱，即一份详细的规范说明，作为任务的单一事实来源。它远超简单的 prompt。例如，一个财务分析任务的契约不会只说“分析上季度的销售”；它会要求“一份20页的PDF报告，分析2025年第一季度欧洲市场销售，包含五个特定的数据可视化、与2024年第一季度的对比分析，以及基于所附供应链中断数据集的风险评估”。该契约明确界定了所需交付物、其精确规格、可接受的数据源、工作范围，甚至预期的计算成本和完成时间，使结果可客观验证。</div>
+        <div class="seg-note"><b>导读注:</b><b>形式化契约</b>把模糊 prompt 变成可验证的交付规格，是任务可靠执行的关键。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"Second is the pillar of a Dynamic Lifecycle of Negotiation and Feedback. The contract is not a static command but the start of a dialogue. The contractor agent can analyze the initial terms and negotiate. For instance, if a contract demands the use of a specific proprietary data source the agent cannot access, it can return feedback stating, "The specified XYZ database is inaccessible. Please provide credentials or approve the use of an alternative public database, which may slightly alter the data's granularity." This negotiation phase, which also allows the agent to flag ambiguities or potential risks, resolves misunderstandings before execution begins, preventing costly failures and ensuring the final output aligns perfectly with the user's actual intent.
+Fig. 2: Contract execution example among agents"</div>
+        <div class="seg-zh">其次是<b>协商与反馈的动态生命周期</b>这一支柱。合同不是静态命令，而是对话的开始。承包方 agent（智能体）可以分析初始条款并进行协商。例如，如果合同要求使用 agent 无法访问的特定专有数据源，它可以返回反馈称：“指定的 XYZ 数据库无法访问。请提供凭据或批准使用替代的公共数据库，这可能会略微改变数据的粒度。”这一协商阶段还允许 agent 标记歧义或潜在风险，从而在执行开始前解决误解，防止代价高昂的失败，并确保最终输出与用户的实际意图完全一致。
+图 2：agent 之间的合同执行示例</div>
+        <div class="seg-note"><b>导读注:</b>合同并非静态命令，而是<b>协商对话的起点</b>，可在执行前化解误解与风险。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"The third pillar is Quality-Focused Iterative Execution. Unlike agents designed for low-latency responses, a contractor prioritizes correctness and quality. It operates on a principle of self-validation and correction. For a code generation contract, for example, the agent would not just write the code; it would generate multiple algorithmic approaches, compile and run them against a suite of unit tests defined within the contract, score each solution on metrics like performance, security, and readability, and only submit the version that passes all validation criteria. This internal loop of generating, reviewing, and improving its own work until the contract's specifications are met is crucial for building trust in its outputs."</div>
+        <div class="seg-zh">第三个支柱是<b>以质量为中心的迭代执行</b>（Quality-Focused Iterative Execution）。与为低延迟响应而设计的 agent 不同，contractor 优先考虑正确性和质量。它遵循<b>自我验证与纠正</b>的原则运行。例如，对于代码生成合约，agent 不会只编写代码；它会生成多种算法方案，针对合约中定义的一套单元测试进行编译和运行，按性能、安全性和可读性等指标为每个方案打分，并且只提交通过所有验证标准的版本。这种生成、审查并改进自身工作直到满足合约规格的<b>内部循环</b>，对于建立对其输出的信任至关重要。</div>
+        <div class="seg-note"><b>导读注:</b>强调 contractor 以<b>自我验证循环</b>换取质量而非低延迟，值得关注。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"Finally, the fourth pillar is Hierarchical Decomposition via Subcontracts. For tasks of significant complexity, a primary contractor agent can act as a project manager, breaking the main goal into smaller, more manageable sub-tasks. It achieves this by generating new, formal "subcontracts." For example, a master contract to "build an e-commerce mobile application" could be decomposed by the primary agent into subcontracts for "designing the UI/UX," "developing the user authentication module," "creating the product database schema," and "integrating a payment gateway." Each of these subcontracts is a complete, independent contract with its own deliverables and specifications, which could be assigned to other specialized agents. This structured decomposition allows the system to tackle immense, multifaceted projects in a highly organized and scalable manner, marking the transition of AI from a simple tool to a truly autonomous and reliable problem-solving engine."</div>
+        <div class="seg-zh">最后，第四个支柱是通过分包合同实现的层次化分解（Hierarchical Decomposition via Subcontracts）。对于复杂度较高的任务，主承包商 agent 可以充当项目经理，将主目标拆解为更小、更易管理的子任务。它通过生成新的正式“分包合同”来实现这一点。例如，一份“构建电商移动应用”的主合同，可由主 agent 分解为“设计 UI/UX”“开发用户认证模块”“创建产品数据库 schema”和“集成支付网关”等分包合同。每份分包合同都是一份完整、独立的合同，拥有自己的交付物和规格说明，可分配给其他专业 agent。这种结构化分解使系统能够以高度有序且可扩展的方式处理庞大而多面的项目，标志着 AI 从简单工具转变为真正自主且可靠的问题求解引擎。</div>
+        <div class="seg-note"><b>导读注:</b><b>层次化分解</b>让主 agent 像项目经理一样拆分任务，是 AI 走向自主的关键一步。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"Ultimately, this contractor framework reimagines AI interaction by embedding principles of formal specification, negotiation, and verifiable execution directly into the agent's core logic. This methodical approach elevates artificial intelligence from a promising but often unpredictable assistant into a dependable system capable of autonomously managing complex projects with auditable precision. By solving the critical challenges of ambiguity and reliability, this model paves the way for deploying AI in mission-critical domains where trust and accountability are paramount. Google's ADK
+Before concluding, let's look at a concrete example of a framework that supports evaluation. Agent evaluation with Google's ADK (see Fig.3) can be conducted via three methods: web-based UI (adk web) for interactive evaluation and dataset generation, programmatic integration using pytest for incorporation into testing pipelines, and direct command-line interface (adk eval) for automated evaluations suitable for regular build generation and verification processes."</div>
+        <div class="seg-zh">最终，这个承包商框架通过将形式化规范、协商和可验证执行的原则直接嵌入智能体的核心逻辑，重新构想了AI交互。这种有条不紊的方法将人工智能从一个有前景但往往不可预测的助手，提升为一个可靠的系统，能够以可审计的精确性自主管理复杂项目。通过解决模糊性和可靠性这两个关键挑战，该模型为在信任和问责至关重要的任务关键型领域部署AI铺平了道路。Google的ADK（Agent Development Kit，智能体开发工具包）在结束之前，让我们看一个支持评估的框架的具体示例。使用Google的ADK进行智能体评估（见图3）可以通过三种方法进行：基于Web的UI（adk web）用于交互式评估和数据集生成；使用pytest进行编程集成，以纳入测试流水线；以及直接命令行界面（adk eval）用于自动化评估，适用于常规构建生成和验证流程。</div>
+        <div class="seg-note"><b>导读注:</b><b>承包商框架</b>将形式化规范与可验证执行嵌入智能体，使AI可审计地管理复杂项目。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"The web-based UI enables interactive session creation and saving into existing or new eval sets, displaying evaluation status. Pytest integration allows running test files as part of integration tests by calling AgentEvaluator.evaluate, specifying the agent module and test file path.
+The command-line interface facilitates automated evaluation by providing the agent module path and eval set file, with options to specify a configuration file or print detailed results. Specific evals within a larger eval set can be selected for execution by listing them after the eval set filename, separated by commas. At a Glance
+What: Agentic systems and LLMs operate in complex, dynamic environments where their performance can degrade over time. Their probabilistic and non-deterministic nature means that traditional software testing is insufficient for ensuring reliability. Evaluating dynamic multi-agent systems is a significant challenge because their constantly changing nature and that of their environments demand the development of adaptive testing methods and sophisticated metrics that can measure collaborative success beyond individual performance. Problems like data drift, unexpected interactions, tool calling, and deviations from intended goals can arise after"</div>
+        <div class="seg-zh">基于 Web 的 UI 支持交互式创建会话并保存到现有或新的 eval set（评估集）中，同时显示评估状态。Pytest 集成允许通过调用 AgentEvaluator.evaluate 来将测试文件作为集成测试的一部分运行，需指定 agent 模块和测试文件路径。
+命令行界面通过提供 agent 模块路径和 eval set 文件来促进自动化评估，并可选指定配置文件或打印详细结果。可通过在 eval set 文件名后列出具体 eval（以逗号分隔）来选择执行较大 eval set 中的特定评估。概览
+是什么：Agentic 系统与 LLM 在复杂、动态的环境中运行，其性能可能随时间下降。其概率性和非确定性本质意味着传统软件测试不足以确保可靠性。<b>评估动态多智能体系统是一项重大挑战</b>，因为它们及其环境不断变化的特性要求开发自适应测试方法，以及能够衡量超越个体性能的协作成功的复杂指标。数据漂移、意外交互、工具调用（tool calling）以及与预期目标的偏差等问题可能在之后出现</div>
+        <div class="seg-note"><b>导读注:</b>点出动态多智能体系统评估的核心难点：<b>传统测试不足，需自适应方法与协作指标</b></div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"deployment. Continuous assessment is therefore necessary to measure an agent's effectiveness, efficiency, and adherence to operational and safety requirements.
+Why: A standardized evaluation and monitoring framework provides a systematic way to assess and ensure the ongoing performance of intelligent agents. This involves defining clear metrics for accuracy, latency, and resource consumption, like token usage for LLMs. It also includes advanced techniques such as analyzing agentic trajectories to understand the reasoning process and employing an LLM-as-a-Judge for nuanced, qualitative assessments. By establishing feedback loops and reporting systems, this framework allows for continuous improvement, A/B testing, and the detection of anomalies or performance drift, ensuring the agent remains aligned with its objectives."</div>
+        <div class="seg-zh">部署。因此，<b>持续评估</b>对于衡量智能体（agent）的有效性、效率以及对运营和安全要求的遵循程度是必要的。
+为什么：标准化的评估与监控框架提供了一种系统化的方式来评估并确保智能体的持续性能。这涉及为准确性、延迟和资源消耗（如 LLM 的 token 使用量）定义清晰的指标。它还包括先进技术，例如分析智能体轨迹（agentic trajectories）以理解推理过程，以及采用 <b>LLM-as-a-Judge</b> 进行细致的定性评估。通过建立反馈循环和报告系统，该框架支持持续改进、A/B 测试以及异常或性能漂移的检测，确保智能体始终与其目标保持一致。</div>
+        <div class="seg-note"><b>导读注:</b>强调部署后<b>持续评估</b>不可或缺，并给出指标、轨迹分析与 LLM-as-a-Judge 等落地手段。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"Rule of thumb: Use this pattern when deploying agents in live, production environments where real-time performance and reliability are critical. Additionally, use it when needing to systematically compare different versions of an agent or its underlying models to drive improvements, and when operating in regulated or high-stakes domains requiring compliance, safety, and ethical audits. This pattern is also suitable when an agent's performance may degrade over time due to changes in data or the environment (drift), or when evaluating complex agentic behavior, including the sequence of actions (trajectory) and the quality of subjective outputs like helpfulness.
+Fig.4: Evaluation and Monitoring design pattern"</div>
+        <div class="seg-zh">经验法则：在实时性能与可靠性至关重要的实时生产环境中部署 agent（智能体）时，使用此模式。此外，当需要系统性地比较 agent 或其底层模型的不同版本以推动改进时，以及在需要合规、安全和伦理审计的受监管或高风险领域中运营时，也使用此模式。当 agent 的性能可能因数据或环境变化（漂移）而随时间下降时，或当评估复杂的 agentic 行为（包括动作序列（trajectory）以及有用性等主观输出的质量）时，此模式同样适用。
+图4：评估与监控设计模式</div>
+        <div class="seg-note"><b>导读注:</b>给出该模式的适用场景清单，<b>漂移</b>与<b>轨迹评估</b>最值得注意。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"● Evaluating intelligent agents goes beyond traditional tests to continuously measure their effectiveness, efficiency, and adherence to requirements in real-world environments. ● Practical applications of agent evaluation include performance tracking in live systems, A/B testing for improvements, compliance audits, and detecting drift or anomalies in behavior. ● Basic agent evaluation involves assessing response accuracy, while real-world scenarios demand more sophisticated metrics like latency monitoring and token usage tracking for LLM-powered agents. ● Agent trajectories, the sequence of steps an agent takes, are crucial for evaluation, comparing actual actions against an ideal, ground-truth path to identify errors and inefficiencies. ● The ADK provides structured evaluation methods through individual test files for unit testing and comprehensive evalset files for integration testing, both defining expected agent behavior. ● Agent evaluations can be executed via a web-based UI for interactive testing, programmatically with pytest for CI/CD integration, or through a command-line interface for automated workflows. ● In order to make AI reliable for complex, high-stakes tasks, we must move from simple prompts to formal "contracts" that precisely define verifiable deliverables and scope. This structured agreement allows the Agents to negotiate, clarify ambiguities, and iteratively validate its own work, transforming it from an unpredictable tool into an accountable and trustworthy system. Conclusions"</div>
+        <div class="seg-zh">● 评估智能体（intelligent agent）超越了传统测试，需要在真实环境中持续衡量其有效性、效率以及对需求的遵循程度。● 智能体评估的实际应用包括：在实时系统中进行性能跟踪、为改进而进行 A/B 测试、合规审计，以及检测行为中的漂移或异常。● 基础的智能体评估涉及评估响应准确性，而真实场景则需要更精细的指标，例如对由 LLM 驱动的智能体进行延迟监控和 token 使用量跟踪。● 智能体轨迹（agent trajectory），即智能体所采取的步骤序列，对评估至关重要——将实际动作与理想的、作为基准真值（ground-truth）的路径进行比较，以识别错误和低效之处。● ADK 通过用于单元测试的单个测试文件和用于集成测试的综合评估集（evalset）文件提供结构化评估方法，二者都定义了预期的智能体行为。● 智能体评估可以通过基于 Web 的 UI 进行交互式测试来执行，也可以通过 pytest 以编程方式执行以集成到 CI/CD 中，或通过命令行界面执行以实现自动化工作流。● 为了使 AI 在复杂、高风险任务中可靠，我们必须从简单的 prompt 转向正式的“契约”（contract），以精确界定可验证的交付物和范围。这种结构化的约定使智能体能够协商、澄清歧义，并迭代地验证自身的工作，从而将其从不可预测的工具转变为可问责且值得信赖的系统。结论</div>
+        <div class="seg-note"><b>导读注:</b>强调评估需超越传统测试，并指出<b>正式契约</b>是让 AI 可问责的关键转变。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"In conclusion, effectively evaluating AI agents requires moving beyond simple accuracy checks to a continuous, multi-faceted assessment of their performance in dynamic environments. This involves practical monitoring of metrics like latency and resource consumption, as well as sophisticated analysis of an agent's decision-making process through its trajectory. For nuanced qualities like helpfulness, innovative methods such as the LLM-as-a-Judge are becoming essential, while frameworks like Google's ADK provide structured tools for both unit and integration testing. The challenge intensifies with multi-agent systems, where the focus shifts to evaluating collaborative success and effective cooperation.
+To ensure reliability in critical applications, the paradigm is shifting from simple, prompt-driven agents to advanced "contractors" bound by formal agreements. These contractor agents operate on explicit, verifiable terms, allowing them to negotiate, decompose tasks, and self-validate their work to meet rigorous quality standards. This structured approach transforms agents from unpredictable tools into accountable systems capable of handling complex, high-stakes tasks. Ultimately, this evolution is crucial for building the trust required to deploy sophisticated agentic AI in mission-critical domains. References"</div>
+        <div class="seg-zh">总之，有效评估 AI agent 需要超越简单的准确性检查，转向在动态环境中对其性能进行持续、多方面的评估。这涉及对延迟和资源消耗等指标进行实际监控，以及通过 agent 的轨迹对其决策过程进行深入分析。对于有用性等细微品质，LLM-as-a-Judge 等创新方法正变得不可或缺，而 Google 的 ADK 等框架则为单元测试和集成测试提供了结构化工具。这一挑战在多 agent 系统中进一步加剧，此时重点转向评估协作成功与有效合作。为确保关键应用中的可靠性，范式正从简单的、prompt 驱动的 agent 转向受正式协议约束的高级“contractor”。这些 contractor agent 依据明确、可验证的条款运作，使其能够协商、分解任务并自我验证工作，以满足严格的质量标准。这种结构化方法将 agent 从不可预测的工具转变为能够处理复杂、高风险任务的负责任系统。最终，这一演进对于建立信任至关重要，而信任是在任务关键型领域部署复杂 agentic AI 所必需的。参考文献</div>
+        <div class="seg-note"><b>导读注:</b>评估范式从准确性转向持续多维监控，并强调<b>contractor agent</b>与正式协议带来的可问责性。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"Relevant research includes: 1. ADK Web: https://github.com/google/adk-web 2. ADK Evaluate: https://google.github.io/adk-docs/evaluate/ 3. Survey on Evaluation of LLM-based Agents, https://arxiv.org/abs/2503.16416 4. Agent-as-a-Judge: Evaluate Agents with Agents, https://arxiv.org/abs/2410.10934 5. Agent Companion, gulli et al: https://www.kaggle.com/whitepaper-agent-companion"</div>
+        <div class="seg-zh">相关研究包括：1. ADK Web：https://github.com/google/adk-web 2. ADK Evaluate：https://google.github.io/adk-docs/evaluate/ 3. 基于 LLM 的智能体评估综述（Survey on Evaluation of LLM-based Agents），https://arxiv.org/abs/2503.16416 4. Agent-as-a-Judge：用智能体评估智能体（Evaluate Agents with Agents），https://arxiv.org/abs/2410.10934 5. Agent Companion，gulli 等：https://www.kaggle.com/whitepaper-agent-companion</div>
+        <div class="seg-note"><b>导读注:</b>列出智能体评估的关键资源，<b>Agent-as-a-Judge</b> 提出用智能体评估智能体的新范式。</div>
+      </div>
+
+      <div class="callout info" style="margin-top:24px">
+        <div class="co-title">来源与用途</div>
+        <p style="margin-bottom:0">《Agentic Design Patterns》,Antonio Gulli · 2025 · <a href="papers/pdf/gulli-agentic-design-patterns.pdf" target="_blank" rel="noopener">原书 PDF</a>。本页为学习用途的对照整理,版权归原作者;有问题到读书导师处提问,答案只引用书中原文并标注章节。</p>
+      </div>
+
+      <p class="pager" style="margin-top:18px">
+        <a class="chip" href="book-gulli-patterns-ch18.html">← 第18章 · 护栏/安全模式 Guardrails/Safety Patterns</a>
+        <a class="chip" href="book-gulli-patterns.html">导读</a>
+        <a class="chip" href="book-gulli-patterns-ch20.html">第20章 · 优先级排序 Prioritization →</a>
+      </p>
+
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/app.js?v=28"></script>
+</body>
+</html>
