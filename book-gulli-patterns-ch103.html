@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="Agentic Design Patterns 附录 附录 D：用 AgentSpace 构建智能体 中英对照翻译。">
+<meta name="description" content="Agentic Design Patterns 附录 附录 D：用 AgentSpace 构建智能体 中英对照翻译,配原书插图与本章一图流。">
 <title>附录 · 附录 D：用 AgentSpace 构建智能体 | Agentic Design Patterns | Agent 学院</title>
 <link rel="stylesheet" href="assets/css/style.css?v=24">
 </head>
@@ -34,73 +34,100 @@
       </header>
 
       <div class="callout key"><div class="co-title">本章要点</div><p>① AgentSpace 统一搜索企业数字足迹并构建企业知识图谱  ① 智能体可自主推理、规划并执行多步任务  ① 支持 A2A 协议实现多智能体互通协作  ① Agent Designer 提供无代码界面降低构建门槛</p></div>
+<h2>本章一图流</h2>
+<div class="flow">
+        <span class="flow-node">统一搜索<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">聚合企业数字足迹</small></span><span class="flow-arrow">→</span><span class="flow-node">知识图谱<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">构建企业知识网络</small></span><span class="flow-arrow">→</span><span class="flow-node">Agent Designer<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">无代码搭建智能体</small></span><span class="flow-arrow">→</span><span class="flow-node">自主推理执行<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">规划并完成多步任务</small></span><span class="flow-arrow">→</span><span class="flow-node">A2A 协作<small style="display:block;font-weight:400;font-size:12px;color:var(--text-3)">多智能体互通协作</small></span>
+        <div class="flow-note">AgentSpace 从数据到智能体：搜索建图、无代码构建、自主执行、多体协作。</div>
+      </div>
+<h2>原书插图</h2>
+      <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px">
+        <figure style="margin:0;text-align:center">
+          <a href="figures/gulli-patterns/ch103-p392.png" target="_blank" rel="noopener"><img src="figures/gulli-patterns/ch103-p392.png" alt="第103章原书插图(第392页)" loading="lazy" style="max-width:100%;height:auto;border:1px solid var(--line);border-radius:10px"></a>
+          <figcaption style="font-size:12px;color:var(--text-3);margin-top:6px">原书第 392 页 · 点击看大图</figcaption>
+        </figure>
+        <figure style="margin:0;text-align:center">
+          <a href="figures/gulli-patterns/ch103-p392.png" target="_blank" rel="noopener"><img src="figures/gulli-patterns/ch103-p392.png" alt="第103章原书插图(第392页)" loading="lazy" style="max-width:100%;height:auto;border:1px solid var(--line);border-radius:10px"></a>
+          <figcaption style="font-size:12px;color:var(--text-3);margin-top:6px">原书第 392 页 · 点击看大图</figcaption>
+        </figure>
+        <figure style="margin:0;text-align:center">
+          <a href="figures/gulli-patterns/ch103-p393.png" target="_blank" rel="noopener"><img src="figures/gulli-patterns/ch103-p393.png" alt="第103章原书插图(第393页)" loading="lazy" style="max-width:100%;height:auto;border:1px solid var(--line);border-radius:10px"></a>
+          <figcaption style="font-size:12px;color:var(--text-3);margin-top:6px">原书第 393 页 · 点击看大图</figcaption>
+        </figure>
+        <figure style="margin:0;text-align:center">
+          <a href="figures/gulli-patterns/ch103-p394.png" target="_blank" rel="noopener"><img src="figures/gulli-patterns/ch103-p394.png" alt="第103章原书插图(第394页)" loading="lazy" style="max-width:100%;height:auto;border:1px solid var(--line);border-radius:10px"></a>
+          <figcaption style="font-size:12px;color:var(--text-3);margin-top:6px">原书第 394 页 · 点击看大图</figcaption>
+        </figure>
+        <figure style="margin:0;text-align:center">
+          <a href="figures/gulli-patterns/ch103-p395.png" target="_blank" rel="noopener"><img src="figures/gulli-patterns/ch103-p395.png" alt="第103章原书插图(第395页)" loading="lazy" style="max-width:100%;height:auto;border:1px solid var(--line);border-radius:10px"></a>
+          <figcaption style="font-size:12px;color:var(--text-3);margin-top:6px">原书第 395 页 · 点击看大图</figcaption>
+        </figure>
+        <figure style="margin:0;text-align:center">
+          <a href="figures/gulli-patterns/ch103-p395.png" target="_blank" rel="noopener"><img src="figures/gulli-patterns/ch103-p395.png" alt="第103章原书插图(第395页)" loading="lazy" style="max-width:100%;height:auto;border:1px solid var(--line);border-radius:10px"></a>
+          <figcaption style="font-size:12px;color:var(--text-3);margin-top:6px">原书第 395 页 · 点击看大图</figcaption>
+        </figure>
+      </div>
 <h2>本章划线句</h2>
-<details class="qn"><summary>本章划线句(逐字校验)</summary>
+<details class="qn"><summary>划线句(逐字校验)</summary>
         <div class="qn-body">
         <div class="qn-en">"These agents are not merely chatbots; they can reason, plan, and execute multi-step actions autonomously."</div>
         <div class="qn-zh"><b>为什么值得划线:</b>点明智能体区别于聊天机器人的核心能力</div>
         </div>
       </details>
-<details class="qn"><summary>本章划线句(逐字校验)</summary>
+<details class="qn"><summary>划线句(逐字校验)</summary>
         <div class="qn-body">
         <div class="qn-en">"AgentSpace constructs an enterprise knowledge graph, mapping the relationships between people, documents, and data."</div>
         <div class="qn-zh"><b>为什么值得划线:</b>揭示企业知识图谱是上下文理解的基础</div>
         </div>
       </details>
-<details class="qn"><summary>本章划线句(逐字校验)</summary>
+<details class="qn"><summary>划线句(逐字校验)</summary>
         <div class="qn-body">
         <div class="qn-en">"This approach abstracts the underlying technical complexity, enabling the construction of specialized multi-agent systems without requiring deep programming expertise."</div>
         <div class="qn-zh"><b>为什么值得划线:</b>概括无代码构建多智能体系统的价值</div>
         </div>
       </details>
-<h2>正文(英中对照)</h2>
+
+      <h2>正文(英中对照)</h2>
 <div class="seg">
-        <div class="seg-en">"Appendix D - Building an Agent with AgentSpace
-AgentSpace is a platform designed to facilitate an "agent-driven enterprise" by integrating artificial intelligence into daily workflows. At its core, it provides a unified search capability across an organization's entire digital footprint, including documents, emails, and databases. This system utilizes advanced AI models, like Google's Gemini, to comprehend and synthesize information from these varied sources.
-The platform enables the creation and deployment of specialized AI "agents" that can perform complex tasks and automate processes. These agents are not merely chatbots; they can reason, plan, and execute multi-step actions autonomously. For instance, an agent could research a topic, compile a report with citations, and even generate an audio summary.
-To achieve this, AgentSpace constructs an enterprise knowledge graph, mapping the relationships between people, documents, and data. This allows the AI to understand context and deliver more relevant and personalized results. The platform also includes a no-code interface called Agent Designer for creating custom agents without requiring deep technical expertise."</div>
-        <div class="seg-zh">附录 D - 使用 AgentSpace 构建 Agent（智能体）
-AgentSpace 是一个旨在通过将人工智能集成到日常工作流中来促进“智能体驱动的企业”的平台。其核心是提供跨组织整个数字足迹（包括文档、电子邮件和数据库）的统一搜索能力。该系统利用先进的 AI 模型（如 Google 的 Gemini）来理解和综合来自这些多样化来源的信息。
-该平台支持创建和部署可执行复杂任务并自动化流程的专用 AI“智能体”。这些智能体不仅仅是聊天机器人；它们能够<b>自主推理、规划并执行多步操作</b>。例如，一个智能体可以研究某个主题、编制带引用的报告，甚至生成音频摘要。
-为实现这一目标，AgentSpace 构建企业知识图谱，映射人员、文档和数据之间的关系。这使 AI 能够理解上下文并提供更相关、更个性化的结果。该平台还包括一个名为 Agent Designer 的无代码界面，用于创建自定义智能体，无需深厚的技术专业知识。</div>
-        <div class="seg-note"><b>导读注:</b>介绍 AgentSpace 如何以知识图谱与无代码设计器支撑<b>自主多步智能体</b>。</div>
+        <div class="seg-en">"Appendix D - Building an Agent with AgentSpace Overview AgentSpace is a platform designed to facilitate an "agent-driven enterprise" by integrating artificial intelligence into daily workflows. At its core, it provides a unified search capability across an organization's entire digital footprint, including documents, emails, and databases. This system utilizes advanced AI models, like Google's Gemini, to comprehend and synthesize information from these varied sources. The platform enables the creation and deployment of specialized AI "agents" that can perform complex tasks and automate processes. These agents are not merely chatbots; they can reason, plan, and execute multi-step actions autonomously."</div>
+        <div class="seg-zh">附录 D - 使用 AgentSpace 构建 Agent 概述 AgentSpace 是一个旨在通过将人工智能集成到日常工作流中来促进"代理驱动型企业"（agent-driven enterprise）的平台。其核心是在组织整个数字足迹（包括文档、电子邮件和数据库）中提供统一的搜索能力。该系统利用先进的 AI 模型（如 Google 的 Gemini）来理解和综合来自这些多样来源的信息。该平台支持创建和部署专门的 AI"代理"（agent），这些代理可以执行复杂任务并自动化流程。这些代理不仅仅是聊天机器人；它们能够<b>自主推理、规划并执行多步骤操作</b>。</div>
+        <div class="seg-note"><b>导读注:</b>点明 AgentSpace 的核心价值：<b>代理能自主推理与多步执行</b>，而非仅聊天。</div>
       </div>
 <div class="seg">
-        <div class="seg-en">"Furthermore, AgentSpace supports a multi-agent system where different AI agents can communicate and collaborate through an open protocol known as the Agent2Agent (A2A) Protocol. This interoperability allows for more complex and orchestrated workflows. Security is a foundational component, with features like role-based access controls and data encryption to protect sensitive enterprise information. Ultimately, AgentSpace aims to enhance productivity and decision-making by embedding intelligent, autonomous systems directly into an organization's operational fabric.
-Figure 1 illustrates how to access AgentSpace by selecting AI Applications from the Google Cloud Console.
-Fig. 1: How to use Google Cloud Console to access AgentSpace
-Your agent can be connected to various services, including Calendar, Google Mail, Workaday, Jira, Outlook, and Service Now (see Fig. 2).
-Fig. 2: Integrate with diverse services, including Google and third-party platforms.
-The Agent can then utilize its own prompt, chosen from a gallery of pre-made prompts provided by Google, as illustrated in Fig. 3."</div>
-        <div class="seg-zh">此外，AgentSpace 支持多智能体系统（multi-agent system），不同的 AI 智能体可通过名为 Agent2Agent（A2A）Protocol 的开放协议进行通信与协作。这种互操作性支持更复杂、可编排的工作流。<b>安全是基础性组件</b>，具备基于角色的访问控制（role-based access controls）和数据加密等功能，以保护敏感的企业信息。最终，AgentSpace 旨在通过将智能、自主的系统直接嵌入组织的运营架构中，来提升生产力与决策能力。
-图 1 展示了如何通过从 Google Cloud Console 中选择 AI Applications 来访问 AgentSpace。
-图 1：如何使用 Google Cloud Console 访问 AgentSpace
-你的智能体可连接到多种服务，包括 Calendar、Google Mail、Workaday、Jira、Outlook 和 Service Now（见图 2）。
-图 2：与包括 Google 及第三方平台在内的多种服务集成。
-随后，智能体可使用其自己的 prompt，从 Google 提供的预制 prompt 库中选择，如图 3 所示。</div>
-        <div class="seg-note"><b>导读注:</b><b>A2A 协议</b>实现多智能体互通，安全与集成能力是 AgentSpace 落地企业场景的关键。</div>
+        <div class="seg-en">"For instance, an agent could research a topic, compile a report with citations, and even generate an audio summary. To achieve this, AgentSpace constructs an enterprise knowledge graph, mapping the relationships between people, documents, and data. This allows the AI to understand context and deliver more relevant and personalized results. The platform also includes a no-code interface called Agent Designer for creating custom agents without requiring deep technical expertise. Furthermore, AgentSpace supports a multi-agent system where different AI agents can communicate and collaborate through an open protocol known as the Agent2Agent (A2A) Protocol. This interoperability allows for more complex and orchestrated workflows."</div>
+        <div class="seg-zh">例如，一个智能体（agent）可以研究某个主题、编写带引用的报告，甚至生成音频摘要。为实现这一点，AgentSpace 构建了一个企业知识图谱（enterprise knowledge graph），映射人员、文档和数据之间的关系。这使 AI 能够理解上下文，并给出更相关、更个性化的结果。该平台还包含一个名为 Agent Designer 的无代码界面，用于创建自定义智能体，无需深厚的技术专业知识。此外，AgentSpace 支持多智能体系统（multi-agent system），其中不同的 AI 智能体可以通过一个名为 Agent2Agent（A2A）Protocol 的开放协议进行通信与协作。这种互操作性支持更复杂、更可编排的工作流。</div>
+        <div class="seg-note"><b>导读注:</b>亮点是<b>企业知识图谱</b>与<b>A2A 协议</b>支撑的多智能体协作。</div>
       </div>
 <div class="seg">
-        <div class="seg-en">"Fig.3: Google's Gallery of Pre-assembled prompts
-In alternative you can create your own prompt as in Fig.4, which will be then used by your agent
-AgentSpace offers a number of advanced features such as integration with datastores to store your own data, integration with Google Knowledge Graph or with your private Knowledge Graph, Web interface for exposing your agent to the Web, and Analytics to monitor usage, and more (see Fig. 5)
-Upon completion, the AgentSpace chat interface (Fig. 6) will be accessible.
-Fig. 6: The AgentSpace User Interface for initiating a chat with your Agent.
-In conclusion, AgentSpace provides a functional framework for developing and deploying AI agents within an organization's existing digital infrastructure. The system's architecture links complex backend processes, such as autonomous reasoning and enterprise knowledge graph mapping, to a graphical user interface for agent construction. Through this interface, users can configure agents by integrating various data services and defining their operational parameters via prompts, resulting in customized, context-aware automated systems."</div>
-        <div class="seg-zh">图3：Google 的预组装 prompt 库（Gallery of Pre-assembled prompts）
-或者，你也可以像图4那样创建自己的 prompt，随后由你的 agent 使用。
-AgentSpace 提供多项高级功能，例如与数据存储（datastore）集成以存储你自己的数据、与 Google 知识图谱（Knowledge Graph）或你的私有知识图谱集成、用于将 agent 暴露到 Web 的 Web 界面，以及用于监控使用情况的分析（Analytics）等（见图5）。
-完成后，即可访问 AgentSpace 聊天界面（图6）。
-图6：用于发起与你的 Agent 对话的 AgentSpace 用户界面。
-总之，AgentSpace 提供了一个功能性框架，用于在组织现有的数字基础设施内开发和部署 AI agent。该系统架构将复杂的后端流程（如自主推理和企业知识图谱映射）与用于构建 agent 的图形用户界面连接起来。通过该界面，用户可以通过集成各种数据服务并借助 prompt 定义其运行参数来配置 agent，从而得到定制的、具备上下文感知能力的自动化系统。</div>
-        <div class="seg-note"><b>导读注:</b>介绍 AgentSpace 从预置/自建 prompt 到部署 agent 的完整流程与架构要点。</div>
+        <div class="seg-en">"Security is a foundational component, with features like role-based access controls and data encryption to protect sensitive enterprise information. Ultimately, AgentSpace aims to enhance productivity and decision-making by embedding intelligent, autonomous systems directly into an organization's operational fabric. How to build an Agent with AgentSpace UI Figure 1 illustrates how to access AgentSpace by selecting AI Applications from the Google Cloud Console. 1 Fig. 1: How to use Google Cloud Console to access AgentSpace Your agent can be connected to various services, including Calendar, Google Mail, Workaday, Jira, Outlook, and Service Now (see Fig. 2)."</div>
+        <div class="seg-zh">安全是基础组件，具备基于角色的访问控制（role-based access controls）和数据加密等功能，以保护敏感的企业信息。最终，AgentSpace 旨在通过将智能、自主的系统直接嵌入组织的运营架构中，来提升生产力和决策能力。如何使用 AgentSpace UI 构建 Agent 图 1 展示了如何通过从 Google Cloud Console 中选择 AI Applications 来访问 AgentSpace。1 图 1：如何使用 Google Cloud Console 访问 AgentSpace 你的 agent 可以连接到各种服务，包括 Calendar、Google Mail、Workaday、Jira、Outlook 和 Service Now（见图 2）。</div>
+        <div class="seg-note"><b>导读注:</b>点出 AgentSpace 的<b>安全基础</b>与<b>可连接多种企业服务</b>两大要点。</div>
       </div>
 <div class="seg">
-        <div class="seg-en">"This approach abstracts the underlying technical complexity, enabling the construction of specialized multi-agent systems without requiring deep programming expertise. The primary objective is to embed automated analytical and operational capabilities directly into workflows, thereby increasing process efficiency and enhancing data-driven analysis. For practical instruction, hands-on learning modules are available, such as the "Build a Gen AI Agent with Agentspace" lab on Google Cloud Skills Boost, which provides a structured environment for skill acquisition.
-1. Create a no-code agent with Agent Designer, https://cloud.google.com/agentspace/agentspace-enterprise/docs/agent-designer 2. Google Cloud Skills Boost, https://www.cloudskillsboost.google/"</div>
-        <div class="seg-zh">该方法抽象了底层技术复杂性，使得无需深入的编程专业知识即可构建专门的多智能体（multi-agent）系统。<b>主要目标是将自动化分析与操作能力直接嵌入工作流，从而提高流程效率并增强数据驱动分析。</b>为便于实践指导，提供了动手学习模块，例如 Google Cloud Skills Boost 上的“Build a Gen AI Agent with Agentspace”实验，为技能获取提供了结构化环境。
-1. 使用 Agent Designer 创建无代码智能体（agent），https://cloud.google.com/agentspace/agentspace-enterprise/docs/agent-designer 2. Google Cloud Skills Boost，https://www.cloudskillsboost.google/</div>
-        <div class="seg-note"><b>导读注:</b><b>无需编程即可构建多智能体系统</b>，并给出无代码工具与实操实验入口。</div>
+        <div class="seg-en">"Fig. 2: Integrate with diverse services, including Google and third-party platforms. 2 The Agent can then utilize its own prompt, chosen from a gallery of pre-made prompts provided by Google, as illustrated in Fig. 3."</div>
+        <div class="seg-zh">图 2：与多种服务集成，包括 Google 及第三方平台。2 随后，Agent 可以使用自己的 prompt，该 prompt 从 Google 提供的预制 prompt 库中选择，如图 3 所示。</div>
+        <div class="seg-note"><b>导读注:</b>展示 Agent 可集成多平台并选用 Google 预制 prompt 库。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"Fig.3: Google's Gallery of Pre-assembled prompts In alternative you can create your own prompt as in Fig.4, which will be then used by your agent 3 Fig.4: Customizing the Agent's Prompt AgentSpace offers a number of advanced features such as integration with datastores to store your own data, integration with Google Knowledge Graph or with your private Knowledge Graph, Web interface for exposing your agent to the Web, and Analytics to monitor usage, and more (see Fig. 5) 4 Fig. 5: AgentSpace advanced capabilities Upon completion, the AgentSpace chat interface (Fig. 6) will be accessible. Fig. 6: The AgentSpace User Interface for initiating a chat with your Agent. 5"</div>
+        <div class="seg-zh">图3：Google 的预组装 prompt 库（Gallery of Pre-assembled prompts）。或者，你可以像图4那样创建自己的 prompt，随后它将被你的 agent 使用。图4：自定义 Agent 的 Prompt。AgentSpace 提供若干高级功能，例如与数据存储（datastore）集成以存储你自己的数据、与 Google Knowledge Graph 或你的私有 Knowledge Graph 集成、用于将你的 agent 暴露到 Web 的 Web 界面，以及用于监控使用情况的分析（Analytics）等（见图5）。图5：AgentSpace 高级能力。完成后，即可访问 AgentSpace 聊天界面（图6）。图6：用于发起与你的 Agent 聊天的 AgentSpace 用户界面。</div>
+        <div class="seg-note"><b>导读注:</b>概览 AgentSpace 从预置/自定义 prompt 到高级集成与聊天界面的完整能力。</div>
+      </div>
+<h3 style="margin:26px 0 8px"><b>结论</b> <span class="small-note">Conclusion</span></h3>
+<div class="seg">
+        <div class="seg-en">"In conclusion, AgentSpace provides a functional framework for developing and deploying AI agents within an organization's existing digital infrastructure. The system's architecture links complex backend processes, such as autonomous reasoning and enterprise knowledge graph mapping, to a graphical user interface for agent construction. Through this interface, users can configure agents by integrating various data services and defining their operational parameters via prompts, resulting in customized, context-aware automated systems. This approach abstracts the underlying technical complexity, enabling the construction of specialized multi-agent systems without requiring deep programming expertise."</div>
+        <div class="seg-zh">总之，AgentSpace 提供了一个功能性框架，用于在组织现有的数字基础设施内开发和部署 AI agent（智能体）。该系统的架构将复杂的后端流程（如自主推理和企业知识图谱映射）与用于构建 agent 的图形用户界面连接起来。通过该界面，用户可以通过集成各种数据服务并通过 prompt（提示词）定义其运行参数来配置 agent，从而产生定制化的、上下文感知的自动化系统。这种方法抽象了底层技术复杂性，使得无需深入的编程专业知识即可构建专门的多 agent 系统。</div>
+        <div class="seg-note"><b>导读注:</b><b>AgentSpace</b> 将复杂后端封装为图形界面，降低多 agent 系统构建门槛。</div>
+      </div>
+<div class="seg">
+        <div class="seg-en">"The primary objective is to embed automated analytical and operational capabilities directly into workflows, thereby increasing process efficiency and enhancing data-driven analysis. For practical instruction, hands-on learning modules are available, such as the "Build a Gen AI Agent with Agentspace" lab on Google Cloud Skills Boost, which provides a structured environment for skill acquisition."</div>
+        <div class="seg-zh">主要目标是将自动化分析能力和操作能力直接嵌入工作流，从而提高流程效率并增强数据驱动分析。为提供实践指导，现有动手学习模块可用，例如 Google Cloud Skills Boost 上的“Build a Gen AI Agent with Agentspace”实验，它为技能获取提供了结构化环境。</div>
+        <div class="seg-note"><b>导读注:</b>强调<b>将自动化能力嵌入工作流</b>，并给出可上手的 Agentspace 实验。</div>
+      </div>
+<h3 style="margin:26px 0 8px">参考文献 <span class="small-note">References</span></h3>
+<div class="seg">
+        <div class="seg-en">"1. Create a no-code agent with Agent Designer, https://cloud.google.com/agentspace/agentspace-enterprise/docs/agent-designer 2. Google Cloud Skills Boost, https://www.cloudskillsboost.google/ 6"</div>
+        <div class="seg-zh">1. 使用 Agent Designer 创建一个无代码 agent（智能体），https://cloud.google.com/agentspace/agentspace-enterprise/docs/agent-designer 2. Google Cloud Skills Boost，https://www.cloudskillsboost.google/ 6</div>
+        <div class="seg-note"><b>导读注:</b>列出两项资源：<b>无代码创建 agent</b> 与技能提升平台。</div>
       </div>
 
       <div class="callout info" style="margin-top:24px">

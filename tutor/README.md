@@ -74,7 +74,8 @@ tutor/
 ├── scripts/extract-pdf.py     # 通用 PDF 提取(pypdf layout 模式)
 ├── scripts/make-paper-page.mjs   # M1 论文管线: PDF → 翻译+解读 → 草稿页 + 人审清单
 ├── scripts/make-book-page.mjs    # 读书管线: 书的 kb → 分章摘要 → 导读草稿页 + 读书导师 pack(答案只来自书内,金句逐字校验);--cards 复跑模式重渲染
-├── scripts/make-book-chapter.mjs # 分章翻译页: 一章 → 英中对照正文(book-<slug>-chN.html,导读章节直达);--all 批量,中文书自动直出
+├── scripts/make-book-chapter.mjs # 分章翻译页: 一章 → 块级解析(代码块还原/标题/散文) → 英中对照 + 原书插图画廊 + 本章一图流(book-<slug>-chN.html);--all 批量,中文书自动直出
+├── scripts/extract-book-figures.py # PDF 插图提取(PyMuPDF;get_image_info 可见 Form XObject 里的位图,pypdf 看不见)→ figures/<slug>/ + 清单
 ├── scripts/import-book.mjs       # 一键导入: PDF/URL → 章节感知切块(Chapter N/第N章/h2) → kb(+--ctx-run) → 接力读书管线
 ├── scripts/publish-book.mjs      # 读书导读发布: 剥初稿标记 + manifest approved
 ├── scripts/make-pack-from-repo.mjs # M2 仓库管线: GitHub 仓库 → 教学包(课程规划器)
