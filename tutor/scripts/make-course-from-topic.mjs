@@ -115,6 +115,11 @@ await pool(plan.chapters, async (ch, idx) => {
 }, 3);
 const okChapters = plan.chapters.map((ch, i) => ({ ch, res: chapterResults[i] })).filter((x) => x.res);
 
+// 一图流:门禁(rubric 含 flow 项)与章节页写盘都需要——必须在 gate 之前生成
+for (const { ch, res } of okChapters) {
+  if (!res.flow) res.flow = await generateFlow({ callLLM: llm, ch });
+}
+
 // Phase B.6 质量门禁预检:生成端不拦草稿,但未达标章节亮红灯——发布端会硬拦
 const gate = gateChapters(okChapters.map(({ ch, res }) => ({
   no: ch.no, title: ch.title, issues: res ? structureIssues(res) : ["本章内容生成失败"],

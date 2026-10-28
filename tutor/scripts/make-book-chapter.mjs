@@ -33,10 +33,12 @@ if (!existsSync(CARDS)) { console.error(`✗ 找不到 ${CARDS}(先跑 make-book
 const cards = JSON.parse(readFileSync(CARDS, "utf8"));
 const KB = resolve(TUTOR, cards.meta.kb);
 const kb = JSON.parse(readFileSync(KB, "utf8"));
-const FIGS = join(TUTOR, "kb", `${SLUG}-figures.json`); // 可选:extract-book-figures.py 产物
+const FIGS = join(SITE, "figures", SLUG, "manifest.json"); // 插图清单(随图提交;旧位置 tutor/kb/ 兜底)
 const figByCh = existsSync(FIGS)
   ? JSON.parse(readFileSync(FIGS, "utf8")).chapters || {}
-  : {};
+  : existsSync(join(TUTOR, "kb", `${SLUG}-figures.json`))
+    ? JSON.parse(readFileSync(join(TUTOR, "kb", `${SLUG}-figures.json`), "utf8")).chapters || {}
+    : {};
 const TITLE = cards.meta.title, AUTHORS = cards.meta.authors || "", PDF = cards.meta.pdf || "";
 
 const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
