@@ -177,6 +177,84 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
   font-size: 12px; color: var(--text-3); line-height: 1.7;
 }
 
+/* ---------- 侧边栏 v5 · 大类 → 课程 → 章节 ---------- */
+button.side-group {
+  display: flex; align-items: center; gap: 7px;
+  width: calc(100% - 24px);
+  padding: 0; border: 0; background: none; cursor: pointer;
+  font-family: inherit; text-align: left;
+}
+button.side-group:hover .g-title { color: var(--text); }
+.side-group .g-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.side-group .g-cnt {
+  flex: none; font-family: var(--mono); font-size: 10px; letter-spacing: 0;
+  color: var(--text-3); background: var(--surface-2);
+  border-radius: 999px; padding: 1px 7px;
+}
+.side-group .g-chev { flex: none; font-size: 9px; color: var(--text-3); transition: transform .18s ease; }
+.side-group:not(.open) .g-chev { transform: rotate(-90deg); }
+.side-group.has-active .g-title { color: var(--accent); }
+.cat-body.folded { display: none; }
+
+/* 课程行（可展开 / 单页直链两种形态共用） */
+.course-row {
+  display: flex; align-items: center; gap: 7px;
+  width: calc(100% - 24px); margin: 2px 12px; padding: 6px 8px;
+  border: 0; background: none; cursor: pointer; text-align: left;
+  border-radius: 8px; color: var(--text-2); font-size: 13.5px;
+  font-family: inherit;
+}
+a.course-row { text-decoration: none; }
+.course-row:hover { background: var(--surface-2); color: var(--text); text-decoration: none; }
+.course-row.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.course-row .c-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.course-row .g-chev { flex: none; width: 12px; font-size: 9px; color: var(--text-3); transition: transform .18s ease; }
+.course-row.open .g-chev { transform: rotate(90deg); }
+.course-row .g-chev.none { visibility: hidden; }
+.course-row .ch-cnt { flex: none; font-family: var(--mono); font-size: 10px; color: var(--text-3); }
+.course-row .no {
+  flex: none; width: 18px;
+  font-family: var(--mono); font-size: 11.5px; color: var(--text-3);
+}
+
+/* 章节面板（课程行展开后，缩进列表） */
+.course-chs { padding: 1px 0 5px; }
+.course-chs.folded { display: none; }
+.course-chs a {
+  display: flex; align-items: flex-start; gap: 8px;
+  padding: 6px 8px 6px 24px; margin: 1px 12px 1px 18px;
+  border-radius: 8px; color: var(--text-2); font-size: 13px; line-height: 1.5;
+}
+.course-chs a:hover { background: var(--surface-2); color: var(--text); text-decoration: none; }
+.course-chs a.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.course-chs .no {
+  flex: none; width: 20px; padding-top: 1px;
+  font-family: var(--mono); font-size: 11px; color: var(--text-3);
+}
+.course-chs a.active .no { color: var(--accent); }
+.course-chs .done-mark { margin-left: auto; font-size: 12px; color: var(--ok); }
+
+/* 主课章节之间的「部分」分隔线 */
+.side-part {
+  display: flex; align-items: center; gap: 6px;
+  margin: 10px 18px 3px 24px;
+  font-family: var(--mono); font-size: 10px; letter-spacing: .1em;
+  color: var(--text-3); white-space: nowrap;
+}
+.side-part::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+
+/* 顶栏面包屑 */
+.crumbs {
+  display: flex; align-items: center; gap: 8px; min-width: 0;
+  max-width: 38%; overflow: hidden; white-space: nowrap;
+  font-size: 12.5px; color: var(--text-3);
+}
+.crumbs a { color: var(--text-2); flex: none; }
+.crumbs a:hover { color: var(--accent); text-decoration: none; }
+.crumbs .sep { opacity: .55; flex: none; }
+.crumbs > :last-child { overflow: hidden; text-overflow: ellipsis; color: var(--text); font-weight: 600; }
+@media (max-width: 1180px) { .crumbs { display: none; } }
+
 /* ---------- 主内容 ---------- */
 .content {
   flex: 1; min-width: 0;

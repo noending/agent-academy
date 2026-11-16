@@ -17,3 +17,13 @@
 1. full-llm-termlogy.html 加入 index.html 学习路径 + app.js NAV
 2. node scripts/check-site.mjs 全绿
 3. git commit + push
+
+## 质量对齐记录(2026-10-25)
+
+机器对齐 pass 已跑(5/5 章被升级,升级≠事实核实):
+- 第3章: 结构问题 2→0
+- 第1章: 结构问题 1→0
+- 第2章: 结构问题 1→0
+- 第5章: 结构问题 1→0
+- 第4章: 结构问题 1→0
+- [ ] 仍需人工核实事实与代码

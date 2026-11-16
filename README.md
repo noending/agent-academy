@@ -90,6 +90,26 @@ export DEEPSEEK_API_KEY="sk-你的密钥"
 
 模型名与能力更新较快，请以 [DeepSeek 官方文档](https://api-docs.deepseek.com) 为准。
 
+## 课程质量保障流程（内容工厂）
+
+所有工厂生成的课程（论文/仓库/课题）与主课共用同一把**结构质量尺**（`tutor/scripts/quality-align.mjs` 的 rubric：小节深度、可运行代码、常见误区、自测≥3、练习带完整方案、代码块语言标注等）。质量约束嵌在流程的四个关口，不靠自觉：
+
+```
+① 生成          ② 体检                ③ 人审              ④ 发布（硬门禁）
+make-course-    check-course-         REVIEW.md           publish-course.mjs
+from-topic      quality.mjs           逐条核实事实/代码    gate 全部章节
+│               │                     │                   │
+└─ Phase B.5    └─ 全课程对比报告      └─ 人是最终关卡      └─ 未达标 → 拒绝发布
+   逐章 LLM 升级    drafts/evals/                          (Agent 工厂 UI 会显示原因)
+   未达标亮红灯     course-quality-                        --force 仅限明确豁免
+                   REPORT.md
+```
+
+- **生成即对齐**：`make-course-from-topic` 每章生成后自动按旗舰基准升级一轮（`--no-align` 可跳）；未达标章节在控制台与 REVIEW.md 亮红灯，草稿照常产出。
+- **存量可补**：`node tutor/scripts/align-course-quality.mjs --all`（或 `--course <slug>`）批量升级旧课程；`--dry` 只体检不写文件。
+- **发布硬门禁**：`publish-course.mjs` 发布前用同一把尺体检全部分章页，任一章节未达标即拒绝发布（`--check-only` 只体检；`--force` 豁免需明确理由）。App 工厂 UI 的「审核通过」走同一脚本，失败原因会直接显示在日志面板。
+- **结构 ≠ 事实**：门禁只保证结构与教学要素齐全；「模型知识可能出错」仍由 REVIEW.md 的人审清单兜底，两条关卡缺一不可。
+
 ## 更新日志
 
 ### v1.2（当前）

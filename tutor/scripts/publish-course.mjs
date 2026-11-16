@@ -1,15 +1,20 @@
 #!/usr/bin/env node
 // 发布课程:移除机器初稿标记与草稿工具条(课程首页 + 全部分章页),标记清单为已审定。
 // 用法: node scripts/publish-course.mjs --skill <slug>
+// 质量门禁: 全部分章页结构达标才允许发布;未达标会被拦下(--force 可跳过)。
+//          node scripts/publish-course.mjs --skill <slug> --check-only  只体检不发布
 import { readFileSync, writeFileSync, existsSync, readdirSync } from "node:fs";
-import { join, dirname } from "node:path";
+import { join, dirname, basename } from "node:path";
 import { fileURLToPath } from "node:url";
 import { updateManifest, readManifest } from "./factory-common.mjs";
+import { parseChapterBody, structureIssues, gateChapters } from "./quality-align.mjs";
 
 const TUTOR = join(dirname(fileURLToPath(import.meta.url)), "..");
 const SITE = join(TUTOR, "..");
 const args = process.argv.slice(2);
 const skill = args[args.indexOf("--skill") + 1];
+const CHECK_ONLY = args.includes("--check-only");
+const FORCE = args.includes("--force");
 
 if (!skill || skill === "agent-dev") { console.error("✗ --skill 必填且不可为 agent-dev"); process.exit(1); }
 
@@ -28,6 +33,36 @@ for (const f of readdirSync(SITE)) {
   if (chRe.test(f)) pages.add(join(SITE, f));
 }
 if (!pages.size) { console.error(`✗ 找不到课程页面(full-${skill}.html)`); process.exit(1); }
+
+// ---------- 质量门禁(结构 rubric 见 quality-align.mjs) ----------
+const chapterPages = [...pages].filter((p) => /-ch\d+\.html$/.test(p));
+const gateItems = chapterPages.map((p) => {
+  const no = (basename(p).match(/-ch(\d+)\.html$/) || [])[1] || "?";
+  try {
+    const html = readFileSync(p, "utf8");
+    const body = (html.match(/<div class="content-inner">([\s\S]*?)<\/main>/) || [])[1] || "";
+    return { no, title: basename(p), issues: structureIssues(parseChapterBody(body)) };
+  } catch (e) {
+    return { no, title: basename(p), issues: ["页面解析失败: " + e.message] };
+  }
+});
+const gate = gateChapters(gateItems);
+
+if (CHECK_ONLY) {
+  console.log(`质量体检 · ${skill}: ${gate.clean}/${gate.total} 章达标`);
+  for (const f of gate.failing) console.log(`  第${f.no}章: ${f.issues.join("; ")}`);
+  console.log(gate.pass ? "✓ 门禁通过,可发布" : "✗ 门禁未过——先跑 node tutor/scripts/align-course-quality.mjs --course " + skill);
+  process.exit(gate.pass ? 0 : 1);
+}
+if (!gate.pass && !FORCE) {
+  console.error(`✗ 质量门禁未过(${gate.clean}/${gate.total} 章达标)——未发布、未改动任何文件:`);
+  for (const f of gate.failing) console.error(`  第${f.no}章: ${f.issues.join("; ")}`);
+  console.error(`  先对齐: node tutor/scripts/align-course-quality.mjs --course ${skill}`);
+  console.error(`  复检:   node tutor/scripts/publish-course.mjs --skill ${skill} --check-only`);
+  console.error(`  确有理由强行发布(如纯展示用途): 加 --force`);
+  process.exit(1);
+}
+console.log(`✓ 质量门禁通过(${gate.clean}/${gate.total} 章达标)${FORCE ? "(--force 跳过)" : ""}`);
 
 let total = 0;
 for (const p of pages) {
